@@ -11,7 +11,7 @@ import stripe
 from bson import ObjectId
 import asyncio
 from fastapi import FastAPI
-from backend.api import router
+from api import router
 from enum import Enum
 import os
 
@@ -28,7 +28,10 @@ app.include_router(router, prefix="/api")  # Include your API router
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[
+        "http://localhost:3000",  # Keep for local development
+        "https://ecommerce-platform-nizy.onrender.com/api",  
+    ],                 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -1,7 +1,7 @@
 # backend/api.py (or wherever your routes are)
 
 from fastapi import APIRouter
-from backend.database.connection import db  # adjust import based on your structure
+from database.connection import db  # adjust import based on your structure
 
 router = APIRouter()
 
