@@ -14,7 +14,7 @@ from fastapi import FastAPI
 from api import router
 from enum import Enum
 import os
-from .routes.admin_routes import router as admin_router
+from routes.admin_routes import router as admin_router
 
 # Configuration
 MONGODB_URL = os.getenv("MONGODB_URL")
