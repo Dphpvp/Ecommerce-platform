@@ -709,3 +709,19 @@ async def delete_product(
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
+    
+    
+@app.post("/api/auth/login")
+async def login(user_login: UserLogin):
+    user = await db.users.find_one({"email": user_login.email})
+    print(f"User found: {user is not None}")
+    if user:
+        print(f"Stored hash: {user['password'][:20]}...")
+        password_match = verify_password(user_login.password, user["password"])
+        print(f"Password match: {password_match}")
+    
+    if not user or not verify_password(user_login.password, user["password"]):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    token = create_jwt_token(str(user["_id"]))
+    return {"token": token, "user": {"id": str(user["_id"]), "email": user["email"], "username": user["username"]}}  
