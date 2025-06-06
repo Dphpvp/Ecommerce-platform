@@ -12,7 +12,7 @@ const Header = () => {
   return (
     <header className="header">
       <div className="container">
-        <Link to="/" className="logo">Welcome to Vergi Shop</Link>
+        <Link to="/" className="logo">Welcome to My Shop</Link>
         
         <nav className="nav">
           {user ? (
