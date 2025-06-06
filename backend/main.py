@@ -14,6 +14,7 @@ from fastapi import FastAPI
 from api import router
 from enum import Enum
 import os
+from .routes.admin_routes import router as admin_router
 
 # Configuration
 MONGODB_URL = os.getenv("MONGODB_URL")
@@ -22,7 +23,7 @@ STRIPE_SECRET_KEY = "sk_test_your_stripe_secret_key"
 
 # Initialize FastAPI
 app = FastAPI()
-app.include_router(router, prefix="/api")  # Include your API router
+app.include_router(admin_router, router, prefix="/api")  # Include your API router
 # app.include_router(router, prefix="/api")
 
 # CORS middleware
