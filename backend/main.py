@@ -10,15 +10,20 @@ import bcrypt
 import stripe
 from bson import ObjectId
 import asyncio
+from fastapi import FastAPI
+from backend.api import router
 from enum import Enum
+import os
 
 # Configuration
-MONGODB_URL = "mongodb+srv://razvanmare:s6gYa6cU7Fj59Ssk@products.tijjxg2.mongodb.net/?retryWrites=true&w=majority&appName=Products"
+MONGODB_URL = os.getenv("MONGODB_URL")
 JWT_SECRET = "your-jwt-secret-key"
 STRIPE_SECRET_KEY = "sk_test_your_stripe_secret_key"
 
 # Initialize FastAPI
-app = FastAPI(title="E-commerce API")
+app = FastAPI()
+app.include_router(router, prefix="/api")  # Include your API router
+# app.include_router(router, prefix="/api")
 
 # CORS middleware
 app.add_middleware(
