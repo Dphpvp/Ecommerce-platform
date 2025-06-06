@@ -30,7 +30,7 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",  # Keep for local development
-        "https://ecommerce-platform-nizy.onrender.com/api",  
+        "https://ecommerce-platform-snowy.vercel.app",  
     ],                 
     allow_credentials=True,
     allow_methods=["*"],
