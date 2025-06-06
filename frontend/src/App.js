@@ -24,6 +24,7 @@ const stripePromise = loadStripe('pk_test_51RWK32RdyxKMeI2qFdwU5mx0G8jZjt1PcOYpe
 
 // API base URL
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api';
+console.log('Cart API_BASE:', API_BASE);
 
 // Page Components
 const Home = () => {
