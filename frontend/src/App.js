@@ -1,8 +1,23 @@
-import React, { useState, useEffect, createContext, useContext } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, Navigate, useNavigate } from 'react-router-dom';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import './App.css';
+
+// Import Contexts
+import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { CartProvider, useCart } from './contexts/CartContext';
+
+// Import Components
+import Header from './components/header';
+import Profile from './components/profile';
+
+// Import Admin Components
+import AdminDashboard from './components/admin/AdminDashboard';
+import AdminOrders from './components/admin/AdminOrders';
+import AdminUsers from './components/admin/AdminUsers';
+import AdminProducts from './components/admin/AdminProducts';
+import AdminRoute from './components/admin/AdminRoute';
 
 // Stripe setup
 const stripePromise = loadStripe('pk_test_51RWK32RdyxKMeI2qFdwU5mx0G8jZjt1PcOYpeCILJSwVgLsh3u23xE89kRCs0uezmScF8zCQqG8culYGXpxpScNq006cWwuoGS');
@@ -10,196 +25,7 @@ const stripePromise = loadStripe('pk_test_51RWK32RdyxKMeI2qFdwU5mx0G8jZjt1PcOYpe
 // API base URL
 const API_BASE = 'http://localhost:8000/api';
 
-// Auth Context
-const AuthContext = createContext();
-
-const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('token'));
-
-  useEffect(() => {
-    if (token) {
-      fetchUser();
-    }
-  }, [token]);
-
-  const fetchUser = async () => {
-    try {
-      const response = await fetch(`${API_BASE}/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (response.ok) {
-        const userData = await response.json();
-        setUser(userData);
-      } else {
-        logout();
-      }
-    } catch (error) {
-      console.error('Failed to fetch user:', error);
-      logout();
-    }
-  };
-
-  const login = async (email, password) => {
-    const response = await fetch(`${API_BASE}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      localStorage.setItem('token', data.token);
-      setToken(data.token);
-      setUser(data.user);
-      return true;
-    }
-    return false;
-  };
-
-  const register = async (userData) => {
-    const response = await fetch(`${API_BASE}/auth/register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(userData)
-    });
-
-    if (response.ok) {
-      const data = await response.json();
-      localStorage.setItem('token', data.token);
-      setToken(data.token);
-      await fetchUser();
-      return true;
-    }
-    return false;
-  };
-
-  const logout = () => {
-    localStorage.removeItem('token');
-    setToken(null);
-    setUser(null);
-  };
-
-  return (
-    <AuthContext.Provider value={{ user, token, login, register, logout }}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
-
-const useAuth = () => useContext(AuthContext);
-
-// Cart Context
-const CartContext = createContext();
-
-const CartProvider = ({ children }) => {
-  const [cartItems, setCartItems] = useState([]);
-  const { token } = useAuth();
-
-  const fetchCart = async () => {
-    if (!token) return;
-    
-    try {
-      const response = await fetch(`${API_BASE}/cart`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setCartItems(data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch cart:', error);
-    }
-  };
-
-  const addToCart = async (productId, quantity = 1) => {
-    if (!token) return false;
-
-    try {
-      const response = await fetch(`${API_BASE}/cart/add`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ product_id: productId, quantity })
-      });
-
-      if (response.ok) {
-        fetchCart();
-        return true;
-      }
-    } catch (error) {
-      console.error('Failed to add to cart:', error);
-    }
-    return false;
-  };
-
-  const removeFromCart = async (itemId) => {
-    try {
-      const response = await fetch(`${API_BASE}/cart/${itemId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      if (response.ok) {
-        fetchCart();
-      }
-    } catch (error) {
-      console.error('Failed to remove from cart:', error);
-    }
-  };
-
-  const clearCart = () => {
-    setCartItems([]);
-  };
-
-  useEffect(() => {
-    fetchCart();
-  }, [token]);
-
-  return (
-    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, clearCart, fetchCart }}>
-      {children}
-    </CartContext.Provider>
-  );
-};
-
-const useCart = () => useContext(CartContext);
-
-// Components
-const Header = () => {
-  const { user, logout } = useAuth();
-  const { cartItems } = useCart();
-
-  return (
-    <header className="header">
-      <div className="container">
-        <Link to="/" className="logo">E-Shop</Link>
-        
-        <nav className="nav">
-          <Link to="/products">Products</Link>
-          {user ? (
-            <>
-              <Link to="/cart" className="cart-link">
-                Cart ({cartItems.length})
-              </Link>
-              <Link to="/orders">Orders</Link>
-              <Link to="/profile">Profile</Link>
-              <button onClick={logout} className="btn btn-outline">Logout</button>
-            </>
-          ) : (
-            <>
-              <Link to="/login">Login</Link>
-              <Link to="/register">Register</Link>
-            </>
-          )}
-        </nav>
-      </div>
-    </header>
-  );
-};
-
+// Page Components
 const Home = () => {
   const [featuredProducts, setFeaturedProducts] = useState([]);
 
@@ -283,11 +109,7 @@ const Products = () => {
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('');
 
-  useEffect(() => {
-    fetchProducts();
-  }, [selectedCategory]);
-
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
     try {
       const url = selectedCategory 
         ? `${API_BASE}/products?category=${selectedCategory}`
@@ -303,7 +125,11 @@ const Products = () => {
     } catch (error) {
       console.error('Failed to fetch products:', error);
     }
-  };
+  }, [selectedCategory]);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
 
   return (
     <div className="products">
@@ -453,7 +279,6 @@ const CheckoutForm = () => {
         });
 
         if (orderResponse.ok) {
-          const orderData = await orderResponse.json();
           clearCart();
           alert('Order placed successfully!');
           navigate('/orders');
@@ -552,7 +377,7 @@ const CheckoutForm = () => {
               disabled={!stripe || processing}
               className="btn btn-primary"
             >
-              {processing ? 'Processing...' : `Pay ${total.toFixed(2)}`}
+              {processing ? 'Processing...' : `Pay $${total.toFixed(2)}`}
             </button>
           </form>
         </div>
@@ -712,11 +537,7 @@ const Orders = () => {
   const [orders, setOrders] = useState([]);
   const { token } = useAuth();
 
-  useEffect(() => {
-    fetchOrders();
-  }, []);
-
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     try {
       const response = await fetch(`${API_BASE}/orders`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -728,7 +549,11 @@ const Orders = () => {
     } catch (error) {
       console.error('Failed to fetch orders:', error);
     }
-  };
+  }, [token]);
+
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
 
   return (
     <div className="orders">
@@ -770,42 +595,17 @@ const Orders = () => {
   );
 };
 
-const Profile = () => {
-  const { user } = useAuth();
-
-  return (
-    <div className="profile">
-      <div className="container">
-        <h1>My Profile</h1>
-        <div className="profile-info">
-          <div className="info-group">
-            <label>Username:</label>
-            <span>{user?.username}</span>
-          </div>
-          <div className="info-group">
-            <label>Email:</label>
-            <span>{user?.email}</span>
-          </div>
-          <div className="info-group">
-            <label>Full Name:</label>
-            <span>{user?.full_name}</span>
-          </div>
-          <div className="info-group">
-            <label>Address:</label>
-            <span>{user?.address || 'Not provided'}</span>
-          </div>
-          <div className="info-group">
-            <label>Phone:</label>
-            <span>{user?.phone || 'Not provided'}</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 const PrivateRoute = ({ children }) => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+  
+  if (loading) {
+    return (
+      <div className="container" style={{ textAlign: 'center', padding: '3rem' }}>
+        <p>Loading...</p>
+      </div>
+    );
+  }
+  
   return user ? children : <Navigate to="/login" />;
 };
 
@@ -823,6 +623,8 @@ const App = () => {
                 <Route path="/products" element={<Products />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+                
+                {/* Regular User Routes */}
                 <Route 
                   path="/cart" 
                   element={
@@ -853,6 +655,40 @@ const App = () => {
                     <PrivateRoute>
                       <Profile />
                     </PrivateRoute>
+                  } 
+                />
+
+                {/* Admin Routes */}
+                <Route 
+                  path="/admin/dashboard" 
+                  element={
+                    <AdminRoute>
+                      <AdminDashboard />
+                    </AdminRoute>
+                  } 
+                />
+                <Route 
+                  path="/admin/orders" 
+                  element={
+                    <AdminRoute>
+                      <AdminOrders />
+                    </AdminRoute>
+                  } 
+                />
+                <Route 
+                  path="/admin/users" 
+                  element={
+                    <AdminRoute>
+                      <AdminUsers />
+                    </AdminRoute>
+                  } 
+                />
+                <Route 
+                  path="/admin/products" 
+                  element={
+                    <AdminRoute>
+                      <AdminProducts />
+                    </AdminRoute>
                   } 
                 />
               </Routes>

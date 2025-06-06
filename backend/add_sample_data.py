@@ -1,6 +1,7 @@
 import asyncio
 import motor.motor_asyncio
 from datetime import datetime
+import bcrypt
 
 # MongoDB connection
 MONGODB_URL = "mongodb+srv://razvanmare:s6gYa6cU7Fj59Ssk@products.tijjxg2.mongodb.net/?retryWrites=true&w=majority&appName=Products"
@@ -167,17 +168,21 @@ async def add_sample_products():
     for category, count in categories.items():
         print(f"  {category}: {count} products")
 
-async def add_sample_admin_user():
-    """Add a sample admin user for testing"""
-    import bcrypt
+async def create_admin_user():
+    """Create admin user if it doesn't exist"""
     
     # Check if admin already exists
     existing_admin = await db.users.find_one({"email": "admin@eshop.com"})
     if existing_admin:
-        print("⚠️  Admin user already exists")
+        # Update existing user to be admin
+        await db.users.update_one(
+            {"email": "admin@eshop.com"},
+            {"$set": {"is_admin": True}}
+        )
+        print("✅ Updated existing user to admin status")
         return
     
-    # Hash password
+    # Create new admin user
     password = "admin123"
     hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     
@@ -193,7 +198,38 @@ async def add_sample_admin_user():
     }
     
     result = await db.users.insert_one(admin_user)
-    print(f"✅ Created admin user: admin@eshop.com / {password}")
+    print(f"✅ Created admin user:")
+    print(f"   Email: admin@eshop.com")
+    print(f"   Password: {password}")
+    print(f"   ID: {str(result.inserted_id)}")
+
+async def create_sample_customer():
+    """Create a sample customer for testing"""
+    
+    # Check if customer already exists
+    existing_customer = await db.users.find_one({"email": "customer@example.com"})
+    if existing_customer:
+        print("⚠️ Sample customer already exists")
+        return
+    
+    password = "customer123"
+    hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    
+    customer_user = {
+        "username": "customer",
+        "email": "customer@example.com",
+        "password": hashed_password,
+        "full_name": "John Customer",
+        "address": "456 Customer Ave, Customer City, CC 67890",
+        "phone": "+1-555-0456",
+        "is_admin": False,
+        "created_at": datetime.utcnow()
+    }
+    
+    result = await db.users.insert_one(customer_user)
+    print(f"✅ Created sample customer:")
+    print(f"   Email: customer@example.com")
+    print(f"   Password: {password}")
 
 async def create_indexes():
     """Create database indexes for better performance"""
@@ -213,13 +249,14 @@ async def create_indexes():
     # Orders indexes
     await db.orders.create_index("user_id")
     await db.orders.create_index("created_at")
+    await db.orders.create_index("status")
     
     print("✅ Database indexes created successfully")
 
 async def main():
     """Main function to set up the database"""
-    print("🚀 Setting up E-commerce database...")
-    print("=" * 50)
+    print("🚀 Setting up E-commerce database with Admin functionality...")
+    print("=" * 60)
     
     try:
         # Test connection
@@ -231,15 +268,29 @@ async def main():
         
         # Add sample data
         await add_sample_products()
-        await add_sample_admin_user()
+        await create_admin_user()
+        await create_sample_customer()
         
-        print("\n" + "=" * 50)
+        print("\n" + "=" * 60)
         print("🎉 Database setup completed successfully!")
-        print("\nYou can now:")
+        print("\n📋 Account Information:")
+        print("   👑 Admin Access:")
+        print("      Email: admin@eshop.com")
+        print("      Password: admin123")
+        print("   👤 Sample Customer:")
+        print("      Email: customer@example.com") 
+        print("      Password: customer123")
+        
+        print("\n🌐 URLs:")
+        print("   Frontend: http://localhost:3000")
+        print("   Admin Dashboard: http://localhost:3000/admin/dashboard")
+        print("   Admin Orders: http://localhost:3000/admin/orders")
+        
+        print("\n🚀 Next Steps:")
         print("1. Start the backend: python main.py")
         print("2. Start the frontend: npm start")
-        print("3. Visit http://localhost:3000")
-        print("4. Login as admin: admin@eshop.com / admin123")
+        print("3. Login as admin to access admin panel")
+        print("4. Test ordering with customer account")
         
     except Exception as e:
         print(f"❌ Error setting up database: {e}")
