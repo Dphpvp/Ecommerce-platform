@@ -2,9 +2,10 @@ import asyncio
 import motor.motor_asyncio
 from datetime import datetime
 import bcrypt
+import os
 
 # MongoDB connection
-MONGODB_URL = "mongodb+srv://razvanmare:s6gYa6cU7Fj59Ssk@products.tijjxg2.mongodb.net/?retryWrites=true&w=majority&appName=Products"
+MONGODB_URL = os.getenv("MONGODB_URL")
 client = motor.motor_asyncio.AsyncIOMotorClient(MONGODB_URL)
 db = client.ecommerce
 
