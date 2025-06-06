@@ -23,7 +23,7 @@ import AdminRoute from './components/admin/AdminRoute';
 const stripePromise = loadStripe('pk_test_51RWK32RdyxKMeI2qFdwU5mx0G8jZjt1PcOYpeCILJSwVgLsh3u23xE89kRCs0uezmScF8zCQqG8culYGXpxpScNq006cWwuoGS');
 
 // API base URL
-const API_BASE = 'https://ecommerce-platform-nizy.onrender.com/api' || 'http://localhost:8000/api';
+const API_BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api';
 
 // Page Components
 const Home = () => {
