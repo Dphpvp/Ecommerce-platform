@@ -111,7 +111,7 @@ async def get_all_orders(admin_user: dict = Depends(get_admin_user)):
     async for order in orders_cursor:
         order["_id"] = str(order["_id"])
         orders.append(order)
-    return orders
+    return {"orders": orders}  
 
 @router.put("/orders/{order_id}/status")
 async def update_order_status(order_id: str, status_data: dict, admin_user: dict = Depends(get_admin_user)):
