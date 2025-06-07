@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api';
@@ -10,21 +10,21 @@ export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
   const { token } = useAuth();
 
-  const fetchCart = async () => {
-    if (!token) return;
-    
-    try {
-      const response = await fetch(`${API_BASE}/cart`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setCartItems(data);
-      }
-    } catch (error) {
-      console.error('Failed to fetch cart:', error);
+const fetchCart = useCallback(async () => {
+  if (!token) return;
+  
+  try {
+    const response = await fetch(`${API_BASE}/cart`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    if (response.ok) {
+      const data = await response.json();
+      setCartItems(data);
     }
-  };
+  } catch (error) {
+    console.error('Failed to fetch cart:', error);
+  } 
+}, [token]); // Add missing closing parenthesis and dependency array
 
   const addToCart = async (productId, quantity = 1) => {
     if (!token) return false;
@@ -49,28 +49,28 @@ export const CartProvider = ({ children }) => {
     return false;
   };
 
-  const removeFromCart = async (itemId) => {
-    try {
-      const response = await fetch(`${API_BASE}/cart/${itemId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      });
+ const removeFromCart = async (itemId) => {
+  try {
+    const response = await fetch(`${API_BASE}/cart/${itemId}`, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    });
 
-      if (response.ok) {
-        fetchCart();
-      }
-    } catch (error) {
-      console.error('Failed to remove from cart:', error);
+    if (response.ok) {
+      fetchCart();
     }
-  };
+  } catch (error) {
+    console.error('Failed to remove from cart:', error);
+  }
+};
 
-  const clearCart = () => {
-    setCartItems([]);
-  };
+const clearCart = () => {
+  setCartItems([]);
+};
 
-  useEffect(() => {
-    fetchCart();
-  }, [token]);
+useEffect(() => {
+  fetchCart();
+}, [fetchCart]); // Changed from [token] to [fetchCart]
 
   return (
     <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, clearCart, fetchCart }}>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import OrderManagementCard from './OrderManagementCard';
 
-const API_BASE = 'http://localhost:8000/api';
+const API_BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api';
 
 const AdminOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -105,7 +105,7 @@ const AdminOrders = () => {
 
         {orders.length === 0 && (
           <div className="no-orders">
-            <p>No orders found for the selected filter.</p>
+            <p>No orders found for the selected filters.</p>
           </div>
         )}
       </div>

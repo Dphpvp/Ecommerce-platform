@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import ProductForm from './ProductForm';
 
-const API_BASE = 'http://localhost:8000/api';
+const API_BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api';
 
 const AdminProducts = () => {
   const [products, setProducts] = useState([]);
@@ -64,7 +64,7 @@ const AdminProducts = () => {
             onClick={() => setShowAddForm(true)}
             className="btn btn-primary"
           >
-            Add New Product
+            Add New Products
           </button>
         </div>
 
