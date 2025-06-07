@@ -13,13 +13,11 @@ STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
 # Initialize FastAPI
 app = FastAPI(title="E-commerce API")
 
+
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "https://ecommerce-platform-snowy.vercel.app",
-    ],
+    allow_origins=["*"],  # Temporary - change back after testing
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

@@ -14,6 +14,7 @@ async def get_admin_user(current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=403, detail="Admin access required")
     return current_user
 
+
 # Dashboard endpoint
 @router.get("/dashboard")
 async def get_dashboard_stats(admin_user: dict = Depends(get_admin_user)):
