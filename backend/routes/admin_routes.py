@@ -138,8 +138,11 @@ async def get_all_users(admin_user: dict = Depends(get_admin_user)):
     users = []
     async for user in cursor:
         user["_id"] = str(user["_id"])
+        # Add order count
+        order_count = await db.orders.count_documents({"user_id": str(user["_id"])})
+        user["order_count"] = order_count
         users.append(user)
-    return users
+    return {"users": users}
 
 @router.put("/users/{user_id}/admin")
 async def toggle_admin_status(user_id: str, admin_data: dict, admin_user: dict = Depends(get_admin_user)):
@@ -165,3 +168,12 @@ async def delete_user(user_id: str, admin_user: dict = Depends(get_admin_user)):
         raise HTTPException(status_code=404, detail="User not found")
     
     return {"message": "User deleted"}
+
+@router.get("/products")
+async def get_admin_products(admin_user: dict = Depends(get_admin_user)):
+    cursor = db.products.find({})
+    products = []
+    async for product in cursor:
+        product["_id"] = str(product["_id"])
+        products.append(product)
+    return {"products": products}
