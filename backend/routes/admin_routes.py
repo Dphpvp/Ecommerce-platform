@@ -3,10 +3,8 @@ from typing import List
 from bson import ObjectId
 import motor.motor_asyncio
 from datetime import datetime
-from dependencies import get_current_user, db, Product
-
-# Import from main.py
-from main import get_current_user, db, Product
+from dependencies import get_current_user, db
+from api import Product
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
