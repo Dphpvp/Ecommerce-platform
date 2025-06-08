@@ -13,18 +13,31 @@ const Header = () => {
     <header className="header">
       <div className="container">
         <Link to="/" className="logo">
-          <img src="/images/logo.png" alt="Vergi Shop Logo" className="logo-img" />
+          <img
+            src="/images/logo.png"
+            alt="Vergi Shop Logo"
+            className="logo-img"
+          />
           <span className="logo-text"></span>
         </Link>
-        
+
         <nav className="nav">
           {user ? (
             <>
               {isAdmin && (
                 <>
-                  <Link to="/admin/orders" className="admin-link">Orders</Link>
-                  <Link to="/admin/users" className="admin-link">Users</Link>
-                  <Link to="/admin/products" className="admin-link">Products</Link>
+                  <Link to="/admin/categories-list" className="admin-link">
+                    Categories
+                  </Link>
+                  <Link to="/admin/orders" className="admin-link">
+                    Orders
+                  </Link>
+                  <Link to="/admin/users" className="admin-link">
+                    Users
+                  </Link>
+                  <Link to="/admin/products" className="admin-link">
+                    Products
+                  </Link>
                 </>
               )}
               {!isAdmin && (
@@ -43,7 +56,11 @@ const Header = () => {
               ) : (
                 <Link to="/profile">Profile</Link>
               )}
-              <button onClick={logout} className="btn btn-outline user-logout-btn" title="Logout">
+              <button
+                onClick={logout}
+                className="btn btn-outline user-logout-btn"
+                title="Logout"
+              >
                 {user.username}
               </button>
             </>

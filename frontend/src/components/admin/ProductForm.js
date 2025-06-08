@@ -91,102 +91,111 @@ const ProductForm = ({
 
   return (
     <div className="product-form-overlay">
-      <div className="product-form">
-        <h3>{isEdit ? "Edit Product" : "Add New Product"}</h3>
-        <form onSubmit={handleSubmit}>
-          <label htmlFor="name">Product Name:</label>
-          <input
-            type="text"
-            name="name"
-            placeholder="Product Name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-          />
-          <label htmlFor="description">Description:</label>
-          <textarea
-            name="description"
-            placeholder="Product Description"
-            value={formData.description}
-            onChange={handleChange}
-            required
-          />
-          <label htmlFor="price">Price:</label>
-          <input
-            type="number"
-            step="0.01"
-            name="price"
-            placeholder="Price"
-            value={formData.price}
-            onChange={handleChange}
-            required
-          />
+      <div className="product-form-container">
+        <div className="product-form">
+          <h3>{isEdit ? "Edit Product" : "Add New Product"}</h3>
+          <form onSubmit={handleSubmit}>
+            <label htmlFor="name">Product Name:</label>
+            <input
+              type="text"
+              name="name"
+              placeholder="Product Name"
+              value={formData.name}
+              onChange={handleChange}
+              required
+            />
+            <label htmlFor="description">Description:</label>
+            <textarea
+              name="description"
+              placeholder="Product Description"
+              value={formData.description}
+              onChange={handleChange}
+              required
+            />
+            <label htmlFor="price">Price:</label>
+            <input
+              type="number"
+              step="0.01"
+              name="price"
+              placeholder="Price"
+              value={formData.price}
+              onChange={handleChange}
+              required
+            />
 
-          <div className="category-section">
-            <select
-              value={categoryType}
-              onChange={handleCategoryTypeChange}
-              className="category-select"
-            >
-              <option value="existing">Select Existing Category</option>
-              <option value="new">Add New Category</option>
-            </select>
-
-            {categoryType === "existing" ? (
+            <div className="category-section">
               <select
-                value={formData.category}
-                onChange={handleCategoryChange}
-                required
+                value={categoryType}
+                onChange={handleCategoryTypeChange}
                 className="category-select"
               >
-                <option value="">Choose Category</option>
-                {categories.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
+                <option value="existing">Select Existing Category</option>
+                <option value="new">Add New Category</option>
               </select>
-            ) : (
-              <input
-                type="text"
-                placeholder="Enter new category"
-                value={customCategory}
-                onChange={handleCategoryChange}
-                required
-              />
-            )}
-          </div>
-          <label htmlFor="image_url">Image URL:</label>
-          <input
-            type="url"
-            name="image_url"
-            placeholder="Image URL"
-            value={formData.image_url}
-            onChange={handleChange}
-            required
-          />
-          <label htmlFor="stock">Stock Quantity:</label>
-          <input
-            type="number"
-            name="stock"
-            placeholder="Stock Quantity"
-            value={formData.stock}
-            onChange={handleChange}
-            required
-          />
-          <div className="form-actions">
-            <button type="submit" className="btn btn-primary">
-              {isEdit ? "Update Product" : "Add Product"}
-            </button>
-            <button
-              type="button"
-              onClick={onCancel}
-              className="btn btn-outline"
-            >
-              Cancel
-            </button>
-          </div>
-        </form>
+
+              {categoryType === "existing" ? (
+                <select
+                  value={formData.category}
+                  onChange={handleCategoryChange}
+                  required
+                  className="category-select"
+                >
+                  <option value="">Choose Category</option>
+                  {categories.map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  type="text"
+                  placeholder="Enter new category"
+                  value={customCategory}
+                  onChange={handleCategoryChange}
+                  required
+                />
+              )}
+            </div>
+            <label htmlFor="image_url">Image URL:</label>
+            <input
+              type="url"
+              name="image_url"
+              placeholder="Image URL"
+              value={formData.image_url}
+              onChange={handleChange}
+              required
+            />
+            <label htmlFor="stock">Stock Quantity:</label>
+            <input
+              type="number"
+              name="stock"
+              placeholder="Stock Quantity"
+              value={formData.stock}
+              onChange={handleChange}
+              required
+            />
+            <div className="form-actions">
+              <button type="submit" className="btn btn-primary">
+                {isEdit ? "Update Product" : "Add Product"}
+              </button>
+              <button
+                type="button"
+                onClick={onCancel}
+                className="btn btn-outline"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+        <div className="product-image-preview">
+          {formData.image_url ? (
+            <img src={formData.image_url} alt="Product Preview" />
+          ) : (
+            <p>No image preview</p>
+          )}
+        </div>
       </div>
     </div>
   );
