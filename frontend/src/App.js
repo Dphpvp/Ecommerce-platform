@@ -1,4 +1,4 @@
-import React, { createContext, useContext } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
@@ -6,7 +6,7 @@ import './App.css';
 
 import { AuthProvider } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
-import { useToast, ToastContainer } from './components/toast';
+import { ToastProvider } from './components/toast';
 
 import Header from './components/header';
 import PrivateRoute from './components/PrivateRoute';
@@ -27,21 +27,6 @@ import AdminProducts from './components/admin/AdminProducts';
 import AdminRoute from './components/admin/AdminRoute';
 
 const stripePromise = loadStripe('pk_test_51RWK32RdyxKMeI2qFdwU5mx0G8jZjt1PcOYpeCILJSwVgLsh3u23xE89kRCs0uezmScF8zCQqG8culYGXpxpScNq006cWwuoGS');
-
-// Toast Context
-const ToastContext = createContext();
-export const useToastContext = () => useContext(ToastContext);
-
-const ToastProvider = ({ children }) => {
-  const { toasts, showToast, removeToast } = useToast();
-  
-  return (
-    <ToastContext.Provider value={{ showToast }}>
-      {children}
-      <ToastContainer toasts={toasts} removeToast={removeToast} />
-    </ToastContext.Provider>
-  );
-};
 
 const App = () => {
   return (

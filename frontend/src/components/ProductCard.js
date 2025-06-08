@@ -1,6 +1,7 @@
 import React from 'react';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useToastContext } from '../toast';
 
 const ProductCard = ({ product }) => {
   const { addToCart } = useCart();
