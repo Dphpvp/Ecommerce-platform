@@ -15,18 +15,21 @@ const AdminCategories = () => {
   }, []);
 
   const fetchCategories = async () => {
-    try {
-      const response = await fetch(`${API_BASE}/admin/categories`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const data = await response.json();
-      setCategories(data.categories);
-    } catch (error) {
-      console.error('Failed to fetch categories:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  console.log('Fetching categories...');
+  try {
+    const response = await fetch(`${API_BASE}/admin/categories`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    console.log('Response status:', response.status);
+    const data = await response.json();
+    console.log('Categories data:', data);
+    setCategories(data.categories || []);
+  } catch (error) {
+    console.error('Failed to fetch categories:', error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   if (loading) return <div className="container"><p>Loading categories...</p></div>;
 
@@ -48,8 +51,5 @@ const AdminCategories = () => {
   );
 };
 
-console.log('Response status:', response.status);
-const data = await response.json();
-console.log('Categories data:', data);
 
 export default AdminCategories;
