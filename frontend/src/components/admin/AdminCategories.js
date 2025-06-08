@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import './admincategories.css';
+
+
+const API_BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api';
 
 const AdminCategories = () => {
   const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
   const { token } = useAuth();
 
   useEffect(() => {
@@ -10,12 +15,20 @@ const AdminCategories = () => {
   }, []);
 
   const fetchCategories = async () => {
-    const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/admin/categories`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    const data = await response.json();
-    setCategories(data.categories);
+    try {
+      const response = await fetch(`${API_BASE}/admin/categories`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await response.json();
+      setCategories(data.categories);
+    } catch (error) {
+      console.error('Failed to fetch categories:', error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  if (loading) return <div className="container"><p>Loading categories...</p></div>;
 
   return (
     <div className="admin-categories">
