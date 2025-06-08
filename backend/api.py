@@ -7,6 +7,9 @@ import bcrypt
 import stripe
 from bson import ObjectId
 import os
+from google.oauth2 import id_token
+from google.auth.transport import requests
+import re
 
 # Import your database connection
 from database.connection import db
@@ -17,6 +20,7 @@ router = APIRouter()
 # Configuration
 JWT_SECRET = os.getenv("JWT_SECRET", "your-jwt-secret-key")
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 stripe.api_key = STRIPE_SECRET_KEY
 
 # Pydantic models
@@ -29,8 +33,11 @@ class User(BaseModel):
     phone: Optional[str] = None
 
 class UserLogin(BaseModel):
-    email: EmailStr
+    identifier: str  # Can be email, username, or phone
     password: str
+
+class GoogleLogin(BaseModel):
+    token: str
 
 class Product(BaseModel):
     name: str
@@ -62,6 +69,26 @@ def create_jwt_token(user_id: str) -> str:
     }
     return jwt.encode(payload, JWT_SECRET, algorithm="HS256")
 
+def get_identifier_type(identifier: str):
+    email_pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    phone_pattern = r'^[\+]?[1-9][\d]{3,14}$'
+    
+    if re.match(email_pattern, identifier):
+        return "email"
+    elif re.match(phone_pattern, identifier.replace(" ", "").replace("-", "")):
+        return "phone"
+    else:
+        return "username"
+
+async def get_next_order_number():
+    counter = await db.counters.find_one_and_update(
+        {"_id": "order_number"},
+        {"$inc": {"value": 1}},
+        upsert=True,
+        return_document=True
+    )
+    return counter["value"]
+
 # Auth routes
 @router.post("/auth/register")
 async def register(user: User):
@@ -88,7 +115,17 @@ async def register(user: User):
 
 @router.post("/auth/login")
 async def login(user_login: UserLogin):
-    user = await db.users.find_one({"email": user_login.email})
+    identifier_type = get_identifier_type(user_login.identifier)
+    
+    # Create query based on identifier type
+    if identifier_type == "email":
+        query = {"email": user_login.identifier}
+    elif identifier_type == "phone":
+        query = {"phone": user_login.identifier}
+    else:
+        query = {"username": user_login.identifier}
+    
+    user = await db.users.find_one(query)
     if not user or not verify_password(user_login.password, user["password"]):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
@@ -103,6 +140,77 @@ async def login(user_login: UserLogin):
             "is_admin": user.get("is_admin", False)
         }
     }
+
+@router.post("/auth/google")
+async def google_login(google_login: GoogleLogin):
+    try:
+        # Verify the Google token
+        idinfo = id_token.verify_oauth2_token(
+            google_login.token, requests.Request(), GOOGLE_CLIENT_ID
+        )
+        
+        if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
+            raise ValueError('Wrong issuer.')
+        
+        email = idinfo['email']
+        name = idinfo['name']
+        google_id = idinfo['sub']
+        
+        # Check if user exists
+        user = await db.users.find_one({"email": email})
+        
+        if user:
+            # User exists, log them in
+            token = create_jwt_token(str(user["_id"]))
+            return {
+                "token": token,
+                "user": {
+                    "id": str(user["_id"]),
+                    "email": user["email"],
+                    "username": user["username"],
+                    "full_name": user.get("full_name", ""),
+                    "is_admin": user.get("is_admin", False)
+                }
+            }
+        else:
+            # Create new user
+            username = email.split('@')[0]  # Use email prefix as username
+            
+            # Ensure username is unique
+            counter = 1
+            original_username = username
+            while await db.users.find_one({"username": username}):
+                username = f"{original_username}{counter}"
+                counter += 1
+            
+            user_data = {
+                "username": username,
+                "email": email,
+                "password": "",  # No password for Google users
+                "full_name": name,
+                "google_id": google_id,
+                "is_admin": False,
+                "created_at": datetime.now(timezone.utc)
+            }
+            
+            result = await db.users.insert_one(user_data)
+            token = create_jwt_token(str(result.inserted_id))
+            
+            return {
+                "token": token,
+                "user": {
+                    "id": str(result.inserted_id),
+                    "email": email,
+                    "username": username,
+                    "full_name": name,
+                    "is_admin": False
+                }
+            }
+            
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail="Invalid Google token")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/auth/me")
 async def get_me(current_user: dict = Depends(get_current_user)):
@@ -244,7 +352,11 @@ async def create_order(order_data: dict, current_user: dict = Depends(get_curren
     
     total = sum(item["product"]["price"] * item["quantity"] for item in cart_items)
     
+    # Get next order number
+    order_number = await get_next_order_number()
+    
     order = {
+        "order_number": f"{order_number:05d}",  # Format as 00001, 00002, etc.
         "user_id": user_id,
         "items": cart_items,
         "total_amount": total,
@@ -267,7 +379,7 @@ async def create_order(order_data: dict, current_user: dict = Depends(get_curren
             {"$inc": {"stock": -item["quantity"]}}
         )
     
-    return {"message": "Order created successfully", "order_id": order_id}
+    return {"message": "Order created successfully", "order_id": order_id, "order_number": order["order_number"]}
 
 @router.get("/orders")
 async def get_orders(current_user: dict = Depends(get_current_user)):

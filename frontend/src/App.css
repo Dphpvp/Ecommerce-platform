@@ -411,6 +411,46 @@ body {
   text-decoration: underline;
 }
 
+/* Error message */
+.error-message {
+  background: #f8d7da;
+  color: #721c24;
+  padding: 0.75rem;
+  border-radius: 5px;
+  margin-bottom: 1rem;
+  text-align: center;
+  border: 1px solid #f5c6cb;
+}
+
+/* Divider for OAuth */
+.divider {
+  display: flex;
+  align-items: center;
+  margin: 1.5rem 0;
+  text-align: center;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #ddd;
+}
+
+.divider span {
+  padding: 0 1rem;
+  color: #666;
+  font-weight: 500;
+}
+
+/* Google login */
+.google-login {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+}
+
 /* Orders */
 .no-orders {
   text-align: center;
@@ -520,76 +560,7 @@ body {
   color: #007bff;
 }
 
-/* Responsive design */
-@media (max-width: 768px) {
-  .header .container {
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .nav {
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .hero h1 {
-    font-size: 2rem;
-  }
-
-  .product-grid {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 1rem;
-  }
-
-  .products-header {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: stretch;
-  }
-
-  .checkout-content {
-    grid-template-columns: 1fr;
-    gap: 2rem;
-  }
-
-  .cart-item {
-    flex-direction: column;
-    text-align: center;
-  }
-
-  .cart-item img {
-    margin: 0 0 1rem 0;
-  }
-
-  .auth-form {
-    margin: 1rem;
-    padding: 2rem;
-  }
-}
-
-@media (max-width: 480px) {
-  .container {
-    padding: 0 10px;
-  }
-
-  .hero {
-    padding: 2rem 0;
-  }
-
-  .hero h1 {
-    font-size: 1.8rem;
-  }
-
-  .product-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .btn {
-    padding: 0.6rem 1rem;
-    font-size: 0.9rem;
-  }
-
-  /* Admin Panel Access in Profile */
+/* Admin Panel Access in Profile */
 .admin-panel-access {
   background: linear-gradient(135deg, #dc3545, #c82333);
   color: white;
@@ -665,8 +636,52 @@ body {
   margin-left: 0.5rem;
 }
 
-/* Responsive design for admin buttons */
+/* Responsive design */
 @media (max-width: 768px) {
+  .header .container {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .nav {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .hero h1 {
+    font-size: 2rem;
+  }
+
+  .product-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 1rem;
+  }
+
+  .products-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: stretch;
+  }
+
+  .checkout-content {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+
+  .cart-item {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .cart-item img {
+    margin: 0 0 1rem 0;
+  }
+
+  .auth-form {
+    margin: 1rem;
+    padding: 2rem;
+  }
+
   .admin-buttons {
     grid-template-columns: 1fr;
     gap: 0.75rem;
@@ -683,6 +698,27 @@ body {
 }
 
 @media (max-width: 480px) {
+  .container {
+    padding: 0 10px;
+  }
+
+  .hero {
+    padding: 2rem 0;
+  }
+
+  .hero h1 {
+    font-size: 1.8rem;
+  }
+
+  .product-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .btn {
+    padding: 0.6rem 1rem;
+    font-size: 0.9rem;
+  }
+
   .admin-panel-access {
     padding: 1rem;
   }
@@ -694,5 +730,4 @@ body {
   .admin-panel-access p {
     font-size: 1rem;
   }
-}
 }

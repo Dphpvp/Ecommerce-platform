@@ -96,11 +96,10 @@ async def delete_product(product_id: str, admin_user: dict = Depends(get_admin_u
     return {"message": "Product deleted"}
 
 # Order management
-# Order management - FIXED VERSION
+
 @router.get("/orders")
 async def get_all_orders(admin_user: dict = Depends(get_admin_user)):
     orders_cursor = db.orders.aggregate([
-        # Convert user_id string to ObjectId for lookup
         {"$addFields": {"user_obj_id": {"$toObjectId": "$user_id"}}},
         {"$lookup": {
             "from": "users", 
@@ -112,6 +111,7 @@ async def get_all_orders(admin_user: dict = Depends(get_admin_user)):
         {"$sort": {"created_at": -1}},
         {"$project": {
             "_id": 1, 
+            "order_number": 1,  # Include order_number
             "total_amount": 1, 
             "status": 1, 
             "created_at": 1, 
@@ -129,7 +129,9 @@ async def get_all_orders(admin_user: dict = Depends(get_admin_user)):
     async for order in orders_cursor:
         order["_id"] = str(order["_id"])
         orders.append(order)
-    return {"orders": orders}  # Match frontend expectation
+    return {"orders": orders}
+
+# Order status update
 @router.put("/orders/{order_id}/status")
 async def update_order_status(order_id: str, status_data: dict, admin_user: dict = Depends(get_admin_user)):
     valid_statuses = ["pending", "processing", "shipped", "delivered", "cancelled"]
@@ -155,7 +157,6 @@ async def get_all_users(admin_user: dict = Depends(get_admin_user)):
     users = []
     async for user in cursor:
         user["_id"] = str(user["_id"])
-        # Add order count
         order_count = await db.orders.count_documents({"user_id": str(user["_id"])})
         user["order_count"] = order_count
         users.append(user)
