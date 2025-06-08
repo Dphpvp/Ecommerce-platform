@@ -96,24 +96,40 @@ async def delete_product(product_id: str, admin_user: dict = Depends(get_admin_u
     return {"message": "Product deleted"}
 
 # Order management
+# Order management - FIXED VERSION
 @router.get("/orders")
 async def get_all_orders(admin_user: dict = Depends(get_admin_user)):
     orders_cursor = db.orders.aggregate([
-        {"$lookup": {"from": "users", "localField": "user_id", "foreignField": "_id", "as": "user"}},
-        {"$unwind": "$user"},
+        # Convert user_id string to ObjectId for lookup
+        {"$addFields": {"user_obj_id": {"$toObjectId": "$user_id"}}},
+        {"$lookup": {
+            "from": "users", 
+            "localField": "user_obj_id", 
+            "foreignField": "_id", 
+            "as": "user_info"
+        }},
+        {"$unwind": "$user_info"},
         {"$sort": {"created_at": -1}},
         {"$project": {
-            "_id": 1, "total_amount": 1, "status": 1, "created_at": 1, "items": 1,
-            "customer_name": "$user.full_name", "customer_email": "$user.email",
-            "shipping_address": 1
+            "_id": 1, 
+            "total_amount": 1, 
+            "status": 1, 
+            "created_at": 1, 
+            "items": 1,
+            "shipping_address": 1,
+            "user_info": {
+                "full_name": "$user_info.full_name",
+                "email": "$user_info.email", 
+                "username": "$user_info.username",
+                "phone": "$user_info.phone"
+            }
         }}
     ])
     orders = []
     async for order in orders_cursor:
         order["_id"] = str(order["_id"])
         orders.append(order)
-    return {"orders": orders}  
-
+    return {"orders": orders}  # Match frontend expectation
 @router.put("/orders/{order_id}/status")
 async def update_order_status(order_id: str, status_data: dict, admin_user: dict = Depends(get_admin_user)):
     valid_statuses = ["pending", "processing", "shipped", "delivered", "cancelled"]
