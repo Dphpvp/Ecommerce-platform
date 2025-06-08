@@ -16,6 +16,7 @@ const CategoryList = () => {
       const response = await fetch(`${API_BASE}/admin/categories`);
       if (!response.ok) throw new Error("Failed to fetch categories");
       const data = await response.json();
+      console.log("Fetched data:", data);
       const uniqueCategories = [...new Set(data.map((p) => p.category))];
       console.log("Fetched categories:", uniqueCategories);
       
