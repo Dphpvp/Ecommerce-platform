@@ -13,13 +13,13 @@ const CategoryList = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch(`${API_BASE}/products`);
-      if (!response.ok) throw new Error('Failed to fetch categories');
+      const response = await fetch(`${API_BASE}/admin/categories`);
+      if (!response.ok) throw new Error("Failed to fetch categories");
       const data = await response.json();
-      const uniqueCategories = [...new Set(data.map(p => p.category))];
+      const uniqueCategories = [...new Set(data.map((p) => p.category))];
       setCategories(uniqueCategories);
     } catch (error) {
-      console.error('Error fetching categories:', error);
+      console.error("Error fetching categories:", error);
     } finally {
       setLoading(false);
     }
@@ -31,10 +31,11 @@ const CategoryList = () => {
     <div className="category-list">
       <h2>Product Categories</h2>
       <ul>
-        {categories.map(category => (
+        {categories.map((category) => (
           <li key={category}>{category}</li>
         ))}
       </ul>
+      {categories.length === 0 && <p>No categories found.</p>}
     </div>
   );
 };
