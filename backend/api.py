@@ -406,5 +406,5 @@ async def get_order(order_id: str, current_user: dict = Depends(get_current_user
 
 @router.get("/admin/categories")
 async def get_categories():
-    categories = await db.products.distinct("categories")
+    categories = await db.categories.distinct("categories")
     return {"categories": categories}
