@@ -14,7 +14,7 @@ const Header = () => {
       <div className="container">
         <Link to="/" className="logo">
           <img src="/images/logo.png" alt="Vergi Shop Logo" className="logo-img" />
-          Vergi Shop
+          <span className="logo-text"></span>
         </Link>
         
         <nav className="nav">
