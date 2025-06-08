@@ -48,4 +48,8 @@ const AdminCategories = () => {
   );
 };
 
+console.log('Response status:', response.status);
+const data = await response.json();
+console.log('Categories data:', data);
+
 export default AdminCategories;
