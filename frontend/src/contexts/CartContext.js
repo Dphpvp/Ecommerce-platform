@@ -70,7 +70,7 @@ const clearCart = () => {
 
 useEffect(() => {
   fetchCart();
-}, [fetchCart]); // Changed from [token] to [fetchCart]
+}, [fetchCart]); 
 
   return (
     <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, clearCart, fetchCart }}>

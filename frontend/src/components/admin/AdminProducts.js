@@ -1,18 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useToastContext } from '../toast';
 import ProductForm from './ProductForm';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api';
 
 const AdminProducts = () => {
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editingProduct, setEditingProduct] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const { token } = useAuth();
+  const { showToast } = useToastContext();
 
   useEffect(() => {
     fetchProducts();
+    fetchCategories();
   }, []);
 
   const fetchProducts = async () => {
@@ -32,6 +36,17 @@ const AdminProducts = () => {
     }
   };
 
+  const fetchCategories = async () => {
+    try {
+      const response = await fetch(`${API_BASE}/products`);
+      const data = await response.json();
+      const uniqueCategories = [...new Set(data.map(p => p.category))];
+      setCategories(uniqueCategories);
+    } catch (error) {
+      console.error('Failed to fetch categories:', error);
+    }
+  };
+
   const deleteProduct = async (productId) => {
     if (!window.confirm('Are you sure you want to delete this product?')) return;
 
@@ -42,14 +57,15 @@ const AdminProducts = () => {
       });
 
       if (response.ok) {
-        alert('Product deleted successfully');
+        showToast('Product deleted successfully', 'success');
         fetchProducts();
+        fetchCategories();
       } else {
-        alert('Failed to delete product');
+        showToast('Failed to delete product', 'error');
       }
     } catch (error) {
       console.error('Failed to delete product:', error);
-      alert('Failed to delete product');
+      showToast('Failed to delete product', 'error');
     }
   };
 
@@ -64,15 +80,17 @@ const AdminProducts = () => {
             onClick={() => setShowAddForm(true)}
             className="btn btn-primary"
           >
-            Add New Products
+            Add New Product
           </button>
         </div>
 
         {showAddForm && (
           <ProductForm 
+            categories={categories}
             onSave={() => {
               setShowAddForm(false);
               fetchProducts();
+              fetchCategories();
             }}
             onCancel={() => setShowAddForm(false)}
             token={token}
@@ -82,9 +100,11 @@ const AdminProducts = () => {
         {editingProduct && (
           <ProductForm 
             product={editingProduct}
+            categories={categories}
             onSave={() => {
               setEditingProduct(null);
               fetchProducts();
+              fetchCategories();
             }}
             onCancel={() => setEditingProduct(null)}
             token={token}

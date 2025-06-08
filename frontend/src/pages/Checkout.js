@@ -3,6 +3,7 @@ import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useToastContext } from '../components/toast';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api';
 
@@ -12,6 +13,7 @@ const Checkout = () => {
   const { cartItems, clearCart } = useCart();
   const { token } = useAuth();
   const navigate = useNavigate();
+  const { showToast } = useToastContext();
   const [processing, setProcessing] = useState(false);
   const [shippingAddress, setShippingAddress] = useState({
     street: '',
@@ -48,7 +50,7 @@ const Checkout = () => {
       });
 
       if (error) {
-        alert('Payment failed: ' + error.message);
+        showToast('Payment failed: ' + error.message, 'error');
       } else if (paymentIntent.status === 'succeeded') {
         const orderResponse = await fetch(`${API_BASE}/orders`, {
           method: 'POST',
@@ -64,15 +66,15 @@ const Checkout = () => {
 
         if (orderResponse.ok) {
           clearCart();
-          alert('Order placed successfully!');
+          showToast('Order placed successfully!', 'success');
           navigate('/orders');
         } else {
-          alert('Failed to create order');
+          showToast('Failed to create order', 'error');
         }
       }
     } catch (error) {
       console.error('Checkout error:', error);
-      alert('Checkout failed');
+      showToast('Checkout failed', 'error');
     }
 
     setProcessing(false);

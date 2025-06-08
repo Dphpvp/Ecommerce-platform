@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
+import { useToastContext } from '../toast';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api';
 
-const ProductForm = ({ product, onSave, onCancel, token, isEdit = false }) => {
+const ProductForm = ({ product, categories = [], onSave, onCancel, token, isEdit = false }) => {
+  const { showToast } = useToastContext();
+  const [categoryType, setCategoryType] = useState('existing');
+  const [customCategory, setCustomCategory] = useState('');
   const [formData, setFormData] = useState({
     name: product?.name || '',
     description: product?.description || '',
@@ -36,14 +40,14 @@ const ProductForm = ({ product, onSave, onCancel, token, isEdit = false }) => {
       });
 
       if (response.ok) {
-        alert(isEdit ? 'Product updated successfully' : 'Product added successfully');
+        showToast(isEdit ? 'Product updated successfully' : 'Product added successfully', 'success');
         onSave();
       } else {
-        alert('Failed to save product');
+        showToast('Failed to save product', 'error');
       }
     } catch (error) {
       console.error('Failed to save product:', error);
-      alert('Failed to save product');
+      showToast('Failed to save product', 'error');
     }
   };
 
@@ -52,6 +56,23 @@ const ProductForm = ({ product, onSave, onCancel, token, isEdit = false }) => {
       ...formData,
       [e.target.name]: e.target.value
     });
+  };
+
+  const handleCategoryTypeChange = (e) => {
+    setCategoryType(e.target.value);
+    if (e.target.value === 'existing') {
+      setCustomCategory('');
+      setFormData({...formData, category: ''});
+    }
+  };
+
+  const handleCategoryChange = (e) => {
+    if (categoryType === 'existing') {
+      setFormData({...formData, category: e.target.value});
+    } else {
+      setCustomCategory(e.target.value);
+      setFormData({...formData, category: e.target.value});
+    }
   };
 
   return (
@@ -83,14 +104,35 @@ const ProductForm = ({ product, onSave, onCancel, token, isEdit = false }) => {
             onChange={handleChange}
             required
           />
-          <input
-            type="text"
-            name="category"
-            placeholder="Category"
-            value={formData.category}
-            onChange={handleChange}
-            required
-          />
+          
+          <div className="category-section">
+            <select value={categoryType} onChange={handleCategoryTypeChange}>
+              <option value="existing">Select Existing Category</option>
+              <option value="new">Add New Category</option>
+            </select>
+            
+            {categoryType === 'existing' ? (
+              <select 
+                value={formData.category} 
+                onChange={handleCategoryChange}
+                required
+              >
+                <option value="">Choose Category</option>
+                {categories.map(cat => (
+                  <option key={cat} value={cat}>{cat}</option>
+                ))}
+              </select>
+            ) : (
+              <input
+                type="text"
+                placeholder="Enter new category"
+                value={customCategory}
+                onChange={handleCategoryChange}
+                required
+              />
+            )}
+          </div>
+
           <input
             type="url"
             name="image_url"
