@@ -161,7 +161,7 @@
 
 .orders-list {
   display: flex;
-  flex-direction: column;
+  flex-direction: list;
   gap: 1.5rem;
 }
 
@@ -170,6 +170,7 @@
   border-radius: 10px;
   box-shadow: 0 4px 6px rgba(0,0,0,0.1);
   overflow: hidden;
+  max-width: 300px;
 }
 
 .order-header {
