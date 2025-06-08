@@ -22,32 +22,26 @@ const Login = () => {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setError('');
-  setLoading(true);
+    e.preventDefault();
+    setError('');
+    setLoading(true);
 
-  try {
-    const loginData = {
-      email: formData.identifier, // Change this line
-      password: formData.password
-    };
+    try {
+      const response = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
 
-    const response = await fetch(`${API_BASE}/auth/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(loginData), // Send loginData instead
-    });
-    // ... rest stays same
+      const data = await response.json();
 
       if (response.ok) {
-        const data = await response.json();
-        login(data.token, data.user);
+        await login(data.token, data.user);
         navigate('/');
       } else {
-        const errorData = await response.json();
-        setError(errorData.detail || 'Login failed');
+        setError(data.detail || 'Login failed');
       }
     } catch (error) {
       setError('Network error. Please try again.');
