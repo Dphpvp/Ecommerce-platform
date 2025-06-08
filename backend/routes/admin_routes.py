@@ -196,6 +196,18 @@ async def get_admin_products(admin_user: dict = Depends(get_admin_user)):
         products.append(product)
     return {"products": products}
 
+@router.get("/debug/products")
+async def debug_products(admin_user: dict = Depends(get_admin_user)):
+    cursor = db.products.find({}).limit(3)
+    products = []
+    async for product in cursor:
+        products.append({
+            "_id": str(product["_id"]),
+            "name": product.get("name"),
+            "category": product.get("category")
+        })
+    return {"products": products}
+
 @router.get("/categories")
 async def get_categories(admin_user: dict = Depends(get_admin_user)):
     """Get all product categories with counts"""
