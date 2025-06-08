@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
+import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api';
 
-const Login = () => {
+const LoginForm = () => {
   const [formData, setFormData] = useState({
     identifier: '',
     password: ''
@@ -26,37 +27,46 @@ const Login = () => {
     setError('');
     setLoading(true);
 
-    console.log('Login attempt with:', formData);
-    console.log('API URL:', `${API_BASE}/auth/login`);
-
     try {
       const response = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 
-      console.log('Response status:', response.status);
-      
       const data = await response.json();
-      console.log('Response data:', data);
 
       if (response.ok) {
-        console.log('Login successful, calling AuthContext login');
-        await login(data.token, data.user);
-        console.log('Navigating to home');
+        login(data.token, data.user);
         navigate('/');
       } else {
-        console.log('Login failed:', data);
         setError(data.detail || 'Login failed');
       }
     } catch (error) {
-      console.log('Network error:', error);
       setError('Network error. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    try {
+      const response = await fetch(`${API_BASE}/auth/google`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: credentialResponse.credential }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        login(data.token, data.user);
+        navigate('/');
+      } else {
+        setError(data.detail || 'Google login failed');
+      }
+    } catch (error) {
+      setError('Google login failed. Please try again.');
     }
   };
 
@@ -90,12 +100,31 @@ const Login = () => {
             </button>
           </form>
 
+          <div className="divider">
+            <span>OR</span>
+          </div>
+
+          <div className="google-login">
+            <GoogleLogin
+              onSuccess={handleGoogleSuccess}
+              onError={() => setError('Google login failed')}
+            />
+          </div>
+
           <p>
             Don't have an account? <Link to="/register">Register here</Link>
           </p>
         </div>
       </div>
     </div>
+  );
+};
+
+const Login = () => {
+  return (
+    <GoogleOAuthProvider clientId={process.env.REACT_APP_GOOGLE_CLIENT_ID}>
+      <LoginForm />
+    </GoogleOAuthProvider>
   );
 };
 
