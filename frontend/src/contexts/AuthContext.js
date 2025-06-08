@@ -50,28 +50,11 @@ export const AuthProvider = ({ children }) => {
     fetchUser();
   }, [fetchUser]);
 
-  const login = async (email, password) => {
-    setLoading(true);
-    try {
-      const response = await fetch(`${API_BASE}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        localStorage.setItem('token', data.token);
-        setToken(data.token);
-        setUser(data.user);
-        setLoading(false);
-        return true;
-      }
-    } catch (error) {
-      console.error('Login failed:', error);
-    }
+  const login = (token, userData) => {
+    localStorage.setItem('token', token);
+    setToken(token);
+    setUser(userData);
     setLoading(false);
-    return false;
   };
 
   const register = async (userData) => {
@@ -87,7 +70,6 @@ export const AuthProvider = ({ children }) => {
         const data = await response.json();
         localStorage.setItem('token', data.token);
         setToken(data.token);
-        // fetchUser will be called automatically due to token change
         return true;
       }
     } catch (error) {
