@@ -161,8 +161,8 @@
 
 .orders-list {
   display: flex;
-  flex-direction: list;
   gap: 1.5rem;
+  flex-wrap: wrap;
 }
 
 .order-management-card {
