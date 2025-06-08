@@ -207,3 +207,9 @@ async def get_admin_dashboard(admin_user: dict = Depends(get_admin_user)):
         "recent_orders": recent_orders,
         "low_stock_products": low_stock_products
     }
+
+@router.get("/categories")
+async def get_categories(admin_user: dict = Depends(get_admin_user)):
+    pipeline = [{"$group": {"_id": "$category", "count": {"$sum": 1}}}]
+    categories = await db.products.aggregate(pipeline).to_list(None)
+    return {"categories": [{"name": cat["_id"], "count": cat["count"]} for cat in categories]}

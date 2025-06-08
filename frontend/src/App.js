@@ -25,7 +25,6 @@ import AdminOrders from './components/admin/AdminOrders';
 import AdminUsers from './components/admin/AdminUsers';
 import AdminProducts from './components/admin/AdminProducts';
 import AdminRoute from './components/admin/AdminRoute';
-import CategoryList from "./components/admin/CategoryList";
 import AdminCategories from './components/admin/AdminCategories';
 
 <Route path="/admin/categories-list" element={<AdminRoute><AdminCategories /></AdminRoute>} />
