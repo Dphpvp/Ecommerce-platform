@@ -23,10 +23,10 @@
 }
 
 .logo-img {
-  height: 100px;
+  height: 120px;
   width: 200px;
   object-fit: contain;
-  margin-left: -20px; /* Adjust as needed */
+  margin-left: -40px; /* Adjust as needed */
   background: transparent;
   mix-blend-mode: multiply; /* or screen/overlay depending on image */
 }
