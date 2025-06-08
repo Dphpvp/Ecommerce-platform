@@ -118,7 +118,7 @@ const App = () => {
                       path="/admin/categories-list"
                       element={
                         <AdminRoute>
-                          <CategoryList />
+                          <AdminCategories />
                         </AdminRoute>
                       }
                     />
