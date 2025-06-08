@@ -1,15 +1,17 @@
 .category-select {
     width: 100%;
-    padding: 10px;
-    margin: 10px 0;
+    padding: 10px 40px 10px 12px; /* add right padding for the arrow */
     font-size: 1rem;
     border: 1px solid #ccc;
     border-radius: 8px;
     background-color: #fff;
     color: #333;
+    appearance: none; /* removes OS default styling */
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg fill='gray' viewBox='0 0 24 24' width='20' height='20'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    background-size: 16px;
     transition: border-color 0.3s ease;
-    /* appearance: none;     removes default OS styling */
-    
   }
   
   .category-select:focus {
