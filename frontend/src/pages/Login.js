@@ -26,6 +26,9 @@ const Login = () => {
     setError('');
     setLoading(true);
 
+    console.log('Login attempt with:', formData);
+    console.log('API URL:', `${API_BASE}/auth/login`);
+
     try {
       const response = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
@@ -35,15 +38,22 @@ const Login = () => {
         body: JSON.stringify(formData),
       });
 
+      console.log('Response status:', response.status);
+      
       const data = await response.json();
+      console.log('Response data:', data);
 
       if (response.ok) {
+        console.log('Login successful, calling AuthContext login');
         await login(data.token, data.user);
+        console.log('Navigating to home');
         navigate('/');
       } else {
+        console.log('Login failed:', data);
         setError(data.detail || 'Login failed');
       }
     } catch (error) {
+      console.log('Network error:', error);
       setError('Network error. Please try again.');
     } finally {
       setLoading(false);
