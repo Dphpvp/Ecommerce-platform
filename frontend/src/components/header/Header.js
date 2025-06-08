@@ -12,7 +12,10 @@ const Header = () => {
   return (
     <header className="header">
       <div className="container">
-        <Link to="/" className="logo">Welcome to My Shop</Link>
+        <Link to="/" className="logo">
+          <img src="/images/logo.png" alt="Vergi Shop Logo" className="logo-img" />
+          Vergi Shop
+        </Link>
         
         <nav className="nav">
           {user ? (
