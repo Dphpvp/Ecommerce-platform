@@ -31,17 +31,17 @@ const Home = () => {
     //     </div>
     //   </section>
 
-      <section className="featured-products">
-        <div className="container">
-          <h2>Featured Products</h2>
-          <div className="product-grid">
-            {featuredProducts.map(product => (
-              <ProductCard key={product._id} product={product} />
-            ))}
-          </div>
+    <section className="featured-products">
+      <div className="container">
+        <h2>Featured Products</h2>
+        <div className="product-grid">
+          {featuredProducts.map((product) => (
+            <ProductCard key={product._id} product={product} />
+          ))}
         </div>
-      </section>
-    </div>
+      </div>
+    </section>
+    // </div>
   );
 };
 
