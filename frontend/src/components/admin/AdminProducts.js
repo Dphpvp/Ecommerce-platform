@@ -76,7 +76,7 @@ const AdminProducts = () => {
       <div className="container">
         <div className="products-header">
           <h1>Product Management</h1>
-          <button 
+          <button
             onClick={() => setShowAddForm(true)}
             className="btn btn-primary"
           >
@@ -85,7 +85,7 @@ const AdminProducts = () => {
         </div>
 
         {showAddForm && (
-          <ProductForm 
+          <ProductForm
             categories={categories}
             onSave={() => {
               setShowAddForm(false);
@@ -98,7 +98,7 @@ const AdminProducts = () => {
         )}
 
         {editingProduct && (
-          <ProductForm 
+          <ProductForm
             product={editingProduct}
             categories={categories}
             onSave={() => {
@@ -111,29 +111,35 @@ const AdminProducts = () => {
             isEdit={true}
           />
         )}
-        
+
         <div className="products-grid">
-          {products.map(product => (
+          {products.map((product) => (
             <div key={product._id} className="admin-product-card">
               <img src={product.image_url} alt={product.name} />
               <div className="product-info">
                 <h3>{product.name}</h3>
                 <p className="description">{product.description}</p>
-                <p><strong>Price:</strong> ${product.price}</p>
-                <p><strong>Category:</strong> {product.category}</p>
-                <p className={`stock ${product.stock < 10 ? 'low-stock' : ''}`}>
+                <p>
+                  <strong>Price:</strong> ${product.price}
+                </p>
+                <p>
+                  <strong>Category:</strong> {product.category}
+                </p>
+                <p className={`stock ${product.stock < 10 ? "low-stock" : ""}`}>
                   <strong>Stock:</strong> {product.stock}
-                  {product.stock < 10 && ' ⚠️'}
+                  {product.stock < 10 && " ⚠️"}
                 </p>
               </div>
               <div className="product-actions">
-                <button 
-                  onClick={() => setEditingProduct(product)}
+                <button
+                  onClick={() => {
+                    setEditingProduct(product);
+                  }}
                   className="btn btn-outline"
                 >
                   Edit
                 </button>
-                <button 
+                <button
                   onClick={() => deleteProduct(product._id)}
                   className="btn btn-danger"
                 >

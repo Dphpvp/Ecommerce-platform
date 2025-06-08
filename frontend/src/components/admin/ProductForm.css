@@ -8,12 +8,8 @@
     background-color: #fff;
     color: #333;
     transition: border-color 0.3s ease;
-    appearance: none;     /* removes default OS styling */
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg fill='gray' viewBox='0 0 24 24' width='24' height='24'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 10px center;
-    background-size: 1em;
-    /* padding-right: 2.5em; */
+    /* appearance: none;     removes default OS styling */
+    
   }
   
   .category-select:focus {
