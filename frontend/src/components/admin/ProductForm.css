@@ -1,3 +1,28 @@
+.product-form-container {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.product-form {
+  flex: 1 1 300px;
+}
+
+.product-image-preview {
+  flex: 1 1 300px;
+  text-align: center;
+}
+
+.product-image-preview img {
+  max-width: 100%;
+  height: auto;
+  border: 1px solid #ccc;
+  padding: 8px;
+  border-radius: 8px;
+}
+
 .category-select {
     width: 100%;
     padding: 10px 40px 10px 12px; /* add right padding for the arrow */
