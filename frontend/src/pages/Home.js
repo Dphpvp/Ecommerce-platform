@@ -22,14 +22,14 @@ const Home = () => {
   };
 
   return (
-    <div className="home">
-      <section className="hero">
-        <div className="container">
-          <h1>Welcome to E-Shop</h1>
-          <p>Discover amazing products at great prices</p>
-          <Link to="/products" className="btn btn-primary">Shop Now</Link>
-        </div>
-      </section>
+    // <div className="home">
+    //   <section className="hero">
+    //     <div className="container">
+    //       <h1>Welcome to E-Shop</h1>
+    //       <p>Discover amazing products at great prices</p>
+    //       <Link to="/products" className="btn btn-primary">Shop Now</Link>
+    //     </div>
+    //   </section>
 
       <section className="featured-products">
         <div className="container">
