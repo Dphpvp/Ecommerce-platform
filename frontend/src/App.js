@@ -26,6 +26,9 @@ import AdminUsers from './components/admin/AdminUsers';
 import AdminProducts from './components/admin/AdminProducts';
 import AdminRoute from './components/admin/AdminRoute';
 import CategoryList from "./components/admin/Category/CategoryList";
+import AdminCategories from './components/admin/AdminCategories';
+
+<Route path="/admin/categories-list" element={<AdminRoute><AdminCategories /></AdminRoute>} />
 
 const stripePromise = loadStripe(
   "pk_test_51RWK32RdyxKMeI2qFdwU5mx0G8jZjt1PcOYpeCILJSwVgLsh3u23xE89kRCs0uezmScF8zCQqG8culYGXpxpScNq006cWwuoGS"

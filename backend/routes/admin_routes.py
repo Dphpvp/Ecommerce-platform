@@ -195,3 +195,22 @@ async def get_admin_products(admin_user: dict = Depends(get_admin_user)):
         product["_id"] = str(product["_id"])
         products.append(product)
     return {"products": products}
+
+@router.get("/categories")
+async def get_categories(admin_user: dict = Depends(get_admin_user)):
+    """Get all product categories with counts"""
+    pipeline = [
+        {"$group": {"_id": "$category", "count": {"$sum": 1}, "total_stock": {"$sum": "$stock"}}},
+        {"$sort": {"count": -1}}
+    ]
+    categories = await db.products.aggregate(pipeline).to_list(None)
+    
+    return {
+        "categories": [
+            {
+                "name": cat["_id"], 
+                "product_count": cat["count"],
+                "total_stock": cat["total_stock"]
+            } for cat in categories
+        ]
+    }
