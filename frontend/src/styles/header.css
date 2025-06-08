@@ -23,8 +23,8 @@
 }
 
 .logo-img {
-  height: 100;
-  width: 100;
+  height: 100px;
+  width: 100px;
   margin-right: 10px;
   background: transparent;
   mix-blend-mode: multiply; /* or screen/overlay depending on image */
