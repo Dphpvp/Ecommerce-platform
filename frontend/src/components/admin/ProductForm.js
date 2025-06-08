@@ -94,6 +94,7 @@ const ProductForm = ({
       <div className="product-form">
         <h3>{isEdit ? "Edit Product" : "Add New Product"}</h3>
         <form onSubmit={handleSubmit}>
+          <label htmlFor="name">Product Name:</label>
           <input
             type="text"
             name="name"
@@ -102,6 +103,7 @@ const ProductForm = ({
             onChange={handleChange}
             required
           />
+          <label htmlFor="description">Description:</label>
           <textarea
             name="description"
             placeholder="Product Description"
@@ -109,6 +111,7 @@ const ProductForm = ({
             onChange={handleChange}
             required
           />
+          <label htmlFor="price">Price:</label>
           <input
             type="number"
             step="0.01"
@@ -153,7 +156,7 @@ const ProductForm = ({
               />
             )}
           </div>
-
+          <label htmlFor="image_url">Image URL:</label>
           <input
             type="url"
             name="image_url"
@@ -162,6 +165,7 @@ const ProductForm = ({
             onChange={handleChange}
             required
           />
+          <label htmlFor="stock">Stock Quantity:</label>
           <input
             type="number"
             name="stock"
