@@ -646,6 +646,10 @@
   }
 }
 
+.relative {
+  position: relative;
+}
+
 /* Order Modal Styles */
 .modal-backdrop {
   position: fixed;

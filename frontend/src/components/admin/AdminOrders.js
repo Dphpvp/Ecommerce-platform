@@ -101,7 +101,7 @@ const AdminOrders = () => {
           </select>
         </div>
 
-        <div className="orders-list">
+        <div className="orders-list relative">
           {orders.map((order) => (
             <OrderManagementCard
               key={order._id}
