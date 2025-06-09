@@ -14,8 +14,13 @@ const AdminOrders = () => {
 
   useEffect(() => {
     fetchOrders();
+<<<<<<< Updated upstream
   }, []);
 
+=======
+  }, [filter]);
+  /* */
+>>>>>>> Stashed changes
   const fetchOrders = async () => {
     try {
       const url = filter
