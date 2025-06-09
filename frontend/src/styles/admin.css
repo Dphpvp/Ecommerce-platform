@@ -651,36 +651,28 @@
 }
 
 /* Order Modal Styles */
-.modal-backdrop {
+.modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0,0,0,0.6);
+  width: 100vw;       /* full viewport width */
+  height: 100vh;      /* full viewport height */
+  background-color: rgba(0, 0, 0, 0.5); /* dim background */
   display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
+  justify-content: center; /* center horizontally */
+  align-items: center;     /* center vertically */
+  z-index: 1000;           /* on top */
 }
 
+/* Modal content box */
 .modal-content {
-  background: var(--color-white);
-  padding: 2rem;
-  border-radius: 10px;
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  max-width: 600px;
+  width: 90%; /* responsive */
   max-height: 90vh;
-  overflow-y: auto;
-  width: 90%;
-  max-width: 700px;
+  overflow-y: auto; /* scroll inside modal if content too big */
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
   position: relative;
-}
-
-.modal-close {
-  position: absolute;
-  top: 10px;
-  right: 15px;
-  font-size: 1.5rem;
-  border: none;
-  background: transparent;
-  cursor: pointer;
 }
