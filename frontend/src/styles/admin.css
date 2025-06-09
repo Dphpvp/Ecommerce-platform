@@ -165,11 +165,12 @@
 
 .orders-list {
   display: flex;
-  gap: 1.5rem;
+  gap: 5px;
   flex-wrap: wrap;
   justify-content: center;
+  align-items: center;
   margin-bottom: 2rem;
-  gap: 1.5rem;
+ 
 }
 
 .order-management-card {
@@ -177,7 +178,7 @@
   border-radius: 10px;
   box-shadow: var(--box-shadow-primary);
   overflow: hidden;
-  max-width: 300px;
+  max-width: 350px;
 }
 
 .order-header {
