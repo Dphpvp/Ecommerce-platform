@@ -1,3 +1,4 @@
+@import url(../src/styles/var.css);
 /* Reset and base styles */
 * {
   margin: 0;
@@ -463,11 +464,7 @@ body {
   color: var(--color-gray);
 }
 
-/* .orders-list {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-} */
+
 
 .order-card {
   background: var(--color-white);

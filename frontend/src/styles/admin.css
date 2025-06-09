@@ -165,7 +165,7 @@
 
 .orders-list {
   display: flex;
-  gap: 5px;
+  gap: 1.5rem;
   flex-wrap: wrap;
   justify-content: center;
   align-items: center;
