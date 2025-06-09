@@ -1,3 +1,6 @@
+@import url(var.css);
+
+
 .product-form-container {
   display: flex;
   gap: 2rem;
@@ -18,7 +21,7 @@
 .product-image-preview img {
   max-width: 100%;
   height: auto;
-  border: 1px solid #ccc;
+  border: 1px solid var(--color-border);
   padding: 8px;
   border-radius: 8px;
 }
@@ -27,9 +30,9 @@
     width: 100%;
     padding: 10px 40px 10px 12px; /* add right padding for the arrow */
     font-size: 1rem;
-    border: 1px solid #ccc;
+    border: 1px solid var(--color-border);
     border-radius: 8px;
-    background-color: #fff;
+    background-color: var(--color-white);
     color: #333;
     appearance: none; /* removes OS default styling */
     background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg fill='gray' viewBox='0 0 24 24' width='20' height='20'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
@@ -41,7 +44,7 @@
   
   .category-select:focus {
     outline: none;
-    border-color: #007bff;
-    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.2);
+    border-color: var(--color-blue);
+    box-shadow: var(--box-shadow-primary);
   }
   

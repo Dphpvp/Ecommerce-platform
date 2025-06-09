@@ -1,0 +1,84 @@
+:root{
+
+    /* Colors */
+    --color-primary: rgb(74, 144, 226) ;
+    --color-secondary: rgb(80, 227, 194);
+    --color-background: rgb(248, 249, 250);
+    --color-background-secondary: rgba(0, 0, 0, 0.5);
+    --color-text: rgb(51, 51, 51);
+    --color-border: rgb(224, 224, 224);
+    --color-error: rgb(208, 2, 27);
+    --color-white: rgb(255, 255, 255);
+    --color-black: rgb(0, 0, 0);
+    --color-gray: rgb(102, 102, 102);
+    --color-light-gray: rgb(238, 238, 238);
+    --color-blue: rgb(0, 123, 255);
+    --color-light-blue: rgb(23, 162, 184);
+    --color-yellow: rgb(255, 193, 7);
+    --color-light-yellow: rgb(255, 243, 205);
+    --color-green: rgb(40, 167, 69);
+    --color-light-green: rgb(220, 242, 220);
+    --color-red: rgb(220, 53, 69);
+    --color-light-red: rgb(255, 205, 210);
+    --color-orange: rgb(255, 159, 67);
+
+
+    /* Status */
+    --status-bg-success: rgb(40, 167, 69);
+    --status-bg-error: rgb(220, 53, 69);
+    --status-bg-warning: rgb(255, 193, 7);
+    --status-bg-info: rgb(23, 162, 184);
+    --status-text-success: rgb(255, 255, 255);
+    --status-text-error: rgb(255, 255, 255);
+    --status-text-warning: rgb(51, 51, 51);
+    --status-text-info: rgb(255, 255, 255);
+    --status-bg-pending: rgb(255, 243, 205);
+    --status-text-pending: rgb(133, 100, 4);
+    --status-bg-processing: rgb(0, 123, 255);
+    --status-text-processing: rgb(0, 64, 133);
+    --status-bg-shipped:rgb(212, 237, 218);
+    --status-text-shipped: rgb(21, 87, 36);
+    --status-bg-delivered: rgb(209, 236, 241);
+    --status-text-delivered: rgb(40, 167, 69);
+
+    --status-bg-completed: rgb(40, 167, 69);
+    --status-text-completed: rgb(255, 255, 255);
+
+
+    /* Font Families */
+    --font-family-sans: 'Helvetica Neue', Arial, sans-serif;
+    --font-family-serif: 'Georgia', serif;
+    
+    --font-size-small: 12px;
+    --font-size-base: 16px;
+    --font-size-large: 20px;
+    
+    /* Font Weights */
+    --spacing-small: 8px;
+    --spacing-base: 16px;
+    --spacing-large: 24px;
+    
+    /* Transition */
+    --transition-duration: 0.3s;
+    --transition-duration: 0.3s;
+    --transition-timing: ease-in-out;
+
+    /* Border */
+    --border-radius-small: 5px;
+    --border-radius-base: 8px;
+    --border-radius-large: 12px;
+    --box-shadow-primary: 0 4px 6px rgba(0,0,0,0.1);
+    --box-shadow-secondary: 0 2px 4px rgba(0,0,0,0.1);
+
+
+    /* Padding */
+    --padding-small: 8px;
+    --padding-base: 16px;
+    --padding-large: 24px;
+
+    /* Margin */
+    --margin-small: 8px;
+    --margin-base: 16px;
+    --margin-large: 24px;
+
+}
