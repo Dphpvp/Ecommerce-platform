@@ -650,20 +650,20 @@
   position: relative;
 }
 .status-filter {
-  appearance: none;        /* Remove default arrow */
+  appearance: none;      
   -webkit-appearance: none;
   -moz-appearance: none;
 
   background-color: var(--color-white);
   border: 1.5px solid var(--color-blue);  
   border-radius: 6px;
-  padding: 8px 40px 8px 12px;   /* Right padding for custom arrow */
+  padding: 8px 40px 8px 12px; 
   font-size: 1rem;
   font-weight: 500;
   color: var(--color-text);
   cursor: pointer;
 
-  background-image: url("data:image/svg+xml;charset=US-ASCII,%3csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23007bff'%3e%3cpath d='M4 6l4 4 4-4z'/%3e%3c/svg%3e"); /* Custom arrow */
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23007bff'%3e%3cpath d='M4 6l4 4 4-4z'/%3e%3c/svg%3e"); 
   background-repeat: no-repeat;
   background-position: right 12px center;
   background-size: 12px;
@@ -685,24 +685,22 @@
   position: fixed;
   top: 0;
   left: 0;
-  width: 100vw;       /* full viewport width */
-  height: 100vh;      /* full viewport height */
-  background-color: rgba(0, 0, 0, 0.5); /* dim background */
+  width: 100vw;    
+  height: 100vh;     
+  background-color: rgba(0, 0, 0, 0.5);
   display: flex;
-  justify-content: center; /* center horizontally */
-  align-items: center;     /* center vertically */
-  z-index: 1000;           /* on top */
+  justify-content: center; 
+  align-items: center;     
+  z-index: 1000;           
 }
-
-/* Modal content box */
 .modal-content {
-  background: #fff;
+  background: var(--color-white);
   padding: 20px;
   border-radius: 8px;
   max-width: 600px;
-  width: 90%; /* responsive */
+  width: 90%;
   max-height: 90vh;
-  overflow-y: auto; /* scroll inside modal if content too big */
+  overflow-y: auto;
   box-shadow: 0 5px 15px rgba(0,0,0,0.3);
   position: relative;
 }
