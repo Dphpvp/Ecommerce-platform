@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import Modal from "../common/Modal"; // Adjust path if needed
+import Modal from "../modal/modal.js"; 
 
 const OrderManagementCard = ({ order, onStatusUpdate, getStatusColor }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
