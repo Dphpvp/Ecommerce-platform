@@ -8,8 +8,8 @@
 body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   line-height: 1.6;
-  color: #333;
-  background-color: #f8f9fa;
+  color: var(--color-gray);
+  background-color: var(--color-white);
 }
 
 .container {
@@ -20,8 +20,8 @@ body {
 
 /* Header */
 .header {
-  background: white;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  background: var(--color-white);
+  box-shadow: var(--box-shadow-primary);
   position: sticky;
   top: 0;
   z-index: 100;
@@ -37,7 +37,7 @@ body {
 .logo {
   font-size: 1.8rem;
   font-weight: bold;
-  color: #007bff;
+  color: var(--color-blue);
   text-decoration: none;
 }
 
@@ -48,26 +48,26 @@ body {
 }
 
 .nav a {
-  color: #333;
+  color: var(--color-gray);
   text-decoration: none;
   font-weight: 500;
   transition: color 0.3s;
 }
 
 .nav a:hover {
-  color: #007bff;
+  color: var(--color-blue);
 }
 
 .cart-link {
-  background: #007bff;
-  color: white !important;
+  background: var(--color-blue);
+  color: var(--color-white) !important;
   padding: 0.5rem 1rem;
   border-radius: 5px;
   transition: background 0.3s;
 }
 
 .cart-link:hover {
-  background: #0056b3 !important;
+  background: var(--color-light-blue) !important;
 }
 
 /* Buttons */
@@ -85,32 +85,32 @@ body {
 }
 
 .btn-primary {
-  background: #007bff;
-  color: white;
+  background: var(--color-blue);
+  color: var(--color-white);
 }
 
 .btn-primary:hover {
-  background: #0056b3;
+  background: var(--color-light-blue);
 }
 
 .btn-outline {
   background: transparent;
-  color: #007bff;
-  border: 2px solid #007bff;
+  color: var(--color-blue);
+  border: 2px solid var(--color-blue);
 }
 
 .btn-outline:hover {
-  background: #007bff;
-  color: white;
+  background: var(--color-blue);
+  color: var(--color-white);
 }
 
 .btn-danger {
-  background: #dc3545;
-  color: white;
+  background: var(--color-red);
+  color: var(--color-white);
 }
 
 .btn-danger:hover {
-  background: #c82333;
+  background: var(--color-light-red);
 }
 
 .btn:disabled {
@@ -126,8 +126,8 @@ body {
 
 /* Home page */
 .hero {
-  background: linear-gradient(135deg, #007bff, #0056b3);
-  color: white;
+  background: linear-gradient(135deg, var(--color-blue), var(--color-light-blue));
+  color: var(--color-white);
   padding: 4rem 0;
   text-align: center;
   margin-bottom: 3rem;
@@ -162,16 +162,16 @@ body {
 }
 
 .product-card {
-  background: white;
+  background: var(--color-white);
   border-radius: 10px;
   overflow: hidden;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  box-shadow: var(--box-shadow-primary);
   transition: transform 0.3s, box-shadow 0.3s;
 }
 
 .product-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 15px rgba(0,0,0,0.15);
+  box-shadow: var(--box-shadow-secondary);
 }
 
 .product-card img {
@@ -192,12 +192,12 @@ body {
 .product-info .price {
   font-size: 1.5rem;
   font-weight: bold;
-  color: #007bff;
+  color: var(--color-blue);
   margin-bottom: 0.5rem;
 }
 
 .product-info .stock {
-  color: #666;
+  color: var(--color-gray);
   margin-bottom: 1rem;
 }
 
@@ -211,7 +211,7 @@ body {
 
 .category-filter {
   padding: 0.5rem 1rem;
-  border: 2px solid #ddd;
+  border: 2px solid var(--color-light-gray);
   border-radius: 5px;
   font-size: 1rem;
 }
@@ -230,7 +230,7 @@ body {
 .empty-cart p {
   font-size: 1.2rem;
   margin-bottom: 2rem;
-  color: #666;
+  color: var(--color-gray);
 }
 
 .cart-items {
@@ -240,11 +240,11 @@ body {
 .cart-item {
   display: flex;
   align-items: center;
-  background: white;
+  background: var(--color-white);
   padding: 1.5rem;
   margin-bottom: 1rem;
   border-radius: 10px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: var(--box-shadow-primary);
 }
 
 .cart-item img {
@@ -265,14 +265,14 @@ body {
 
 .item-details p {
   margin-bottom: 0.25rem;
-  color: #666;
+  color: var(--color-gray);
 }
 
 .cart-summary {
-  background: white;
+  background: var(--color-white);
   padding: 2rem;
   border-radius: 10px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: var(--box-shadow-primary);
   text-align: center;
 }
 
@@ -291,10 +291,10 @@ body {
 }
 
 .order-summary {
-  background: white;
+  background: var(--color-white);
   padding: 2rem;
   border-radius: 10px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: var(--box-shadow-primary);
   height: fit-content;
 }
 
@@ -307,21 +307,21 @@ body {
   display: flex;
   justify-content: space-between;
   padding: 0.5rem 0;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--color-white);
 }
 
 .order-total {
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 2px solid #007bff;
+  border-top: 2px solid var(--color-blue);
   font-size: 1.2rem;
 }
 
 .checkout-form {
-  background: white;
+  background: var(--color-white);
   padding: 2rem;
   border-radius: 10px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: var(--box-shadow-primary);
 }
 
 .shipping-section {
@@ -338,19 +338,19 @@ body {
   width: 100%;
   padding: 0.75rem;
   margin-bottom: 1rem;
-  border: 2px solid #ddd;
+  border: 2px solid var(--color-light-gray);
   border-radius: 5px;
   font-size: 1rem;
 }
 
 .checkout-form input:focus {
   outline: none;
-  border-color: #007bff;
+  border-color: var(--color-blue);
 }
 
 .card-element {
   padding: 1rem;
-  border: 2px solid #ddd;
+  border: 2px solid var(--color-light-gray);
   border-radius: 5px;
   margin-bottom: 2rem;
 }
@@ -364,10 +364,10 @@ body {
 }
 
 .auth-form {
-  background: white;
+  background: var(--color-white);
   padding: 3rem;
   border-radius: 10px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  box-shadow: var(--box-shadow-primary);
   width: 100%;
   max-width: 400px;
 }
@@ -375,21 +375,21 @@ body {
 .auth-form h1 {
   text-align: center;
   margin-bottom: 2rem;
-  color: #007bff;
+  color: var(--color-blue);
 }
 
 .auth-form input {
   width: 100%;
   padding: 0.75rem;
   margin-bottom: 1rem;
-  border: 2px solid #ddd;
+  border: 2px solid var(--color-light-gray);
   border-radius: 5px;
   font-size: 1rem;
 }
 
 .auth-form input:focus {
   outline: none;
-  border-color: #007bff;
+  border-color: var(--color-blue);
 }
 
 .auth-form button {
@@ -399,11 +399,11 @@ body {
 
 .auth-form p {
   text-align: center;
-  color: #666;
+  color: var(--color-gray);
 }
 
 .auth-form a {
-  color: #007bff;
+  color: var(--color-blue);
   text-decoration: none;
 }
 
@@ -413,13 +413,13 @@ body {
 
 /* Error message */
 .error-message {
-  background: #f8d7da;
-  color: #721c24;
+  background: var(--color-light-red);
+  color: var(--color-red);
   padding: 0.75rem;
   border-radius: 5px;
   margin-bottom: 1rem;
   text-align: center;
-  border: 1px solid #f5c6cb;
+  border: 1px solid var(--color-red);
 }
 
 /* Divider for OAuth */
@@ -435,12 +435,12 @@ body {
   content: '';
   flex: 1;
   height: 1px;
-  background: #ddd;
+  background: var(--color-light-gray);
 }
 
 .divider span {
   padding: 0 1rem;
-  color: #666;
+  color: var(--color-gray);
   font-weight: 500;
 }
 
@@ -460,7 +460,7 @@ body {
 .no-orders p {
   font-size: 1.2rem;
   margin-bottom: 2rem;
-  color: #666;
+  color: var(--color-gray);
 }
 
 .orders-list {
@@ -470,10 +470,10 @@ body {
 }
 
 .order-card {
-  background: white;
+  background: var(--color-white);
   padding: 2rem;
   border-radius: 10px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: var(--box-shadow-primary);
 }
 
 .order-header {
@@ -484,7 +484,7 @@ body {
 }
 
 .order-header h3 {
-  color: #007bff;
+  color: var(--color-blue);
 }
 
 .status {
@@ -496,28 +496,30 @@ body {
 }
 
 .status.pending {
-  background: #fff3cd;
-  color: #856404;
+  background: var(--status-bg-pending);
+  color: var(--status-text-pending);
+ 
 }
 
 .status.processing {
-  background: #cce5ff;
-  color: #004085;
+  background: var(--status-bg-processing);
+  color: var(--status-text-processing);
+  
 }
 
 .status.shipped {
-  background: #d4edda;
-  color: #155724;
+  background: var(--status-bg-shipped);
+  color: var(--status-text-shipped);
 }
 
 .status.delivered {
-  background: #d1ecf1;
-  color: #0c5460;
+  background: var(--status-bg-delivered);
+  color: var(--status-text-delivered);
 }
 
 .order-details p {
   margin-bottom: 0.5rem;
-  color: #666;
+  color: var(--color-gray);
 }
 
 .order-items {
@@ -532,15 +534,15 @@ body {
   display: flex;
   justify-content: space-between;
   padding: 0.25rem 0;
-  color: #666;
+  color: var(--color-gray);
 }
 
 /* Profile */
 .profile-info {
-  background: white;
+  background: var(--color-white);
   padding: 2rem;
   border-radius: 10px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: var(--box-shadow-primary);
   max-width: 500px;
 }
 
@@ -548,7 +550,7 @@ body {
   display: flex;
   justify-content: space-between;
   padding: 1rem 0;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--color-white);
 }
 
 .info-group:last-child {
@@ -557,22 +559,22 @@ body {
 
 .info-group label {
   font-weight: 600;
-  color: #007bff;
+  color: var(--color-blue);
 }
 
 /* Admin Panel Access in Profile */
 .admin-panel-access {
-  background: linear-gradient(135deg, #dc3545, #c82333);
-  color: white;
+  background: linear-gradient(135deg, var(--color-red), var(--color-orange));
+  color: var(--color-white);
   padding: 2rem;
   border-radius: 10px;
   margin-top: 2rem;
-  box-shadow: 0 4px 6px rgba(220, 53, 69, 0.3);
+  box-shadow: var(--box-shadow-primary);
 }
 
 .admin-panel-access h2 {
   margin-bottom: 1rem;
-  color: white;
+  color: var(--color-white);
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -596,9 +598,9 @@ body {
 }
 
 .btn-admin {
-  background: rgba(255, 255, 255, 0.2);
-  color: white !important;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  background: var(--color-background-secondary);
+  color: var(--color-white) !important;
+  border: 2px solid var(--color-gray);
   padding: 1rem 1.5rem;
   border-radius: 8px;
   text-decoration: none;
@@ -614,11 +616,11 @@ body {
 }
 
 .btn-admin:hover {
-  background: rgba(255, 255, 255, 0.3);
-  border-color: rgba(255, 255, 255, 0.6);
+  background: var(--color-gray);
+  border-color: var(--color-light-gray);
   transform: translateY(-2px);
-  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
-  color: white !important;
+  box-shadow: var(--box-shadow-secondary);
+  color: var(--color-white) !important;
 }
 
 .btn-admin:active {
@@ -627,8 +629,8 @@ body {
 
 /* Admin badge in header for logged in admin */
 .nav .admin-badge {
-  background: #dc3545;
-  color: white;
+  background: var(--color-red);
+  color: var(--color-white);
   padding: 0.25rem 0.75rem;
   border-radius: 15px;
   font-size: 0.8rem;
