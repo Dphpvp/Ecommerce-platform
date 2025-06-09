@@ -649,6 +649,36 @@
 .relative {
   position: relative;
 }
+.status-filter {
+  appearance: none;        /* Remove default arrow */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  background-color: var(--color-white);
+  border: 1.5px solid var(--color-blue);  
+  border-radius: 6px;
+  padding: 8px 40px 8px 12px;   /* Right padding for custom arrow */
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--color-text);
+  cursor: pointer;
+
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23007bff'%3e%3cpath d='M4 6l4 4 4-4z'/%3e%3c/svg%3e"); /* Custom arrow */
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 12px;
+  transition: border-color 0.3s ease;
+}
+
+.status-filter:hover {
+  border-color: var(--color-blue);
+}
+
+.status-filter:focus {
+  outline: none;
+  border-color: var(--color-light-blue);
+  box-shadow: var(--box-shadow-secondary);
+}
 
 /* Order Modal Styles */
 .modal-overlay {
