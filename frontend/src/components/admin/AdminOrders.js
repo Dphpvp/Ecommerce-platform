@@ -1,13 +1,58 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import OrderManagementCard from './OrderManagementCard';
+// AdminOrders.jsx
+import React, { useState, useEffect } from "react";
+import { useAuth } from "../../contexts/AuthContext";
+import OrderManagementCard from "./OrderManagementCard";
 
-const API_BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api';
+const API_BASE =
+  process.env.REACT_APP_API_BASE_URL || "http://localhost:8000/api";
+
+const EditOrderModal = ({ order, onClose, onSave }) => {
+  const [newStatus, setNewStatus] = useState(order.status);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSave(order._id, newStatus);
+    onClose();
+  };
+
+  return (
+    <div className="modal-overlay">
+      <div className="modal-content">
+        <h2>Edit Order Status</h2>
+        <form onSubmit={handleSubmit}>
+          <label>Status:</label>
+          <select
+            value={newStatus}
+            onChange={(e) => setNewStatus(e.target.value)}
+            required
+          >
+            <option value="pending">Pending</option>
+            <option value="accepted">Accepted</option>
+            <option value="processing">Processing</option>
+            <option value="shipped">Shipped</option>
+            <option value="delivered">Delivered</option>
+            <option value="cancelled">Cancelled</option>
+          </select>
+          <div className="modal-actions">
+            <button type="submit" className="btn btn-primary">
+              Save
+            </button>
+            <button type="button" onClick={onClose} className="btn btn-outline">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
 
 const AdminOrders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('');
+  const [filter, setFilter] = useState("");
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
   const { token } = useAuth();
 
   useEffect(() => {
@@ -16,20 +61,20 @@ const AdminOrders = () => {
 
   const fetchOrders = async () => {
     try {
-      const url = filter 
+      const url = filter
         ? `${API_BASE}/admin/orders?status=${filter}`
         : `${API_BASE}/admin/orders`;
-      
+
       const response = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         setOrders(data.orders);
       }
     } catch (error) {
-      console.error('Failed to fetch orders:', error);
+      console.error("Failed to fetch orders:", error);
     } finally {
       setLoading(false);
     }
@@ -37,48 +82,56 @@ const AdminOrders = () => {
 
   const updateOrderStatus = async (orderId, newStatus) => {
     try {
-      const response = await fetch(`${API_BASE}/admin/orders/${orderId}/status`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ status: newStatus })
-      });
+      const response = await fetch(
+        `${API_BASE}/admin/orders/${orderId}/status`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ status: newStatus }),
+        }
+      );
 
       if (response.ok) {
         alert(`Order status updated to ${newStatus}`);
-        fetchOrders(); // Refresh the orders list
+        fetchOrders();
       } else {
-        alert('Failed to update order status');
+        alert("Failed to update order status");
       }
     } catch (error) {
-      console.error('Failed to update order:', error);
-      alert('Failed to update order status');
+      console.error("Failed to update order:", error);
+      alert("Failed to update order status");
     }
   };
 
   const getStatusColor = (status) => {
     const colors = {
-      pending: '#ffc107',
-      accepted: '#17a2b8',
-      processing: '#007bff',
-      shipped: '#28a745',
-      delivered: '#6c757d',
-      cancelled: '#dc3545'
+      pending: "#ffc107",
+      accepted: "#17a2b8",
+      processing: "#007bff",
+      shipped: "#28a745",
+      delivered: "#6c757d",
+      cancelled: "#dc3545",
     };
-    return colors[status] || '#6c757d';
+    return colors[status] || "#6c757d";
   };
 
-  if (loading) return <div className="container"><p>Loading orders...</p></div>;
+  if (loading)
+    return (
+      <div className="container">
+        <p>Loading orders...</p>
+      </div>
+    );
 
   return (
     <div className="admin-orders">
       <div className="container">
         <div className="orders-header">
           <h1>Order Management</h1>
-          <select 
-            value={filter} 
+          <select
+            value={filter}
             onChange={(e) => setFilter(e.target.value)}
             className="status-filter"
           >
@@ -93,12 +146,16 @@ const AdminOrders = () => {
         </div>
 
         <div className="orders-list">
-          {orders.map(order => (
-            <OrderManagementCard 
-              key={order._id} 
-              order={order} 
+          {orders.map((order) => (
+            <OrderManagementCard
+              key={order._id}
+              order={order}
               onStatusUpdate={updateOrderStatus}
               getStatusColor={getStatusColor}
+              onEdit={() => {
+                setSelectedOrder(order);
+                setShowEditModal(true);
+              }}
             />
           ))}
         </div>
@@ -107,6 +164,17 @@ const AdminOrders = () => {
           <div className="no-orders">
             <p>No orders found for the selected filters.</p>
           </div>
+        )}
+
+        {showEditModal && selectedOrder && (
+          <EditOrderModal
+            order={selectedOrder}
+            onClose={() => {
+              setShowEditModal(false);
+              setSelectedOrder(null);
+            }}
+            onSave={updateOrderStatus}
+          />
         )}
       </div>
     </div>
