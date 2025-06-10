@@ -21,15 +21,7 @@ app = FastAPI(title="E-commerce API")
 # 🆕 Updated CORS for production
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",  # Local development
-        "https://localhost:3000",  # Local HTTPS
-        FRONTEND_URL,  # Your Vercel URL from environment
-        "vs1.vercel.app", # All Vercel subdomains
-        "vergishop.vercel.app",
-        "https://ecommerce-platform-snowy.vercel.app",
-        
-    ],
+    allow_origins=["*"],  # Allow all origins for now
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
