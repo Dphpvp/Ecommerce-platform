@@ -9,8 +9,6 @@ const AdminCategories = () => {
   const [loading, setLoading] = useState(true);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [creating, setCreating] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState(null);
-  const [categoryProducts, setCategoryProducts] = useState([]);
   const { token } = useAuth();
 
   useEffect(() => {
@@ -73,31 +71,12 @@ const AdminCategories = () => {
       
       if (response.ok) {
         fetchCategories();
-        if (selectedCategory === categoryName) setSelectedCategory(null);
       } else {
         alert('Failed to delete category');
       }
     } catch (error) {
       console.error('Failed to delete category:', error);
       alert('Failed to delete category');
-    }
-  };
-
-  const viewCategoryProducts = async (categoryName) => {
-    if (selectedCategory === categoryName) {
-      setSelectedCategory(null);
-      return;
-    }
-    
-    try {
-      const response = await fetch(`${API_BASE}/products?category=${encodeURIComponent(categoryName)}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const products = await response.json();
-      setCategoryProducts(products);
-      setSelectedCategory(categoryName);
-    } catch (error) {
-      console.error('Failed to fetch products:', error);
     }
   };
 
@@ -124,47 +103,21 @@ const AdminCategories = () => {
         {categories.length === 0 ? (
           <p>No categories found. Create your first category above.</p>
         ) : (
-          <>
-            <div className="categories-grid">
-              {categories.map(cat => (
-                <div key={cat.name} className="category-card">
-                  <h3>{cat.name}</h3>
-                  <p>Products: {cat.product_count}</p>
-                  <p>Total Stock: {cat.total_stock}</p>
-                  <div className="category-actions">
-                    <button 
-                      className="view-btn"
-                      onClick={() => viewCategoryProducts(cat.name)}
-                    >
-                      {selectedCategory === cat.name ? 'Hide Products' : 'View Products'}
-                    </button>
-                    <button 
-                      className="delete-btn"
-                      onClick={() => deleteCategory(cat.name)}
-                    >
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-            
-            {selectedCategory && (
-              <div className="products-section">
-                <h2>Products in "{selectedCategory}"</h2>
-                <div className="products-grid">
-                  {categoryProducts.map(product => (
-                    <div key={product._id} className="product-card">
-                      <img src={product.image_url} alt={product.name} />
-                      <h4>{product.name}</h4>
-                      <p>${product.price}</p>
-                      <p>Stock: {product.stock}</p>
-                    </div>
-                  ))}
-                </div>
+          <div className="categories-grid">
+            {categories.map(cat => (
+              <div key={cat.name} className="category-card">
+                <h3>{cat.name}</h3>
+                <p>Products: {cat.product_count}</p>
+                <p>Total Stock: {cat.total_stock}</p>
+                <button 
+                  className="delete-btn"
+                  onClick={() => deleteCategory(cat.name)}
+                >
+                  Delete
+                </button>
               </div>
-            )}
-          </>
+            ))}
+          </div>
         )}
       </div>
     </div>
