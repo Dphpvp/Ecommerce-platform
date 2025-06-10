@@ -1,11 +1,18 @@
-.category-actions {
+.category-form {
+  margin-bottom: 20px;
   display: flex;
   gap: 10px;
-  margin-top: 10px;
 }
 
-.view-btn {
-  background: #007bff;
+.category-form input {
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  flex: 1;
+}
+
+.delete-btn {
+  background: #ff4444;
   color: white;
   border: none;
   padding: 5px 10px;
@@ -13,29 +20,15 @@
   cursor: pointer;
 }
 
-.products-section {
-  margin-top: 30px;
-  padding-top: 20px;
-  border-top: 1px solid #ddd;
-}
-
-.products-grid {
+.categories-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 15px;
-  margin-top: 15px;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
 }
 
-.product-card {
+.category-card {
   border: 1px solid #ddd;
-  padding: 10px;
-  border-radius: 4px;
-  text-align: center;
-}
-
-.product-card img {
-  width: 100%;
-  height: 120px;
-  object-fit: cover;
-  border-radius: 4px;
+  padding: 15px;
+  border-radius: 8px;
+  background: white;
 }
