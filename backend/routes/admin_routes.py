@@ -226,3 +226,22 @@ async def get_categories(admin_user: dict = Depends(get_admin_user)):
             } for cat in categories
         ]
     }
+
+@router.get("/debug")
+async def debug_categories(admin_user: dict = Depends(get_admin_user)):
+    # Count total products
+    total_products = await db.products.count_documents({})
+    
+    # Get first few products
+    sample_products = []
+    async for product in db.products.find({}).limit(3):
+        sample_products.append({
+            "name": product.get("name"),
+            "category": product.get("category"),
+            "all_fields": list(product.keys())
+        })
+    
+    return {
+        "total_products": total_products,
+        "sample_products": sample_products
+    }
