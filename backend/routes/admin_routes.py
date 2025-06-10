@@ -209,24 +209,23 @@ async def debug_products(admin_user: dict = Depends(get_admin_user)):
     return {"products": products}
 
 # Category management
-@router.get("/categories")
-async def get_categories(admin_user: dict = Depends(get_admin_user)):
-    """Get all product categories with counts"""
-    pipeline = [
-        {"$group": {"_id": "$category", "count": {"$sum": 1}, "total_stock": {"$sum": "$stock"}}},
-        {"$sort": {"count": -1}}
-    ]
-    categories = await db.products.aggregate(pipeline).to_list(None)
+@router.post("/categories")
+async def create_category(category_data: dict, admin_user: dict = Depends(get_admin_user)):
+    category_name = category_data.get("name", "").strip()
+    if not category_name:
+        raise HTTPException(status_code=400, detail="Category name required")
     
-    return {
-        "categories": [
-            {
-                "name": cat["_id"], 
-                "product_count": cat["count"],
-                "total_stock": cat["total_stock"]
-            } for cat in categories if cat["_id"]  # Filter out null categories
-        ]
-    }
+    # Insert a placeholder product to make category visible
+    await db.products.insert_one({
+        "name": f"Sample {category_name} Product",
+        "description": "Placeholder product - edit or delete",
+        "price": 0.01,
+        "category": category_name,
+        "image_url": "https://via.placeholder.com/400",
+        "stock": 0,
+        "created_at": datetime.utcnow()
+    })
+    return {"success": True}
 
 @router.post("/categories")
 async def create_category(category_data: dict, admin_user: dict = Depends(get_admin_user)):
