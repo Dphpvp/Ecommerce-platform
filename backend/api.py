@@ -15,6 +15,9 @@ import re
 from database.connection import db
 from dependencies import get_current_user, security
 
+# 🆕 ADD EMAIL IMPORT
+from utils.email import send_order_confirmation_email, send_admin_order_notification
+
 router = APIRouter()
 
 # Configuration
@@ -340,7 +343,7 @@ async def create_payment_intent(payment: PaymentIntent):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-# Order routes
+# 🆕 UPDATED ORDER ROUTES WITH EMAIL NOTIFICATIONS
 @router.post("/orders")
 async def create_order(order_data: dict, current_user: dict = Depends(get_current_user)):
     user_id = str(current_user["_id"])
@@ -379,6 +382,44 @@ async def create_order(order_data: dict, current_user: dict = Depends(get_curren
             {"$inc": {"stock": -item["quantity"]}}
         )
     
+    # 🆕 SEND EMAIL NOTIFICATIONS
+    try:
+        user_name = current_user.get("full_name", current_user.get("username", "Customer"))
+        user_email = current_user["email"]
+        
+        print(f"📧 Sending emails for order {order['order_number']}...")
+        
+        # Send confirmation email to customer
+        customer_email_sent = await send_order_confirmation_email(
+            user_email=user_email,
+            user_name=user_name,
+            order_id=order["order_number"],
+            total_amount=total,
+            items=cart_items
+        )
+        
+        # Send notification email to admin
+        admin_email_sent = await send_admin_order_notification(
+            order_id=order["order_number"],
+            user_email=user_email,
+            user_name=user_name,
+            total_amount=total,
+            items=cart_items
+        )
+        
+        if customer_email_sent and admin_email_sent:
+            print(f"✅ Both emails sent successfully for order {order['order_number']}")
+        elif customer_email_sent:
+            print(f"✅ Customer email sent, ❌ admin email failed for order {order['order_number']}")
+        elif admin_email_sent:
+            print(f"❌ Customer email failed, ✅ admin email sent for order {order['order_number']}")
+        else:
+            print(f"❌ Both emails failed for order {order['order_number']}")
+            
+    except Exception as e:
+        print(f"❌ Email notification error for order {order['order_number']}: {str(e)}")
+        # Don't fail the order creation if email fails
+    
     return {"message": "Order created successfully", "order_id": order_id, "order_number": order["order_number"]}
 
 @router.get("/orders")
@@ -403,8 +444,3 @@ async def get_order(order_id: str, current_user: dict = Depends(get_current_user
     
     order["_id"] = str(order["_id"])
     return order
-
-@router.get("/admin/categories")
-async def get_categories():
-    categories = await db.categories.distinct("categories")
-    return {"categories": categories}
