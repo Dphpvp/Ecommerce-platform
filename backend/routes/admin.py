@@ -118,7 +118,7 @@ async def update_order_status(
         status_messages = {
             "accepted": "Your order has been accepted and is being prepared for shipment.",
             "processing": "Your order is currently being processed.",
-            "shipped": "Great news! Your order has been shipped and is on its way to you.",
+            "shipped": "Great news! Your order has been shipped.",
             "delivered": "Your order has been delivered. Thank you for your business!",
             "cancelled": "Unfortunately, your order has been cancelled. Please contact us for more information."
         }

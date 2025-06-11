@@ -27,6 +27,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 # Stripe configuration
 if STRIPE_SECRET_KEY:
     stripe.api_key = STRIPE_SECRET_KEY
