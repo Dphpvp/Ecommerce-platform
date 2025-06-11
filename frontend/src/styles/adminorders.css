@@ -209,6 +209,181 @@
   box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
 }
 
+/* Order Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;    
+  height: 100vh;     
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center; 
+  align-items: center;     
+  z-index: 1000;           
+}
+
+.modal-content {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  max-width: 600px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  position: relative;
+  border: 1px solid #e9ecef;
+}
+
+.modal-content h2 {
+  margin: 0 0 1.5rem 0;
+  color: #333;
+  font-size: 1.5rem;
+  font-weight: 700;
+  text-align: center;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e9ecef;
+}
+
+/* Order Details Expanded */
+.order-details-expanded {
+  padding: 2rem;
+  background: white;
+}
+
+.modal-content section {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.modal-content section:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}
+
+.modal-content section h3 {
+  color: #007bff;
+  margin-bottom: 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.modal-content section h3:nth-child(1)::before {
+  content: "👤";
+}
+
+.modal-content section:nth-child(2) h3::before {
+  content: "📍";
+}
+
+.modal-content section:nth-child(3) h3::before {
+  content: "📦";
+}
+
+.modal-content section:nth-child(4) h3::before {
+  content: "⚙️";
+}
+
+.modal-content section p {
+  margin-bottom: 0.5rem;
+  color: #6c757d;
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+.modal-content section p strong {
+  color: #333;
+  font-weight: 600;
+}
+
+/* Order Items in Modal */
+.order-item-detail {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin-bottom: 0.75rem;
+  border: 1px solid #e9ecef;
+  transition: all 0.3s ease;
+}
+
+.order-item-detail:hover {
+  background: #e9ecef;
+  transform: translateY(-1px);
+}
+
+.order-item-detail img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid #dee2e6;
+}
+
+.order-item-detail div {
+  flex: 1;
+}
+
+.order-item-detail p {
+  margin: 0.25rem 0;
+  font-size: 0.9rem;
+}
+
+.order-item-detail p strong {
+  color: #007bff;
+  font-weight: 600;
+}
+
+/* Status Update Section in Modal */
+.modal-content section select {
+  padding: 0.6rem 1rem;
+  border: 2px solid #e9ecef;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-right: 1rem;
+}
+
+.modal-content section select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+.modal-content .btn-primary {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.modal-content .btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #0056b3, #004085);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+.modal-content .btn-primary:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+  transform: none;
+  opacity: 0.6;
+}
+
 /* No Orders State */
 .no-orders {
   text-align: center;
