@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import Modal from "../modal/modal.js"; 
-
+import "../../styles/ordermanagementcard.css"; 
 
 
 const OrderManagementCard = ({ order, onStatusUpdate, getStatusColor }) => {
