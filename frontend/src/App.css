@@ -1,5 +1,6 @@
+@import url('./var.css');
+
 /* Reset and base styles */
-/* Reset CSS */
 * {
   margin: 0;
   padding: 0;
@@ -10,7 +11,7 @@ body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   line-height: 1.6;
   color: var(--color-gray);
-  background-color: var(--color-gray);
+  background-color: var(--color-white);
 }
 
 .container {
@@ -304,13 +305,6 @@ body {
   font-size: 1.3rem;
 }
 
-.order-item {
-  display: flex;
-  justify-content: space-between;
-  padding: 0.5rem 0;
-  border-bottom: 1px solid var(--color-white);
-}
-
 .order-total {
   margin-top: 1rem;
   padding-top: 1rem;
@@ -450,86 +444,6 @@ body {
   display: flex;
   justify-content: center;
   margin-bottom: 1.5rem;
-}
-
-/* Orders - General Styles (for user order history) */
-.no-orders {
-  text-align: center;
-  padding: 3rem;
-}
-
-.no-orders p {
-  font-size: 1.2rem;
-  margin-bottom: 2rem;
-  color: var(--color-gray);
-}
-
-/* User Order History Card (different from admin order management) */
-.user-order-card {
-  background: var(--color-white);
-  padding: 2rem;
-  border-radius: 10px;
-  box-shadow: var(--box-shadow-primary);
-  margin-bottom: 1.5rem;
-}
-
-.user-order-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
-.user-order-header h3 {
-  color: var(--color-blue);
-}
-
-.status {
-  padding: 0.25rem 0.75rem;
-  border-radius: 15px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  text-transform: capitalize;
-}
-
-.status.pending {
-  background: var(--status-bg-pending);
-  color: var(--status-text-pending);
-}
-
-.status.processing {
-  background: var(--status-bg-processing);
-  color: var(--status-text-processing);
-}
-
-.status.shipped {
-  background: var(--status-bg-shipped);
-  color: var(--status-text-shipped);
-}
-
-.status.delivered {
-  background: var(--status-bg-delivered);
-  color: var(--status-text-delivered);
-}
-
-.user-order-details p {
-  margin-bottom: 0.5rem;
-  color: var(--color-gray);
-}
-
-.user-order-items {
-  margin-top: 1rem;
-}
-
-.user-order-items h4 {
-  margin-bottom: 0.5rem;
-}
-
-.user-order-item {
-  display: flex;
-  justify-content: space-between;
-  padding: 0.25rem 0;
-  color: var(--color-gray);
 }
 
 /* Profile */

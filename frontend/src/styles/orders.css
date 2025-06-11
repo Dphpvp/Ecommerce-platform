@@ -1,6 +1,4 @@
-@import url('./var.css');
-
-/* Orders Page Styles */
+/* Orders Page Styles - Fully Scoped */
 .orders {
   padding: 2rem 0;
   background: #f8f9fa;
@@ -26,14 +24,14 @@
 }
 
 /* Orders List */
-.orders-list {
+.orders .orders-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
   gap: 1.5rem;
 }
 
 /* Order Cards */
-.order-card {
+.orders .order-card {
   background: white;
   border-radius: 12px;
   padding: 2rem;
@@ -44,7 +42,7 @@
   overflow: hidden;
 }
 
-.order-card::before {
+.orders .order-card::before {
   content: '';
   position: absolute;
   top: 0;
@@ -54,13 +52,13 @@
   background: linear-gradient(135deg, #007bff, #0056b3);
 }
 
-.order-card:hover {
+.orders .order-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
 }
 
 /* Order Header */
-.order-header {
+.orders .order-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -69,7 +67,7 @@
   border-bottom: 2px solid #e9ecef;
 }
 
-.order-header h3 {
+.orders .order-header h3 {
   color: #333;
   margin: 0;
   font-size: 1.3rem;
@@ -79,13 +77,13 @@
   gap: 0.5rem;
 }
 
-.order-header h3::before {
+.orders .order-header h3::before {
   content: "📦";
   font-size: 1.2rem;
 }
 
 /* Status Badge */
-.status {
+.orders .status {
   padding: 0.5rem 1rem;
   border-radius: 20px;
   font-size: 0.85rem;
@@ -98,39 +96,39 @@
   text-align: center;
 }
 
-.status.pending {
+.orders .status.pending {
   background: linear-gradient(135deg, #ffc107, #e0a800);
   color: #212529;
 }
 
-.status.accepted {
+.orders .status.accepted {
   background: linear-gradient(135deg, #17a2b8, #138496);
 }
 
-.status.processing {
+.orders .status.processing {
   background: linear-gradient(135deg, #007bff, #0056b3);
 }
 
-.status.shipped {
+.orders .status.shipped {
   background: linear-gradient(135deg, #6f42c1, #5a2d91);
 }
 
-.status.delivered {
+.orders .status.delivered {
   background: linear-gradient(135deg, #28a745, #1e7e34);
 }
 
-.status.cancelled {
+.orders .status.cancelled {
   background: linear-gradient(135deg, #dc3545, #c82333);
 }
 
 /* Order Details */
-.order-details {
+.orders .order-details {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 }
 
-.order-details > p {
+.orders .order-details > p {
   margin: 0.25rem 0;
   color: #6c757d;
   font-size: 0.95rem;
@@ -140,29 +138,29 @@
   gap: 0.5rem;
 }
 
-.order-details > p:first-child::before {
+.orders .order-details > p:first-child::before {
   content: "📅";
   font-size: 0.9rem;
 }
 
-.order-details > p:nth-child(2)::before {
+.orders .order-details > p:nth-child(2)::before {
   content: "💰";
   font-size: 0.9rem;
 }
 
-.order-details > p strong,
-.order-details > p:nth-child(2) {
+.orders .order-details > p strong,
+.orders .order-details > p:nth-child(2) {
   color: #333;
   font-weight: 600;
   font-size: 1.1rem;
 }
 
 /* Order Items Section */
-.order-items {
+.orders .order-items {
   margin-top: 1rem;
 }
 
-.order-items h4 {
+.orders .order-items h4 {
   color: #333;
   margin-bottom: 1rem;
   font-size: 1.1rem;
@@ -174,13 +172,13 @@
   border-bottom: 1px solid #e9ecef;
 }
 
-.order-items h4::before {
+.orders .order-items h4::before {
   content: "🛒";
   font-size: 1rem;
 }
 
 /* Individual Order Items */
-.order-item {
+.orders .order-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -192,24 +190,24 @@
   transition: all 0.3s ease;
 }
 
-.order-item:hover {
+.orders .order-item:hover {
   background: #e7f3ff;
   transform: translateX(2px);
 }
 
-.order-item span:first-child {
+.orders .order-item span:first-child {
   color: #333;
   font-weight: 500;
 }
 
-.order-item span:last-child {
+.orders .order-item span:last-child {
   color: #007bff;
   font-weight: 600;
   font-size: 1rem;
 }
 
 /* No Orders State */
-.no-orders {
+.orders .no-orders {
   text-align: center;
   padding: 4rem 2rem;
   background: white;
@@ -219,7 +217,7 @@
   margin-top: 2rem;
 }
 
-.no-orders p {
+.orders .no-orders p {
   font-size: 1.3rem;
   margin-bottom: 2rem;
   font-weight: 500;
@@ -229,12 +227,12 @@
   gap: 0.5rem;
 }
 
-.no-orders p::before {
+.orders .no-orders p::before {
   content: "📦";
   font-size: 1.5rem;
 }
 
-.no-orders .btn {
+.orders .no-orders .btn {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -248,14 +246,16 @@
   transition: all 0.3s ease;
   text-transform: uppercase;
   letter-spacing: 0.3px;
+  border: none;
+  cursor: pointer;
 }
 
-.no-orders .btn::before {
+.orders .no-orders .btn::before {
   content: "🛍️";
   font-size: 1rem;
 }
 
-.no-orders .btn:hover {
+.orders .no-orders .btn:hover {
   background: linear-gradient(135deg, #0056b3, #004085);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
@@ -270,41 +270,40 @@
     margin-bottom: 2rem;
   }
 
-  .order-card {
+  .orders .order-card {
     padding: 1.5rem;
   }
 
-  .order-header {
+  .orders .order-header {
     flex-direction: column;
     align-items: stretch;
     gap: 1rem;
     text-align: center;
   }
 
-  .order-header h3 {
+  .orders .order-header h3 {
     justify-content: center;
   }
 
-  .order-details {
+  .orders .orders-list {
     grid-template-columns: 1fr;
-    gap: 1rem;
   }
 
-  .order-details > p {
+  .orders .order-details > p {
     justify-content: center;
   }
 
-  .order-items h4 {
+  .orders .order-items h4 {
     justify-content: center;
   }
 
-  .order-item {
+  .orders .order-item {
     flex-direction: column;
     gap: 0.5rem;
     text-align: center;
   }
 
-  .status {
+  .orders .status {
     min-width: auto;
     width: 100%;
   }
@@ -324,43 +323,43 @@
     margin-bottom: 1.5rem;
   }
 
-  .order-card {
+  .orders .order-card {
     padding: 1rem;
   }
 
-  .order-header h3 {
+  .orders .order-header h3 {
     font-size: 1.1rem;
   }
 
-  .order-details > p {
+  .orders .order-details > p {
     font-size: 0.9rem;
     flex-direction: column;
     gap: 0.25rem;
   }
 
-  .order-items h4 {
+  .orders .order-items h4 {
     font-size: 1rem;
   }
 
-  .order-item {
+  .orders .order-item {
     padding: 0.5rem;
   }
 
-  .order-item span {
+  .orders .order-item span {
     font-size: 0.9rem;
   }
 
-  .no-orders {
+  .orders .no-orders {
     padding: 2rem 1rem;
   }
 
-  .no-orders p {
+  .orders .no-orders p {
     font-size: 1.1rem;
     flex-direction: column;
     gap: 0.5rem;
   }
 
-  .no-orders .btn {
+  .orders .no-orders .btn {
     font-size: 0.9rem;
     padding: 0.6rem 1.2rem;
   }
