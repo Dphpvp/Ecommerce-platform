@@ -1,0 +1,369 @@
+@import url('./var.css');
+
+/* Orders Page Styles */
+.orders {
+  padding: 2rem 0;
+  background: #f8f9fa;
+  min-height: 100vh;
+}
+
+.orders .container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.orders h1 {
+  text-align: center;
+  margin-bottom: 2.5rem;
+  color: #333;
+  font-size: 2.5rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Orders List */
+.orders-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Order Cards */
+.order-card {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e9ecef;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.order-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(135deg, #007bff, #0056b3);
+}
+
+.order-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+/* Order Header */
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.order-header h3 {
+  color: #333;
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.order-header h3::before {
+  content: "📦";
+  font-size: 1.2rem;
+}
+
+/* Status Badge */
+.status {
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  min-width: 100px;
+  text-align: center;
+}
+
+.status.pending {
+  background: linear-gradient(135deg, #ffc107, #e0a800);
+  color: #212529;
+}
+
+.status.accepted {
+  background: linear-gradient(135deg, #17a2b8, #138496);
+}
+
+.status.processing {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+}
+
+.status.shipped {
+  background: linear-gradient(135deg, #6f42c1, #5a2d91);
+}
+
+.status.delivered {
+  background: linear-gradient(135deg, #28a745, #1e7e34);
+}
+
+.status.cancelled {
+  background: linear-gradient(135deg, #dc3545, #c82333);
+}
+
+/* Order Details */
+.order-details {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  align-items: start;
+}
+
+.order-details > p {
+  margin: 0.5rem 0;
+  color: #6c757d;
+  font-size: 1rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.order-details > p:first-child::before {
+  content: "📅";
+  font-size: 0.9rem;
+}
+
+.order-details > p:nth-child(2)::before {
+  content: "💰";
+  font-size: 0.9rem;
+}
+
+.order-details > p strong,
+.order-details > p:nth-child(2) {
+  color: #333;
+  font-weight: 600;
+  font-size: 1.1rem;
+}
+
+/* Order Items Section */
+.order-items {
+  grid-column: 1 / -1;
+  margin-top: 1rem;
+}
+
+.order-items h4 {
+  color: #333;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.order-items h4::before {
+  content: "🛒";
+  font-size: 1rem;
+}
+
+/* Individual Order Items */
+.order-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  margin-bottom: 0.5rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 4px solid #007bff;
+  transition: all 0.3s ease;
+}
+
+.order-item:hover {
+  background: #e7f3ff;
+  transform: translateX(2px);
+}
+
+.order-item span:first-child {
+  color: #333;
+  font-weight: 500;
+}
+
+.order-item span:last-child {
+  color: #007bff;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+/* No Orders State */
+.no-orders {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: white;
+  border-radius: 12px;
+  border: 2px dashed #e9ecef;
+  color: #6c757d;
+  margin-top: 2rem;
+}
+
+.no-orders p {
+  font-size: 1.3rem;
+  margin-bottom: 2rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.no-orders p::before {
+  content: "📦";
+  font-size: 1.5rem;
+}
+
+.no-orders .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.no-orders .btn::before {
+  content: "🛍️";
+  font-size: 1rem;
+}
+
+.no-orders .btn:hover {
+  background: linear-gradient(135deg, #0056b3, #004085);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+  text-decoration: none;
+  color: white;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .orders h1 {
+    font-size: 2rem;
+    margin-bottom: 2rem;
+  }
+
+  .order-card {
+    padding: 1.5rem;
+  }
+
+  .order-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+    text-align: center;
+  }
+
+  .order-header h3 {
+    justify-content: center;
+  }
+
+  .order-details {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .order-details > p {
+    justify-content: center;
+  }
+
+  .order-items h4 {
+    justify-content: center;
+  }
+
+  .order-item {
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: center;
+  }
+
+  .status {
+    min-width: auto;
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .orders {
+    padding: 1rem 0;
+  }
+
+  .orders .container {
+    padding: 0 0.5rem;
+  }
+
+  .orders h1 {
+    font-size: 1.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .order-card {
+    padding: 1rem;
+  }
+
+  .order-header h3 {
+    font-size: 1.1rem;
+  }
+
+  .order-details > p {
+    font-size: 0.9rem;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .order-items h4 {
+    font-size: 1rem;
+  }
+
+  .order-item {
+    padding: 0.5rem;
+  }
+
+  .order-item span {
+    font-size: 0.9rem;
+  }
+
+  .no-orders {
+    padding: 2rem 1rem;
+  }
+
+  .no-orders p {
+    font-size: 1.1rem;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .no-orders .btn {
+    font-size: 0.9rem;
+    padding: 0.6rem 1.2rem;
+  }
+}
