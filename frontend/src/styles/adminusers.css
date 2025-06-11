@@ -106,8 +106,8 @@
 
 /* Users Grid - Fixed Layout */
 .users-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
@@ -124,8 +124,8 @@
   overflow: hidden;
   height: auto;
   min-height: 280px;
-  width: 100%;
-  max-width: 400px;
+  width: 320px;
+  flex: 0 0 320px;
 }
 
 .user-card::before {
@@ -569,7 +569,8 @@
   .user-card {
     padding: 1.5rem;
     min-height: 260px;
-    max-width: none;
+    width: 250px;
+    flex: 0 0 250px;
   }
 
   .user-header {
@@ -635,6 +636,8 @@
   .user-card {
     padding: 1rem;
     min-height: 240px;
+    width: 180px;
+    flex: 0 0 180px;
   }
 
   .user-header h3 {
