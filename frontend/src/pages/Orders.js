@@ -60,7 +60,7 @@ const Orders = () => {
               <div key={order._id} className="order-management-card">
                 <div className="order-header">
                   <div className="order-basic-info">
-                    <h3>Order #{order._id.slice(-8)}</h3>
+                    <h3>Order #{order.order_number || order._id.slice(-8)}</h3>
                     <p>Total: ${order.total_amount.toFixed(2)}</p>
                     <p>Date: {formatDate(order.created_at)}</p>
                     <p>Items: {order.items.length}</p>
@@ -85,7 +85,7 @@ const Orders = () => {
         <Modal isOpen={isModalOpen} onClose={closeModal}>
           {selectedOrder && (
             <>
-              <h2>Order #{selectedOrder._id.slice(-8)}</h2>
+              <h2>Order #{selectedOrder.order_number || selectedOrder._id.slice(-8)}</h2>
 
               <section>
                 <h3>Order Information</h3>
