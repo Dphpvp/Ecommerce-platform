@@ -2,18 +2,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import stripe
 import os
-from dotenv import load_dotenv
-
-# 🆕 Load environment variables from .env file
-load_dotenv()
-
-# Import your existing routers
 from api import router as api_router
 from routes.admin_routes import router as admin_router
 
 # Configuration
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
-FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
+FRONTEND_URL = os.getenv("FRONTEND_URL")
 
 # Initialize FastAPI
 app = FastAPI(title="E-commerce API")
