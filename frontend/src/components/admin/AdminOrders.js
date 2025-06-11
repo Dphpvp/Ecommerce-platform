@@ -1,34 +1,40 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import OrderManagementCard from "./OrderManagementCard";
-import "../../styles/admin.css";
+import "../../styles/adminorders.css";
 
 const API_BASE =
   process.env.REACT_APP_API_BASE_URL || "http://localhost:8000/api";
 
 const AdminOrders = () => {
   const [orders, setOrders] = useState([]);
+  const [filteredOrders, setFilteredOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const { token } = useAuth();
 
   useEffect(() => {
     fetchOrders();
   }, []);
 
+  // Filter orders when statusFilter or orders change
+  useEffect(() => {
+    if (statusFilter === "all") {
+      setFilteredOrders(orders);
+    } else {
+      setFilteredOrders(orders.filter(order => order.status === statusFilter));
+    }
+  }, [orders, statusFilter]);
+
   const fetchOrders = async () => {
     try {
-      const url = filter
-        ? `${API_BASE}/admin/orders?status=${filter}`
-        : `${API_BASE}/admin/orders`;
-
-      const response = await fetch(url, {
+      const response = await fetch(`${API_BASE}/admin/orders`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       if (response.ok) {
         const data = await response.json();
-        setOrders(data.orders);
+        setOrders(data.orders || []);
       }
     } catch (error) {
       console.error("Failed to fetch orders:", error);
@@ -52,8 +58,13 @@ const AdminOrders = () => {
       );
 
       if (response.ok) {
+        // Update the orders state
+        setOrders(prevOrders =>
+          prevOrders.map(order =>
+            order._id === orderId ? { ...order, status: newStatus } : order
+          )
+        );
         alert(`Order status updated to ${newStatus}`);
-        fetchOrders(); // Refresh the orders list
       } else {
         alert("Failed to update order status");
       }
@@ -75,49 +86,75 @@ const AdminOrders = () => {
     return colors[status] || "#6c757d";
   };
 
-  if (loading)
+  const getStatusCount = (status) => {
+    return orders.filter(order => order.status === status).length;
+  };
+
+  if (loading) {
     return (
-      <div className="container">
-        <p>Loading orders...</p>
+      <div className="admin-orders">
+        <div className="container">
+          <p>Loading orders...</p>
+        </div>
       </div>
     );
+  }
 
   return (
     <div className="admin-orders">
       <div className="container">
-        <div className="orders-header">
-          <h1>Order Management</h1>
-          <select
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            className="status-filter"
-          >
-            <option value="">All Orders</option>
-            <option value="pending">Pending</option>
-            <option value="accepted">Accepted</option>
-            <option value="processing">Processing</option>
-            <option value="shipped">Shipped</option>
-            <option value="delivered">Delivered</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-        </div>
-
-        <div className="orders-list relative">
-          {orders.map((order) => (
-            <OrderManagementCard
-              key={order._id}
-              order={order}
-              onStatusUpdate={updateOrderStatus}
-              getStatusColor={getStatusColor}
-            />
-          ))}
-        </div>
-
-        {orders.length === 0 && (
-          <div className="no-orders">
-            <p>No orders found for the selected filters.</p>
+        <h1>Order Management</h1>
+        
+        {/* Filter Section */}
+        <div className="filter-section">
+          <h3>Filter by Status:</h3>
+          <div className="filter-buttons">
+            <button 
+              className={`filter-btn ${statusFilter === 'all' ? 'active' : ''}`}
+              onClick={() => setStatusFilter('all')}
+            >
+              All Orders ({orders.length})
+            </button>
+            {['pending', 'accepted', 'processing', 'shipped', 'delivered', 'cancelled'].map(status => (
+              <button
+                key={status}
+                className={`filter-btn ${statusFilter === status ? 'active' : ''}`}
+                onClick={() => setStatusFilter(status)}
+                style={{ 
+                  backgroundColor: statusFilter === status ? getStatusColor(status) : '#f8f9fa',
+                  color: statusFilter === status ? 'white' : '#333'
+                }}
+              >
+                {status.charAt(0).toUpperCase() + status.slice(1)} ({getStatusCount(status)})
+              </button>
+            ))}
           </div>
-        )}
+        </div>
+
+        {/* Orders Display */}
+        <div className="orders-section">
+          {filteredOrders.length === 0 ? (
+            <div className="no-orders">
+              <p>
+                {statusFilter === 'all' 
+                  ? 'No orders found.' 
+                  : `No orders with status "${statusFilter}" found.`
+                }
+              </p>
+            </div>
+          ) : (
+            <div className="orders-list">
+              {filteredOrders.map((order) => (
+                <OrderManagementCard
+                  key={order._id}
+                  order={order}
+                  onStatusUpdate={updateOrderStatus}
+                  getStatusColor={getStatusColor}
+                />
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
