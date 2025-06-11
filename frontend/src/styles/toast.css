@@ -1,4 +1,6 @@
 /* Toast Notifications */
+@import url(var.css);
+
 .toast-container {
   position: fixed;
   top: 20px;

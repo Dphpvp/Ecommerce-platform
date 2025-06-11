@@ -1,3 +1,5 @@
+@import url(var.css);
+
 .category-form {
   margin-bottom: 20px;
   display: flex;
