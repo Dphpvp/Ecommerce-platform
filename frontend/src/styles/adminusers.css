@@ -1,3 +1,4 @@
+@import url('./var.css');
 /* Admin Users - Modern Design */
 .admin-users {
   padding: 2rem 0;
@@ -9,6 +10,12 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 0 1rem;
+}
+
+.users-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 }
 
 .admin-users h1 {
@@ -122,6 +129,7 @@
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  max-width: 350px;
   height: 100%;
 }
 
