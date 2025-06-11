@@ -96,7 +96,6 @@ async def delete_product(product_id: str, admin_user: dict = Depends(get_admin_u
     return {"message": "Product deleted"}
 
 # Order management
-
 @router.get("/orders")
 async def get_all_orders(admin_user: dict = Depends(get_admin_user)):
     orders_cursor = db.orders.aggregate([
@@ -134,7 +133,7 @@ async def get_all_orders(admin_user: dict = Depends(get_admin_user)):
 # Order status update
 @router.put("/orders/{order_id}/status")
 async def update_order_status(order_id: str, status_data: dict, admin_user: dict = Depends(get_admin_user)):
-    valid_statuses = ["pending", "processing", "shipped", "delivered", "cancelled"]
+    valid_statuses = ["pending", "accepted", "processing", "shipped", "delivered", "cancelled"]
     new_status = status_data.get("status")
     
     if new_status not in valid_statuses:
@@ -162,86 +161,27 @@ async def get_all_users(admin_user: dict = Depends(get_admin_user)):
         users.append(user)
     return {"users": users}
 
-@router.put("/users/{user_id}/admin")
-async def toggle_admin_status(user_id: str, admin_data: dict, admin_user: dict = Depends(get_admin_user)):
-    is_admin = admin_data.get("is_admin", False)
+@router.put("/users/{user_id}")
+async def update_user(user_id: str, user_data: dict, admin_user: dict = Depends(get_admin_user)):
+    """Update user information"""
+    # Remove any fields that shouldn't be updated
+    allowed_fields = ["full_name", "email", "username", "phone", "address"]
+    update_data = {k: v for k, v in user_data.items() if k in allowed_fields}
+    
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No valid fields to update")
+    
+    # Check if email or username already exists (if being updated)
+    if "email" in update_data:
+        existing_email = await db.users.find_one({"email": update_data["email"], "_id": {"$ne": ObjectId(user_id)}})
+        if existing_email:
+            raise HTTPException(status_code=400, detail="Email already exists")
+    
+    if "username" in update_data:
+        existing_username = await db.users.find_one({"username": update_data["username"], "_id": {"$ne": ObjectId(user_id)}})
+        if existing_username:
+            raise HTTPException(status_code=400, detail="Username already exists")
     
     result = await db.users.update_one(
         {"_id": ObjectId(user_id)},
-        {"$set": {"is_admin": is_admin}}
-    )
-    
-    if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    return {"message": "User admin status updated"}
-
-@router.delete("/users/{user_id}")
-async def delete_user(user_id: str, admin_user: dict = Depends(get_admin_user)):
-    if str(admin_user["_id"]) == user_id:
-        raise HTTPException(status_code=400, detail="Cannot delete your own account")
-    
-    result = await db.users.delete_one({"_id": ObjectId(user_id)})
-    if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    return {"message": "User deleted"}
-
-@router.get("/products")
-async def get_admin_products(admin_user: dict = Depends(get_admin_user)):
-    cursor = db.products.find({})
-    products = []
-    async for product in cursor:
-        product["_id"] = str(product["_id"])
-        products.append(product)
-    return {"products": products}
-
-@router.get("/debug/products")
-async def debug_products(admin_user: dict = Depends(get_admin_user)):
-    cursor = db.products.find({}).limit(3)
-    products = []
-    async for product in cursor:
-        products.append({
-            "_id": str(product["_id"]),
-            "name": product.get("name"),
-            "category": product.get("category")
-        })
-    return {"products": products}
-
-@router.get("/categories")
-async def get_categories(admin_user: dict = Depends(get_admin_user)):
-    """Get all product categories with counts"""
-    pipeline = [
-        {"$group": {"_id": "$category", "count": {"$sum": 1}, "total_stock": {"$sum": "$stock"}}},
-        {"$sort": {"count": -1}}
-    ]
-    categories = await db.products.aggregate(pipeline).to_list(None)
-    
-    return {
-        "categories": [
-            {
-                "name": cat["_id"], 
-                "product_count": cat["count"],
-                "total_stock": cat["total_stock"]
-            } for cat in categories
-        ]
-    }
-
-@router.get("/debug")
-async def debug_categories(admin_user: dict = Depends(get_admin_user)):
-    # Count total products
-    total_products = await db.products.count_documents({})
-    
-    # Get first few products
-    sample_products = []
-    async for product in db.products.find({}).limit(3):
-        sample_products.append({
-            "name": product.get("name"),
-            "category": product.get("category"),
-            "all_fields": list(product.keys())
-        })
-    
-    return {
-        "total_products": total_products,
-        "sample_products": sample_products
-    }
+        {"$set": update_data}

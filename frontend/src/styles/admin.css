@@ -142,69 +142,6 @@
   color: var(--color-gray);
 }
 
-/* Admin Users Styles */
-.admin-users {
-  padding: 2rem 0;
-}
-
-.users-list {
-  display: grid;
-  gap: 1.5rem;
-}
-
-.user-card {
-  background: var(--color-white);
-  padding: 2rem;
-  border-radius: 10px;
-  box-shadow: var(--box-shadow-primary);
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
-.user-info h3 {
-  color: var(--color-gray);
-  margin-bottom: 1rem;
-}
-
-.user-info p {
-  margin-bottom: 0.5rem;
-  color: var(--color-gray);
-}
-
-.user-actions {
-  display: flex;
-  align-items: center;
-}
-
-.role-section {
-  text-align: center;
-}
-
-.role-badge {
-  display: inline-block;
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  font-weight: bold;
-  margin-bottom: 1rem;
-  font-size: 0.9rem;
-}
-
-.role-badge.admin {
-  background: var(--color-red);
-  color: var(--color-white);
-}
-
-.role-badge.user {
-  background: var(--color-green);
-  color: var(--color-white);
-}
-
-.role-controls button {
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
-}
-
 /* Admin Products Styles */
 .admin-products {
   padding: 2rem 0;
@@ -356,7 +293,6 @@
 }
 
 /* No Data States */
-.no-users,
 .no-products {
   text-align: center;
   padding: 3rem;
@@ -365,7 +301,6 @@
   box-shadow: var(--box-shadow-secondary);
 }
 
-.no-users p,
 .no-products p {
   font-size: 1.2rem;
   color: var(--color-gray);
@@ -389,11 +324,6 @@
   
   .dashboard-content {
     grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-  
-  .user-card {
-    flex-direction: column;
     gap: 1rem;
   }
   
@@ -425,7 +355,6 @@
 
 @media (max-width: 480px) {
   .admin-dashboard,
-  .admin-users,
   .admin-products {
     padding: 1rem 0;
   }
@@ -441,10 +370,6 @@
   
   .stat-number {
     font-size: 1.8rem;
-  }
-  
-  .user-card {
-    padding: 1rem;
   }
   
   .product-form {

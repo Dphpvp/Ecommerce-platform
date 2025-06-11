@@ -1,11 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import '../../styles/adminusers.css';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api';
 
 const AdminUsers = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [editingUser, setEditingUser] = useState(null);
+  const [editFormData, setEditFormData] = useState({});
+  const [searchTerm, setSearchTerm] = useState('');
+  const [roleFilter, setRoleFilter] = useState('all');
   const { token } = useAuth();
 
   const fetchUsers = useCallback(async () => {
@@ -29,9 +34,73 @@ const AdminUsers = () => {
     fetchUsers();
   }, [fetchUsers]);
 
+  const startEditUser = (user) => {
+    setEditingUser(user._id);
+    setEditFormData({
+      full_name: user.full_name,
+      email: user.email,
+      username: user.username,
+      phone: user.phone || '',
+      address: user.address || ''
+    });
+  };
+
+  const cancelEdit = () => {
+    setEditingUser(null);
+    setEditFormData({});
+  };
+
+  const saveUser = async (userId) => {
+    try {
+      const response = await fetch(`${API_BASE}/admin/users/${userId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(editFormData)
+      });
+
+      if (response.ok) {
+        alert('User updated successfully');
+        fetchUsers();
+        setEditingUser(null);
+        setEditFormData({});
+      } else {
+        const errorData = await response.json();
+        alert(errorData.detail || 'Failed to update user');
+      }
+    } catch (error) {
+      console.error('Failed to update user:', error);
+      alert('Failed to update user');
+    }
+  };
+
+  const deleteUser = async (userId, userName) => {
+    if (!window.confirm(`Delete user "${userName}"? This action cannot be undone.`)) return;
+
+    try {
+      const response = await fetch(`${API_BASE}/admin/users/${userId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.ok) {
+        alert('User deleted successfully');
+        fetchUsers();
+      } else {
+        const errorData = await response.json();
+        alert(errorData.detail || 'Failed to delete user');
+      }
+    } catch (error) {
+      console.error('Failed to delete user:', error);
+      alert('Failed to delete user');
+    }
+  };
+
   const updateUserRole = async (userId, isAdmin) => {
     try {
-      const response = await fetch(`${API_BASE}/admin/users/${userId}/role`, {
+      const response = await fetch(`${API_BASE}/admin/users/${userId}/admin`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -54,50 +123,181 @@ const AdminUsers = () => {
     }
   };
 
-  if (loading) return <div className="container"><p>Loading users...</p></div>;
+  // Filter users based on search and role
+  const filteredUsers = users.filter(user => {
+    const matchesSearch = user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          user.username.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesRole = roleFilter === 'all' || 
+                       (roleFilter === 'admin' && user.is_admin) ||
+                       (roleFilter === 'user' && !user.is_admin);
+    
+    return matchesSearch && matchesRole;
+  });
+
+  const getUserCount = (role) => {
+    if (role === 'all') return users.length;
+    return users.filter(user => role === 'admin' ? user.is_admin : !user.is_admin).length;
+  };
+
+  if (loading) {
+    return (
+      <div className="admin-users">
+        <div className="container">
+          <p>Loading users...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="admin-users">
       <div className="container">
         <h1>User Management</h1>
         
-        <div className="users-list">
-          {users.map(user => (
-            <div key={user._id} className="user-card">
-              <div className="user-info">
-                <h3>{user.full_name}</h3>
-                <p><strong>Email:</strong> {user.email}</p>
-                <p><strong>Username:</strong> {user.username}</p>
-                <p><strong>Phone:</strong> {user.phone || 'Not provided'}</p>
-                <p><strong>Address:</strong> {user.address || 'Not provided'}</p>
-                <p><strong>Orders:</strong> {user.order_count}</p>
-                <p><strong>Joined:</strong> {new Date(user.created_at).toLocaleDateString()}</p>
-              </div>
-              
-              <div className="user-actions">
-                <div className="role-section">
-                  <span className={`role-badge ${user.is_admin ? 'admin' : 'user'}`}>
-                    {user.is_admin ? 'Admin' : 'User'}
-                  </span>
-                  <div className="role-controls">
-                    <button
-                      onClick={() => updateUserRole(user._id, !user.is_admin)}
-                      className={`btn ${user.is_admin ? 'btn-danger' : 'btn-primary'}`}
-                    >
-                      {user.is_admin ? 'Remove Admin' : 'Make Admin'}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
+        {/* Search and Filter Section */}
+        <div className="filter-section">
+          <div className="search-box">
+            <input
+              type="text"
+              placeholder="Search users by name, email, or username..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="search-input"
+            />
+          </div>
+          
+          <div className="filter-buttons">
+            <button 
+              className={`filter-btn ${roleFilter === 'all' ? 'active' : ''}`}
+              onClick={() => setRoleFilter('all')}
+            >
+              All Users ({getUserCount('all')})
+            </button>
+            <button 
+              className={`filter-btn ${roleFilter === 'admin' ? 'active' : ''}`}
+              onClick={() => setRoleFilter('admin')}
+            >
+              Admins ({getUserCount('admin')})
+            </button>
+            <button 
+              className={`filter-btn ${roleFilter === 'user' ? 'active' : ''}`}
+              onClick={() => setRoleFilter('user')}
+            >
+              Users ({getUserCount('user')})
+            </button>
+          </div>
         </div>
 
-        {users.length === 0 && (
-          <div className="no-users">
-            <p>No users found.</p>
-          </div>
-        )}
+        {/* Users Display */}
+        <div className="users-section">
+          {filteredUsers.length === 0 ? (
+            <div className="no-users">
+              <p>
+                {searchTerm ? `No users found matching "${searchTerm}".` : 'No users found.'}
+              </p>
+            </div>
+          ) : (
+            <div className="users-list">
+              {filteredUsers.map(user => (
+                <div key={user._id} className="user-card">
+                  {editingUser === user._id ? (
+                    <div className="edit-form">
+                      <h3>Edit User</h3>
+                      <div className="form-grid">
+                        <input
+                          type="text"
+                          value={editFormData.full_name}
+                          onChange={(e) => setEditFormData({...editFormData, full_name: e.target.value})}
+                          placeholder="Full Name"
+                        />
+                        <input
+                          type="email"
+                          value={editFormData.email}
+                          onChange={(e) => setEditFormData({...editFormData, email: e.target.value})}
+                          placeholder="Email"
+                        />
+                        <input
+                          type="text"
+                          value={editFormData.username}
+                          onChange={(e) => setEditFormData({...editFormData, username: e.target.value})}
+                          placeholder="Username"
+                        />
+                        <input
+                          type="tel"
+                          value={editFormData.phone}
+                          onChange={(e) => setEditFormData({...editFormData, phone: e.target.value})}
+                          placeholder="Phone"
+                        />
+                        <textarea
+                          value={editFormData.address}
+                          onChange={(e) => setEditFormData({...editFormData, address: e.target.value})}
+                          placeholder="Address"
+                          rows="3"
+                        />
+                      </div>
+                      <div className="edit-actions">
+                        <button 
+                          className="save-btn"
+                          onClick={() => saveUser(user._id)}
+                        >
+                          Save Changes
+                        </button>
+                        <button 
+                          className="cancel-btn"
+                          onClick={cancelEdit}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="user-info">
+                        <div className="user-header">
+                          <h3>{user.full_name}</h3>
+                          <span className={`role-badge ${user.is_admin ? 'admin' : 'user'}`}>
+                            {user.is_admin ? 'Admin' : 'User'}
+                          </span>
+                        </div>
+                        <div className="user-details">
+                          <p><strong>Email:</strong> {user.email}</p>
+                          <p><strong>Username:</strong> {user.username}</p>
+                          <p><strong>Phone:</strong> {user.phone || 'Not provided'}</p>
+                          <p><strong>Address:</strong> {user.address || 'Not provided'}</p>
+                          <p><strong>Orders:</strong> {user.order_count}</p>
+                          <p><strong>Joined:</strong> {new Date(user.created_at).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="user-actions">
+                        <button
+                          className="edit-btn"
+                          onClick={() => startEditUser(user)}
+                        >
+                          Edit
+                        </button>
+                        <button
+                          className={`role-btn ${user.is_admin ? 'remove-admin' : 'make-admin'}`}
+                          onClick={() => updateUserRole(user._id, !user.is_admin)}
+                        >
+                          {user.is_admin ? 'Remove Admin' : 'Make Admin'}
+                        </button>
+                        <button
+                          className="delete-btn"
+                          onClick={() => deleteUser(user._id, user.full_name)}
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
