@@ -119,7 +119,8 @@
 /* Users Grid - Fixed Layout */
 .users-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  max-width: 320px;
+  position: relative;
   grid-auto-rows: 1fr;
   align-items: start;
   gap: 1.5rem;
