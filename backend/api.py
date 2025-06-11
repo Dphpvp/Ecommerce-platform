@@ -236,10 +236,10 @@ async def create_product(product: Product):
     return {"message": "Product created", "id": str(result.inserted_id)}
 
 @router.get("/products")
-async def get_products(category: Optional[str] = None, limit: int = 20, skip: int = 0):
+async def get_products(category: Optional[str] = None, limit: int = 100, skip: int = 0):
     query = {}
-    if category:
-        query["category"] = category
+    if category and category.strip():
+        query["category"] = category.strip()
     
     cursor = db.products.find(query).skip(skip).limit(limit)
     products = []
@@ -444,8 +444,3 @@ async def get_order(order_id: str, current_user: dict = Depends(get_current_user
     
     order["_id"] = str(order["_id"])
     return order
-
-@router.get("/admin/categories")
-async def get_categories():
-    categories = await db.categories.distinct("categories")
-    return {"categories": categories}
