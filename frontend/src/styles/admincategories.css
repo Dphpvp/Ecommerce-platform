@@ -1,5 +1,3 @@
-@import url('./var.css');
-
 /* Admin Categories - Modern Design */
 .admin-categories {
   padding: 2rem 0;
@@ -19,7 +17,7 @@
   color: #333;
   font-size: 2.5rem;
   font-weight: 700;
-  background: linear-gradient(135deg, var(--color-blue), #0056b3);
+  background: linear-gradient(135deg, #007bff, #0056b3);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -59,7 +57,7 @@
 
 .category-form input:focus {
   outline: none;
-  border-color: var(--color-blue);
+  border-color: #007bff;
   box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
   transform: translateY(-1px);
 }
@@ -70,7 +68,7 @@
 }
 
 .category-form button {
-  background: linear-gradient(135deg, var(--color-blue), #0056b3);
+  background: linear-gradient(135deg, #007bff, #0056b3);
   color: white;
   border: none;
   padding: 12px 24px;
@@ -123,7 +121,7 @@
   left: 0;
   right: 0;
   height: 4px;
-  background: linear-gradient(135deg, var(--color-blue), #0056b3);
+  background: linear-gradient(135deg, #007bff, #0056b3);
 }
 
 .category-card:hover {
@@ -233,6 +231,7 @@
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   border: 1px solid #e9ecef;
   margin-top: 2rem;
+  scroll-margin-top: 2rem;
 }
 
 .products-section h2 {
@@ -254,13 +253,13 @@
   transform: translateX(-50%);
   width: 60px;
   height: 3px;
-  background: linear-gradient(135deg, var(--color-blue), #0056b3);
+  background: linear-gradient(135deg, #007bff, #0056b3);
 }
 
 /* Products Grid */
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 1.5rem;
   margin-top: 2rem;
 }
@@ -303,7 +302,7 @@
 }
 
 .product-card:hover img {
-  border-color: var(--color-blue);
+  border-color: #007bff;
 }
 
 .product-card h4 {
@@ -356,8 +355,155 @@
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 3;
-  line-clamp: 3;
   -webkit-box-orient: vertical;
+}
+
+/* Product Actions */
+.product-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  justify-content: center;
+}
+
+.edit-btn {
+  background: linear-gradient(135deg, #ffc107, #e0a800);
+  color: #212529;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex: 1;
+  max-width: 100px;
+}
+
+.edit-btn:hover {
+  background: linear-gradient(135deg, #e0a800, #d39e00);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(255, 193, 7, 0.3);
+}
+
+.delete-product-btn {
+  background: linear-gradient(135deg, #dc3545, #c82333);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex: 1;
+  max-width: 100px;
+}
+
+.delete-product-btn:hover {
+  background: linear-gradient(135deg, #c82333, #a71e2a);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(220, 53, 69, 0.3);
+}
+
+/* Edit Form */
+.edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.edit-form input,
+.edit-form textarea {
+  padding: 8px 12px;
+  border: 2px solid #e9ecef;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  transition: border-color 0.3s ease;
+}
+
+.edit-form input:focus,
+.edit-form textarea:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+}
+
+.edit-form textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+/* Edit Actions */
+.edit-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.save-btn {
+  background: linear-gradient(135deg, #28a745, #1e7e34);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex: 1;
+}
+
+.save-btn:hover {
+  background: linear-gradient(135deg, #1e7e34, #155724);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(40, 167, 69, 0.3);
+}
+
+.cancel-btn {
+  background: linear-gradient(135deg, #6c757d, #5a6268);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex: 1;
+}
+
+.cancel-btn:hover {
+  background: linear-gradient(135deg, #5a6268, #4e555b);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(108, 117, 125, 0.3);
+}
+
+/* Scroll Controls */
+.scroll-controls {
+  text-align: center;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 2px solid #e9ecef;
+}
+
+.scroll-to-top {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: white;
+  border: none;
+  padding: 12px 24px;
+  border-radius: 50px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+}
+
+.scroll-to-top:hover {
+  background: linear-gradient(135deg, #0056b3, #004085);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 123, 255, 0.3);
 }
 
 /* Loading and Empty States */
@@ -417,7 +563,7 @@
   }
 
   .products-grid {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 1rem;
   }
 
@@ -428,6 +574,16 @@
 
   .products-section h2 {
     font-size: 1.5rem;
+  }
+
+  .product-actions {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .edit-btn,
+  .delete-product-btn {
+    max-width: 100%;
   }
 }
 
