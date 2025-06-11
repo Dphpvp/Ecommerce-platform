@@ -107,10 +107,10 @@
 /* Users Grid - Fixed Layout */
 .users-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, 320px);
   gap: 1.5rem;
-  max-width: 350px;
   margin-bottom: 2rem;
+  justify-content: start;
 }
 
 /* User Cards - Proper Grid Cards */
@@ -561,7 +561,7 @@
   }
 
  .users-grid {
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(240px));
     gap: 1rem;
   }
 
