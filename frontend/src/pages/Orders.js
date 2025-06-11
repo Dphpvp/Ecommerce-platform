@@ -40,6 +40,10 @@ const Orders = () => {
     setSelectedOrder(null);
   };
 
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleString();
+  };
+
   return (
     <div className="orders">
       <div className="container">
@@ -53,39 +57,25 @@ const Orders = () => {
         ) : (
           <div className="orders-list">
             {orders.map(order => (
-              <div key={order._id} className="order-card">
+              <div key={order._id} className="order-management-card">
                 <div className="order-header">
-                  <h3>Order #{order.order_number || order._id.slice(-6)}</h3>
-                  <span className={`status ${order.status}`}>{order.status}</span>
-                </div>
-                <div className="order-details">
-                  <p>Date: {new Date(order.created_at).toLocaleDateString()}</p>
-                  <p>Total: ${order.total_amount.toFixed(2)}</p>
-                  <div className="order-items">
-                    <h4>Items:</h4>
-                    <div className="order-items-container">
-                      {order.items.slice(0, 3).map((item, index) => (
-                        <div key={index} className="order-item">
-                          <span>{item.product.name} x {item.quantity}</span>
-                          <span>${(item.product.price * item.quantity).toFixed(2)}</span>
-                        </div>
-                      ))}
-                      {order.items.length > 3 && (
-                        <div className="order-item">
-                          <span>+{order.items.length - 3} more items...</span>
-                          <span></span>
-                        </div>
-                      )}
-                    </div>
+                  <div className="order-basic-info">
+                    <h3>Order #{order._id.slice(-8)}</h3>
+                    <p>Total: ${order.total_amount.toFixed(2)}</p>
+                    <p>Date: {formatDate(order.created_at)}</p>
+                    <p>Items: {order.items.length}</p>
                   </div>
-                </div>
-                <div className="order-actions">
-                  <button 
-                    className="expand-btn"
-                    onClick={() => openModal(order)}
-                  >
-                    View Details
-                  </button>
+                  <div className="order-status-section">
+                    <span className={`current-status status-${order.status}`}>
+                      {order.status.toUpperCase()}
+                    </span>
+                    <button
+                      className="details-toggle"
+                      onClick={() => openModal(order)}
+                    >
+                      View Details
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -94,29 +84,46 @@ const Orders = () => {
 
         <Modal isOpen={isModalOpen} onClose={closeModal}>
           {selectedOrder && (
-            <div>
-              <h2>Order #{selectedOrder.order_number || selectedOrder._id.slice(-6)}</h2>
-              
-              <div className="modal-order-details">
-                <p><strong>Order ID:</strong> {selectedOrder._id}</p>
-                <p><strong>Date:</strong> {new Date(selectedOrder.created_at).toLocaleDateString()}</p>
-                <p><strong>Status:</strong> <span className={`status ${selectedOrder.status}`}>{selectedOrder.status}</span></p>
-                <p><strong>Total Amount:</strong> ${selectedOrder.total_amount.toFixed(2)}</p>
-                {selectedOrder.shipping_address && (
-                  <p><strong>Shipping Address:</strong> {selectedOrder.shipping_address}</p>
-                )}
-              </div>
+            <>
+              <h2>Order #{selectedOrder._id.slice(-8)}</h2>
 
-              <div className="modal-order-items">
-                <h3>Order Items</h3>
+              <section>
+                <h3>Order Information</h3>
+                <p><strong>Order ID:</strong> {selectedOrder._id}</p>
+                <p><strong>Date:</strong> {formatDate(selectedOrder.created_at)}</p>
+                <p><strong>Status:</strong> {selectedOrder.status}</p>
+                <p><strong>Total Amount:</strong> ${selectedOrder.total_amount.toFixed(2)}</p>
+              </section>
+
+              {selectedOrder.shipping_address && (
+                <section>
+                  <h3>Shipping Address</h3>
+                  <p>
+                    {selectedOrder.shipping_address.street}<br />
+                    {selectedOrder.shipping_address.city}, {selectedOrder.shipping_address.state} {selectedOrder.shipping_address.zipCode}<br />
+                    {selectedOrder.shipping_address.country}
+                  </p>
+                </section>
+              )}
+
+              <section>
+                <h3>Items</h3>
                 {selectedOrder.items.map((item, index) => (
-                  <div key={index} className="modal-order-item">
-                    <span>{item.product.name} x {item.quantity}</span>
-                    <span>${(item.product.price * item.quantity).toFixed(2)}</span>
+                  <div key={index} className="order-item-detail">
+                    <img
+                      src={item.product.image_url}
+                      alt={item.product.name}
+                    />
+                    <div>
+                      <p><strong>{item.product.name}</strong></p>
+                      <p>Quantity: {item.quantity}</p>
+                      <p>Price: ${item.product.price.toFixed(2)} each</p>
+                      <p>Subtotal: ${(item.product.price * item.quantity).toFixed(2)}</p>
+                    </div>
                   </div>
                 ))}
-              </div>
-            </div>
+              </section>
+            </>
           )}
         </Modal>
       </div>
