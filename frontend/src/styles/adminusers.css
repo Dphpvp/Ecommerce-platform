@@ -100,8 +100,19 @@
 }
 
 /* Users Section */
-.users-section {
+
+/*.users-section {
   margin-top: 2rem;
+}
+  */
+
+.users-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-auto-rows: 1fr;
+  align-items: start;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 /* Users Grid - Fixed Layout */
