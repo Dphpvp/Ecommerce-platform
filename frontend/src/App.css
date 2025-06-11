@@ -10,7 +10,7 @@ body {
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   line-height: 1.6;
   color: var(--color-gray);
-  background-color: var(--color-white);
+  background-color: var(--color-gray);
 }
 
 .container {
