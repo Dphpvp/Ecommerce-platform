@@ -110,10 +110,6 @@
 
 /* Users Grid - Fixed Layout */
 .users-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, 320px);
-  grid-auto-flow: column;
-  align-items: start;
   gap: 1.5rem;
   margin-bottom: 2rem;
   justify-content: start;
