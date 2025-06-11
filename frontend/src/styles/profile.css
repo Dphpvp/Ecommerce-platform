@@ -1,5 +1,5 @@
 /* Profile Component Styles */
-@import url(var.css);
+@import url(../src/styles/var.css);
 
 .profile {
   padding: 2rem 0;

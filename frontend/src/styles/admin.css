@@ -1,5 +1,5 @@
 /* Imports */
-@import url(var.css); /* variable styles */
+@import url(../src/styles/var.css);
 
 
 /* Admin Panel Styles */

@@ -1,5 +1,5 @@
 /* Toast Notifications */
-@import url(var.css);
+@import url(../src/styles/var.css);
 
 .toast-container {
   position: fixed;

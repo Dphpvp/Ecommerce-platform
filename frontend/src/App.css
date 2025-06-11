@@ -452,7 +452,7 @@ body {
   margin-bottom: 1.5rem;
 }
 
-/* Orders */
+/* Orders - General Styles (for user order history) */
 .no-orders {
   text-align: center;
   padding: 3rem;
@@ -464,23 +464,23 @@ body {
   color: var(--color-gray);
 }
 
-
-
-.order-card {
+/* User Order History Card (different from admin order management) */
+.user-order-card {
   background: var(--color-white);
   padding: 2rem;
   border-radius: 10px;
   box-shadow: var(--box-shadow-primary);
+  margin-bottom: 1.5rem;
 }
 
-.order-header {
+.user-order-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
 }
 
-.order-header h3 {
+.user-order-header h3 {
   color: var(--color-blue);
 }
 
@@ -495,13 +495,11 @@ body {
 .status.pending {
   background: var(--status-bg-pending);
   color: var(--status-text-pending);
- 
 }
 
 .status.processing {
   background: var(--status-bg-processing);
   color: var(--status-text-processing);
-  
 }
 
 .status.shipped {
@@ -514,20 +512,20 @@ body {
   color: var(--status-text-delivered);
 }
 
-.order-details p {
+.user-order-details p {
   margin-bottom: 0.5rem;
   color: var(--color-gray);
 }
 
-.order-items {
+.user-order-items {
   margin-top: 1rem;
 }
 
-.order-items h4 {
+.user-order-items h4 {
   margin-bottom: 0.5rem;
 }
 
-.order-item {
+.user-order-item {
   display: flex;
   justify-content: space-between;
   padding: 0.25rem 0;
