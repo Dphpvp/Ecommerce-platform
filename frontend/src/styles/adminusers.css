@@ -101,15 +101,13 @@
 
 /* Users Section */
 .users-section {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  grid-auto-flow: column;
-  align-items: start;
   margin-top: 2rem;
 }
 
 /* Users Grid - Fixed Layout */
 .users-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
 }
@@ -126,6 +124,8 @@
   overflow: hidden;
   height: auto;
   min-height: 280px;
+  width: 100%;
+  max-width: 400px;
 }
 
 .user-card::before {
@@ -561,15 +561,15 @@
     padding: 10px 16px;
   }
 
- .users-grid {
-    grid-template-columns: repeat(auto-fill, minmax(240px));
+  .users-grid {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 1rem;
   }
-
 
   .user-card {
     padding: 1.5rem;
     min-height: 260px;
+    max-width: none;
   }
 
   .user-header {
@@ -628,10 +628,9 @@
   }
 
   .users-grid {
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: 1fr 1fr;
     gap: 0.75rem;
   }
-
 
   .user-card {
     padding: 1rem;
