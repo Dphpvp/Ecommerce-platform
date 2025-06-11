@@ -13,7 +13,7 @@ const Home = () => {
 
   const fetchFeaturedProducts = async () => {
     try {
-      const response = await fetch(`${API_BASE}/products?limit=8`);
+      const response = await fetch(`${API_BASE}/products?limit=20`);
       const data = await response.json();
       setFeaturedProducts(data);
     } catch (error) {
