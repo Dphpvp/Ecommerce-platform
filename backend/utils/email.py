@@ -60,7 +60,7 @@ async def send_email(to_email: str, subject: str, body: str):
 async def send_order_confirmation_email(user_email: str, user_name: str, order_id: str, total_amount: float, items: List[dict]):
     """Send order confirmation email to customer"""
     
-    subject = f"🎉 Order Confirmation - #{order_id} - Your Store"
+    subject = f"🎉 Order Confirmation - #{order_id} - Vergi Store"
     
     # Build items HTML
     items_html = ""
