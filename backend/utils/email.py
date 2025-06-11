@@ -7,10 +7,10 @@ import os
 
 # 🆕 Email configuration - Production ready with your credentials
 EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
-EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))
+EMAIL_PORT = int(os.getenv("EMAIL_PORT"))
 EMAIL_USER = os.getenv("EMAIL_USER", "email.testing.dph@gmail.com")
 EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD", "khclismazjlasfco")
-ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "email.testing.dph@gmail.com")
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
 
 # Production URLs
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
