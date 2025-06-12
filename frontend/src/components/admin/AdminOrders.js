@@ -159,34 +159,34 @@ const AdminOrders = () => {
   const [filter, setFilter] = useState("");
   const { token } = useAuth();
 
-  const fetchOrders = async () => {
-    try {
-      setLoading(true);
-      const url = filter
-        ? `${API_BASE}/admin/orders?status=${filter}`
-        : `${API_BASE}/admin/orders`;
-
-      console.log('Fetching URL:', url); // Debug log
-
-      const response = await fetch(url, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Orders received:', data.orders.length); // Debug log
-        setOrders(data.orders);
-      }
-    } catch (error) {
-      console.error("Failed to fetch orders:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchOrders();
-  }, [filter, token]); // Direct dependency on filter
+    const fetchOrdersWithFilter = async () => {
+      try {
+        setLoading(true);
+        const url = filter
+          ? `${API_BASE}/admin/orders?status=${filter}`
+          : `${API_BASE}/admin/orders`;
+
+        console.log('Fetching URL:', url, 'Filter:', filter);
+
+        const response = await fetch(url, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Orders received:', data.orders.length);
+          setOrders(data.orders);
+        }
+      } catch (error) {
+        console.error("Failed to fetch orders:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchOrdersWithFilter();
+  }, [filter, token]);
 
   const updateOrderStatus = async (orderId, newStatus) => {
     try {
