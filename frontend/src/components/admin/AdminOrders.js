@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../contexts/AuthContext";
-import "../../styles/admin/orders.css";
+import "../../styles/adminorders.css";
 
 
 const API_BASE =
