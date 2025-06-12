@@ -97,8 +97,18 @@ async def delete_product(product_id: str, admin_user: dict = Depends(get_admin_u
 
 # Order management
 @router.get("/orders")
-async def get_all_orders(admin_user: dict = Depends(get_admin_user)):
-    orders_cursor = db.orders.aggregate([
+async def get_all_orders(status: str = None, admin_user: dict = Depends(get_admin_user)):
+    # Build match stage for aggregation
+    match_stage = {}
+    if status:
+        match_stage["status"] = status
+    
+    # Add match stage to pipeline if needed
+    pipeline = []
+    if match_stage:
+        pipeline.append({"$match": match_stage})
+    
+    pipeline.extend([
         {"$addFields": {"user_obj_id": {"$toObjectId": "$user_id"}}},
         {"$lookup": {
             "from": "users", 
@@ -110,7 +120,7 @@ async def get_all_orders(admin_user: dict = Depends(get_admin_user)):
         {"$sort": {"created_at": -1}},
         {"$project": {
             "_id": 1, 
-            "order_number": 1,  # Include order_number
+            "order_number": 1,
             "total_amount": 1, 
             "status": 1, 
             "created_at": 1, 
@@ -124,6 +134,8 @@ async def get_all_orders(admin_user: dict = Depends(get_admin_user)):
             }
         }}
     ])
+    
+    orders_cursor = db.orders.aggregate(pipeline)
     orders = []
     async for order in orders_cursor:
         order["_id"] = str(order["_id"])
