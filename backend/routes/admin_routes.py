@@ -249,6 +249,8 @@ async def get_admin_products(admin_user: dict = Depends(get_admin_user)):
     return {"products": products}
 
 # Category management
+# Update backend/routes/admin_routes.py - Replace the category management section
+
 @router.get("/categories")
 async def get_categories(admin_user: dict = Depends(get_admin_user)):
     """Get all categories with hierarchical structure"""
@@ -262,12 +264,16 @@ async def get_categories(admin_user: dict = Depends(get_admin_user)):
     ]
     categories = await db.products.aggregate(pipeline).to_list(None)
     
+    # Build hierarchical structure
+    category_tree = {}
     flat_categories = []
+    
     for cat in categories:
         if cat["_id"]:  # Filter out null categories
             category_name = cat["_id"]
             parts = category_name.split('/')
             
+            # Add to flat list for easy access
             flat_categories.append({
                 "name": category_name,
                 "product_count": cat["count"],
@@ -280,7 +286,7 @@ async def get_categories(admin_user: dict = Depends(get_admin_user)):
 
 @router.post("/categories")
 async def create_category(category_data: dict, admin_user: dict = Depends(get_admin_user)):
-    """Create a new category (no sample product needed)"""
+    """Create a new category with optional parent"""
     category_name = category_data.get("name", "").strip()
     parent_category = category_data.get("parent", "").strip()
     
@@ -293,43 +299,51 @@ async def create_category(category_data: dict, admin_user: dict = Depends(get_ad
     else:
         full_category_name = category_name
     
-    # Check if category already exists in products
+    # Check if category already exists
     existing = await db.products.find_one({"category": full_category_name})
     if existing:
         raise HTTPException(status_code=400, detail="Category already exists")
     
-    # Category is created implicitly when products are added to it
-    return {"success": True, "message": f"Category '{full_category_name}' ready for use"}
+    # Create placeholder product
+    placeholder_product = {
+        "name": f"Sample {category_name} Product",
+        "description": "Placeholder product - edit or delete as needed",
+        "price": 0.01,
+        "category": full_category_name,
+        "image_url": "https://via.placeholder.com/400x300?text=Sample+Product",
+        "stock": 0,
+        "created_at": datetime.utcnow()
+    }
+    
+    await db.products.insert_one(placeholder_product)
+    return {"success": True, "message": f"Category '{full_category_name}' created"}
 
 @router.delete("/categories/{category_name:path}")
-async def delete_category(
-    category_name: str, 
-    delete_products: bool = False,
-    admin_user: dict = Depends(get_admin_user)
-):
-    """Delete category with options for handling products"""
+async def delete_category(category_name: str, admin_user: dict = Depends(get_admin_user)):
+    """Delete category and all subcategories"""
+    import re
+    from urllib.parse import unquote
+    
+    # Properly decode URL-encoded category name
     category_name = unquote(category_name)
     
-    # Find products in this category and subcategories
-    regex_pattern = f"^{re.escape(category_name)}(/.*)?$"
+    # Find all categories that start with this category name (including subcategories)
+    categories_to_delete = await db.products.distinct("category", {
+        "category": {"$regex": f"^{re.escape(category_name)}(/.*)?$"}
+    })
     
-    if delete_products:
-        # Delete all products in these categories
-        result = await db.products.delete_many({
-            "category": {"$regex": regex_pattern}
-        })
-        products_message = f"{result.deleted_count} products deleted"
-    else:
-        # Move products to 'Uncategorized'
-        result = await db.products.update_many(
-            {"category": {"$regex": regex_pattern}},
-            {"$set": {"category": "Uncategorized"}}
-        )
-        products_message = f"{result.modified_count} products moved to 'Uncategorized'"
+    if not categories_to_delete:
+        raise HTTPException(status_code=404, detail="Category not found")
+    
+    # Move all products in these categories to 'Uncategorized'
+    result = await db.products.update_many(
+        {"category": {"$in": categories_to_delete}},
+        {"$set": {"category": "Uncategorized"}}
+    )
     
     return {
         "success": True, 
-        "message": f"Category operations completed. {products_message}"
+        "message": f"Category and {len(categories_to_delete)} subcategories deleted. {result.modified_count} products moved to 'Uncategorized'"
     }
 
 # Debug endpoints
