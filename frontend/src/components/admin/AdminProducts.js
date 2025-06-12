@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useToastContext } from '../toast';
 import ProductForm from './ProductForm';
 
-const API_BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api';
+const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
 const AdminProducts = () => {
   const [products, setProducts] = useState([]);
@@ -38,10 +38,13 @@ const AdminProducts = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch(`${API_BASE}/products`);
+      const response = await fetch(`${API_BASE}/admin/categories`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       const data = await response.json();
-      const uniqueCategories = [...new Set(data.map(p => p.category))];
-      setCategories(uniqueCategories);
+      // Extract category names and sort them hierarchically
+      const categoryNames = data.categories.map(cat => cat.name).sort();
+      setCategories(categoryNames);
     } catch (error) {
       console.error('Failed to fetch categories:', error);
     }
