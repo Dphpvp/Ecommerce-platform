@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../contexts/AuthContext";
-import "../../styles/adminorders.css";
+import "./adminorders.css";
 
 const API_BASE =
-  process.env.REACT_APP_API_BASE_URL;
+  process.env.REACT_APP_API_BASE_URL || "http://localhost:8000/api";
 
 // Modal Component
 const Modal = ({ isOpen, onClose, children }) => {
@@ -161,17 +161,9 @@ const AdminOrders = () => {
 
   useEffect(() => {
     fetchOrders();
-  }, []);
+  }, [fetchOrders]);
 
-  useEffect(() => {
-    if (filter !== "") {
-      fetchOrders();
-    } else {
-      fetchOrders();
-    }
-  }, [filter]);
-
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     try {
       setLoading(true);
       const url = filter
@@ -191,7 +183,7 @@ const AdminOrders = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter, token]);
 
   const updateOrderStatus = async (orderId, newStatus) => {
     try {
