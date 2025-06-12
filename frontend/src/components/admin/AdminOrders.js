@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../../contexts/AuthContext";
-import "../../styles/adminorders.css";
+import "./adminorders.css";
 
 const API_BASE =
   process.env.REACT_APP_API_BASE_URL || "http://localhost:8000/api";
@@ -159,12 +159,14 @@ const AdminOrders = () => {
   const [filter, setFilter] = useState("");
   const { token } = useAuth();
 
-  const fetchOrders = useCallback(async () => {
+  const fetchOrders = async () => {
     try {
       setLoading(true);
       const url = filter
         ? `${API_BASE}/admin/orders?status=${filter}`
         : `${API_BASE}/admin/orders`;
+
+      console.log('Fetching URL:', url); // Debug log
 
       const response = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
@@ -172,6 +174,7 @@ const AdminOrders = () => {
 
       if (response.ok) {
         const data = await response.json();
+        console.log('Orders received:', data.orders.length); // Debug log
         setOrders(data.orders);
       }
     } catch (error) {
@@ -179,11 +182,11 @@ const AdminOrders = () => {
     } finally {
       setLoading(false);
     }
-  }, [filter, token]);
+  };
 
   useEffect(() => {
     fetchOrders();
-  }, [fetchOrders]);
+  }, [filter, token]); // Direct dependency on filter
 
   const updateOrderStatus = async (orderId, newStatus) => {
     try {
