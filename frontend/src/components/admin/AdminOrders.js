@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../contexts/AuthContext";
-import "../../styles/adminorders.css";
+import "./adminorders.css";
 
 const API_BASE =
   process.env.REACT_APP_API_BASE_URL || "http://localhost:8000/api";
@@ -161,6 +161,14 @@ const AdminOrders = () => {
 
   useEffect(() => {
     fetchOrders();
+  }, []);
+
+  useEffect(() => {
+    if (filter !== "") {
+      fetchOrders();
+    } else {
+      fetchOrders();
+    }
   }, [filter]);
 
   const fetchOrders = async () => {
