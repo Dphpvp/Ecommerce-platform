@@ -285,79 +285,32 @@ async def get_categories(admin_user: dict = Depends(get_admin_user)):
     
     return {"categories": flat_categories}
 
-@router.get("/categories")
-async def get_categories(admin_user: dict = Depends(get_admin_user)):
-    """Get all categories from dedicated categories collection"""
-    # Get categories from dedicated collection
-    categories_cursor = db.categories.find({}).sort("name", 1)
-    categories_list = await categories_cursor.to_list(None)
+# Add this endpoint to migrate existing categories
+@router.post("/migrate-categories")
+async def migrate_categories(admin_user: dict = Depends(get_admin_user)):
+    """Migrate categories from products to dedicated categories collection"""
     
-    # Get product counts for each category
-    categories_with_counts = []
-    for cat in categories_list:
-        product_count = await db.products.count_documents({"category": cat["name"]})
-        stock_pipeline = [
-            {"$match": {"category": cat["name"]}},
-            {"$group": {"_id": None, "total_stock": {"$sum": "$stock"}}}
-        ]
-        stock_result = await db.products.aggregate(stock_pipeline).to_list(1)
-        total_stock = stock_result[0]["total_stock"] if stock_result else 0
-        
-        categories_with_counts.append({
-            "name": cat["name"],
-            "product_count": product_count,
-            "total_stock": total_stock,
-            "level": len(cat["name"].split('/')) - 1,
-            "parent": '/'.join(cat["name"].split('/')[:-1]) if '/' in cat["name"] else None,
-            "created_at": cat.get("created_at", datetime.utcnow())
-        })
+    # Get unique categories from products
+    existing_categories = await db.products.distinct("category")
     
-    return {"categories": categories_with_counts}
-
-@router.post("/categories")
-async def create_category(category_data: dict, admin_user: dict = Depends(get_admin_user)):
-    """Create a new category in dedicated categories collection"""
-    category_name = category_data.get("name", "").strip()
-    parent_category = category_data.get("parent", "").strip()
+    migrated = 0
+    for cat_name in existing_categories:
+        if cat_name and cat_name != "Uncategorized":
+            # Check if already exists in categories collection
+            existing = await db.categories.find_one({"name": cat_name})
+            if not existing:
+                # Create category document
+                category_doc = {
+                    "name": cat_name,
+                    "display_name": cat_name.split('/')[-1],
+                    "parent": '/'.join(cat_name.split('/')[:-1]) if '/' in cat_name else None,
+                    "created_at": datetime.utcnow(),
+                    "created_by": admin_user["_id"]
+                }
+                await db.categories.insert_one(category_doc)
+                migrated += 1
     
-    if not category_name:
-        raise HTTPException(status_code=400, detail="Category name is required")
-    
-    # Build full category path
-    if parent_category:
-        full_category_name = f"{parent_category}/{category_name}"
-    else:
-        full_category_name = category_name
-    
-    # Check if category already exists
-    existing = await db.categories.find_one({"name": full_category_name})
-    if existing:
-        raise HTTPException(status_code=400, detail="Category already exists")
-    
-    # Create category document
-    category_doc = {
-        "name": full_category_name,
-        "display_name": category_name,
-        "parent": parent_category if parent_category else None,
-        "created_at": datetime.utcnow(),
-        "created_by": admin_user["_id"]
-    }
-    
-    await db.categories.insert_one(category_doc)
-    return {"success": True, "message": f"Category '{full_category_name}' created"}
-
-@router.delete("/categories/{category_name:path}")
-async def delete_category(
-    category_name: str, 
-    delete_products: bool = False,
-    admin_user: dict = Depends(get_admin_user)
-):
-    """Delete category with options for handling products"""
-    import re
-    from urllib.parse import unquote
-    
-    category_name = unquote(category_name)
-    
+    return {"success": True, "message": f"Migrated {migrated} categories"}
     # Find all categories that start with this category name (including subcategories)
     categories_to_delete = await db.categories.find({
         "name": {"$regex": f"^{re.escape(category_name)}(/.*)?$"}
@@ -388,7 +341,7 @@ async def delete_category(
         "success": True, 
         "message": f"Deleted {len(categories_to_delete)} categories. {products_message}"
     }
-    
+
 # Debug endpoints
 @router.get("/debug/products")
 async def debug_products(admin_user: dict = Depends(get_admin_user)):
