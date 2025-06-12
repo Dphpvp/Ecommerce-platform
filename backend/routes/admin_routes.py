@@ -3,6 +3,8 @@ from typing import List
 from bson import ObjectId
 import motor.motor_asyncio
 from datetime import datetime
+import re
+from urllib.parse import unquote
 from dependencies import get_current_user, db
 from api import Product
 
@@ -13,7 +15,6 @@ async def get_admin_user(current_user: dict = Depends(get_current_user)):
     if not current_user.get("is_admin"):
         raise HTTPException(status_code=403, detail="Admin access required")
     return current_user
-
 
 # Dashboard endpoint
 @router.get("/dashboard")
@@ -248,10 +249,6 @@ async def get_admin_products(admin_user: dict = Depends(get_admin_user)):
     return {"products": products}
 
 # Category management
-# Update backend/routes/admin_routes.py - Replace the category management section
-
-# Update backend/routes/admin_routes.py - Replace the category management section
-
 @router.get("/categories")
 async def get_categories(admin_user: dict = Depends(get_admin_user)):
     """Get all categories with hierarchical structure"""
@@ -265,16 +262,12 @@ async def get_categories(admin_user: dict = Depends(get_admin_user)):
     ]
     categories = await db.products.aggregate(pipeline).to_list(None)
     
-    # Build hierarchical structure
-    category_tree = {}
     flat_categories = []
-    
     for cat in categories:
         if cat["_id"]:  # Filter out null categories
             category_name = cat["_id"]
             parts = category_name.split('/')
             
-            # Add to flat list for easy access
             flat_categories.append({
                 "name": category_name,
                 "product_count": cat["count"],
@@ -285,61 +278,58 @@ async def get_categories(admin_user: dict = Depends(get_admin_user)):
     
     return {"categories": flat_categories}
 
-# Add this endpoint to migrate existing categories
-@router.post("/migrate-categories")
-async def migrate_categories(admin_user: dict = Depends(get_admin_user)):
-    """Migrate categories from products to dedicated categories collection"""
+@router.post("/categories")
+async def create_category(category_data: dict, admin_user: dict = Depends(get_admin_user)):
+    """Create a new category (no sample product needed)"""
+    category_name = category_data.get("name", "").strip()
+    parent_category = category_data.get("parent", "").strip()
     
-    # Get unique categories from products
-    existing_categories = await db.products.distinct("category")
+    if not category_name:
+        raise HTTPException(status_code=400, detail="Category name is required")
     
-    migrated = 0
-    for cat_name in existing_categories:
-        if cat_name and cat_name != "Uncategorized":
-            # Check if already exists in categories collection
-            existing = await db.categories.find_one({"name": cat_name})
-            if not existing:
-                # Create category document
-                category_doc = {
-                    "name": cat_name,
-                    "display_name": cat_name.split('/')[-1],
-                    "parent": '/'.join(cat_name.split('/')[:-1]) if '/' in cat_name else None,
-                    "created_at": datetime.utcnow(),
-                    "created_by": admin_user["_id"]
-                }
-                await db.categories.insert_one(category_doc)
-                migrated += 1
+    # Build full category path
+    if parent_category:
+        full_category_name = f"{parent_category}/{category_name}"
+    else:
+        full_category_name = category_name
     
-    return {"success": True, "message": f"Migrated {migrated} categories"}
-    # Find all categories that start with this category name (including subcategories)
-    categories_to_delete = await db.categories.find({
-        "name": {"$regex": f"^{re.escape(category_name)}(/.*)?$"}
-    }).to_list(None)
+    # Check if category already exists in products
+    existing = await db.products.find_one({"category": full_category_name})
+    if existing:
+        raise HTTPException(status_code=400, detail="Category already exists")
     
-    if not categories_to_delete:
-        raise HTTPException(status_code=404, detail="Category not found")
+    # Category is created implicitly when products are added to it
+    return {"success": True, "message": f"Category '{full_category_name}' ready for use"}
+
+@router.delete("/categories/{category_name:path}")
+async def delete_category(
+    category_name: str, 
+    delete_products: bool = False,
+    admin_user: dict = Depends(get_admin_user)
+):
+    """Delete category with options for handling products"""
+    category_name = unquote(category_name)
     
-    category_names = [cat["name"] for cat in categories_to_delete]
+    # Find products in this category and subcategories
+    regex_pattern = f"^{re.escape(category_name)}(/.*)?$"
     
-    # Handle products based on delete_products parameter
     if delete_products:
         # Delete all products in these categories
-        result = await db.products.delete_many({"category": {"$in": category_names}})
+        result = await db.products.delete_many({
+            "category": {"$regex": regex_pattern}
+        })
         products_message = f"{result.deleted_count} products deleted"
     else:
         # Move products to 'Uncategorized'
         result = await db.products.update_many(
-            {"category": {"$in": category_names}},
+            {"category": {"$regex": regex_pattern}},
             {"$set": {"category": "Uncategorized"}}
         )
         products_message = f"{result.modified_count} products moved to 'Uncategorized'"
     
-    # Delete categories
-    await db.categories.delete_many({"name": {"$in": category_names}})
-    
     return {
         "success": True, 
-        "message": f"Deleted {len(categories_to_delete)} categories. {products_message}"
+        "message": f"Category operations completed. {products_message}"
     }
 
 # Debug endpoints
