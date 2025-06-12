@@ -1,9 +1,9 @@
-import React, { useState, useEffect, fetchOrders} from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../../contexts/AuthContext";
-import "../../styles/adminorders.css";
+import ".,/../styles/adminorders.css";
 
 const API_BASE =
-  process.env.REACT_APP_API_BASE_URL || "http://localhost:8000/api";
+  process.env.REACT_APP_API_BASE_URL;
 
 // Modal Component
 const Modal = ({ isOpen, onClose, children }) => {
@@ -204,7 +204,8 @@ const AdminOrders = () => {
 
       if (response.ok) {
         alert(`Order status updated to ${newStatus}`);
-        fetchOrders();
+        // Trigger re-fetch by updating a dependency
+        window.location.reload();
       } else {
         alert("Failed to update order status");
       }
