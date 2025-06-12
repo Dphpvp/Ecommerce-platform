@@ -57,6 +57,18 @@ const Orders = () => {
     return new Date(dateString).toLocaleString();
   };
 
+  const getStatusColor = (status) => {
+    const colors = {
+      pending: "#ffc107",
+      accepted: "#17a2b8",
+      processing: "#007bff",
+      shipped: "#28a745",
+      delivered: "#6c757d",
+      cancelled: "#dc3545",
+    };
+    return colors[status] || "#6c757d";
+  };
+
   return (
     <div className="orders">
       <div className="container">
@@ -79,7 +91,10 @@ const Orders = () => {
                     <p>Items: {order.items.length}</p>
                   </div>
                   <div className="order-status-section">
-                    <span className={`current-status status-${order.status}`}>
+                    <span 
+                      className="current-status"
+                      style={{ backgroundColor: getStatusColor(order.status) }}
+                    >
                       {order.status.toUpperCase()}
                     </span>
                     <button
