@@ -250,6 +250,8 @@ async def get_admin_products(admin_user: dict = Depends(get_admin_user)):
 # Category management
 # Update backend/routes/admin_routes.py - Replace the category management section
 
+# Update backend/routes/admin_routes.py - Replace the category management section
+
 @router.get("/categories")
 async def get_categories(admin_user: dict = Depends(get_admin_user)):
     """Get all categories with hierarchical structure"""
@@ -317,10 +319,33 @@ async def create_category(category_data: dict, admin_user: dict = Depends(get_ad
     await db.products.insert_one(placeholder_product)
     return {"success": True, "message": f"Category '{full_category_name}' created"}
 
-@router.delete("/categories/{category_name}")
+@router.delete("/categories/{category_name:path}")
 async def delete_category(category_name: str, admin_user: dict = Depends(get_admin_user)):
     """Delete category and all subcategories"""
-    category_name = category_name.replace("%2F", "/")  # Handle URL encoding
+    import re
+    from urllib.parse import unquote
+    
+    # Properly decode URL-encoded category name
+    category_name = unquote(category_name)
+    
+    # Find all categories that start with this category name (including subcategories)
+    categories_to_delete = await db.products.distinct("category", {
+        "category": {"$regex": f"^{re.escape(category_name)}(/.*)?$"}
+    })
+    
+    if not categories_to_delete:
+        raise HTTPException(status_code=404, detail="Category not found")
+    
+    # Move all products in these categories to 'Uncategorized'
+    result = await db.products.update_many(
+        {"category": {"$in": categories_to_delete}},
+        {"$set": {"category": "Uncategorized"}}
+    )
+    
+    return {
+        "success": True, 
+        "message": f"Category and {len(categories_to_delete)} subcategories deleted. {result.modified_count} products moved to 'Uncategorized'"
+    }
     
     # Find all categories that start with this category name (including subcategories)
     categories_to_delete = await db.products.distinct("category", {

@@ -83,23 +83,28 @@ const AdminCategories = () => {
     if (!window.confirm(message)) return;
     
     try {
-      const response = await fetch(`${API_BASE}/admin/categories/${encodeURIComponent(categoryName)}`, {
+      // Double encode for paths with forward slashes
+      const encodedName = encodeURIComponent(categoryName);
+      const response = await fetch(`${API_BASE}/admin/categories/${encodedName}`, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
       
       if (response.ok) {
+        const result = await response.json();
+        alert(result.message);
         fetchCategories();
         if (selectedCategory === categoryName) {
           setSelectedCategory(null);
           setCategoryProducts([]);
         }
       } else {
-        alert('Failed to delete category');
+        const errorData = await response.json();
+        alert(errorData.detail || 'Failed to delete category');
       }
     } catch (error) {
       console.error('Failed to delete category:', error);
-      alert('Failed to delete category');
+      alert('Failed to delete category: ' + error.message);
     }
   };
 
