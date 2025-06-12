@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../contexts/AuthContext";
-import Modal from "../components/modal";
-import "../../styles/adminorders.css";
-
+import "../../style/adminorders.css";
 
 const API_BASE =
   process.env.REACT_APP_API_BASE_URL;
