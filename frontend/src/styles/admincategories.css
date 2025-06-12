@@ -531,6 +531,261 @@
   border-radius: 8px;
   font-weight: 500;
 }
+/* Add these styles to your existing admincategories.css */
+
+/* Form Row Layout */
+.category-form .form-row {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.category-form .form-row select {
+  flex: 1;
+  min-width: 200px;
+  padding: 12px 16px;
+  font-size: 1rem;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  background: #fff;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.category-form .form-row select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+}
+
+/* Parent Preview */
+.parent-preview {
+  margin-top: 1rem;
+  padding: 0.75rem 1rem;
+  background: #e7f3ff;
+  border: 1px solid #b3d9ff;
+  border-radius: 6px;
+  color: #0056b3;
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.clear-parent {
+  background: none;
+  border: none;
+  color: #dc3545;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 0;
+  margin-left: 1rem;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.clear-parent:hover {
+  background: #f8d7da;
+  border-radius: 50%;
+}
+
+/* Categories Tree */
+.categories-tree {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid #e9ecef;
+  margin-bottom: 2rem;
+}
+
+.category-tree-item {
+  margin-bottom: 0.5rem;
+}
+
+.category-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+}
+
+.expand-toggle {
+  background: none;
+  border: none;
+  color: #007bff;
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+.expand-toggle:hover {
+  background: #e7f3ff;
+  color: #0056b3;
+}
+
+/* Updated Category Card for Tree View */
+.categories-tree .category-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  margin-bottom: 0.5rem;
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  min-height: 60px;
+}
+
+.categories-tree .category-card:hover {
+  background: white;
+  border-color: #007bff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.1);
+}
+
+.category-info {
+  flex: 1;
+}
+
+.category-info h3 {
+  margin: 0 0 0.25rem 0;
+  color: #333;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.category-stats {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.85rem;
+  color: #6c757d;
+}
+
+.category-stats span {
+  font-weight: 500;
+}
+
+/* Updated Category Actions for Tree View */
+.categories-tree .category-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.add-sub-btn {
+  background: linear-gradient(135deg, #17a2b8, #138496);
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 70px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.add-sub-btn:hover {
+  background: linear-gradient(135deg, #138496, #117a8b);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 10px rgba(23, 162, 184, 0.3);
+}
+
+/* Updated button sizes for tree view */
+.categories-tree .view-btn,
+.categories-tree .delete-btn {
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  min-width: 70px;
+}
+
+/* Subcategories indentation */
+.subcategories {
+  margin-left: 20px;
+  border-left: 2px solid #e9ecef;
+  padding-left: 1rem;
+  margin-top: 0.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .category-form .form-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .category-form .form-row select,
+  .category-form .form-row input {
+    min-width: 100%;
+  }
+  
+  .categories-tree .category-card {
+    flex-direction: column;
+    align-items: stretch;
+    text-align: center;
+    gap: 1rem;
+  }
+  
+  .category-header {
+    justify-content: center;
+  }
+  
+  .categories-tree .category-actions {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .subcategories {
+    margin-left: 10px;
+    padding-left: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .expand-toggle {
+    width: 20px;
+    height: 20px;
+    font-size: 0.8rem;
+  }
+  
+  .category-info h3 {
+    font-size: 0.9rem;
+  }
+  
+  .category-stats {
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.8rem;
+  }
+  
+  .categories-tree .category-actions {
+    gap: 0.25rem;
+  }
+  
+  .add-sub-btn,
+  .categories-tree .view-btn,
+  .categories-tree .delete-btn {
+    padding: 5px 8px;
+    font-size: 0.7rem;
+    min-width: 60px;
+  }
+}
 
 /* Responsive Design */
 @media (max-width: 768px) {
@@ -630,4 +885,5 @@
   .product-card {
     padding: 1rem;
   }
+  
 }
