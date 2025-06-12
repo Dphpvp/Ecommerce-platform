@@ -1,9 +1,23 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import '../styles/orders.css';
+import '../../styles/orders.css';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
+
+// Modal Component
+const Modal = ({ isOpen, onClose, children }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="modal-overlay" onClick={onClose}>
+      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+        <button className="modal-close" onClick={onClose}>×</button>
+        {children}
+      </div>
+    </div>
+  );
+};
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
@@ -112,6 +126,7 @@ const Orders = () => {
                     <img
                       src={item.product.image_url}
                       alt={item.product.name}
+                      className="item-image"
                     />
                     <div>
                       <p><strong>{item.product.name}</strong></p>
