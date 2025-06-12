@@ -76,16 +76,30 @@ const AdminCategories = () => {
       cat.name.startsWith(categoryName + '/') || cat.name === categoryName
     ).length;
     
-    const message = subcategoryCount > 1 
-      ? `Delete "${categoryName}" and ${subcategoryCount - 1} subcategories? Products will be moved to "Uncategorized".`
-      : `Delete category "${categoryName}"? Products will be moved to "Uncategorized".`;
+    const hasProducts = categories.find(cat => cat.name === categoryName)?.product_count > 0;
+    
+    let message = subcategoryCount > 1 
+      ? `Delete "${categoryName}" and ${subcategoryCount - 1} subcategories?`
+      : `Delete category "${categoryName}"?`;
+    
+    if (hasProducts) {
+      message += '\n\nWhat should happen to the products in this category?';
+    }
     
     if (!window.confirm(message)) return;
     
+    let deleteProducts = false;
+    if (hasProducts) {
+      deleteProducts = window.confirm(
+        'Click OK to DELETE products permanently, or Cancel to move them to "Uncategorized"'
+      );
+    }
+    
     try {
-      // Double encode for paths with forward slashes
       const encodedName = encodeURIComponent(categoryName);
-      const response = await fetch(`${API_BASE}/admin/categories/${encodedName}`, {
+      const url = `${API_BASE}/admin/categories/${encodedName}${deleteProducts ? '?delete_products=true' : ''}`;
+      
+      const response = await fetch(url, {
         method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
