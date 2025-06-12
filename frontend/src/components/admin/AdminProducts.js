@@ -42,7 +42,6 @@ const AdminProducts = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await response.json();
-      // Extract category names and sort them hierarchically
       const categoryNames = data.categories.map(cat => cat.name).sort();
       setCategories(categoryNames);
     } catch (error) {
@@ -72,6 +71,21 @@ const AdminProducts = () => {
     }
   };
 
+  const handleAddProduct = () => {
+    setEditingProduct(null); // Close edit modal if open
+    setShowAddForm(true);
+  };
+
+  const handleEditProduct = (product) => {
+    setShowAddForm(false); // Close add modal if open
+    setEditingProduct(product);
+  };
+
+  const closeModals = () => {
+    setShowAddForm(false);
+    setEditingProduct(null);
+  };
+
   if (loading) return <div className="container"><p>Loading products...</p></div>;
 
   return (
@@ -80,36 +94,38 @@ const AdminProducts = () => {
         <div className="products-header">
           <h1>Product Management</h1>
           <button
-            onClick={() => setShowAddForm(true)}
+            onClick={handleAddProduct}
             className="btn btn-primary"
           >
             Add New Product
           </button>
         </div>
 
+        {/* Add Product Modal */}
         {showAddForm && (
           <ProductForm
             categories={categories}
             onSave={() => {
-              setShowAddForm(false);
+              closeModals();
               fetchProducts();
               fetchCategories();
             }}
-            onCancel={() => setShowAddForm(false)}
+            onCancel={closeModals}
             token={token}
           />
         )}
 
+        {/* Edit Product Modal */}
         {editingProduct && (
           <ProductForm
             product={editingProduct}
             categories={categories}
             onSave={() => {
-              setEditingProduct(null);
+              closeModals();
               fetchProducts();
               fetchCategories();
             }}
-            onCancel={() => setEditingProduct(null)}
+            onCancel={closeModals}
             token={token}
             isEdit={true}
           />
@@ -135,9 +151,7 @@ const AdminProducts = () => {
               </div>
               <div className="product-actions">
                 <button
-                  onClick={() => {
-                    setEditingProduct(product);
-                  }}
+                  onClick={() => handleEditProduct(product)}
                   className="btn btn-outline"
                 >
                   Edit
