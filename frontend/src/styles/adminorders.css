@@ -1,5 +1,4 @@
-@import url('./var.css');
-/* Admin Orders - Modern Design */
+/* Admin Orders - Combined Styles */
 .admin-orders {
   padding: 2rem 0;
   background: #f8f9fa;
@@ -49,11 +48,6 @@
   gap: 0.5rem;
 }
 
-.filter-section h3::before {
-  content: "🔍";
-  font-size: 1.1rem;
-}
-
 .filter-buttons {
   display: flex;
   gap: 0.75rem;
@@ -92,11 +86,6 @@
   font-weight: 700;
 }
 
-.filter-btn.active:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
-}
-
 /* Orders Section */
 .orders-section {
   margin-top: 2rem;
@@ -107,18 +96,19 @@
   gap: 1.5rem;
   flex-wrap: wrap;
   justify-content: center;
-  align-items: center;
+  align-items: flex-start;
   margin-bottom: 2rem;
   width: 100%;
 }
 
-/* Order Management Card - Original Layout */
+/* Order Management Card */
 .order-management-card {
   background: white;
   border-radius: 10px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   overflow: hidden;
   max-width: 350px;
+  min-width: 300px;
   border: 1px solid #e9ecef;
   transition: all 0.3s ease;
   position: relative;
@@ -145,7 +135,6 @@
   justify-content: space-between;
   align-items: center;
   padding: 1.5rem;
-  cursor: pointer;
   background: #f8f9fa;
   border-bottom: 1px solid #e9ecef;
 }
@@ -157,6 +146,7 @@
 .order-basic-info {
   text-align: center;
   margin-bottom: 1rem;
+  width: 100%;
 }
 
 .order-basic-info h3 {
@@ -179,6 +169,7 @@
   gap: 1rem;
   justify-content: center;
   flex-wrap: wrap;
+  width: 100%;
 }
 
 .current-status {
@@ -190,6 +181,8 @@
   text-transform: uppercase;
   letter-spacing: 0.3px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  min-width: 100px;
+  text-align: center;
 }
 
 .details-toggle {
@@ -202,6 +195,7 @@
   font-size: 0.9rem;
   font-weight: 500;
   transition: all 0.3s ease;
+  min-width: 120px;
 }
 
 .details-toggle:hover {
@@ -210,18 +204,18 @@
   box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
 }
 
-/* Order Modal Styles */
+/* Modal Styles */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100vw;    
-  height: 100vh;     
+  width: 100vw;
+  height: 100vh;
   background-color: rgba(0, 0, 0, 0.5);
   display: flex;
-  justify-content: center; 
-  align-items: center;     
-  z-index: 1000;           
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
 }
 
 .modal-content {
@@ -237,6 +231,31 @@
   border: 1px solid #e9ecef;
 }
 
+.modal-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  font-size: 2rem;
+  cursor: pointer;
+  color: #6c757d;
+  line-height: 1;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.modal-close:hover {
+  color: #dc3545;
+  background: #f8f9fa;
+}
+
 .modal-content h2 {
   margin: 0 0 1.5rem 0;
   color: #333;
@@ -244,13 +263,8 @@
   font-weight: 700;
   text-align: center;
   padding-bottom: 1rem;
+  padding-right: 2rem;
   border-bottom: 2px solid #e9ecef;
-}
-
-/* Order Details Expanded */
-.order-details-expanded {
-  padding: 2rem;
-  background: white;
 }
 
 .modal-content section {
@@ -272,22 +286,6 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-}
-
-.modal-content section h3:nth-child(1)::before {
-  content: "👤";
-}
-
-.modal-content section:nth-child(2) h3::before {
-  content: "📍";
-}
-
-.modal-content section:nth-child(3) h3::before {
-  content: "📦";
-}
-
-.modal-content section:nth-child(4) h3::before {
-  content: "⚙️";
 }
 
 .modal-content section p {
@@ -320,7 +318,7 @@
   transform: translateY(-1px);
 }
 
-.order-item-detail img {
+.item-image {
   width: 60px;
   height: 60px;
   object-fit: cover;
@@ -342,7 +340,14 @@
   font-weight: 600;
 }
 
-/* Status Update Section in Modal */
+/* Status Update Section */
+.status-update-section {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
 .modal-content section select {
   padding: 0.6rem 1rem;
   border: 2px solid #e9ecef;
@@ -351,7 +356,6 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
-  margin-right: 1rem;
 }
 
 .modal-content section select:focus {
@@ -360,7 +364,7 @@
   box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
 }
 
-.modal-content .btn-primary {
+.btn-primary {
   background: linear-gradient(135deg, #007bff, #0056b3);
   color: white;
   border: none;
@@ -372,13 +376,13 @@
   transition: all 0.3s ease;
 }
 
-.modal-content .btn-primary:hover:not(:disabled) {
+.btn-primary:hover:not(:disabled) {
   background: linear-gradient(135deg, #0056b3, #004085);
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
 }
 
-.modal-content .btn-primary:disabled {
+.btn-primary:disabled {
   background: #6c757d;
   cursor: not-allowed;
   transform: none;
@@ -406,13 +410,8 @@
   gap: 0.5rem;
 }
 
-.no-orders p::before {
-  content: "📦";
-  font-size: 1.5rem;
-}
-
 /* Loading State */
-.admin-orders .container > p {
+.loading-message {
   text-align: center;
   color: #6c757d;
   font-size: 1.2rem;
@@ -426,36 +425,6 @@
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-}
-
-.admin-orders .container > p::before {
-  content: "⏳";
-  font-size: 1.5rem;
-}
-
-/* Status Colors for Active Filter Buttons */
-.filter-btn[style*="ffc107"] { /* pending - yellow */
-  background: linear-gradient(135deg, #ffc107, #e0a800) !important;
-}
-
-.filter-btn[style*="17a2b8"] { /* accepted - info */
-  background: linear-gradient(135deg, #17a2b8, #138496) !important;
-}
-
-.filter-btn[style*="007bff"] { /* processing - primary */
-  background: linear-gradient(135deg, #007bff, #0056b3) !important;
-}
-
-.filter-btn[style*="28a745"] { /* shipped - success */
-  background: linear-gradient(135deg, #28a745, #1e7e34) !important;
-}
-
-.filter-btn[style*="6c757d"] { /* delivered - secondary */
-  background: linear-gradient(135deg, #6c757d, #5a6268) !important;
-}
-
-.filter-btn[style*="dc3545"] { /* cancelled - danger */
-  background: linear-gradient(135deg, #dc3545, #c82333) !important;
 }
 
 /* Responsive Design */
@@ -487,6 +456,7 @@
 
   .order-management-card {
     max-width: 100%;
+    min-width: auto;
   }
 
   .order-header {
@@ -496,12 +466,45 @@
   }
 
   .order-status-section {
-    flex-direction: column;
-    gap: 0.5rem;
+    flex-direction: row;
+    justify-content: space-between;
+    width: 100%;
   }
 
-  .orders-section {
-    margin-top: 1.5rem;
+  .current-status {
+    flex: 1;
+    margin-right: 1rem;
+  }
+
+  .details-toggle {
+    flex-shrink: 0;
+  }
+
+  .modal-content {
+    padding: 1.5rem;
+    width: 95%;
+  }
+
+  .modal-content h2 {
+    font-size: 1.3rem;
+    padding-right: 2rem;
+  }
+
+  .order-item-detail {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .status-update-section {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .status-update-section select,
+  .status-update-section button {
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 0.5rem;
   }
 }
 
@@ -555,11 +558,28 @@
     padding: 0.5rem 1rem;
   }
 
+  .modal-content {
+    padding: 1rem;
+  }
+
+  .modal-close {
+    top: 0.5rem;
+    right: 0.5rem;
+    font-size: 1.5rem;
+  }
+
   .no-orders {
     padding: 2rem 1rem;
   }
 
   .no-orders p {
+    font-size: 1rem;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .loading-message {
+    padding: 2rem 1rem;
     font-size: 1rem;
     flex-direction: column;
     gap: 0.5rem;
