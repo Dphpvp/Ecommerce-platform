@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import "../../styles/admin/orders.css";
-import Modal from "../modal/Modal";
+import Modal from "../modal/modal";
 
 const API_BASE =
-  process.env.REACT_APP_API_BASE_URL || "http://localhost:8000/api";
+  process.env.REACT_APP_API_BASE_URL;
 
 // Modal Component
 const Modal = ({ isOpen, onClose, children }) => {
