@@ -1,4 +1,4 @@
-/* Profile Component Styles */
+/* Updated frontend/src/styles/profile.css */
 @import url('./var.css');
 
 .profile {
@@ -13,142 +13,85 @@
   padding: 0 1rem;
 }
 
-.profile h1 {
+.profile-header {
   text-align: center;
   margin-bottom: 2rem;
+}
+
+.profile-header h1 {
   color: #333;
   font-size: 2.5rem;
   font-weight: 700;
-  background: linear-gradient(135deg, var(--color-blue), var(--color-light-blue));
+  background: linear-gradient(135deg, #007bff, #0056b3);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-/* Profile Avatar Section */
+/* Avatar Section */
 .profile-avatar-section {
-  text-align: center;
-  margin-bottom: 2rem;
+  display: flex;
+  justify-content: center;
+  margin-bottom: 3rem;
 }
 
 .avatar-container {
-  display: inline-block;
-  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
 }
 
 .profile-avatar {
   width: 120px;
   height: 120px;
   border-radius: 50%;
+  border: 4px solid #007bff;
   object-fit: cover;
-  border: 4px solid var(--color-blue);
-  box-shadow: 0 4px 16px rgba(0, 123, 255, 0.2);
-  margin-bottom: 1rem;
-  transition: all 0.3s ease;
-}
-
-.profile-avatar:hover {
-  transform: scale(1.05);
-  box-shadow: 0 6px 20px rgba(0, 123, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
 }
 
 .change-avatar-btn {
-  background: linear-gradient(135deg, var(--color-blue), #0056b3);
+  background: linear-gradient(135deg, #007bff, #0056b3);
   color: white;
   border: none;
   padding: 0.5rem 1rem;
-  border-radius: 20px;
+  border-radius: 6px;
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.3s ease;
-  display: block;
-  margin: 0 auto;
 }
 
 .change-avatar-btn:hover:not(:disabled) {
   background: linear-gradient(135deg, #0056b3, #004085);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+  transform: translateY(-1px);
 }
 
-.change-avatar-btn:disabled {
-  background: #6c757d;
-  cursor: not-allowed;
-  transform: none;
-}
-
-/* Avatar Selection Modal */
-.avatar-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
+/* Profile Content */
+.profile-content {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  gap: 2rem;
   align-items: center;
-  z-index: 1000;
 }
 
-.avatar-modal {
-  background: white;
-  border-radius: 12px;
-  padding: 2rem;
-  max-width: 500px;
-  width: 90%;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-}
-
-.avatar-modal h3 {
-  text-align: center;
-  margin-bottom: 1.5rem;
-  color: #333;
-  font-size: 1.3rem;
-  font-weight: 600;
-}
-
-.avatar-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-
-.avatar-option {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  cursor: pointer;
-  border: 3px solid transparent;
-  transition: all 0.3s ease;
-  object-fit: cover;
-}
-
-.avatar-option:hover {
-  border-color: var(--color-blue);
-  transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
-}
-
-/* Profile Information */
 .profile-info {
   background: var(--color-white);
   padding: 2rem;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  width: 100%;
+  max-width: 600px;
 }
 
 .info-group {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   padding: 1rem 0;
   border-bottom: 1px solid #eee;
+  gap: 1rem;
 }
 
 .info-group:last-child {
@@ -157,67 +100,104 @@
 
 .info-group label {
   font-weight: 600;
-  color: var(--color-blue);
+  color: #007bff;
   min-width: 120px;
+  flex-shrink: 0;
 }
 
 .info-group span {
-  color: #333;
   flex: 1;
   text-align: right;
 }
 
-/* Profile Edit Form */
-.profile-edit-form {
-  width: 100%;
+/* Email verification section */
+.email-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.unverified-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.verification-badge {
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.verification-badge.verified {
+  color: #28a745;
+  background: #d4edda;
+}
+
+.verification-badge.unverified {
+  color: #dc3545;
+  background: #f8d7da;
+}
+
+.btn-sm {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+}
+
+/* Profile Actions */
+.profile-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  justify-content: center;
+}
+
+/* Form Styling */
+.profile-edit-form,
+.password-change-form,
+.disable-2fa-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
 }
 
 .form-group {
-  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .form-group label {
-  display: block;
-  margin-bottom: 0.5rem;
   font-weight: 600;
-  color: var(--color-blue);
+  color: #333;
 }
 
 .form-group input,
 .form-group textarea {
-  width: 100%;
   padding: 0.75rem;
   border: 2px solid #e9ecef;
-  border-radius: 8px;
+  border-radius: 6px;
   font-size: 1rem;
-  transition: all 0.3s ease;
-  box-sizing: border-box;
+  transition: border-color 0.3s ease;
 }
 
 .form-group input:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: var(--color-blue);
+  border-color: #007bff;
   box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
 }
 
-.form-group textarea {
-  resize: vertical;
-  min-height: 100px;
-}
-
-/* Error States */
-.form-group input.error,
-.form-group textarea.error {
-  border-color: var(--color-red);
-  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1);
+.form-group input.error {
+  border-color: #dc3545;
 }
 
 .error-text {
-  display: block;
-  color: var(--color-red);
-  font-size: 0.875rem;
-  margin-top: 0.5rem;
+  color: #dc3545;
+  font-size: 0.9rem;
   font-weight: 500;
 }
 
@@ -225,16 +205,54 @@
   display: flex;
   gap: 1rem;
   justify-content: center;
-  margin-top: 2rem;
+  margin-top: 1rem;
 }
 
-.profile-actions {
+/* Security Section */
+.security-section {
+  background: var(--color-white);
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  width: 100%;
+  max-width: 600px;
+  text-align: center;
+}
+
+.security-section h2 {
+  margin-bottom: 1rem;
+  color: #333;
+  font-size: 1.5rem;
+}
+
+.security-section p {
+  margin-bottom: 1.5rem;
+  color: #666;
+}
+
+.security-actions {
   display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 1rem;
-  justify-content: center;
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid #eee;
+}
+
+.security-status {
+  color: #28a745;
+  font-weight: 600;
+  margin-bottom: 1rem;
+}
+
+.security-notice {
+  color: #dc3545;
+  font-size: 0.9rem;
+  margin-top: 1rem;
+  font-style: italic;
+}
+
+.disable-2fa-form {
+  max-width: 300px;
+  width: 100%;
 }
 
 /* Password Change Section */
@@ -242,119 +260,35 @@
   background: var(--color-white);
   padding: 2rem;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem;
-  border-left: 4px solid var(--color-orange);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  width: 100%;
+  max-width: 600px;
 }
 
 .password-change-section h3 {
-  color: #333;
-  margin-bottom: 1.5rem;
-  font-size: 1.3rem;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.password-change-section h3::before {
-  content: "🔒";
-  font-size: 1.2rem;
-}
-
-.password-change-form {
-  width: 100%;
-}
-
-.password-change-form .form-group {
-  position: relative;
-}
-
-.password-change-form .form-group input[type="password"] {
-  padding-right: 3rem;
-}
-
-/* Security Notice */
-.password-change-section::before {
-  content: "";
-  display: block;
-  width: 100%;
-  height: 2px;
-  background: linear-gradient(90deg, var(--color-orange), var(--color-yellow));
-  margin-bottom: 1rem;
-  border-radius: 1px;
-}
-
-/* Button Styles */
-.btn {
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-decoration: none;
-  display: inline-block;
   text-align: center;
-  min-width: 120px;
+  margin-bottom: 1.5rem;
+  color: #333;
 }
 
-.btn-primary {
-  background: linear-gradient(135deg, var(--color-blue), #0056b3);
-  color: white;
-}
-
-.btn-primary:hover:not(:disabled) {
-  background: linear-gradient(135deg, #0056b3, #004085);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
-}
-
-.btn-outline {
-  background: transparent;
-  color: var(--color-blue);
-  border: 2px solid var(--color-blue);
-}
-
-.btn-outline:hover:not(:disabled) {
-  background: var(--color-blue);
-  color: white;
-  transform: translateY(-2px);
-}
-
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-/* Admin Panel Access */
-.admin-panel-access {
+/* Admin Section */
+.admin-section {
   background: linear-gradient(135deg, var(--color-red), var(--color-orange));
   color: var(--color-white);
   padding: 2rem;
   border-radius: 12px;
-  margin-top: 2rem;
-  box-shadow: 0 4px 16px rgba(220, 53, 69, 0.2);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  width: 100%;
+  max-width: 600px;
+  text-align: center;
 }
 
-.admin-panel-access h2 {
+.admin-section h2 {
   margin-bottom: 1rem;
   color: var(--color-white);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 1.5rem;
 }
 
-.admin-panel-access h2::before {
-  content: "🔐";
-  font-size: 1.5rem;
-}
-
-.admin-panel-access p {
+.admin-section p {
   margin-bottom: 1.5rem;
   opacity: 0.9;
   font-size: 1.1rem;
@@ -390,48 +324,119 @@
   transform: translateY(-2px);
   box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
   color: var(--color-white) !important;
+}
+
+/* Button Styles */
+.btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
   text-decoration: none;
-}
-
-.btn-admin:active {
-  transform: translateY(0);
-}
-
-/* Password Strength Indicator (Optional Enhancement) */
-.password-strength {
-  margin-top: 0.5rem;
-  height: 4px;
-  background: #e9ecef;
-  border-radius: 2px;
-  overflow: hidden;
-}
-
-.password-strength-bar {
-  height: 100%;
+  display: inline-block;
+  text-align: center;
   transition: all 0.3s ease;
-  border-radius: 2px;
+  border: 2px solid transparent;
 }
 
-.password-strength.weak .password-strength-bar {
-  width: 33%;
-  background: var(--color-red);
+.btn-primary {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: white;
 }
 
-.password-strength.medium .password-strength-bar {
-  width: 66%;
-  background: var(--color-orange);
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #0056b3, #004085);
+  transform: translateY(-1px);
 }
 
-.password-strength.strong .password-strength-bar {
-  width: 100%;
-  background: var(--color-green);
+.btn-outline {
+  background: transparent;
+  color: #007bff;
+  border-color: #007bff;
+}
+
+.btn-outline:hover:not(:disabled) {
+  background: #007bff;
+  color: white;
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #dc3545, #c82333);
+  color: white;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: linear-gradient(135deg, #c82333, #a71e2a);
+  transform: translateY(-1px);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Avatar Modal */
+.avatar-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.avatar-modal {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  text-align: center;
+}
+
+.avatar-modal h3 {
+  margin-bottom: 1.5rem;
+  color: #333;
+}
+
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.avatar-option {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 2px solid #e9ecef;
+  transition: all 0.3s ease;
+}
+
+.avatar-option:hover {
+  border-color: #007bff;
+  transform: scale(1.1);
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .profile h1 {
+  .profile .container {
+    max-width: 100%;
+    padding: 0 0.5rem;
+  }
+
+  .profile-header h1 {
     font-size: 2rem;
-    margin-bottom: 1.5rem;
   }
 
   .profile-avatar {
@@ -439,55 +444,44 @@
     height: 100px;
   }
 
-  .profile-info,
-  .password-change-section {
-    padding: 1.5rem;
-  }
-
   .info-group {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
-    text-align: left;
   }
 
   .info-group span {
     text-align: left;
   }
 
-  .form-actions,
+  .email-info,
+  .unverified-section {
+    align-items: flex-start;
+  }
+
   .profile-actions {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .form-actions {
+    flex-direction: column;
   }
 
   .admin-buttons {
     grid-template-columns: 1fr;
     gap: 0.75rem;
   }
-  
+
   .btn-admin {
     padding: 0.75rem 1rem;
     font-size: 0.9rem;
   }
-  
-  .admin-panel-access {
+
+  .security-section,
+  .password-change-section,
+  .admin-section {
     padding: 1.5rem;
-  }
-
-  .avatar-modal {
-    padding: 1.5rem;
-    width: 95%;
-  }
-
-  .avatar-grid {
-    grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
-    gap: 0.75rem;
-  }
-
-  .avatar-option {
-    width: 60px;
-    height: 60px;
   }
 }
 
@@ -496,58 +490,27 @@
     padding: 1rem 0;
   }
 
-  .profile .container {
-    padding: 0 0.5rem;
-  }
-
-  .profile h1 {
+  .profile-header h1 {
     font-size: 1.75rem;
-    margin-bottom: 1rem;
-  }
-
-  .profile-avatar {
-    width: 80px;
-    height: 80px;
   }
 
   .profile-info,
-  .password-change-section {
+  .security-section,
+  .password-change-section,
+  .admin-section {
     padding: 1rem;
-  }
-
-  .admin-panel-access {
-    padding: 1rem;
-  }
-  
-  .admin-panel-access h2 {
-    font-size: 1.3rem;
-  }
-  
-  .admin-panel-access p {
-    font-size: 1rem;
   }
 
   .avatar-modal {
     padding: 1rem;
   }
 
+  .avatar-grid {
+    grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+  }
+
   .avatar-option {
-    width: 50px;
-    height: 50px;
-  }
-
-  .form-group input,
-  .form-group textarea {
-    padding: 0.6rem;
-    font-size: 0.9rem;
-  }
-
-  .btn {
-    padding: 0.6rem 1rem;
-    font-size: 0.9rem;
-  }
-
-  .password-change-section h3 {
-    font-size: 1.1rem;
+    width: 60px;
+    height: 60px;
   }
 }
