@@ -1,3 +1,5 @@
+// Update your AuthContext.js to handle profile updates better
+
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
@@ -50,11 +52,16 @@ export const AuthProvider = ({ children }) => {
     fetchUser();
   }, [fetchUser]);
 
-  const login = (token, userData) => {
-    localStorage.setItem('token', token);
-    setToken(token);
+  const login = (newToken, userData) => {
+    localStorage.setItem('token', newToken);
+    setToken(newToken);
     setUser(userData);
     setLoading(false);
+  };
+
+  // Add updateUser function for profile updates
+  const updateUser = (updatedUserData) => {
+    setUser(updatedUserData);
   };
 
   const register = async (userData) => {
@@ -80,7 +87,15 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      token, 
+      login, 
+      register, 
+      logout, 
+      loading, 
+      updateUser 
+    }}>
       {children}
     </AuthContext.Provider>
   );

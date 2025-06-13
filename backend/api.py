@@ -15,8 +15,8 @@ import re
 from database.connection import db
 from dependencies import get_current_user, security
 
-# Email imports
-from utils.email import send_order_confirmation_email, send_admin_order_notification, send_contact_email
+# 🆕 ADD EMAIL IMPORT
+from utils.email import send_order_confirmation_email, send_admin_order_notification
 
 router = APIRouter()
 
@@ -58,11 +58,13 @@ class PaymentIntent(BaseModel):
     amount: int
     currency: str = "usd"
 
-class ContactForm(BaseModel):
-    name: str
-    email: EmailStr
+# 🆕 NEW: Profile Update Models
+class UserProfileUpdate(BaseModel):
+    full_name: Optional[str] = None
+    email: Optional[str] = None
     phone: Optional[str] = None
-    message: str
+    address: Optional[str] = None
+    profile_image_url: Optional[str] = None
 
 # Helper functions
 def hash_password(password: str) -> str:
@@ -146,6 +148,9 @@ async def login(user_login: UserLogin):
             "email": user["email"], 
             "username": user["username"],
             "full_name": user.get("full_name", ""),
+            "address": user.get("address"),
+            "phone": user.get("phone"),
+            "profile_image_url": user.get("profile_image_url"),
             "is_admin": user.get("is_admin", False)
         }
     }
@@ -178,6 +183,9 @@ async def google_login(google_login: GoogleLogin):
                     "email": user["email"],
                     "username": user["username"],
                     "full_name": user.get("full_name", ""),
+                    "address": user.get("address"),
+                    "phone": user.get("phone"),
+                    "profile_image_url": user.get("profile_image_url"),
                     "is_admin": user.get("is_admin", False)
                 }
             }
@@ -212,6 +220,9 @@ async def google_login(google_login: GoogleLogin):
                     "email": email,
                     "username": username,
                     "full_name": name,
+                    "address": None,
+                    "phone": None,
+                    "profile_image_url": None,
                     "is_admin": False
                 }
             }
@@ -227,10 +238,88 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         "id": str(current_user["_id"]),
         "username": current_user["username"],
         "email": current_user["email"],
-        "full_name": current_user["full_name"],
+        "full_name": current_user.get("full_name", ""),
         "address": current_user.get("address"),
         "phone": current_user.get("phone"),
+        "profile_image_url": current_user.get("profile_image_url"),
         "is_admin": current_user.get("is_admin", False)
+    }
+
+# 🆕 NEW: Profile Update Routes
+@router.put("/auth/update-profile")
+async def update_profile(profile_data: UserProfileUpdate, current_user: dict = Depends(get_current_user)):
+    """Update user profile information"""
+    user_id = str(current_user["_id"])
+    
+    # Prepare update data - only include fields that were provided
+    update_data = {}
+    if profile_data.full_name is not None:
+        update_data["full_name"] = profile_data.full_name
+    if profile_data.email is not None:
+        # Check if email already exists for another user
+        existing_user = await db.users.find_one({
+            "email": profile_data.email, 
+            "_id": {"$ne": ObjectId(user_id)}
+        })
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Email already exists")
+        update_data["email"] = profile_data.email
+    if profile_data.phone is not None:
+        update_data["phone"] = profile_data.phone
+    if profile_data.address is not None:
+        update_data["address"] = profile_data.address
+    if profile_data.profile_image_url is not None:
+        update_data["profile_image_url"] = profile_data.profile_image_url
+    
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No valid fields to update")
+    
+    # Update user in database
+    result = await db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$set": update_data}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Return updated user data
+    updated_user = await db.users.find_one({"_id": ObjectId(user_id)})
+    return {
+        "message": "Profile updated successfully",
+        "user": {
+            "id": str(updated_user["_id"]),
+            "username": updated_user["username"],
+            "email": updated_user["email"],
+            "full_name": updated_user.get("full_name", ""),
+            "address": updated_user.get("address"),
+            "phone": updated_user.get("phone"),
+            "profile_image_url": updated_user.get("profile_image_url"),
+            "is_admin": updated_user.get("is_admin", False)
+        }
+    }
+
+@router.post("/auth/upload-avatar")
+async def upload_avatar(current_user: dict = Depends(get_current_user)):
+    """Handle avatar upload - simplified version using external URLs"""
+    # For now, return some sample avatar URLs
+    # In production, you'd implement actual file upload to cloud storage
+    sample_avatars = [
+        f"https://api.dicebear.com/7.x/avataaars/svg?seed={current_user['username']}1",
+        f"https://api.dicebear.com/7.x/avataaars/svg?seed={current_user['username']}2", 
+        f"https://api.dicebear.com/7.x/avataaars/svg?seed={current_user['username']}3",
+        f"https://api.dicebear.com/7.x/avataaars/svg?seed={current_user['username']}4",
+        f"https://api.dicebear.com/7.x/avataaars/svg?seed={current_user['username']}5",
+        f"https://api.dicebear.com/7.x/adventurer/svg?seed={current_user['username']}1",
+        f"https://api.dicebear.com/7.x/adventurer/svg?seed={current_user['username']}2",
+        f"https://api.dicebear.com/7.x/adventurer/svg?seed={current_user['username']}3",
+        f"https://api.dicebear.com/7.x/personas/svg?seed={current_user['username']}1",
+        f"https://api.dicebear.com/7.x/personas/svg?seed={current_user['username']}2"
+    ]
+    
+    return {
+        "message": "Avatar options available",
+        "avatars": sample_avatars
     }
 
 # Product routes
@@ -336,26 +425,6 @@ async def remove_from_cart(item_id: str, current_user: dict = Depends(get_curren
     
     return {"message": "Item removed from cart"}
 
-# Contact form route
-@router.post("/contact")
-async def submit_contact_form(contact_data: ContactForm):
-    try:
-        email_sent = await send_contact_email(
-            name=contact_data.name,
-            email=contact_data.email,
-            phone=contact_data.phone,
-            message=contact_data.message
-        )
-        
-        if email_sent:
-            return {"message": "Message sent successfully"}
-        else:
-            raise HTTPException(status_code=500, detail="Failed to send message")
-            
-    except Exception as e:
-        print(f"❌ Contact form error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Failed to send message")
-
 # Payment route
 @router.post("/payment/create-intent")
 async def create_payment_intent(payment: PaymentIntent):
@@ -369,12 +438,12 @@ async def create_payment_intent(payment: PaymentIntent):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-# Order routes with email notifications
+# 🆕 UPDATED ORDER ROUTES WITH EMAIL NOTIFICATIONS
 @router.post("/orders")
 async def create_order(order_data: dict, current_user: dict = Depends(get_current_user)):
     user_id = str(current_user["_id"])
     
-    # Get cart items
+    # Get cart items using the get_cart function
     cart_items = await get_cart(current_user)
     if not cart_items:
         raise HTTPException(status_code=400, detail="Cart is empty")
@@ -385,7 +454,7 @@ async def create_order(order_data: dict, current_user: dict = Depends(get_curren
     order_number = await get_next_order_number()
     
     order = {
-        "order_number": f"{order_number:05d}",
+        "order_number": f"{order_number:05d}",  # Format as 00001, 00002, etc.
         "user_id": user_id,
         "items": cart_items,
         "total_amount": total,
@@ -408,10 +477,12 @@ async def create_order(order_data: dict, current_user: dict = Depends(get_curren
             {"$inc": {"stock": -item["quantity"]}}
         )
     
-    # Send email notifications
+    # 🆕 SEND EMAIL NOTIFICATIONS
     try:
         user_name = current_user.get("full_name", current_user.get("username", "Customer"))
         user_email = current_user["email"]
+        
+        print(f"📧 Sending emails for order {order['order_number']}...")
         
         # Send confirmation email to customer
         customer_email_sent = await send_order_confirmation_email(
@@ -430,9 +501,19 @@ async def create_order(order_data: dict, current_user: dict = Depends(get_curren
             total_amount=total,
             items=cart_items
         )
+        
+        if customer_email_sent and admin_email_sent:
+            print(f"✅ Both emails sent successfully for order {order['order_number']}")
+        elif customer_email_sent:
+            print(f"✅ Customer email sent, ❌ admin email failed for order {order['order_number']}")
+        elif admin_email_sent:
+            print(f"❌ Customer email failed, ✅ admin email sent for order {order['order_number']}")
+        else:
+            print(f"❌ Both emails failed for order {order['order_number']}")
             
     except Exception as e:
         print(f"❌ Email notification error for order {order['order_number']}: {str(e)}")
+        # Don't fail the order creation if email fails
     
     return {"message": "Order created successfully", "order_id": order_id, "order_number": order["order_number"]}
 

@@ -2,13 +2,11 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCart } from '../../contexts/CartContext';
-import { useTheme } from '../../contexts/ThemeContext';
 import '../../styles/header.css';
 
 const Header = () => {
   const { user, logout } = useAuth();
   const { cartItems } = useCart();
-  const { isDarkMode, toggleTheme } = useTheme();
   const isAdmin = user && user.is_admin;
 
   return (
@@ -24,13 +22,6 @@ const Header = () => {
         </Link>
 
         <nav className="nav">
-          <Link to="/">Home</Link>
-          <Link to="/about">About Us</Link>
-          <Link to="/contact">Contact</Link>
-          <Link to="/cart" className="cart-link">
-                    Cart ({cartItems.length})
-                  </Link>
-          
           {user ? (
             <>
               {isAdmin && (
@@ -49,11 +40,11 @@ const Header = () => {
                   </Link>
                 </>
               )}
+              
               {!isAdmin && (
-                <>
-                  <Link to="/orders">My Orders</Link>
-                </>
+                <Link to="/orders">My Orders</Link>
               )}
+              
               {isAdmin ? (
                 <Link to="/admin/dashboard" className="dashboard-link">
                   Dashboard
@@ -62,6 +53,12 @@ const Header = () => {
               ) : (
                 <Link to="/profile">Profile</Link>
               )}
+              
+              {/* Cart button - now beside username for all users */}
+              <Link to="/cart" className="cart-link">
+                Cart ({cartItems.length})
+              </Link>
+              
               <button
                 onClick={logout}
                 className="btn btn-outline user-logout-btn"
@@ -76,14 +73,6 @@ const Header = () => {
               <Link to="/register">Register</Link>
             </>
           )}
-          
-          <button
-            onClick={toggleTheme}
-            className="theme-toggle"
-            title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-          >
-            {isDarkMode ? '☀️' : '🌙'}
-          </button>
         </nav>
       </div>
     </header>
