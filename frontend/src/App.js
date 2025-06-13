@@ -36,7 +36,9 @@ const stripePromise = loadStripe(
 );
 
 const App = () => {
+  
   return (
+    <ThemeProvider>
     <Elements stripe={stripePromise}>
       <Router>
         <AuthProvider>
@@ -135,6 +137,7 @@ const App = () => {
         </AuthProvider>
       </Router>
     </Elements>
+    </ThemeProvider>
   );
 };
 
