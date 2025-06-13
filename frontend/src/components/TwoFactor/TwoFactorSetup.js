@@ -1,6 +1,6 @@
 // frontend/src/components/TwoFactorSetup.js
 import React, { useState } from 'react';
-import { useAuth } from './contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
 import { useToastContext } from './toast';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
