@@ -56,7 +56,9 @@
   .nav a[href="/about"],
   .nav a[href="/contact"],
   .nav a[href="/login"],
-  .nav a[href="/register"] {
+  .nav a[href="/register"],
+  .nav a[href="/profile"],
+  .nav a[href="/my orders"] {
   color: var(--color-blue);
   font-weight: 600;
   padding: 0.5rem 1rem;
@@ -68,7 +70,9 @@
   .nav a[href="/about"]:hover,
   .nav a[href="/contact"]:hover,
   .nav a[href="/login"]:hover,
-  .nav a[href="/register"]:hover {
+  .nav a[href="/register"]:hover,
+  .nav a[href="/profile"]:hover,
+  .nav a[href="/my orders"]:hover {
   background: var(--color-light-blue);
   color: var(--color-white);
 }
@@ -199,7 +203,9 @@
   .nav a[href="/about"],
   .nav a[href="/contact"],
   .nav a[href="/login"],
-  .nav a[href="/register"] {
+  .nav a[href="/register"],
+  .nav a[href="/profile"],
+  .nav a[href="/my orders"] {
     padding: 0.4rem 0.8rem;
     font-size: 0.9rem;
   }
@@ -228,7 +234,9 @@
   .nav a[href="/about"],
   .nav a[href="/contact"],
   .nav a[href="/login"],
-  .nav a[href="/register"] {
+  .nav a[href="/register"],
+  .nav a[href="/profile"],
+  .nav a[href="/my orders"] {
     padding: 0.3rem 0.6rem;
     font-size: 0.8rem;
   }
