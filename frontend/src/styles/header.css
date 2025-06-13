@@ -3,12 +3,11 @@
 /* Header Component Styles */
 
 .header {
-  background: var(--bg-primary);
-  box-shadow: var(--shadow-sm);
+  background: var(--color-white);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   position: sticky;
   top: 0;
   z-index: 100;
-  border-bottom: 1px solid var(--border-color);
 }
 
 .header .container {
@@ -21,7 +20,7 @@
 .logo {
   font-size: 1.8rem;
   font-weight: bold;
-  color: var(--color-blue);
+  color: #007bff;
   text-decoration: none;
 }
 
@@ -29,9 +28,9 @@
   height: 120px;
   width: 200px;
   object-fit: contain;
-  margin-left: -40px;
+  margin-left: -40px; /* Adjust as needed */
   background: transparent;
-  mix-blend-mode: multiply;
+  mix-blend-mode: multiply; /* or screen/overlay depending on image */
 }
 
 .nav {
@@ -41,7 +40,7 @@
 }
 
 .nav a {
-  color: var(--text-primary);
+  color: #333;
   text-decoration: none;
   font-weight: 500;
   transition: color 0.3s;
@@ -49,32 +48,6 @@
 
 .nav a:hover {
   color: var(--color-blue);
-}
-
-/* Main navigation pages */
-  .nav a[href="/"],
-  .nav a[href="/about"],
-  .nav a[href="/contact"],
-  .nav a[href="/login"],
-  .nav a[href="/register"],
-  .nav a[href="/profile"],
-  .nav a[href="/orders"] {
-  color: var(--color-blue);
-  font-weight: 600;
-  padding: 0.5rem 1rem;
-  border-radius: 5px;
-  transition: all 0.3s;
-}
-
-  .nav a[href="/"]:hover,
-  .nav a[href="/about"]:hover,
-  .nav a[href="/contact"]:hover,
-  .nav a[href="/login"]:hover,
-  .nav a[href="/register"]:hover,
-  .nav a[href="/profile"]:hover,
-  .nav a[href="/orders"]:hover {
-  background: var(--color-light-blue);
-  color: var(--color-white);
 }
 
 .cart-link {
@@ -89,17 +62,86 @@
   background: var(--color-light-blue) !important;
 }
 
-/* Admin Navigation Styles */
-.admin-link {
-  color: var(--color-red) !important;
-  font-weight: 600;
-  border-bottom: 2px solid transparent;
-  transition: border-color 0.3s;
+/* Admin Dropdown Styles */
+.admin-dropdown {
+  position: relative;
+  display: inline-block;
 }
 
-.admin-link:hover {
-  color: var(--color-error) !important;
-  border-bottom-color: var(--color-red);
+.dropdown-toggle {
+  background: none;
+  border: none;
+  color: var(--color-blue);
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+  font-size: 1rem;
+}
+
+.dropdown-toggle:hover {
+  background: rgba(0, 123, 255, 0.1);
+  color: var(--color-blue);
+}
+
+.dropdown-arrow {
+  font-size: 0.8rem;
+  transition: transform 0.3s ease;
+  margin-left: 0.25rem;
+}
+
+.dropdown-arrow.open {
+  transform: rotate(180deg);
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: var(--color-white);
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  min-width: 200px;
+  z-index: 1000;
+  overflow: hidden;
+  margin-top: 0.5rem;
+  animation: dropdownFadeIn 0.2s ease-out;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown-item {
+  display: block;
+  padding: 0.75rem 1rem;
+  color: #333 !important;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border-bottom: 1px solid #f8f9fa;
+}
+
+.dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.dropdown-item:hover {
+  background: var(--color-blue);
+  color: var(--color-white) !important;
+  transform: translateX(5px);
 }
 
 /* Admin badge in header */
@@ -110,7 +152,6 @@
   border-radius: 15px;
   font-size: 0.8rem;
   font-weight: bold;
-  margin-left: 0.5rem;
 }
 
 /* Dashboard link for admin */
@@ -134,9 +175,6 @@
 .user-logout-btn {
   position: relative;
   transition: all 0.3s ease;
-  background: transparent;
-  color: var(--text-primary);
-  border: 1px solid var(--border-color);
 }
 
 .user-logout-btn::after {
@@ -165,28 +203,6 @@
   color: transparent;
 }
 
-/* Theme toggle button */
-.theme-toggle {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 50%;
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 1.2rem;
-  transition: all 0.3s ease;
-  margin-left: 0.5rem;
-}
-
-.theme-toggle:hover {
-  background: var(--color-blue);
-  border-color: var(--color-blue);
-  transform: scale(1.1);
-}
-
 /* Responsive Header */
 @media (max-width: 768px) {
   .header .container {
@@ -198,22 +214,15 @@
     flex-wrap: wrap;
     justify-content: center;
   }
-  
-  .nav a[href="/"],
-  .nav a[href="/about"],
-  .nav a[href="/contact"],
-  .nav a[href="/login"],
-  .nav a[href="/register"],
-  .nav a[href="/profile"],
-  .nav a[href="/orders"] {
-    padding: 0.4rem 0.8rem;
-    font-size: 0.9rem;
+
+  .dropdown-menu {
+    right: auto;
+    left: 0;
+    min-width: 180px;
   }
 
-  .theme-toggle {
-    width: 35px;
-    height: 35px;
-    font-size: 1rem;
+  .admin-dropdown {
+    order: 2; /* Put dropdown after main nav items on mobile */
   }
 }
 
@@ -230,25 +239,22 @@
     font-size: 0.9rem;
   }
   
-  .nav a[href="/"],
-  .nav a[href="/about"],
-  .nav a[href="/contact"],
-  .nav a[href="/login"],
-  .nav a[href="/register"],
-  .nav a[href="/profile"],
-  .nav a[href="/orders"] {
-    padding: 0.3rem 0.6rem;
-    font-size: 0.8rem;
-  }
-  
   .admin-badge {
     font-size: 0.7rem;
     padding: 0.2rem 0.5rem;
   }
 
-  .theme-toggle {
-    width: 32px;
-    height: 32px;
+  .dropdown-toggle {
     font-size: 0.9rem;
+    padding: 0.4rem;
+  }
+
+  .dropdown-item {
+    padding: 0.6rem 0.8rem;
+    font-size: 0.9rem;
+  }
+
+  .dropdown-menu {
+    min-width: 160px;
   }
 }

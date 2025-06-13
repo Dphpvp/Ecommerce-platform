@@ -22,6 +22,12 @@ const Header = () => {
         </Link>
 
         <nav className="nav">
+          {/* General navigation - always visible */}
+          <Link to="/">Home</Link>
+          <Link to="/products">Products</Link>
+          <Link to="/about">About Us</Link>
+          <Link to="/contact">Contact</Link>
+          
           {user ? (
             <>
               {isAdmin && (

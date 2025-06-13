@@ -11,8 +11,11 @@ const Profile = () => {
   const { showToast } = useToastContext();
   const [isEditing, setIsEditing] = useState(false);
   const [isChangingAvatar, setIsChangingAvatar] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
   const [availableAvatars, setAvailableAvatars] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
+  
   const [formData, setFormData] = useState({
     full_name: '',
     email: '',
@@ -20,6 +23,14 @@ const Profile = () => {
     address: '',
     profile_image_url: ''
   });
+
+  const [passwordData, setPasswordData] = useState({
+    old_password: '',
+    new_password: '',
+    confirm_password: ''
+  });
+
+  const [passwordErrors, setPasswordErrors] = useState({});
 
   useEffect(() => {
     if (user) {
@@ -41,6 +52,50 @@ const Profile = () => {
     }));
   };
 
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+    
+    // Clear specific error when user starts typing
+    if (passwordErrors[name]) {
+      setPasswordErrors(prev => ({
+        ...prev,
+        [name]: ''
+      }));
+    }
+  };
+
+  const validatePasswordForm = () => {
+    const errors = {};
+    
+    if (!passwordData.old_password) {
+      errors.old_password = 'Current password is required';
+    }
+    
+    if (!passwordData.new_password) {
+      errors.new_password = 'New password is required';
+    } else if (passwordData.new_password.length < 6) {
+      errors.new_password = 'Password must be at least 6 characters long';
+    }
+    
+    if (!passwordData.confirm_password) {
+      errors.confirm_password = 'Please confirm your new password';
+    } else if (passwordData.new_password !== passwordData.confirm_password) {
+      errors.confirm_password = 'Passwords do not match';
+    }
+    
+    if (passwordData.old_password && passwordData.new_password && 
+        passwordData.old_password === passwordData.new_password) {
+      errors.new_password = 'New password must be different from current password';
+    }
+    
+    setPasswordErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSaveProfile = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -57,7 +112,6 @@ const Profile = () => {
 
       if (response.ok) {
         const data = await response.json();
-        // Update the auth context with new user data
         login(token, data.user);
         showToast('Profile updated successfully!', 'success');
         setIsEditing(false);
@@ -73,9 +127,48 @@ const Profile = () => {
     }
   };
 
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    
+    if (!validatePasswordForm()) {
+      return;
+    }
+    
+    setPasswordLoading(true);
+
+    try {
+      const response = await fetch(`${API_BASE}/auth/change-password`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(passwordData)
+      });
+
+      if (response.ok) {
+        showToast('Password changed successfully!', 'success');
+        setIsChangingPassword(false);
+        setPasswordData({
+          old_password: '',
+          new_password: '',
+          confirm_password: ''
+        });
+        setPasswordErrors({});
+      } else {
+        const errorData = await response.json();
+        showToast(errorData.detail || 'Failed to change password', 'error');
+      }
+    } catch (error) {
+      console.error('Password change error:', error);
+      showToast('Failed to change password', 'error');
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
   const handleCancelEdit = () => {
     setIsEditing(false);
-    // Reset form data to original user data
     if (user) {
       setFormData({
         full_name: user.full_name || '',
@@ -85,6 +178,16 @@ const Profile = () => {
         profile_image_url: user.profile_image_url || ''
       });
     }
+  };
+
+  const handleCancelPasswordChange = () => {
+    setIsChangingPassword(false);
+    setPasswordData({
+      old_password: '',
+      new_password: '',
+      confirm_password: ''
+    });
+    setPasswordErrors({});
   };
 
   const handleChangeAvatar = async () => {
@@ -142,9 +245,11 @@ const Profile = () => {
     if (user?.profile_image_url) {
       return user.profile_image_url;
     }
-    // Generate a default avatar based on username
     return `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.username || 'default'}`;
   };
+
+  // Check if user can change password (not Google authenticated)
+  const canChangePassword = user && !user.google_id;
 
   return (
     <div className="profile">
@@ -302,10 +407,89 @@ const Profile = () => {
                 >
                   Edit Profile
                 </button>
+                {canChangePassword && (
+                  <button 
+                    onClick={() => setIsChangingPassword(true)}
+                    className="btn btn-outline"
+                  >
+                    Change Password
+                  </button>
+                )}
               </div>
             </>
           )}
         </div>
+
+        {/* Password Change Section */}
+        {isChangingPassword && canChangePassword && (
+          <div className="password-change-section">
+            <h3>Change Password</h3>
+            <form onSubmit={handleChangePassword} className="password-change-form">
+              <div className="form-group">
+                <label>Current Password:</label>
+                <input
+                  type="password"
+                  name="old_password"
+                  value={passwordData.old_password}
+                  onChange={handlePasswordChange}
+                  placeholder="Enter your current password"
+                  className={passwordErrors.old_password ? 'error' : ''}
+                />
+                {passwordErrors.old_password && (
+                  <span className="error-text">{passwordErrors.old_password}</span>
+                )}
+              </div>
+              
+              <div className="form-group">
+                <label>New Password:</label>
+                <input
+                  type="password"
+                  name="new_password"
+                  value={passwordData.new_password}
+                  onChange={handlePasswordChange}
+                  placeholder="Enter your new password (min 6 characters)"
+                  className={passwordErrors.new_password ? 'error' : ''}
+                />
+                {passwordErrors.new_password && (
+                  <span className="error-text">{passwordErrors.new_password}</span>
+                )}
+              </div>
+              
+              <div className="form-group">
+                <label>Confirm New Password:</label>
+                <input
+                  type="password"
+                  name="confirm_password"
+                  value={passwordData.confirm_password}
+                  onChange={handlePasswordChange}
+                  placeholder="Confirm your new password"
+                  className={passwordErrors.confirm_password ? 'error' : ''}
+                />
+                {passwordErrors.confirm_password && (
+                  <span className="error-text">{passwordErrors.confirm_password}</span>
+                )}
+              </div>
+
+              <div className="form-actions">
+                <button 
+                  type="submit" 
+                  className="btn btn-primary"
+                  disabled={passwordLoading}
+                >
+                  {passwordLoading ? 'Changing...' : 'Change Password'}
+                </button>
+                <button 
+                  type="button" 
+                  onClick={handleCancelPasswordChange}
+                  className="btn btn-outline"
+                  disabled={passwordLoading}
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
 
         {/* Admin Panel Access */}
         {user?.is_admin && (

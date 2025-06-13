@@ -66,6 +66,11 @@ class UserProfileUpdate(BaseModel):
     address: Optional[str] = None
     profile_image_url: Optional[str] = None
 
+class PasswordChange(BaseModel):
+    old_password: str
+    new_password: str
+    confirm_password: str
+
 # Helper functions
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
@@ -298,6 +303,45 @@ async def update_profile(profile_data: UserProfileUpdate, current_user: dict = D
             "is_admin": updated_user.get("is_admin", False)
         }
     }
+
+@router.put("/auth/change-password")
+async def change_password(password_data: PasswordChange, current_user: dict = Depends(get_current_user)):
+    """Change user password"""
+    user_id = str(current_user["_id"])
+    
+    # Validate password confirmation
+    if password_data.new_password != password_data.confirm_password:
+        raise HTTPException(status_code=400, detail="New passwords do not match")
+    
+    # Validate password length
+    if len(password_data.new_password) < 6:
+        raise HTTPException(status_code=400, detail="New password must be at least 6 characters long")
+    
+    # Check if user has a password (Google users might not have one)
+    if not current_user.get("password"):
+        raise HTTPException(status_code=400, detail="Cannot change password for Google authenticated accounts")
+    
+    # Verify old password
+    if not verify_password(password_data.old_password, current_user["password"]):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+    
+    # Check if new password is different from old password
+    if verify_password(password_data.new_password, current_user["password"]):
+        raise HTTPException(status_code=400, detail="New password must be different from current password")
+    
+    # Hash new password
+    new_hashed_password = hash_password(password_data.new_password)
+    
+    # Update password in database
+    result = await db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$set": {"password": new_hashed_password, "updated_at": datetime.now(timezone.utc)}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {"message": "Password changed successfully"}
 
 @router.post("/auth/upload-avatar")
 async def upload_avatar(current_user: dict = Depends(get_current_user)):
