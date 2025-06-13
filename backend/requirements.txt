@@ -1,3 +1,4 @@
+# backend/requirements.txt - Updated with 2FA dependencies
 fastapi[all]==0.104.1
 uvicorn[standard]==0.24.0
 motor==3.3.2
@@ -12,3 +13,5 @@ email-validator==2.1.1
 google-auth==2.25.2
 google-auth-oauthlib==1.2.0
 google-auth-httplib2==0.2.0
+pyotp==2.9.0
+qrcode[pil]==7.4.2

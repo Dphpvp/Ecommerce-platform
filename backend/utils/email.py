@@ -361,5 +361,62 @@ async def send_admin_order_notification(order_id: str, user_email: str, user_nam
     </body>
     </html>
     """
+# Updated backend/utils/email.py - Add this function
+
+async def send_verification_email(user_email: str, user_name: str, verification_url: str):
+    """Send email verification email"""
     
-    return await send_email(ADMIN_EMAIL, subject, body)
+    subject = f"🔐 Verify Your Email - {os.getenv('FRONTEND_URL', 'E-Commerce')}"
+    
+    body = f"""
+    <html>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #007bff, #28a745); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="margin: 0; font-size: 28px;">🔐 Verify Your Email</h1>
+            <p style="margin: 10px 0 0 0; font-size: 18px;">Welcome to our platform, {user_name}!</p>
+        </div>
+        
+        <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <div style="background: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #007bff;">
+                <h3 style="margin-top: 0; color: #007bff;">📧 Email Verification Required</h3>
+                <p style="margin-bottom: 0;">To complete your account setup and start shopping, please verify your email address by clicking the button below:</p>
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="{verification_url}" 
+                   style="background-color: #007bff; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block; font-size: 16px;">
+                    ✅ Verify Email Address
+                </a>
+            </div>
+            
+            <div style="background: #e7f3ff; padding: 20px; margin: 30px 0; border-radius: 8px; border: 1px solid #b3d9ff;">
+                <h4 style="color: #0056b3; margin-top: 0;">🔒 Security Notice</h4>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                    <li>This verification link will expire in 24 hours</li>
+                    <li>If you didn't create an account, please ignore this email</li>
+                    <li>For security, never share this link with others</li>
+                </ul>
+            </div>
+            
+            <div style="background: #f8f9fa; padding: 20px; margin: 30px 0; border-radius: 8px; text-align: center;">
+                <p style="margin: 0; color: #666; font-size: 14px;">
+                    <strong>Can't click the button?</strong><br>
+                    Copy and paste this URL into your browser:<br>
+                    <span style="color: #007bff; word-break: break-all;">{verification_url}</span>
+                </p>
+            </div>
+            
+            <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee;">
+                <p style="color: #666; font-size: 14px; margin: 0;">
+                    Need help? Contact our support team<br>
+                    📧 {EMAIL_USER}<br>
+                    <em>This is an automated verification email.</em>
+                </p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    return await send_email(user_email, subject, body)
+    

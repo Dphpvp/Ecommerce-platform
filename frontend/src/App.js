@@ -1,3 +1,4 @@
+// frontend/src/App.js - Updated with email verification route
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { loadStripe } from '@stripe/stripe-js';
@@ -7,22 +8,19 @@ import './App.css';
 import { AuthProvider } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
 import { ToastProvider } from './components/toast';
-import { ThemeProvider } from './contexts/ThemeContext';
 
 import Header from './components/header';
-import Footer from './components/Footer';
 import PrivateRoute from './components/PrivateRoute';
 import Profile from './components/profile';
 
 import Home from './pages/Home';
-import About from './pages/About';
-import Contact from './pages/Contact';
 import Products from './pages/Products';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Orders from './pages/Orders';
+import EmailVerification from './pages/EmailVerification';
 
 import AdminDashboard from './components/admin/AdminDashboard';
 import AdminOrders from './components/admin/AdminOrders';
@@ -36,9 +34,7 @@ const stripePromise = loadStripe(
 );
 
 const App = () => {
-  
   return (
-    <ThemeProvider>
     <Elements stripe={stripePromise}>
       <Router>
         <AuthProvider>
@@ -49,11 +45,10 @@ const App = () => {
                 <main className="main">
                   <Routes>
                     <Route path="/" element={<Home />} />
-                    <Route path="/about" element={<About />} />
-                    <Route path="/contact" element={<Contact />} />
                     <Route path="/products" element={<Products />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
+                    <Route path="/verify-email" element={<EmailVerification />} />
 
                     <Route
                       path="/cart"
@@ -130,14 +125,12 @@ const App = () => {
                     />
                   </Routes>
                 </main>
-                <Footer />
               </div>
             </ToastProvider>
           </CartProvider>
         </AuthProvider>
       </Router>
     </Elements>
-    </ThemeProvider>
   );
 };
 

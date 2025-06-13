@@ -2,16 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToastContext } from '../toast';
+import TwoFactorSetup from '../TwoFactorSetup';
 import '../../styles/profile.css';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
 const Profile = () => {
-  const { user, token, login } = useAuth();
+  const { user, token, login, refetchUser } = useAuth();
   const { showToast } = useToastContext();
   const [isEditing, setIsEditing] = useState(false);
   const [isChangingAvatar, setIsChangingAvatar] = useState(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [showTwoFactorSetup, setShowTwoFactorSetup] = useState(false);
+  const [disabling2FA, setDisabling2FA] = useState(false);
   const [availableAvatars, setAvailableAvatars] = useState([]);
   const [loading, setLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
@@ -28,6 +31,11 @@ const Profile = () => {
     old_password: '',
     new_password: '',
     confirm_password: ''
+  });
+
+  const [disable2FAForm, setDisable2FAForm] = useState({ 
+    password: '', 
+    code: '' 
   });
 
   const [passwordErrors, setPasswordErrors] = useState({});
@@ -59,7 +67,6 @@ const Profile = () => {
       [name]: value
     }));
     
-    // Clear specific error when user starts typing
     if (passwordErrors[name]) {
       setPasswordErrors(prev => ({
         ...prev,
@@ -167,6 +174,35 @@ const Profile = () => {
     }
   };
 
+  const disable2FA = async (e) => {
+    e.preventDefault();
+    setDisabling2FA(true);
+
+    try {
+      const response = await fetch(`${API_BASE}/auth/disable-2fa`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(disable2FAForm)
+      });
+
+      if (response.ok) {
+        showToast('2FA disabled successfully', 'success');
+        setDisable2FAForm({ password: '', code: '' });
+        refetchUser();
+      } else {
+        const data = await response.json();
+        showToast(data.detail || 'Failed to disable 2FA', 'error');
+      }
+    } catch (error) {
+      showToast('Failed to disable 2FA', 'error');
+    } finally {
+      setDisabling2FA(false);
+    }
+  };
+
   const handleCancelEdit = () => {
     setIsEditing(false);
     if (user) {
@@ -248,7 +284,6 @@ const Profile = () => {
     return `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.username || 'default'}`;
   };
 
-  // Check if user can change password (not Google authenticated)
   const canChangePassword = user && !user.google_id;
 
   return (
@@ -379,7 +414,14 @@ const Profile = () => {
               </div>
               <div className="info-group">
                 <label>Email:</label>
-                <span>{user?.email}</span>
+                <span>
+                  {user?.email}
+                  {user?.email_verified ? (
+                    <span style={{ color: '#28a745', marginLeft: '10px' }}>✅ Verified</span>
+                  ) : (
+                    <span style={{ color: '#dc3545', marginLeft: '10px' }}>❌ Unverified</span>
+                  )}
+                </span>
               </div>
               <div className="info-group">
                 <label>Full Name:</label>
@@ -392,6 +434,16 @@ const Profile = () => {
               <div className="info-group">
                 <label>Address:</label>
                 <span>{user?.address || 'Not provided'}</span>
+              </div>
+              <div className="info-group">
+                <label>Two-Factor Auth:</label>
+                <span>
+                  {user?.two_factor_enabled ? (
+                    <span style={{ color: '#28a745' }}>🔐 Enabled</span>
+                  ) : (
+                    <span style={{ color: '#dc3545' }}>🔓 Disabled</span>
+                  )}
+                </span>
               </div>
               {user?.is_admin && (
                 <div className="info-group">
@@ -491,6 +543,58 @@ const Profile = () => {
           </div>
         )}
 
+        {/* 2FA Management Section */}
+        <div className="admin-panel-access">
+          <h2>🔐 Security Settings</h2>
+          <p>Manage your account security and two-factor authentication:</p>
+          
+          {!user?.two_factor_enabled ? (
+            <button 
+              onClick={() => setShowTwoFactorSetup(true)}
+              className="btn btn-admin"
+              disabled={!user?.email_verified}
+            >
+              🔐 Enable Two-Factor Authentication
+            </button>
+          ) : (
+            <div>
+              <p style={{ color: '#28a745', marginBottom: '1rem' }}>
+                ✅ Two-factor authentication is enabled
+              </p>
+              <form onSubmit={disable2FA}>
+                <input
+                  type="password"
+                  placeholder="Current Password"
+                  value={disable2FAForm.password}
+                  onChange={(e) => setDisable2FAForm({...disable2FAForm, password: e.target.value})}
+                  required
+                />
+                <input
+                  type="text"
+                  placeholder="2FA Code"
+                  value={disable2FAForm.code}
+                  onChange={(e) => setDisable2FAForm({...disable2FAForm, code: e.target.value})}
+                  required
+                />
+                <button 
+                  type="submit" 
+                  className="btn btn-admin"
+                  disabled={disabling2FA}
+                  style={{ background: 'linear-gradient(135deg, #dc3545, #c82333)' }}
+                >
+                  {disabling2FA ? 'Disabling...' : '🔓 Disable 2FA'}
+                </button>
+              </form>
+            </div>
+          )}
+          
+          {!user?.email_verified && (
+            <p style={{ color: '#dc3545', fontSize: '0.9rem', marginTop: '1rem' }}>
+              ⚠️ You must verify your email before enabling 2FA
+            </p>
+          )}
+        </div>
+
         {/* Admin Panel Access */}
         {user?.is_admin && (
           <div className="admin-panel-access">
@@ -511,6 +615,14 @@ const Profile = () => {
               </Link>
             </div>
           </div>
+        )}
+
+        {/* 2FA Setup Modal */}
+        {showTwoFactorSetup && (
+          <TwoFactorSetup 
+            onClose={() => setShowTwoFactorSetup(false)}
+            onComplete={() => refetchUser()}
+          />
         )}
       </div>
     </div>

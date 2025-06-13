@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import TwoFactorVerification from '../components/TwoFactorVerification';
+import { useToastContext } from '../components/toast';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
@@ -11,7 +13,8 @@ const Login = () => {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login, requires2FA, tempToken, handle2FARequired } = useAuth();
+  const { showToast } = useToastContext();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -52,8 +55,12 @@ const Login = () => {
       const data = await apiResponse.json();
 
       if (apiResponse.ok) {
-        login(data.token, data.user);
-        navigate('/');
+        if (data.requires_2fa) {
+          handle2FARequired(data.temp_token);
+        } else {
+          login(data.token, data.user);
+          navigate('/');
+        }
       } else {
         setError(data.detail || 'Google login failed');
       }
@@ -84,10 +91,17 @@ const Login = () => {
       const data = await response.json();
 
       if (response.ok) {
-        login(data.token, data.user);
-        navigate('/');
+        if (data.requires_2fa) {
+          handle2FARequired(data.temp_token);
+        } else {
+          login(data.token, data.user);
+          navigate('/');
+        }
       } else {
         setError(data.detail || 'Login failed');
+        if (data.detail && data.detail.includes('Email not verified')) {
+          showToast('Please verify your email address', 'error');
+        }
       }
     } catch (error) {
       setError('Network error. Please try again.');
@@ -95,6 +109,10 @@ const Login = () => {
       setLoading(false);
     }
   };
+
+  if (requires2FA) {
+    return <TwoFactorVerification tempToken={tempToken} onSuccess={() => navigate('/')} />;
+  }
 
   return (
     <div className="auth-page">

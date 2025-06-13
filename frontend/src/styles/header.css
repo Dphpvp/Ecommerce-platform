@@ -36,30 +36,103 @@
 .nav {
   display: flex;
   align-items: center;
-  gap: 1.5rem;
+  gap: 1rem;
 }
 
+/* Navigation Links with Button Styles */
 .nav a {
+  padding: 8px 16px;
+  border: 2px solid #e9ecef;
+  border-radius: 6px;
+  background: #f8f9fa;
   color: #333;
   text-decoration: none;
-  font-weight: 500;
-  transition: color 0.3s;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 80px;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  display: inline-block;
 }
 
 .nav a:hover {
-  color: var(--color-blue);
+  border-color: #007bff;
+  background: #e7f3ff;
+  color: #007bff;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
 }
 
+/* Specific hover colors for different nav items */
+.nav a[href="/products"]:hover {
+  background: #28a745;
+  color: white;
+  border-color: #28a745;
+  box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+}
+
+.nav a[href="/about"]:hover {
+  background: #17a2b8;
+  color: white;
+  border-color: #17a2b8;
+  box-shadow: 0 4px 12px rgba(23, 162, 184, 0.3);
+}
+
+.nav a[href="/contact"]:hover {
+  background: #ffc107;
+  color: #212529;
+  border-color: #ffc107;
+  box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
+}
+
+.nav a[href="/orders"]:hover {
+  background: #6f42c1;
+  color: white;
+  border-color: #6f42c1;
+  box-shadow: 0 4px 12px rgba(111, 66, 193, 0.3);
+}
+
+.nav a[href="/profile"]:hover {
+  background: #fd7e14;
+  color: white;
+  border-color: #fd7e14;
+  box-shadow: 0 4px 12px rgba(253, 126, 20, 0.3);
+}
+
+.nav a[href="/login"]:hover,
+.nav a[href="/register"]:hover {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+/* Cart Link - Special Styling */
 .cart-link {
-  background: var(--color-blue);
+  background: linear-gradient(135deg, var(--color-blue), #0056b3) !important;
   color: var(--color-white) !important;
-  padding: 0.5rem 1rem;
-  border-radius: 5px;
-  transition: background 0.3s;
+  border: 2px solid var(--color-blue) !important;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  min-width: 80px;
+  text-align: center;
+  transition: all 0.3s ease;
+  transform: translateY(0);
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2);
 }
 
 .cart-link:hover {
-  background: var(--color-light-blue) !important;
+  background: linear-gradient(135deg, #0056b3, #004085) !important;
+  border-color: #0056b3 !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 16px rgba(0, 123, 255, 0.4) !important;
 }
 
 /* Admin Dropdown Styles */
@@ -69,23 +142,30 @@
 }
 
 .dropdown-toggle {
-  background: none;
-  border: none;
+  padding: 8px 16px;
+  border: 2px solid #e9ecef;
+  border-radius: 6px;
+  background: #f8f9fa;
   color: var(--color-blue);
   font-weight: 600;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.5rem;
-  border-radius: 5px;
   transition: all 0.3s ease;
-  font-size: 1rem;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  min-width: 120px;
+  justify-content: center;
 }
 
 .dropdown-toggle:hover {
-  background: rgba(0, 123, 255, 0.1);
+  border-color: #007bff;
+  background: #e7f3ff;
   color: var(--color-blue);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
 }
 
 .dropdown-arrow {
@@ -154,27 +234,31 @@
   font-weight: bold;
 }
 
-/* Dashboard link for admin */
-.dashboard-link {
-  color: var(--color-blue) !important;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  transition: color 0.3s;
-}
-
-.dashboard-link:hover {
-  color: var(--color-blue) !important;
-}
-
-.dashboard-link .admin-badge {
-  background: var(--color-red);
-}
-
-/* User logout button with username */
+/* User logout button with username - Button Style */
 .user-logout-btn {
-  position: relative;
+  padding: 8px 16px;
+  border: 2px solid #e9ecef;
+  border-radius: 6px;
+  background: #f8f9fa;
+  color: #333;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
   transition: all 0.3s ease;
+  min-width: 80px;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  position: relative;
+  overflow: hidden;
+}
+
+.user-logout-btn:hover {
+  border-color: #dc3545;
+  background: #f5c6cb;
+  color: #721c24;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
 }
 
 .user-logout-btn::after {
@@ -189,10 +273,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 5px;
+  border-radius: 4px;
   opacity: 0;
   transition: opacity 0.3s ease;
-  font-weight: 500;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
 }
 
 .user-logout-btn:hover::after {
@@ -201,6 +287,16 @@
 
 .user-logout-btn:hover {
   color: transparent;
+}
+
+/* Button Active States */
+.nav a.active,
+.dropdown-toggle.active {
+  background: var(--color-blue);
+  color: white;
+  border-color: var(--color-blue);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 123, 255, 0.3);
 }
 
 /* Responsive Header */
@@ -213,6 +309,16 @@
   .nav {
     flex-wrap: wrap;
     justify-content: center;
+    gap: 0.75rem;
+  }
+
+  .nav a,
+  .cart-link,
+  .dropdown-toggle,
+  .user-logout-btn {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    min-width: 70px;
   }
 
   .dropdown-menu {
@@ -232,21 +338,22 @@
   }
   
   .nav {
-    gap: 1rem;
+    gap: 0.5rem;
   }
   
-  .nav a {
-    font-size: 0.9rem;
+  .nav a,
+  .cart-link,
+  .dropdown-toggle,
+  .user-logout-btn {
+    font-size: 0.75rem;
+    padding: 5px 10px;
+    min-width: 60px;
+    letter-spacing: 0.2px;
   }
   
   .admin-badge {
     font-size: 0.7rem;
     padding: 0.2rem 0.5rem;
-  }
-
-  .dropdown-toggle {
-    font-size: 0.9rem;
-    padding: 0.4rem;
   }
 
   .dropdown-item {
@@ -256,5 +363,19 @@
 
   .dropdown-menu {
     min-width: 160px;
+  }
+
+  /* Stack navigation vertically on very small screens */
+  .nav {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .nav a,
+  .cart-link,
+  .dropdown-toggle,
+  .user-logout-btn {
+    width: 100%;
+    margin-bottom: 0.25rem;
   }
 }
