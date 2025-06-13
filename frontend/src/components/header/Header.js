@@ -27,6 +27,9 @@ const Header = () => {
           <Link to="/">Home</Link>
           <Link to="/about">About Us</Link>
           <Link to="/contact">Contact</Link>
+          <Link to="/cart" className="cart-link">
+                    Cart ({cartItems.length})
+                  </Link>
           
           {user ? (
             <>
@@ -48,9 +51,6 @@ const Header = () => {
               )}
               {!isAdmin && (
                 <>
-                  <Link to="/cart" className="cart-link">
-                    Cart ({cartItems.length})
-                  </Link>
                   <Link to="/orders">My Orders</Link>
                 </>
               )}
