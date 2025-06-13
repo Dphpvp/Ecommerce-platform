@@ -2,11 +2,13 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCart } from '../../contexts/CartContext';
+import { useTheme } from '../../contexts/ThemeContext';
 import '../../styles/header.css';
 
 const Header = () => {
   const { user, logout } = useAuth();
   const { cartItems } = useCart();
+  const { isDarkMode, toggleTheme } = useTheme();
   const isAdmin = user && user.is_admin;
 
   return (
@@ -74,6 +76,14 @@ const Header = () => {
               <Link to="/register">Register</Link>
             </>
           )}
+          
+          <button
+            onClick={toggleTheme}
+            className="theme-toggle"
+            title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+          >
+            {isDarkMode ? '☀️' : '🌙'}
+          </button>
         </nav>
       </div>
     </header>

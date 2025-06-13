@@ -3,11 +3,12 @@
 /* Header Component Styles */
 
 .header {
-  background: var(--color-white);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  background: var(--bg-primary);
+  box-shadow: var(--shadow-sm);
   position: sticky;
   top: 0;
   z-index: 100;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .header .container {
@@ -20,7 +21,7 @@
 .logo {
   font-size: 1.8rem;
   font-weight: bold;
-  color: #007bff;
+  color: var(--color-blue);
   text-decoration: none;
 }
 
@@ -40,7 +41,7 @@
 }
 
 .nav a {
-  color: #333;
+  color: var(--text-primary);
   text-decoration: none;
   font-weight: 500;
   transition: color 0.3s;
@@ -125,6 +126,9 @@
 .user-logout-btn {
   position: relative;
   transition: all 0.3s ease;
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border-color);
 }
 
 .user-logout-btn::after {
@@ -153,6 +157,28 @@
   color: transparent;
 }
 
+/* Theme toggle button */
+.theme-toggle {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: all 0.3s ease;
+  margin-left: 0.5rem;
+}
+
+.theme-toggle:hover {
+  background: var(--color-blue);
+  border-color: var(--color-blue);
+  transform: scale(1.1);
+}
+
 /* Responsive Header */
 @media (max-width: 768px) {
   .header .container {
@@ -170,6 +196,12 @@
   .nav a[href="/contact"] {
     padding: 0.4rem 0.8rem;
     font-size: 0.9rem;
+  }
+
+  .theme-toggle {
+    width: 35px;
+    height: 35px;
+    font-size: 1rem;
   }
 }
 
@@ -196,5 +228,11 @@
   .admin-badge {
     font-size: 0.7rem;
     padding: 0.2rem 0.5rem;
+  }
+
+  .theme-toggle {
+    width: 32px;
+    height: 32px;
+    font-size: 0.9rem;
   }
 }

@@ -34,7 +34,6 @@ const stripePromise = loadStripe(
   process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY
 );
 
-
 const App = () => {
   return (
     <Elements stripe={stripePromise}>
