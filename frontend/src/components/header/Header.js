@@ -23,65 +23,62 @@ const Header = () => {
           <span className="logo-text"></span>
         </Link>
 
-        <nav className="nav">
-          <Link to="/">Home</Link>
-          <Link to="/about">About Us</Link>
-          <Link to="/contact">Contact</Link>
-          
-          {user ? (
-            <>
-              {isAdmin && (
-                <>
-                  <Link to="/admin/categories-list" className="admin-link">
-                    Categories
-                  </Link>
-                  <Link to="/admin/orders" className="admin-link">
-                    Orders
-                  </Link>
-                  <Link to="/admin/users" className="admin-link">
-                    Users
-                  </Link>
-                  <Link to="/admin/products" className="admin-link">
-                    Products
-                  </Link>
-                </>
-              )}
-              {!isAdmin && (
-                <>
-                  <Link to="/cart" className="cart-link">
-                    Cart ({cartItems.length})
-                  </Link>
-                  <Link to="/orders">My Orders</Link>
-                </>
-              )}
-              {isAdmin ? (
-                <Link to="/admin/dashboard" className="dashboard-link">
-                  Dashboard
-                  <span className="admin-badge">ADMIN</span>
-                </Link>
-              ) : (
-                <Link to="/profile">Profile</Link>
-              )}
-              <button
-                onClick={logout}
-                className="btn btn-outline user-logout-btn"
-                title="Logout"
-              >
-                {user.username}
-              </button>
-            </>
-          ) : (
-            <>
-              <Link to="/login">Login</Link>
-              <Link to="/register">Register</Link>
-            </>
-          )}
-          
+<nav className="nav">
+  <Link to="/">Home</Link>
+  <Link to="/about">About Us</Link>
+  <Link to="/contact">Contact</Link>
+  <Link to="/login">Login</Link>
+  <Link to="/register">Register</Link>
+  
+  {user ? (
+    <>
+      {isAdmin && (
+        <>
+          <Link to="/admin/categories-list" className="admin-link">
+            Categories
+          </Link>
+          <Link to="/admin/orders" className="admin-link">
+            Orders
+          </Link>
+          <Link to="/admin/users" className="admin-link">
+            Users
+          </Link>
+          <Link to="/admin/products" className="admin-link">
+            Products
+          </Link>
+        </>
+      )}
+      {!isAdmin && (
+        <>
+          <Link to="/cart" className="cart-link">
+            Cart ({cartItems.length})
+          </Link>
+          <Link to="/orders">My Orders</Link>
+        </>
+      )}
+      {isAdmin ? (
+        <Link to="/admin/dashboard" className="dashboard-link">
+          Dashboard
+          <span className="admin-badge">ADMIN</span>
+        </Link>
+      ) : (
+        <Link to="/profile">Profile</Link>
+      )}
+      <button
+        onClick={logout}
+        className="btn btn-outline user-logout-btn"
+        title="Logout"
+      >
+        {user.username}
+      </button>
+    </>
+  ) : null}
+  
           <button
             onClick={toggleTheme}
-            className="theme-toggle"
-            title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
-          >
+              className="theme-toggle"
+              title={isDarkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+  >
             {isDarkMode ? '☀️' : '🌙'}
           </button>
         </nav>

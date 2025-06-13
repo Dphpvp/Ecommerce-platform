@@ -52,9 +52,11 @@
 }
 
 /* Main navigation pages */
-.nav a[href="/"],
-.nav a[href="/about"],
-.nav a[href="/contact"] {
+  .nav a[href="/"],
+  .nav a[href="/about"],
+  .nav a[href="/contact"],
+  .nav a[href="/login"],
+  .nav a[href="/register"] {
   color: var(--color-blue);
   font-weight: 600;
   padding: 0.5rem 1rem;
@@ -62,9 +64,11 @@
   transition: all 0.3s;
 }
 
-.nav a[href="/"]:hover,
-.nav a[href="/about"]:hover,
-.nav a[href="/contact"]:hover {
+  .nav a[href="/"]:hover,
+  .nav a[href="/about"]:hover,
+  .nav a[href="/contact"]:hover,
+  .nav a[href="/login"]:hover,
+  .nav a[href="/register"]:hover {
   background: var(--color-light-blue);
   color: var(--color-white);
 }
@@ -193,7 +197,9 @@
   
   .nav a[href="/"],
   .nav a[href="/about"],
-  .nav a[href="/contact"] {
+  .nav a[href="/contact"],
+  .nav a[href="/login"],
+  .nav a[href="/register"] {
     padding: 0.4rem 0.8rem;
     font-size: 0.9rem;
   }
@@ -220,7 +226,9 @@
   
   .nav a[href="/"],
   .nav a[href="/about"],
-  .nav a[href="/contact"] {
+  .nav a[href="/contact"],
+  .nav a[href="/login"],
+  .nav a[href="/register"] {
     padding: 0.3rem 0.6rem;
     font-size: 0.8rem;
   }
