@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToastContext } from '../toast';
-import TwoFactorSetup from '../TwoFactorSetup';
+import TwoFactorSetup from '../../TwoFactorSetup';
 import '../../styles/profile.css';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
