@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import '../styles/adminorders.css';
+import '../../styles/adminorders.css';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
