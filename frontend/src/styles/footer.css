@@ -1,0 +1,47 @@
+@import url('./var.css');
+
+.footer {
+  background: var(--color-dark);
+  color: var(--color-white);
+  padding: 2rem 0;
+  margin-top: auto;
+}
+
+.footer-content {
+  text-align: center;
+}
+
+.footer-text {
+  margin-bottom: 0.5rem;
+  font-size: 1rem;
+  color: var(--color-light-gray);
+}
+
+.footer-link {
+  color: var(--color-blue);
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.3s ease;
+}
+
+.footer-link:hover {
+  color: var(--color-light-blue);
+  text-decoration: underline;
+}
+
+.footer-copyright {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--color-gray);
+}
+
+@media (max-width: 768px) {
+  .footer {
+    padding: 1.5rem 0;
+  }
+  
+  .footer-text,
+  .footer-copyright {
+    font-size: 0.9rem;
+  }
+}

@@ -57,6 +57,75 @@ async def send_email(to_email: str, subject: str, body: str):
         print(f"❌ Email sending failed: {e}")
         return False
 
+async def send_contact_email(name: str, email: str, phone: str, message: str) -> bool:
+    """Send contact form email to admin"""
+    try:
+        subject = f"📧 New Contact Form Message from {name}"
+        
+        phone_text = f"Phone: {phone}" if phone else "Phone: Not provided"
+        
+        body = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto;">
+            <div style="background: linear-gradient(135deg, #007bff, #28a745); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+                <h1 style="margin: 0; font-size: 28px;">📧 New Contact Message</h1>
+                <p style="margin: 10px 0 0 0; font-size: 18px;">From your website contact form</p>
+            </div>
+            
+            <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <div style="background: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #007bff;">
+                    <h3 style="margin-top: 0; color: #007bff;">👤 Contact Details</h3>
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                            <td style="padding: 8px 0; font-weight: bold; width: 100px;">Name:</td>
+                            <td style="padding: 8px 0;">{name}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; font-weight: bold;">Email:</td>
+                            <td style="padding: 8px 0;"><a href="mailto:{email}" style="color: #007bff;">{email}</a></td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; font-weight: bold;">Phone:</td>
+                            <td style="padding: 8px 0;">{phone if phone else 'Not provided'}</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px 0; font-weight: bold;">Date:</td>
+                            <td style="padding: 8px 0;">{datetime.now().strftime('%B %d, %Y at %I:%M %p')}</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <div style="background: #fff3cd; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #ffc107;">
+                    <h3 style="margin-top: 0; color: #856404;">💬 Message</h3>
+                    <div style="background: white; padding: 15px; border-radius: 5px; border: 1px solid #ffeaa7;">
+                        <p style="margin: 0; white-space: pre-wrap; line-height: 1.6;">{message}</p>
+                    </div>
+                </div>
+                
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="mailto:{email}?subject=Re: Your inquiry" 
+                       style="background-color: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">
+                        📧 Reply to {name}
+                    </a>
+                </div>
+                
+                <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee;">
+                    <p style="color: #666; font-size: 14px; margin: 0;">
+                        This message was sent from the contact form on {FRONTEND_URL}<br>
+                        <em>Please respond promptly to maintain good customer service.</em>
+                    </p>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        return await send_email(ADMIN_EMAIL, subject, body)
+        
+    except Exception as e:
+        print(f"❌ Error sending contact email: {e}")
+        return False
+
 async def send_order_confirmation_email(user_email: str, user_name: str, order_id: str, total_amount: float, items: List[dict]):
     """Send order confirmation email to customer"""
     

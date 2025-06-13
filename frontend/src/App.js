@@ -9,10 +9,13 @@ import { CartProvider } from './contexts/CartContext';
 import { ToastProvider } from './components/toast';
 
 import Header from './components/header';
+import Footer from './components/Footer';
 import PrivateRoute from './components/PrivateRoute';
 import Profile from './components/profile';
 
 import Home from './pages/Home';
+import About from './pages/About';
+import Contact from './pages/Contact';
 import Products from './pages/Products';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
@@ -26,8 +29,6 @@ import AdminUsers from './components/admin/AdminUsers';
 import AdminProducts from './components/admin/AdminProducts';
 import AdminRoute from './components/admin/AdminRoute';
 import AdminCategories from './components/admin/AdminCategories';
-
-<Route path="/admin/categories-list" element={<AdminRoute><AdminCategories /></AdminRoute>} />
 
 const stripePromise = loadStripe(
   "pk_test_51RWK32RdyxKMeI2qFdwU5mx0G8jZjt1PcOYpeCILJSwVgLsh3u23xE89kRCs0uezmScF8zCQqG8culYGXpxpScNq006cWwuoGS"
@@ -45,6 +46,8 @@ const App = () => {
                 <main className="main">
                   <Routes>
                     <Route path="/" element={<Home />} />
+                    <Route path="/about" element={<About />} />
+                    <Route path="/contact" element={<Contact />} />
                     <Route path="/products" element={<Products />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
@@ -124,6 +127,7 @@ const App = () => {
                     />
                   </Routes>
                 </main>
+                <Footer />
               </div>
             </ToastProvider>
           </CartProvider>

@@ -22,6 +22,10 @@ const Header = () => {
         </Link>
 
         <nav className="nav">
+          <Link to="/">Home</Link>
+          <Link to="/about">About Us</Link>
+          <Link to="/contact">Contact</Link>
+          
           {user ? (
             <>
               {isAdmin && (
