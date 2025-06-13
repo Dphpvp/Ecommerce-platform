@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useToastContext } from '../toast';
-import '../styles/ProductForm.css';
+import './styles/ProductForm.css';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
