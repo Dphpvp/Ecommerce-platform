@@ -56,7 +56,7 @@ class CartItem(BaseModel):
 
 class PaymentIntent(BaseModel):
     amount: int
-    currency: str = "usd"
+    currency: str = "ron"
 
 class ContactForm(BaseModel):
     name: str
@@ -232,6 +232,8 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         "phone": current_user.get("phone"),
         "is_admin": current_user.get("is_admin", False)
     }
+@router.put("/auth/update-profile") 
+@router.put("/auth/update-password")
 
 # Product routes
 @router.post("/products")
