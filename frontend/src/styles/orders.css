@@ -40,7 +40,7 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   border: 1px solid var(--color-border);
   transition: all 0.3s ease;
-  height: 250px;
+  height: 300px;
   display: flex;
   flex-direction: column;
 }
@@ -78,9 +78,11 @@
 
 .orders .order-status-section {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.75rem;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: auto;
 }
 
 .orders .current-status {
@@ -91,9 +93,10 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  min-width: 100px;
   text-align: center;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  flex: 1;
+  max-width: 120px;
 }
 
 .orders .status-pending {
@@ -131,7 +134,8 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
-  min-width: 120px;
+  flex: 1;
+  max-width: 120px;
 }
 
 .orders .details-toggle:hover {
