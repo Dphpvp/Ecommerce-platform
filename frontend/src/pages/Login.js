@@ -13,7 +13,9 @@ const Login = () => {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login, requires2FA, tempToken, handle2FARequired } = useAuth();
+  const [show2FA, setShow2FA] = useState(false);
+  const [tempToken, setTempToken] = useState('');
+  const { login } = useAuth();
   const { showToast } = useToastContext();
   const navigate = useNavigate();
 
@@ -56,7 +58,8 @@ const Login = () => {
 
       if (apiResponse.ok) {
         if (data.requires_2fa) {
-          handle2FARequired(data.temp_token);
+          setTempToken(data.temp_token);
+          setShow2FA(true);
         } else {
           login(data.token, data.user);
           navigate('/');
@@ -92,8 +95,12 @@ const Login = () => {
 
       if (response.ok) {
         if (data.requires_2fa) {
-          handle2FARequired(data.temp_token);
+          // User has 2FA enabled - show 2FA verification
+          setTempToken(data.temp_token);
+          setShow2FA(true);
+          showToast('Please enter your 2FA code', 'info');
         } else {
+          // Normal login
           login(data.token, data.user);
           navigate('/');
         }
@@ -110,8 +117,25 @@ const Login = () => {
     }
   };
 
-  if (requires2FA) {
-    return <TwoFactorVerification tempToken={tempToken} onSuccess={() => navigate('/')} />;
+  const handle2FASuccess = () => {
+    setShow2FA(false);
+    navigate('/');
+  };
+
+  const handle2FACancel = () => {
+    setShow2FA(false);
+    setTempToken('');
+  };
+
+  // Show 2FA verification if required
+  if (show2FA) {
+    return (
+      <TwoFactorVerification 
+        tempToken={tempToken} 
+        onSuccess={handle2FASuccess}
+        onCancel={handle2FACancel}
+      />
+    );
   }
 
   return (

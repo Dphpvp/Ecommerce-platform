@@ -4,7 +4,7 @@ import { useToastContext } from '../toast';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
-const TwoFactorVerification = ({ tempToken, onSuccess }) => {
+const TwoFactorVerification = ({ tempToken, onSuccess, onCancel }) => {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
@@ -98,6 +98,18 @@ const TwoFactorVerification = ({ tempToken, onSuccess }) => {
           <p style={{ marginTop: '20px', fontSize: '0.9rem', color: '#666', textAlign: 'center' }}>
             Lost access? Use a backup code to sign in.
           </p>
+          
+          {onCancel && (
+            <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+              <button 
+                onClick={onCancel}
+                className="btn btn-outline"
+                style={{ fontSize: '0.9rem' }}
+              >
+                ← Back to Login
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
