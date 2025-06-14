@@ -482,22 +482,21 @@ const Profile = () => {
       <div className="unverified-section">
         <span className="verification-badge unverified">❌ Unverified</span>
         <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-           <button 
-            onClick={() => window.location.href = '/verify-email'}
-            className="btn btn-sm btn-primary"
-            style={{ flex: 1 }}
-          >
-            Verify Code
-          </button>
           <button 
             onClick={sendVerificationEmail}
             className="btn btn-sm btn-outline"
             disabled={sendingVerification}
-            style={{ flex: 1 }}
+            style={{ flex: 0 }}
           >
             {sendingVerification ? 'Sending...' : 'Resend'}
           </button>
-          
+          <button 
+            onClick={() => window.location.href = '/verify-email'}
+            className="btn btn-sm btn-primary"
+            style={{ flex: 2 }}
+          >
+            Verify Code
+          </button>
         </div>
       </div>
     )}
