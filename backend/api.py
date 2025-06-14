@@ -61,7 +61,13 @@ class CartItem(BaseModel):
 
 class PaymentIntent(BaseModel):
     amount: int
-    currency: str = "usd"
+    currency: str = "ron"
+    
+class ContactForm(BaseModel):
+    name: str
+    email: str
+    phone: str = ""
+    message: str
 
 # 🆕 NEW: Profile Update Models
 class UserProfileUpdate(BaseModel):
@@ -1201,3 +1207,25 @@ async def get_order(order_id: str, current_user: dict = Depends(get_current_user
     
     order["_id"] = str(order["_id"])
     return order
+
+@router.post("/contact")
+async def submit_contact_form(contact_data: ContactForm):
+    """Handle contact form submissions"""
+    try:
+        from utils.email import send_contact_email
+        
+        success = await send_contact_email(
+            name=contact_data.name,
+            email=contact_data.email,
+            phone=contact_data.phone,
+            message=contact_data.message
+        )
+        
+        if success:
+            return {"message": "Message sent successfully"}
+        else:
+            raise HTTPException(status_code=500, detail="Failed to send message")
+            
+    except Exception as e:
+        print(f"Contact form error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to send message")
