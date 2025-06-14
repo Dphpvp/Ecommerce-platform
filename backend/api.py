@@ -10,13 +10,18 @@ import os
 from google.oauth2 import id_token
 from google.auth.transport import requests
 import re
+import pyotp
+import qrcode
+import io
+import base64
+import secrets
 
 # Import your database connection
 from database.connection import db
 from dependencies import get_current_user, security
 
 # 🆕 ADD EMAIL IMPORT
-from utils.email import send_order_confirmation_email, send_admin_order_notification
+from utils.email import send_order_confirmation_email, send_admin_order_notification, send_verification_email
 
 router = APIRouter()
 
@@ -71,6 +76,23 @@ class PasswordChange(BaseModel):
     new_password: str
     confirm_password: str
 
+# 2FA Models
+class TwoFactorVerification(BaseModel):
+    code: str
+
+class TwoFactorSetup(BaseModel):
+    code: str
+    
+class TwoFactorDisable(BaseModel):
+    password: str
+    code: str
+
+class EmailVerification(BaseModel):
+    token: str
+
+class ResendVerification(BaseModel):
+    email: str
+
 # Helper functions
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
@@ -78,10 +100,10 @@ def hash_password(password: str) -> str:
 def verify_password(password: str, hashed: str) -> bool:
     return bcrypt.checkpw(password.encode('utf-8'), hashed.encode('utf-8'))
 
-def create_jwt_token(user_id: str) -> str:
+def create_jwt_token(user_id: str, expires_in: timedelta = timedelta(days=7)) -> str:
     payload = {
         "user_id": user_id,
-        "exp": datetime.now(timezone.utc) + timedelta(days=7)
+        "exp": datetime.now(timezone.utc) + expires_in
     }
     return jwt.encode(payload, JWT_SECRET, algorithm="HS256")
 
@@ -112,6 +134,9 @@ async def register(user: User):
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     
+    # Generate verification token
+    verification_token = secrets.token_urlsafe(32)
+    
     hashed_password = hash_password(user.password)
     user_data = {
         "username": user.username,
@@ -121,13 +146,85 @@ async def register(user: User):
         "address": user.address,
         "phone": user.phone,
         "is_admin": False,
+        "email_verified": False,
+        "verification_token": verification_token,
+        "verification_token_created": datetime.now(timezone.utc),
+        "two_factor_enabled": False,
+        "two_factor_secret": None,
+        "backup_codes": [],
         "created_at": datetime.now(timezone.utc)
     }
     
     result = await db.users.insert_one(user_data)
-    token = create_jwt_token(str(result.inserted_id))
     
-    return {"message": "User registered successfully", "token": token}
+    # Send verification email
+    try:
+        verification_url = f"{os.getenv('FRONTEND_URL', 'http://localhost:3000')}/verify-email?token={verification_token}"
+        await send_verification_email(user.email, user.full_name, verification_url)
+        print(f"✅ Verification email sent to {user.email}")
+    except Exception as e:
+        print(f"❌ Failed to send verification email: {e}")
+    
+    return {"message": "User registered successfully. Please check your email to verify your account."}
+
+@router.post("/auth/verify-email")
+async def verify_email(verification_data: EmailVerification):
+    """Verify email with token"""
+    try:
+        user = await db.users.find_one({"verification_token": verification_data.token})
+        if not user:
+            raise HTTPException(status_code=400, detail="Invalid verification token")
+        
+        # Check if token is expired (24 hours)
+        token_created = user.get("verification_token_created")
+        if token_created:
+            expiry_time = token_created + timedelta(hours=24)
+            if datetime.now(timezone.utc) > expiry_time:
+                raise HTTPException(status_code=400, detail="Verification token expired")
+        
+        # Update user as verified
+        await db.users.update_one(
+            {"_id": user["_id"]},
+            {
+                "$set": {"email_verified": True},
+                "$unset": {"verification_token": "", "verification_token_created": ""}
+            }
+        )
+        
+        return {"message": "Email verified successfully"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Verification failed")
+
+@router.post("/auth/resend-verification")
+async def resend_verification(email_data: ResendVerification):
+    """Resend verification email"""
+    try:
+        user = await db.users.find_one({"email": email_data.email, "email_verified": False})
+        
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found or already verified")
+        
+        # Generate new token
+        verification_token = secrets.token_urlsafe(32)
+        await db.users.update_one(
+            {"_id": user["_id"]},
+            {
+                "$set": {
+                    "verification_token": verification_token,
+                    "verification_token_created": datetime.now(timezone.utc)
+                }
+            }
+        )
+        
+        # Send new verification email
+        verification_url = f"{os.getenv('FRONTEND_URL', 'http://localhost:3000')}/verify-email?token={verification_token}"
+        await send_verification_email(email_data.email, user.get("full_name", "User"), verification_url)
+        
+        return {"message": "Verification email sent"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail="Failed to send verification email")
 
 @router.post("/auth/login")
 async def login(user_login: UserLogin):
@@ -145,6 +242,23 @@ async def login(user_login: UserLogin):
     if not user or not verify_password(user_login.password, user["password"]):
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
+    # Check email verification
+    if not user.get("email_verified", False):
+        raise HTTPException(
+            status_code=401, 
+            detail="Email not verified. Please check your email and verify your account."
+        )
+    
+    # Check if 2FA is enabled
+    if user.get("two_factor_enabled"):
+        # Return temporary token for 2FA verification
+        temp_token = create_jwt_token(str(user["_id"]), expires_in=timedelta(minutes=5))
+        return {
+            "requires_2fa": True,
+            "temp_token": temp_token,
+            "message": "Please enter your 2FA code"
+        }
+    
     token = create_jwt_token(str(user["_id"]))
     return {
         "token": token, 
@@ -156,9 +270,194 @@ async def login(user_login: UserLogin):
             "address": user.get("address"),
             "phone": user.get("phone"),
             "profile_image_url": user.get("profile_image_url"),
-            "is_admin": user.get("is_admin", False)
+            "is_admin": user.get("is_admin", False),
+            "email_verified": user.get("email_verified", False),
+            "two_factor_enabled": user.get("two_factor_enabled", False)
         }
     }
+
+@router.post("/auth/verify-2fa")
+async def verify_2fa_login(verification_data: dict):
+    """Verify 2FA during login"""
+    try:
+        temp_token = verification_data.get("temp_token")
+        code = verification_data.get("code")
+        
+        payload = jwt.decode(temp_token, JWT_SECRET, algorithms=["HS256"])
+        user_id = payload.get("user_id")
+        user = await db.users.find_one({"_id": ObjectId(user_id)})
+        
+        if not user:
+            raise HTTPException(status_code=401, detail="Invalid token")
+        
+        # Verify 2FA code
+        secret = user.get("two_factor_secret")
+        totp = pyotp.TOTP(secret)
+        
+        # Check TOTP code
+        if totp.verify(code, valid_window=1):
+            token = create_jwt_token(str(user["_id"]))
+            return {
+                "token": token,
+                "user": {
+                    "id": str(user["_id"]), 
+                    "email": user["email"], 
+                    "username": user["username"],
+                    "full_name": user.get("full_name", ""),
+                    "address": user.get("address"),
+                    "phone": user.get("phone"),
+                    "profile_image_url": user.get("profile_image_url"),
+                    "is_admin": user.get("is_admin", False),
+                    "email_verified": user.get("email_verified", False),
+                    "two_factor_enabled": user.get("two_factor_enabled", False)
+                }
+            }
+        
+        # Check backup codes
+        backup_codes = user.get("backup_codes", [])
+        if code.upper() in backup_codes:
+            # Remove used backup code
+            backup_codes.remove(code.upper())
+            await db.users.update_one(
+                {"_id": user["_id"]},
+                {"$set": {"backup_codes": backup_codes}}
+            )
+            
+            token = create_jwt_token(str(user["_id"]))
+            return {
+                "token": token,
+                "user": {
+                    "id": str(user["_id"]), 
+                    "email": user["email"], 
+                    "username": user["username"],
+                    "full_name": user.get("full_name", ""),
+                    "address": user.get("address"),
+                    "phone": user.get("phone"),
+                    "profile_image_url": user.get("profile_image_url"),
+                    "is_admin": user.get("is_admin", False),
+                    "email_verified": user.get("email_verified", False),
+                    "two_factor_enabled": user.get("two_factor_enabled", False)
+                },
+                "backup_code_used": True
+            }
+        
+        raise HTTPException(status_code=401, detail="Invalid 2FA code")
+        
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="2FA verification expired")
+    except jwt.JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
+
+@router.post("/auth/setup-2fa")
+async def setup_2fa(current_user: dict = Depends(get_current_user)):
+    """Setup 2FA for user"""
+    try:
+        if not current_user.get("email_verified"):
+            raise HTTPException(status_code=400, detail="Email must be verified before enabling 2FA")
+        
+        # Generate 2FA secret
+        secret = pyotp.random_base32()
+        
+        # Generate QR code
+        totp_uri = pyotp.totp.TOTP(secret).provisioning_uri(
+            name=current_user["email"],
+            issuer_name="ECommerce App"
+        )
+        
+        qr = qrcode.QRCode(version=1, box_size=10, border=5)
+        qr.add_data(totp_uri)
+        qr.make(fit=True)
+        
+        img = qr.make_image(fill_color="black", back_color="white")
+        buffer = io.BytesIO()
+        img.save(buffer, format='PNG')
+        buffer.seek(0)
+        qr_code = base64.b64encode(buffer.getvalue()).decode()
+        
+        # Store secret temporarily (not enabled until verified)
+        await db.users.update_one(
+            {"_id": current_user["_id"]},
+            {"$set": {"two_factor_secret_temp": secret}}
+        )
+        
+        return {
+            "secret": secret,
+            "qr_code": f"data:image/png;base64,{qr_code}"
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@router.post("/auth/verify-2fa-setup")
+async def verify_2fa_setup(verification_data: TwoFactorSetup, current_user: dict = Depends(get_current_user)):
+    """Verify and enable 2FA"""
+    try:
+        user = await db.users.find_one({"_id": current_user["_id"]})
+        temp_secret = user.get("two_factor_secret_temp")
+        
+        if not temp_secret:
+            raise HTTPException(status_code=400, detail="No 2FA setup in progress")
+        
+        # Verify the code
+        totp = pyotp.TOTP(temp_secret)
+        if not totp.verify(verification_data.code, valid_window=1):
+            raise HTTPException(status_code=400, detail="Invalid 2FA code")
+        
+        # Generate backup codes
+        backup_codes = [secrets.token_hex(4).upper() for _ in range(8)]
+        
+        # Enable 2FA
+        await db.users.update_one(
+            {"_id": current_user["_id"]},
+            {
+                "$set": {
+                    "two_factor_enabled": True,
+                    "two_factor_secret": temp_secret,
+                    "backup_codes": backup_codes
+                },
+                "$unset": {"two_factor_secret_temp": ""}
+            }
+        )
+        
+        return {
+            "message": "2FA enabled successfully",
+            "backup_codes": backup_codes
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@router.post("/auth/disable-2fa")
+async def disable_2fa(verification_data: TwoFactorDisable, current_user: dict = Depends(get_current_user)):
+    """Disable 2FA"""
+    try:
+        # Verify password
+        if not verify_password(verification_data.password, current_user["password"]):
+            raise HTTPException(status_code=400, detail="Invalid password")
+        
+        # Verify 2FA code
+        if current_user.get("two_factor_enabled"):
+            secret = current_user.get("two_factor_secret")
+            totp = pyotp.TOTP(secret)
+            if not totp.verify(verification_data.code, valid_window=1):
+                raise HTTPException(status_code=400, detail="Invalid 2FA code")
+        
+        # Disable 2FA
+        await db.users.update_one(
+            {"_id": current_user["_id"]},
+            {
+                "$set": {"two_factor_enabled": False},
+                "$unset": {
+                    "two_factor_secret": "",
+                    "backup_codes": ""
+                }
+            }
+        )
+        
+        return {"message": "2FA disabled successfully"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 @router.post("/auth/google")
 async def google_login(google_login: GoogleLogin):
@@ -191,7 +490,9 @@ async def google_login(google_login: GoogleLogin):
                     "address": user.get("address"),
                     "phone": user.get("phone"),
                     "profile_image_url": user.get("profile_image_url"),
-                    "is_admin": user.get("is_admin", False)
+                    "is_admin": user.get("is_admin", False),
+                    "email_verified": user.get("email_verified", True),  # Google accounts are verified
+                    "two_factor_enabled": user.get("two_factor_enabled", False)
                 }
             }
         else:
@@ -212,6 +513,8 @@ async def google_login(google_login: GoogleLogin):
                 "full_name": name,
                 "google_id": google_id,
                 "is_admin": False,
+                "email_verified": True,  # Google accounts are pre-verified
+                "two_factor_enabled": False,
                 "created_at": datetime.now(timezone.utc)
             }
             
@@ -228,7 +531,9 @@ async def google_login(google_login: GoogleLogin):
                     "address": None,
                     "phone": None,
                     "profile_image_url": None,
-                    "is_admin": False
+                    "is_admin": False,
+                    "email_verified": True,
+                    "two_factor_enabled": False
                 }
             }
             
@@ -247,7 +552,9 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         "address": current_user.get("address"),
         "phone": current_user.get("phone"),
         "profile_image_url": current_user.get("profile_image_url"),
-        "is_admin": current_user.get("is_admin", False)
+        "is_admin": current_user.get("is_admin", False),
+        "email_verified": current_user.get("email_verified", False),
+        "two_factor_enabled": current_user.get("two_factor_enabled", False)
     }
 
 # 🆕 NEW: Profile Update Routes
@@ -300,7 +607,9 @@ async def update_profile(profile_data: UserProfileUpdate, current_user: dict = D
             "address": updated_user.get("address"),
             "phone": updated_user.get("phone"),
             "profile_image_url": updated_user.get("profile_image_url"),
-            "is_admin": updated_user.get("is_admin", False)
+            "is_admin": updated_user.get("is_admin", False),
+            "email_verified": updated_user.get("email_verified", False),
+            "two_factor_enabled": updated_user.get("two_factor_enabled", False)
         }
     }
 
