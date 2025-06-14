@@ -159,7 +159,7 @@ async def register(user: User):
     
     # Send verification email
     try:
-        verification_url = f"{os.getenv('FRONTEND_URL', 'http://localhost:3000')}/verify-email?token={verification_token}"
+        verification_url = f"{os.getenv('FRONTEND_URL')}/verify-email?token={verification_token}"
         await send_verification_email(user.email, user.full_name, verification_url)
         print(f"✅ Verification email sent to {user.email}")
     except Exception as e:
@@ -200,10 +200,18 @@ async def verify_email(verification_data: EmailVerification):
 async def resend_verification(email_data: ResendVerification):
     """Resend verification email"""
     try:
-        user = await db.users.find_one({"email": email_data.email, "email_verified": False})
+        print(f"📧 Attempting to resend verification for: {email_data.email}")
+        
+        # Find user by email regardless of verification status
+        user = await db.users.find_one({"email": email_data.email})
         
         if not user:
-            raise HTTPException(status_code=404, detail="User not found or already verified")
+            print(f"❌ User not found: {email_data.email}")
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        if user.get("email_verified", False):
+            print(f"✅ Email already verified: {email_data.email}")
+            return {"message": "Email already verified"}
         
         # Generate new token
         verification_token = secrets.token_urlsafe(32)
@@ -218,14 +226,39 @@ async def resend_verification(email_data: ResendVerification):
         )
         
         # Send new verification email
-        verification_url = f"{os.getenv('FRONTEND_URL', 'http://localhost:3000')}/verify-email?token={verification_token}"
+        frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:3000')
+        verification_url = f"{frontend_url}/verify-email?token={verification_token}"
+        
+        print(f"📧 Sending verification email to: {email_data.email}")
+        print(f"🔗 Verification URL: {verification_url}")
+        
         await send_verification_email(email_data.email, user.get("full_name", "User"), verification_url)
         
+        print(f"✅ Verification email sent successfully to: {email_data.email}")
         return {"message": "Verification email sent"}
         
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(status_code=400, detail="Failed to send verification email")
+        print(f"❌ Error in resend_verification: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to send verification email: {str(e)}")
 
+# Also add a debug route
+@router.get("/auth/debug-user/{email}")
+async def debug_user(email: str):
+    """Debug route to check user status"""
+    user = await db.users.find_one({"email": email})
+    if not user:
+        return {"error": "User not found"}
+    
+    return {
+        "email": user["email"],
+        "email_verified": user.get("email_verified", False),
+        "is_admin": user.get("is_admin", False),
+        "has_verification_token": bool(user.get("verification_token")),
+        "created_at": user.get("created_at")
+    }
+    
 @router.post("/auth/login")
 async def login(user_login: UserLogin):
     identifier_type = get_identifier_type(user_login.identifier)
