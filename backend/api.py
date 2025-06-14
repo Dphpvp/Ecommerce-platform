@@ -77,11 +77,12 @@ class PasswordChange(BaseModel):
     confirm_password: str
 
 # 2FA Models
-class TwoFactorVerification(BaseModel):
-    code: str
 
 class TwoFactorSetup(BaseModel):
     code: str
+    
+class TwoFactorSetupChoice(BaseModel):
+    method: str
     
 class TwoFactorDisable(BaseModel):
     password: str
@@ -92,7 +93,14 @@ class EmailVerification(BaseModel):
 
 class ResendVerification(BaseModel):
     email: str
-
+    
+class TwoFactorVerification(BaseModel):
+    code: str
+        
+class EmailTwoFactorCode(BaseModel):
+    email: str
+    code: str
+    
 # Helper functions
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
@@ -117,6 +125,43 @@ def get_identifier_type(identifier: str):
         return "phone"
     else:
         return "username"
+    
+def generate_email_2fa_code():
+    """Generate 6-digit code for email 2FA"""
+    return f"{secrets.randbelow(1000000):06d}"
+
+async def send_2fa_email_code(email: str, code: str, user_name: str = "User"):
+    """Send 2FA code via email"""
+    subject = "🔐 Your Login Code"
+    body = f"""
+    <html>
+    <body style="font-family: Arial, sans-serif; max-width: 500px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #007bff, #0056b3); color: white; padding: 2rem; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="margin: 0;">🔐 Security Code</h1>
+        </div>
+        
+        <div style="background: white; padding: 2rem; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <p>Hello {user_name},</p>
+            <p>Your login verification code is:</p>
+            
+            <div style="background: #f8f9fa; padding: 2rem; margin: 1.5rem 0; border-radius: 8px; text-align: center; border: 2px solid #007bff;">
+                <span style="font-size: 2rem; font-weight: bold; color: #007bff; letter-spacing: 0.5rem;">{code}</span>
+            </div>
+            
+            <p><strong>This code expires in 5 minutes.</strong></p>
+            <p>If you didn't request this code, please ignore this email.</p>
+            
+            <hr style="margin: 2rem 0;">
+            <p style="color: #666; font-size: 0.9rem; text-align: center;">
+                This is an automated security message.
+            </p>
+        </div>
+    </body>
+    </html>
+    """
+    
+    from utils.email import send_email
+    return await send_email(email, subject, body)
 
 async def get_next_order_number():
     counter = await db.counters.find_one_and_update(
@@ -126,6 +171,7 @@ async def get_next_order_number():
         return_document=True
     )
     return counter["value"]
+
 
 # Auth routes
 @router.post("/auth/register")
@@ -349,7 +395,7 @@ async def login(user_login: UserLogin):
 
 @router.post("/auth/verify-2fa")
 async def verify_2fa_login(verification_data: dict):
-    """Verify 2FA during login"""
+    """Verify 2FA during login - handles both app and email"""
     try:
         temp_token = verification_data.get("temp_token")
         code = verification_data.get("code")
@@ -361,33 +407,47 @@ async def verify_2fa_login(verification_data: dict):
         if not user:
             raise HTTPException(status_code=401, detail="Invalid token")
         
-        # Verify 2FA code
-        secret = user.get("two_factor_secret")
-        totp = pyotp.TOTP(secret)
+        method = user.get("two_factor_method", "app")
         
-        # Check TOTP code
-        if totp.verify(code, valid_window=1):
-            token = create_jwt_token(str(user["_id"]))
-            return {
-                "token": token,
-                "user": {
-                    "id": str(user["_id"]), 
-                    "email": user["email"], 
-                    "username": user["username"],
-                    "full_name": user.get("full_name", ""),
-                    "address": user.get("address"),
-                    "phone": user.get("phone"),
-                    "profile_image_url": user.get("profile_image_url"),
-                    "is_admin": user.get("is_admin", False),
-                    "email_verified": user.get("email_verified", False),
-                    "two_factor_enabled": user.get("two_factor_enabled", False)
-                }
-            }
+        if method == "app":
+            # Verify TOTP code
+            secret = user.get("two_factor_secret")
+            totp = pyotp.TOTP(secret)
+            
+            if totp.verify(code, valid_window=1):
+                token = create_jwt_token(str(user["_id"]))
+                return create_user_response(token, user)
+                
+        elif method == "email":
+            # Verify email code
+            stored_code = user.get("email_2fa_code")
+            code_created = user.get("email_2fa_code_created")
+            
+            if not stored_code:
+                raise HTTPException(status_code=401, detail="No verification code found")
+            
+            # Check if code expired (5 minutes)
+            if code_created:
+                if isinstance(code_created, datetime):
+                    if code_created.tzinfo is None:
+                        code_created = code_created.replace(tzinfo=timezone.utc)
+                    
+                    if datetime.now(timezone.utc) > code_created + timedelta(minutes=5):
+                        raise HTTPException(status_code=401, detail="Verification code expired")
+            
+            if code == stored_code:
+                # Clear the used code
+                await db.users.update_one(
+                    {"_id": user["_id"]},
+                    {"$unset": {"email_2fa_code": "", "email_2fa_code_created": ""}}
+                )
+                
+                token = create_jwt_token(str(user["_id"]))
+                return create_user_response(token, user)
         
-        # Check backup codes
+        # Check backup codes (works for both methods)
         backup_codes = user.get("backup_codes", [])
         if code.upper() in backup_codes:
-            # Remove used backup code
             backup_codes.remove(code.upper())
             await db.users.update_one(
                 {"_id": user["_id"]},
@@ -395,106 +455,216 @@ async def verify_2fa_login(verification_data: dict):
             )
             
             token = create_jwt_token(str(user["_id"]))
-            return {
-                "token": token,
-                "user": {
-                    "id": str(user["_id"]), 
-                    "email": user["email"], 
-                    "username": user["username"],
-                    "full_name": user.get("full_name", ""),
-                    "address": user.get("address"),
-                    "phone": user.get("phone"),
-                    "profile_image_url": user.get("profile_image_url"),
-                    "is_admin": user.get("is_admin", False),
-                    "email_verified": user.get("email_verified", False),
-                    "two_factor_enabled": user.get("two_factor_enabled", False)
-                },
-                "backup_code_used": True
-            }
+            response = create_user_response(token, user)
+            response["backup_code_used"] = True
+            return response
         
-        raise HTTPException(status_code=401, detail="Invalid 2FA code")
+        raise HTTPException(status_code=401, detail="Invalid verification code")
         
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="2FA verification expired")
     except jwt.JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
-
-@router.post("/auth/setup-2fa")
-async def setup_2fa(current_user: dict = Depends(get_current_user)):
-    """Setup 2FA for user"""
+    
+@router.post("/auth/send-2fa-email")
+async def send_2fa_email(verification_data: dict):
+    """Send 2FA code via email during login"""
     try:
-        if not current_user.get("email_verified"):
-            raise HTTPException(status_code=400, detail="Email must be verified before enabling 2FA")
+        temp_token = verification_data.get("temp_token")
         
-        # Generate 2FA secret
-        secret = pyotp.random_base32()
+        payload = jwt.decode(temp_token, JWT_SECRET, algorithms=["HS256"])
+        user_id = payload.get("user_id")
+        user = await db.users.find_one({"_id": ObjectId(user_id)})
         
-        # Generate QR code
-        totp_uri = pyotp.totp.TOTP(secret).provisioning_uri(
-            name=current_user["email"],
-            issuer_name="ECommerce App"
-        )
+        if not user or user.get("two_factor_method") != "email":
+            raise HTTPException(status_code=400, detail="Email 2FA not enabled")
         
-        qr = qrcode.QRCode(version=1, box_size=10, border=5)
-        qr.add_data(totp_uri)
-        qr.make(fit=True)
-        
-        img = qr.make_image(fill_color="black", back_color="white")
-        buffer = io.BytesIO()
-        img.save(buffer, format='PNG')
-        buffer.seek(0)
-        qr_code = base64.b64encode(buffer.getvalue()).decode()
-        
-        # Store secret temporarily (not enabled until verified)
+        # Generate and send code
+        code = generate_email_2fa_code()
         await db.users.update_one(
-            {"_id": current_user["_id"]},
-            {"$set": {"two_factor_secret_temp": secret}}
+            {"_id": user["_id"]},
+            {
+                "$set": {
+                    "email_2fa_code": code,
+                    "email_2fa_code_created": datetime.now(timezone.utc)
+                }
+            }
         )
         
-        return {
-            "secret": secret,
-            "qr_code": f"data:image/png;base64,{qr_code}"
-        }
+        user_name = user.get("full_name", user.get("username", "User"))
+        await send_2fa_email_code(user["email"], code, user_name)
+        
+        return {"message": "Verification code sent to your email"}
         
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
+# Helper function for user response
+def create_user_response(token, user):
+    return {
+        "token": token,
+        "user": {
+            "id": str(user["_id"]), 
+            "email": user["email"], 
+            "username": user["username"],
+            "full_name": user.get("full_name", ""),
+            "address": user.get("address"),
+            "phone": user.get("phone"),
+            "profile_image_url": user.get("profile_image_url"),
+            "is_admin": user.get("is_admin", False),
+            "email_verified": user.get("email_verified", False),
+            "two_factor_enabled": user.get("two_factor_enabled", False),
+            "two_factor_method": user.get("two_factor_method", "app")
+        }
+    }
+
+@router.post("/auth/setup-2fa")
+async def setup_2fa(setup_data: TwoFactorSetupChoice, current_user: dict = Depends(get_current_user)):
+    """Setup 2FA - choose between app or email"""
+    try:
+        if not current_user.get("email_verified"):
+            raise HTTPException(status_code=400, detail="Email must be verified before enabling 2FA")
+        
+        if setup_data.method == "app":
+            # Generate QR code for authenticator app
+            secret = pyotp.random_base32()
+            
+            totp_uri = pyotp.totp.TOTP(secret).provisioning_uri(
+                name=current_user["email"],
+                issuer_name="ECommerce App"
+            )
+            
+            qr = qrcode.QRCode(version=1, box_size=10, border=5)
+            qr.add_data(totp_uri)
+            qr.make(fit=True)
+            
+            img = qr.make_image(fill_color="black", back_color="white")
+            buffer = io.BytesIO()
+            img.save(buffer, format='PNG')
+            buffer.seek(0)
+            qr_code = base64.b64encode(buffer.getvalue()).decode()
+            
+            # Store secret temporarily
+            await db.users.update_one(
+                {"_id": current_user["_id"]},
+                {"$set": {"two_factor_secret_temp": secret, "two_factor_method": "app"}}
+            )
+            
+            return {
+                "method": "app",
+                "secret": secret,
+                "qr_code": f"data:image/png;base64,{qr_code}"
+            }
+            
+        elif setup_data.method == "email":
+            # Setup email 2FA
+            await db.users.update_one(
+                {"_id": current_user["_id"]},
+                {"$set": {"two_factor_method": "email"}}
+            )
+            
+            # Send test code
+            code = generate_email_2fa_code()
+            await db.users.update_one(
+                {"_id": current_user["_id"]},
+                {
+                    "$set": {
+                        "email_2fa_code_temp": code,
+                        "email_2fa_code_created": datetime.now(timezone.utc)
+                    }
+                }
+            )
+            
+            user_name = current_user.get("full_name", current_user.get("username", "User"))
+            await send_2fa_email_code(current_user["email"], code, user_name)
+            
+            return {
+                "method": "email",
+                "message": "Verification code sent to your email"
+            }
+        else:
+            raise HTTPException(status_code=400, detail="Invalid method. Choose 'app' or 'email'")
+            
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
 @router.post("/auth/verify-2fa-setup")
 async def verify_2fa_setup(verification_data: TwoFactorSetup, current_user: dict = Depends(get_current_user)):
-    """Verify and enable 2FA"""
+    """Verify and enable 2FA for both app and email"""
     try:
         user = await db.users.find_one({"_id": current_user["_id"]})
-        temp_secret = user.get("two_factor_secret_temp")
+        method = user.get("two_factor_method", "app")
         
-        if not temp_secret:
-            raise HTTPException(status_code=400, detail="No 2FA setup in progress")
-        
-        # Verify the code
-        totp = pyotp.TOTP(temp_secret)
-        if not totp.verify(verification_data.code, valid_window=1):
-            raise HTTPException(status_code=400, detail="Invalid 2FA code")
-        
-        # Generate backup codes
-        backup_codes = [secrets.token_hex(4).upper() for _ in range(8)]
-        
-        # Enable 2FA
-        await db.users.update_one(
-            {"_id": current_user["_id"]},
-            {
-                "$set": {
-                    "two_factor_enabled": True,
-                    "two_factor_secret": temp_secret,
-                    "backup_codes": backup_codes
-                },
-                "$unset": {"two_factor_secret_temp": ""}
+        if method == "app":
+            temp_secret = user.get("two_factor_secret_temp")
+            if not temp_secret:
+                raise HTTPException(status_code=400, detail="No 2FA setup in progress")
+            
+            totp = pyotp.TOTP(temp_secret)
+            if not totp.verify(verification_data.code, valid_window=1):
+                raise HTTPException(status_code=400, detail="Invalid 2FA code")
+            
+            # Generate backup codes
+            backup_codes = [secrets.token_hex(4).upper() for _ in range(8)]
+            
+            await db.users.update_one(
+                {"_id": current_user["_id"]},
+                {
+                    "$set": {
+                        "two_factor_enabled": True,
+                        "two_factor_secret": temp_secret,
+                        "two_factor_method": "app",
+                        "backup_codes": backup_codes
+                    },
+                    "$unset": {"two_factor_secret_temp": ""}
+                }
+            )
+            
+            return {
+                "message": "App-based 2FA enabled successfully",
+                "backup_codes": backup_codes
             }
-        )
-        
-        return {
-            "message": "2FA enabled successfully",
-            "backup_codes": backup_codes
-        }
-        
+            
+        elif method == "email":
+            temp_code = user.get("email_2fa_code_temp")
+            code_created = user.get("email_2fa_code_created")
+            
+            if not temp_code:
+                raise HTTPException(status_code=400, detail="No verification code found")
+            
+            # Check if code expired (5 minutes)
+            if code_created:
+                if isinstance(code_created, datetime):
+                    if code_created.tzinfo is None:
+                        code_created = code_created.replace(tzinfo=timezone.utc)
+                    
+                    if datetime.now(timezone.utc) > code_created + timedelta(minutes=5):
+                        raise HTTPException(status_code=400, detail="Verification code expired")
+            
+            if verification_data.code != temp_code:
+                raise HTTPException(status_code=400, detail="Invalid verification code")
+            
+            # Generate backup codes
+            backup_codes = [secrets.token_hex(4).upper() for _ in range(8)]
+            
+            await db.users.update_one(
+                {"_id": current_user["_id"]},
+                {
+                    "$set": {
+                        "two_factor_enabled": True,
+                        "two_factor_method": "email",
+                        "backup_codes": backup_codes
+                    },
+                    "$unset": {"email_2fa_code_temp": "", "email_2fa_code_created": ""}
+                }
+            )
+            
+            return {
+                "message": "Email-based 2FA enabled successfully",
+                "backup_codes": backup_codes
+            }
+            
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
