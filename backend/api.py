@@ -683,6 +683,8 @@ async def disable_2fa(verification_data: TwoFactorDisable, current_user: dict = 
             if method == "app":
                 # Verify TOTP code
                 secret = current_user.get("two_factor_secret")
+                if not secret:
+                    raise HTTPException(status_code=400, detail="2FA secret not found")
                 totp = pyotp.TOTP(secret)
                 if not totp.verify(verification_data.code, valid_window=1):
                     raise HTTPException(status_code=400, detail="Invalid 2FA code")
@@ -708,27 +710,24 @@ async def disable_2fa(verification_data: TwoFactorDisable, current_user: dict = 
                     raise HTTPException(status_code=400, detail="Invalid verification code")
         
         # Disable 2FA
-        update_fields = {
-            "two_factor_enabled": False,
-            "two_factor_method": None
-        }
-        unset_fields = {
-            "two_factor_secret": "",
-            "backup_codes": "",
-            "disable_2fa_code": "",
-            "disable_2fa_code_created": ""
-        }
-        
         await db.users.update_one(
             {"_id": current_user["_id"]},
             {
-                "$set": update_fields,
-                "$unset": unset_fields
+                "$set": {"two_factor_enabled": False},
+                "$unset": {
+                    "two_factor_secret": "",
+                    "backup_codes": "",
+                    "two_factor_method": "",
+                    "disable_2fa_code": "",
+                    "disable_2fa_code_created": ""
+                }
             }
         )
         
         return {"message": "2FA disabled successfully"}
         
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
     
@@ -768,7 +767,7 @@ async def send_disable_2fa_code(request_data: dict, current_user: dict = Depends
         
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-
+    
 @router.post("/auth/google")
 async def google_login(google_login: GoogleLogin):
     try:

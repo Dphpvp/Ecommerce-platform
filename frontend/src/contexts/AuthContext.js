@@ -22,33 +22,31 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const fetchUser = useCallback(async () => {
-    if (!token) {
-      setLoading(false);
+  if (!token) {
+    setLoading(false);
+    return;
+  }
+
+  try {
+    const response = await fetch(`${API_BASE}/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    
+    if (response.ok) {
+      const userData = await response.json();
+      setUser(userData);
+    } else if (response.status === 401) {
+      // Token is invalid, logout without retry
+      logout();
       return;
     }
-
-    try {
-      const response = await fetch(`${API_BASE}/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      if (response.ok) {
-        const userData = await response.json();
-        setUser(userData);
-      } else {
-        logout();
-      }
-    } catch (error) {
-      console.error('Failed to fetch user:', error);
-      logout();
-    } finally {
-      setLoading(false);
-    }
-  }, [token, logout]);
-
-  useEffect(() => {
-    fetchUser();
-  }, [fetchUser]);
+  } catch (error) {
+    console.error('Failed to fetch user:', error);
+    // Don't logout on network errors, only on auth errors
+  } finally {
+    setLoading(false);
+  }
+}, [token, logout]);
 
   const login = (token, userData) => {
     localStorage.setItem('token', token);
