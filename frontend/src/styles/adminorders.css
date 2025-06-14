@@ -1,4 +1,6 @@
 /* Admin Orders - Combined Styles */
+@import url('./var.css');
+
 .admin-orders {
   padding: 2rem 0;
   background: #f8f9fa;

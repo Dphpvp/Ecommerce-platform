@@ -1,3 +1,4 @@
+// frontend/src/App.js - Updated with email verification route
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { loadStripe } from '@stripe/stripe-js';
@@ -19,6 +20,7 @@ import Checkout from './pages/Checkout';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Orders from './pages/Orders';
+import EmailVerification from './pages/EmailVerification';
 
 import AdminDashboard from './components/admin/AdminDashboard';
 import AdminOrders from './components/admin/AdminOrders';
@@ -27,10 +29,8 @@ import AdminProducts from './components/admin/AdminProducts';
 import AdminRoute from './components/admin/AdminRoute';
 import AdminCategories from './components/admin/AdminCategories';
 
-<Route path="/admin/categories-list" element={<AdminRoute><AdminCategories /></AdminRoute>} />
-
 const stripePromise = loadStripe(
-  "pk_test_51RWK32RdyxKMeI2qFdwU5mx0G8jZjt1PcOYpeCILJSwVgLsh3u23xE89kRCs0uezmScF8zCQqG8culYGXpxpScNq006cWwuoGS"
+  process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY
 );
 
 const App = () => {
@@ -48,6 +48,7 @@ const App = () => {
                     <Route path="/products" element={<Products />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
+                    <Route path="/verify-email" element={<EmailVerification />} />
 
                     <Route
                       path="/cart"

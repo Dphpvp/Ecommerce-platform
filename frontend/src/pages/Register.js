@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { useToastContext } from '../components/toast';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -11,17 +12,25 @@ const Register = () => {
     address: '',
     phone: ''
   });
+  const [loading, setLoading] = useState(false);
   const { register } = useAuth();
+  const { showToast } = useToastContext();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const success = await register(formData);
-    if (success) {
-      navigate('/');
+    setLoading(true);
+    
+    const result = await register(formData);
+    
+    if (result.success) {
+      showToast(result.message, 'success');
+      navigate('/login');
     } else {
-      alert('Registration failed');
+      showToast(result.message, 'error');
     }
+    
+    setLoading(false);
   };
 
   const handleChange = (e) => {
@@ -83,7 +92,9 @@ const Register = () => {
               value={formData.phone}
               onChange={handleChange}
             />
-            <button type="submit" className="btn btn-primary">Register</button>
+            <button type="submit" disabled={loading} className="btn btn-primary">
+              {loading ? 'Registering...' : 'Register'}
+            </button>
           </form>
           <p>
             Already have an account? <Link to="/login">Login here</Link>

@@ -12,15 +12,14 @@ FRONTEND_URL = os.getenv("FRONTEND_URL")
 # Initialize FastAPI
 app = FastAPI(title="E-commerce API")
 
-# 🆕 Updated CORS for production
+# CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins for now
+    allow_origins=["*"],  # Allow all origins for development; restrict in production],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 # Stripe configuration
 if STRIPE_SECRET_KEY:
@@ -30,7 +29,7 @@ if STRIPE_SECRET_KEY:
 app.include_router(api_router, prefix="/api")
 app.include_router(admin_router)
 
-# 🆕 Health check endpoint
+# Health check endpoints
 @app.get("/")
 async def root():
     return {"message": "E-commerce API is running", "status": "healthy"}
@@ -44,59 +43,14 @@ async def health_check():
         "frontend_url": FRONTEND_URL
     }
 
-# 🆕 Startup event to check configuration
-@app.on_event("startup")
-async def startup_event():
-    """Print configuration status on startup"""
-    print("🚀 E-commerce Backend Starting Up...")
-    print("=" * 50)
-    
-    # Email configuration check
-    email_user = os.getenv("EMAIL_USER")
-    email_password = os.getenv("EMAIL_PASSWORD")
-    admin_email = os.getenv("ADMIN_EMAIL")
-    
-    if email_user and email_password:
-        print(f"📧 Email Configuration: ✅ CONFIGURED")
-        print(f"📧 Email User: {email_user}")
-        print(f"📧 Admin Email: {admin_email}")
-    else:
-        print(f"📧 Email Configuration: ❌ NOT CONFIGURED")
-        print("⚠️  Add EMAIL_USER and EMAIL_PASSWORD to environment variables")
-    
-    # URL configuration check
-    frontend_url = os.getenv("FRONTEND_URL")
-    backend_url = os.getenv("BACKEND_URL")
-    
-    print(f"🌐 Frontend URL: {frontend_url}")
-    print(f"🖥️  Backend URL: {backend_url}")
-    
-    # Database check
-    mongodb_url = os.getenv("MONGODB_URL")
-    if mongodb_url:
-        print(f"💾 Database: ✅ CONFIGURED")
-    else:
-        print(f"💾 Database: ❌ NOT CONFIGURED")
-    
-    # Stripe check
-    if STRIPE_SECRET_KEY:
-        key_preview = STRIPE_SECRET_KEY[:7] + "..." + STRIPE_SECRET_KEY[-4:]
-        print(f"💳 Stripe: ✅ CONFIGURED ({key_preview})")
-    else:
-        print(f"💳 Stripe: ❌ NOT CONFIGURED")
-    
-    print("=" * 50)
-    print("🎯 Ready to handle requests!")
-
-# DB Index Creation and Configuration Check
-
+# Startup event (merged both functions)
 @app.on_event("startup")
 async def startup_event():
     """Create indexes and print configuration status on startup"""
     print("🚀 E-commerce Backend Starting Up...")
     print("=" * 50)
     
-    # Create indexes for better performance
+    # Create database indexes
     try:
         from database.connection import db
         
@@ -104,7 +58,7 @@ async def startup_event():
         await db.products.create_index("category")
         await db.products.create_index("name")
         await db.products.create_index("price")
-        await db.products.create_index([("name", "text"), ("description", "text")])  # Text search
+        await db.products.create_index([("name", "text"), ("description", "text")])
         
         # Users indexes
         await db.users.create_index("email", unique=True)
@@ -125,7 +79,7 @@ async def startup_event():
     except Exception as e:
         print(f"⚠️ Index creation failed: {e}")
     
-    #  
+    # Configuration status check
     email_user = os.getenv("EMAIL_USER")
     email_password = os.getenv("EMAIL_PASSWORD")
     admin_email = os.getenv("ADMIN_EMAIL")
