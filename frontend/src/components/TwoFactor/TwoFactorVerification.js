@@ -1,4 +1,3 @@
-// frontend/src/components/TwoFactorVerification.js
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToastContext } from '../toast';
@@ -8,8 +7,32 @@ const API_BASE = process.env.REACT_APP_API_BASE_URL;
 const TwoFactorVerification = ({ tempToken, onSuccess }) => {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
   const { login } = useAuth();
   const { showToast } = useToastContext();
+
+  const sendEmailCode = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_BASE}/auth/send-2fa-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ temp_token: tempToken })
+      });
+
+      if (response.ok) {
+        setEmailSent(true);
+        showToast('Verification code sent to your email', 'success');
+      } else {
+        const data = await response.json();
+        showToast(data.detail || 'Failed to send email', 'error');
+      }
+    } catch (error) {
+      showToast('Failed to send email', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const verify2FA = async (e) => {
     e.preventDefault();
@@ -45,9 +68,9 @@ const TwoFactorVerification = ({ tempToken, onSuccess }) => {
       <div className="container">
         <div className="auth-form">
           <h1>🔐 Two-Factor Authentication</h1>
-          <p>Enter the 6-digit code from your authenticator app or use a backup code:</p>
           
           <form onSubmit={verify2FA}>
+            <p>Enter your verification code:</p>
             <input
               type="text"
               placeholder="000000 or backup code"
@@ -61,8 +84,19 @@ const TwoFactorVerification = ({ tempToken, onSuccess }) => {
             </button>
           </form>
           
-          <p style={{ marginTop: '20px', fontSize: '0.9rem', color: '#666' }}>
-            Lost your device? Use one of your backup codes to sign in.
+          <div style={{ margin: '1rem 0', textAlign: 'center' }}>
+            <button 
+              onClick={sendEmailCode}
+              className="btn btn-outline"
+              disabled={loading || emailSent}
+              style={{ fontSize: '0.9rem' }}
+            >
+              {emailSent ? 'Email Sent ✓' : '📧 Send Code to Email'}
+            </button>
+          </div>
+          
+          <p style={{ marginTop: '20px', fontSize: '0.9rem', color: '#666', textAlign: 'center' }}>
+            Lost access? Use a backup code to sign in.
           </p>
         </div>
       </div>
