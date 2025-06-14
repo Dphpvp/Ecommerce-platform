@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
+import ReCAPTCHA from 'react-google-recaptcha';
+import { useToastContext } from '../components/toast';
 import '../styles/contact.css';
 
 const Contact = () => {
@@ -9,6 +11,9 @@ const Contact = () => {
     message: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [captchaValue, setCaptchaValue] = useState(null);
+  const { showToast } = useToastContext();
+  const recaptchaRef = useRef();
 
   const handleChange = (e) => {
     setFormData({
@@ -19,6 +24,12 @@ const Contact = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!captchaValue) {
+      showToast('Please complete the CAPTCHA', 'error');
+      return;
+    }
+    
     setIsSubmitting(true);
     
     try {
@@ -27,23 +38,28 @@ const Contact = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({
+          ...formData,
+          captcha: captchaValue
+        })
       });
 
       if (response.ok) {
-        alert('Message sent successfully! We will get back to you soon.');
+        showToast('Message sent successfully! We will get back to you soon.', 'success');
         setFormData({
           name: '',
           email: '',
           phone: '',
           message: ''
         });
+        setCaptchaValue(null);
+        recaptchaRef.current?.reset();
       } else {
         throw new Error('Failed to send message');
       }
     } catch (error) {
       console.error('Error sending message:', error);
-      alert('Failed to send message. Please try again.');
+      showToast('Failed to send message. Please try again.', 'error');
     }
     
     setIsSubmitting(false);
@@ -134,10 +150,19 @@ const Contact = () => {
                 ></textarea>
               </div>
 
+              <div className="form-group">
+                <ReCAPTCHA
+                  ref={recaptchaRef}
+                  sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY}
+                  onChange={setCaptchaValue}
+                  onExpired={() => setCaptchaValue(null)}
+                />
+              </div>
+
               <button 
                 type="submit" 
                 className="btn btn-primary"
-                disabled={isSubmitting}
+                disabled={isSubmitting || !captchaValue}
               >
                 {isSubmitting ? 'Sending...' : 'Send Message'}
               </button>

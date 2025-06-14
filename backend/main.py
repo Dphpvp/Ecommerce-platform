@@ -63,6 +63,7 @@ async def startup_event():
         # Users indexes
         await db.users.create_index("email", unique=True)
         await db.users.create_index("username", unique=True)
+        await db.users.create_index("phone", unique=True)
         
         # Orders indexes
         await db.orders.create_index("user_id")
