@@ -172,32 +172,34 @@ async def verify_email(request_data: dict):
     """Verify email with token"""
     try:
         token = request_data.get("token")
-        print(f"🔍 Received token: {token}")
         
         if not token:
-            print("❌ No token in request")
             raise HTTPException(status_code=400, detail="Token is required")
         
         user = await db.users.find_one({"verification_token": token})
         if not user:
-            print(f"❌ No user found with token")
             raise HTTPException(status_code=400, detail="Invalid verification token")
-        
-        print(f"✅ User found: {user['email']}")
         
         # Check if already verified
         if user.get("email_verified", False):
             return {"message": "Email already verified"}
         
-        # Check if token is expired (24 hours)
+        # Fix datetime comparison - ensure both are timezone-aware
         token_created = user.get("verification_token_created")
-        if token_created and isinstance(token_created, datetime):
-            expiry_time = token_created + timedelta(hours=24)
-            if datetime.now(timezone.utc) > expiry_time:
-                raise HTTPException(status_code=400, detail="Verification token expired")
+        if token_created:
+            # Make sure both datetimes have timezone info
+            if isinstance(token_created, datetime):
+                if token_created.tzinfo is None:
+                    token_created = token_created.replace(tzinfo=timezone.utc)
+                
+                current_time = datetime.now(timezone.utc)
+                expiry_time = token_created + timedelta(hours=24)
+                
+                if current_time > expiry_time:
+                    raise HTTPException(status_code=400, detail="Verification token expired")
         
         # Update user as verified
-        result = await db.users.update_one(
+        await db.users.update_one(
             {"_id": user["_id"]},
             {
                 "$set": {"email_verified": True},
@@ -205,14 +207,13 @@ async def verify_email(request_data: dict):
             }
         )
         
-        print(f"✅ Email verified: {user['email']}")
         return {"message": "Email verified successfully"}
         
     except HTTPException:
         raise
     except Exception as e:
-        print(f"❌ Error: {str(e)}")
-        raise HTTPException(status_code=400, detail=str(e))
+        print(f"❌ Verification error: {str(e)}")
+        raise HTTPException(status_code=400, detail="Verification failed")
 
 @router.post("/auth/resend-verification")
 async def resend_verification(email_data: ResendVerification):
