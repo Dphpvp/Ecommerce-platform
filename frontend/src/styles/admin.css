@@ -44,6 +44,24 @@
   transform: translateY(-5px);
 }
 
+/* Clickable styles for dashboard links */
+.stat-card.clickable,
+.recent-order-item.clickable,
+.low-stock-item.clickable {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: block;
+}
+
+.stat-card.clickable:hover,
+.recent-order-item.clickable:hover,
+.low-stock-item.clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
 .stat-card.total { border-left-color: var(--color-gray); }
 .stat-card.pending { border-left-color: var(--color-yellow); }
 .stat-card.accepted { border-left-color: var(--color-light-blue); }

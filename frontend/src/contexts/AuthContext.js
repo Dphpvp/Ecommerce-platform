@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
+
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
 const AuthContext = createContext();
@@ -8,11 +9,15 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
+  const [requires2FA, setRequires2FA] = useState(false);
+  const [tempToken, setTempToken] = useState(null);
 
   const logout = useCallback(() => {
     localStorage.removeItem('token');
     setToken(null);
     setUser(null);
+    setRequires2FA(false);
+    setTempToken(null);
     setLoading(false);
   }, []);
 
@@ -23,19 +28,14 @@ export const AuthProvider = ({ children }) => {
     }
 
     try {
-      console.log('Fetching user with token:', token);
       const response = await fetch(`${API_BASE}/auth/me`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      console.log('Response status:', response.status);
-      
       if (response.ok) {
         const userData = await response.json();
-        console.log('User data received:', userData);
         setUser(userData);
       } else {
-        console.log('Auth failed, logging out');
         logout();
       }
     } catch (error) {
@@ -54,7 +54,14 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('token', token);
     setToken(token);
     setUser(userData);
+    setRequires2FA(false);
+    setTempToken(null);
     setLoading(false);
+  };
+
+  const handle2FARequired = (tempToken) => {
+    setRequires2FA(true);
+    setTempToken(tempToken);
   };
 
   const register = async (userData) => {
@@ -67,20 +74,31 @@ export const AuthProvider = ({ children }) => {
       });
 
       if (response.ok) {
+        return { success: true, message: 'Registration successful! Please check your email to verify your account.' };
+      } else {
         const data = await response.json();
-        localStorage.setItem('token', data.token);
-        setToken(data.token);
-        return true;
+        return { success: false, message: data.detail || 'Registration failed' };
       }
     } catch (error) {
-      console.error('Registration failed:', error);
+      return { success: false, message: 'Registration failed' };
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-    return false;
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, register, logout, loading }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      token, 
+      login, 
+      register, 
+      logout, 
+      loading,
+      requires2FA,
+      tempToken,
+      handle2FARequired,
+      refetchUser: fetchUser
+    }}>
       {children}
     </AuthContext.Provider>
   );

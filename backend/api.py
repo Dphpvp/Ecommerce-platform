@@ -58,6 +58,19 @@ class PaymentIntent(BaseModel):
     amount: int
     currency: str = "usd"
 
+# 🆕 NEW: Profile Update Models
+class UserProfileUpdate(BaseModel):
+    full_name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    address: Optional[str] = None
+    profile_image_url: Optional[str] = None
+
+class PasswordChange(BaseModel):
+    old_password: str
+    new_password: str
+    confirm_password: str
+
 # Helper functions
 def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
@@ -140,6 +153,9 @@ async def login(user_login: UserLogin):
             "email": user["email"], 
             "username": user["username"],
             "full_name": user.get("full_name", ""),
+            "address": user.get("address"),
+            "phone": user.get("phone"),
+            "profile_image_url": user.get("profile_image_url"),
             "is_admin": user.get("is_admin", False)
         }
     }
@@ -172,6 +188,9 @@ async def google_login(google_login: GoogleLogin):
                     "email": user["email"],
                     "username": user["username"],
                     "full_name": user.get("full_name", ""),
+                    "address": user.get("address"),
+                    "phone": user.get("phone"),
+                    "profile_image_url": user.get("profile_image_url"),
                     "is_admin": user.get("is_admin", False)
                 }
             }
@@ -206,6 +225,9 @@ async def google_login(google_login: GoogleLogin):
                     "email": email,
                     "username": username,
                     "full_name": name,
+                    "address": None,
+                    "phone": None,
+                    "profile_image_url": None,
                     "is_admin": False
                 }
             }
@@ -221,10 +243,127 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         "id": str(current_user["_id"]),
         "username": current_user["username"],
         "email": current_user["email"],
-        "full_name": current_user["full_name"],
+        "full_name": current_user.get("full_name", ""),
         "address": current_user.get("address"),
         "phone": current_user.get("phone"),
+        "profile_image_url": current_user.get("profile_image_url"),
         "is_admin": current_user.get("is_admin", False)
+    }
+
+# 🆕 NEW: Profile Update Routes
+@router.put("/auth/update-profile")
+async def update_profile(profile_data: UserProfileUpdate, current_user: dict = Depends(get_current_user)):
+    """Update user profile information"""
+    user_id = str(current_user["_id"])
+    
+    # Prepare update data - only include fields that were provided
+    update_data = {}
+    if profile_data.full_name is not None:
+        update_data["full_name"] = profile_data.full_name
+    if profile_data.email is not None:
+        # Check if email already exists for another user
+        existing_user = await db.users.find_one({
+            "email": profile_data.email, 
+            "_id": {"$ne": ObjectId(user_id)}
+        })
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Email already exists")
+        update_data["email"] = profile_data.email
+    if profile_data.phone is not None:
+        update_data["phone"] = profile_data.phone
+    if profile_data.address is not None:
+        update_data["address"] = profile_data.address
+    if profile_data.profile_image_url is not None:
+        update_data["profile_image_url"] = profile_data.profile_image_url
+    
+    if not update_data:
+        raise HTTPException(status_code=400, detail="No valid fields to update")
+    
+    # Update user in database
+    result = await db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$set": update_data}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Return updated user data
+    updated_user = await db.users.find_one({"_id": ObjectId(user_id)})
+    return {
+        "message": "Profile updated successfully",
+        "user": {
+            "id": str(updated_user["_id"]),
+            "username": updated_user["username"],
+            "email": updated_user["email"],
+            "full_name": updated_user.get("full_name", ""),
+            "address": updated_user.get("address"),
+            "phone": updated_user.get("phone"),
+            "profile_image_url": updated_user.get("profile_image_url"),
+            "is_admin": updated_user.get("is_admin", False)
+        }
+    }
+
+@router.put("/auth/change-password")
+async def change_password(password_data: PasswordChange, current_user: dict = Depends(get_current_user)):
+    """Change user password"""
+    user_id = str(current_user["_id"])
+    
+    # Validate password confirmation
+    if password_data.new_password != password_data.confirm_password:
+        raise HTTPException(status_code=400, detail="New passwords do not match")
+    
+    # Validate password length
+    if len(password_data.new_password) < 6:
+        raise HTTPException(status_code=400, detail="New password must be at least 6 characters long")
+    
+    # Check if user has a password (Google users might not have one)
+    if not current_user.get("password"):
+        raise HTTPException(status_code=400, detail="Cannot change password for Google authenticated accounts")
+    
+    # Verify old password
+    if not verify_password(password_data.old_password, current_user["password"]):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+    
+    # Check if new password is different from old password
+    if verify_password(password_data.new_password, current_user["password"]):
+        raise HTTPException(status_code=400, detail="New password must be different from current password")
+    
+    # Hash new password
+    new_hashed_password = hash_password(password_data.new_password)
+    
+    # Update password in database
+    result = await db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$set": {"password": new_hashed_password, "updated_at": datetime.now(timezone.utc)}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return {"message": "Password changed successfully"}
+
+@router.post("/auth/upload-avatar")
+async def upload_avatar(current_user: dict = Depends(get_current_user)):
+    """Handle avatar upload - simplified version using external URLs"""
+    # For now, return some sample avatar URLs
+    # In production, you'd implement actual file upload to cloud storage
+    sample_avatars = [
+        f"https://api.dicebear.com/7.x/avataaars/svg?seed={current_user['username']}1",
+        f"https://api.dicebear.com/7.x/avataaars/svg?seed={current_user['username']}2", 
+        f"https://api.dicebear.com/7.x/avataaars/svg?seed={current_user['username']}3",
+        f"https://api.dicebear.com/7.x/avataaars/svg?seed={current_user['username']}4",
+        f"https://api.dicebear.com/7.x/avataaars/svg?seed={current_user['username']}5",
+        f"https://api.dicebear.com/7.x/adventurer/svg?seed={current_user['username']}1",
+        f"https://api.dicebear.com/7.x/adventurer/svg?seed={current_user['username']}2",
+        f"https://api.dicebear.com/7.x/adventurer/svg?seed={current_user['username']}3",
+        f"https://api.dicebear.com/7.x/personas/svg?seed={current_user['username']}1",
+        f"https://api.dicebear.com/7.x/personas/svg?seed={current_user['username']}2"
+    ]
+    
+    return {
+        "message": "Avatar options available",
+        "avatars": sample_avatars
     }
 
 # Product routes

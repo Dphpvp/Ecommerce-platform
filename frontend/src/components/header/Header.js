@@ -24,8 +24,12 @@ const Header = () => {
         <nav className="nav">
           {user ? (
             <>
+              {/* Admin-only navigation */}
               {isAdmin && (
                 <>
+                  <Link to="/admin/dashboard" className="admin-link">
+                    Dashboard
+                  </Link>
                   <Link to="/admin/categories-list" className="admin-link">
                     Categories
                   </Link>
@@ -40,31 +44,30 @@ const Header = () => {
                   </Link>
                 </>
               )}
+
+              {/* Regular user navigation */}
               {!isAdmin && (
                 <>
                   <Link to="/cart" className="cart-link">
                     Cart ({cartItems.length})
                   </Link>
                   <Link to="/orders">My Orders</Link>
+                  <Link to="/profile">Profile</Link>
                 </>
               )}
-              {isAdmin ? (
-                <Link to="/admin/dashboard" className="dashboard-link">
-                  Dashboard
-                  <span className="admin-badge">ADMIN</span>
-                </Link>
-              ) : (
-                <Link to="/profile">Profile</Link>
-              )}
+
+              {/* User info and logout */}
               <button
                 onClick={logout}
                 className="btn btn-outline user-logout-btn"
                 title="Logout"
               >
                 {user.username}
+                {isAdmin && <span className="admin-badge">ADMIN</span>}
               </button>
             </>
           ) : (
+            /* Guest navigation */
             <>
               <Link to="/login">Login</Link>
               <Link to="/register">Register</Link>
