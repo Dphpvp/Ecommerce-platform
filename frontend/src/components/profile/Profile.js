@@ -482,6 +482,13 @@ const Profile = () => {
       <div className="unverified-section">
         <span className="verification-badge unverified">❌ Unverified</span>
         <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+           <button 
+            onClick={() => window.location.href = '/verify-email'}
+            className="btn btn-sm btn-primary"
+            style={{ flex: 1 }}
+          >
+            Verify Code
+          </button>
           <button 
             onClick={sendVerificationEmail}
             className="btn btn-sm btn-outline"
@@ -490,13 +497,7 @@ const Profile = () => {
           >
             {sendingVerification ? 'Sending...' : 'Resend'}
           </button>
-          <button 
-            onClick={() => window.location.href = '/verify-email'}
-            className="btn btn-sm btn-primary"
-            style={{ flex: 1 }}
-          >
-            Verify Code
-          </button>
+          
         </div>
       </div>
     )}
@@ -668,19 +669,19 @@ const Profile = () => {
                     )}
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                       <button 
+                        type="button"
+                        onClick={() => setStep(1)}
+                        className="btn btn-outline"
+                      >
+                        ← Back
+                      </button>
+                      <button 
                         type="submit" 
                         className="btn btn-danger"
                         disabled={disabling2FA}
                         style={{ flex: 1 }}
                       >
                         {disabling2FA ? 'Disabling...' : '🔓 Disable 2FA'}
-                      </button>
-                      <button 
-                        type="button"
-                        onClick={() => setStep(1)}
-                        className="btn btn-outline"
-                      >
-                        ← Back
                       </button>
                     </div>
                   </form>
