@@ -1,5 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
@@ -11,6 +10,10 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [requires2FA, setRequires2FA] = useState(false);
   const [tempToken, setTempToken] = useState(null);
+  
+  // Auto-logout state
+  const timeoutRef = useRef(null);
+  const TIMEOUT_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
 
   const logout = useCallback(() => {
     localStorage.removeItem('token');
@@ -19,34 +22,86 @@ export const AuthProvider = ({ children }) => {
     setRequires2FA(false);
     setTempToken(null);
     setLoading(false);
+    
+    // Clear auto-logout timer
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
   }, []);
 
-  const fetchUser = useCallback(async () => {
-  if (!token) {
-    setLoading(false);
-    return;
-  }
-
-  try {
-    const response = await fetch(`${API_BASE}/auth/me`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
+  // Auto-logout functions
+  const resetTimeout = useCallback(() => {
+    if (!user) return;
     
-    if (response.ok) {
-      const userData = await response.json();
-      setUser(userData);
-    } else if (response.status === 401) {
-      // Token is invalid, logout without retry
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    
+    timeoutRef.current = setTimeout(() => {
+      console.log('Auto-logout due to inactivity');
       logout();
+    }, TIMEOUT_DURATION);
+  }, [user, logout, TIMEOUT_DURATION]);
+
+  const handleActivity = useCallback(() => {
+    resetTimeout();
+  }, [resetTimeout]);
+
+  // Activity event listeners
+  useEffect(() => {
+    if (!user) return;
+
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+    
+    events.forEach(event => {
+      document.addEventListener(event, handleActivity, true);
+    });
+
+    // Start the initial timeout
+    resetTimeout();
+
+    return () => {
+      events.forEach(event => {
+        document.removeEventListener(event, handleActivity, true);
+      });
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [user, handleActivity, resetTimeout]);
+
+  const fetchUser = useCallback(async () => {
+    if (!token) {
+      setLoading(false);
       return;
     }
-  } catch (error) {
-    console.error('Failed to fetch user:', error);
-    // Don't logout on network errors, only on auth errors
-  } finally {
-    setLoading(false);
-  }
-}, [token, logout]);
+
+    try {
+      const response = await fetch(`${API_BASE}/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      
+      if (response.ok) {
+        const userData = await response.json();
+        setUser(userData);
+      } else if (response.status === 401) {
+        // Token is invalid, logout without retry
+        logout();
+        return;
+      }
+    } catch (error) {
+      console.error('Failed to fetch user:', error);
+      // Don't logout on network errors, only on auth errors
+    } finally {
+      setLoading(false);
+    }
+  }, [token, logout]);
+
+  // FIX: Add this useEffect to fetch user on app load
+  useEffect(() => {
+    fetchUser();
+  }, [fetchUser]);
 
   const login = (token, userData) => {
     localStorage.setItem('token', token);
