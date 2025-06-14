@@ -168,33 +168,32 @@ async def register(user: User):
     return {"message": "User registered successfully. Please check your email to verify your account."}
 
 @router.post("/auth/verify-email")
-async def verify_email(verification_data: EmailVerification):
+async def verify_email(request_data: dict):
     """Verify email with token"""
     try:
-        token = verification_data.token
-        print(f"🔍 Verifying token: {token[:20]}..." if token else "❌ No token provided")
+        token = request_data.get("token")
+        print(f"🔍 Received token: {token}")
         
         if not token:
+            print("❌ No token in request")
             raise HTTPException(status_code=400, detail="Token is required")
         
         user = await db.users.find_one({"verification_token": token})
         if not user:
-            print(f"❌ No user found with token: {token[:20]}...")
+            print(f"❌ No user found with token")
             raise HTTPException(status_code=400, detail="Invalid verification token")
         
         print(f"✅ User found: {user['email']}")
         
         # Check if already verified
         if user.get("email_verified", False):
-            print(f"✅ Email already verified: {user['email']}")
             return {"message": "Email already verified"}
         
         # Check if token is expired (24 hours)
         token_created = user.get("verification_token_created")
-        if token_created:
+        if token_created and isinstance(token_created, datetime):
             expiry_time = token_created + timedelta(hours=24)
             if datetime.now(timezone.utc) > expiry_time:
-                print(f"❌ Token expired for: {user['email']}")
                 raise HTTPException(status_code=400, detail="Verification token expired")
         
         # Update user as verified
@@ -206,21 +205,14 @@ async def verify_email(verification_data: EmailVerification):
             }
         )
         
-        if result.modified_count > 0:
-            print(f"✅ Email verified successfully: {user['email']}")
-            return {"message": "Email verified successfully"}
-        else:
-            print(f"❌ Failed to update user: {user['email']}")
-            raise HTTPException(status_code=500, detail="Failed to verify email")
+        print(f"✅ Email verified: {user['email']}")
+        return {"message": "Email verified successfully"}
         
     except HTTPException:
         raise
     except Exception as e:
-        print(f"❌ Verification error: {str(e)}")
-        raise HTTPException(status_code=400, detail="Verification failed")
-
-# Also update the frontend verification component to handle the token properly
-# Make sure the token is being sent correctly from the URL params
+        print(f"❌ Error: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
 
 @router.post("/auth/resend-verification")
 async def resend_verification(email_data: ResendVerification):
@@ -252,7 +244,7 @@ async def resend_verification(email_data: ResendVerification):
         )
         
         # Send new verification email
-        frontend_url = os.getenv('FRONTEND_URL', 'http://localhost:3000')
+        frontend_url = os.getenv('FRONTEND_URL')
         verification_url = f"{frontend_url}/verify-email?token={verification_token}"
         
         print(f"📧 Sending verification email to: {email_data.email}")
@@ -284,6 +276,25 @@ async def debug_user(email: str):
         "has_verification_token": bool(user.get("verification_token")),
         "created_at": user.get("created_at")
     }
+    
+@router.get("/auth/debug-token/{token}")
+async def debug_token(token: str):
+    """Debug route to check token"""
+    try:
+        user = await db.users.find_one({"verification_token": token})
+        if user:
+            return {
+                "found": True,
+                "email": user["email"],
+                "email_verified": user.get("email_verified", False),
+                "token_created": user.get("verification_token_created"),
+                "expired": (datetime.now(timezone.utc) - user.get("verification_token_created", datetime.now(timezone.utc))).days > 1 if user.get("verification_token_created") else False
+            }
+        else:
+            return {"found": False, "token": token}
+    except Exception as e:
+        return {"error": str(e)}
+
     
 @router.post("/auth/login")
 async def login(user_login: UserLogin):
