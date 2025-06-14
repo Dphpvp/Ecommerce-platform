@@ -676,26 +676,95 @@ async def disable_2fa(verification_data: TwoFactorDisable, current_user: dict = 
         if not verify_password(verification_data.password, current_user["password"]):
             raise HTTPException(status_code=400, detail="Invalid password")
         
-        # Verify 2FA code
+        # Verify 2FA code based on method
         if current_user.get("two_factor_enabled"):
-            secret = current_user.get("two_factor_secret")
-            totp = pyotp.TOTP(secret)
-            if not totp.verify(verification_data.code, valid_window=1):
-                raise HTTPException(status_code=400, detail="Invalid 2FA code")
+            method = current_user.get("two_factor_method", "app")
+            
+            if method == "app":
+                # Verify TOTP code
+                secret = current_user.get("two_factor_secret")
+                totp = pyotp.TOTP(secret)
+                if not totp.verify(verification_data.code, valid_window=1):
+                    raise HTTPException(status_code=400, detail="Invalid 2FA code")
+            
+            elif method == "email":
+                # Verify email code
+                stored_code = current_user.get("disable_2fa_code")
+                code_created = current_user.get("disable_2fa_code_created")
+                
+                if not stored_code:
+                    raise HTTPException(status_code=400, detail="No verification code found. Please request a new code.")
+                
+                # Check if code expired (5 minutes)
+                if code_created:
+                    if isinstance(code_created, datetime):
+                        if code_created.tzinfo is None:
+                            code_created = code_created.replace(tzinfo=timezone.utc)
+                        
+                        if datetime.now(timezone.utc) > code_created + timedelta(minutes=5):
+                            raise HTTPException(status_code=400, detail="Verification code expired. Please request a new code.")
+                
+                if verification_data.code != stored_code:
+                    raise HTTPException(status_code=400, detail="Invalid verification code")
         
         # Disable 2FA
+        update_fields = {
+            "two_factor_enabled": False,
+            "two_factor_method": None
+        }
+        unset_fields = {
+            "two_factor_secret": "",
+            "backup_codes": "",
+            "disable_2fa_code": "",
+            "disable_2fa_code_created": ""
+        }
+        
         await db.users.update_one(
             {"_id": current_user["_id"]},
             {
-                "$set": {"two_factor_enabled": False},
-                "$unset": {
-                    "two_factor_secret": "",
-                    "backup_codes": ""
-                }
+                "$set": update_fields,
+                "$unset": unset_fields
             }
         )
         
         return {"message": "2FA disabled successfully"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    
+@router.post("/auth/send-disable-2fa-code")
+async def send_disable_2fa_code(request_data: dict, current_user: dict = Depends(get_current_user)):
+    """Send 2FA code for disabling 2FA"""
+    try:
+        password = request_data.get("password")
+        
+        if not password:
+            raise HTTPException(status_code=400, detail="Password is required")
+        
+        # Verify password
+        if not verify_password(password, current_user["password"]):
+            raise HTTPException(status_code=400, detail="Invalid password")
+        
+        # Check if user has email-based 2FA
+        if not current_user.get("two_factor_enabled") or current_user.get("two_factor_method") != "email":
+            raise HTTPException(status_code=400, detail="Email 2FA is not enabled")
+        
+        # Generate and send code
+        code = generate_email_2fa_code()
+        await db.users.update_one(
+            {"_id": current_user["_id"]},
+            {
+                "$set": {
+                    "disable_2fa_code": code,
+                    "disable_2fa_code_created": datetime.now(timezone.utc)
+                }
+            }
+        )
+        
+        user_name = current_user.get("full_name", current_user.get("username", "User"))
+        await send_2fa_email_code(current_user["email"], code, user_name)
+        
+        return {"message": "Verification code sent to your email"}
         
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))

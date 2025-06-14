@@ -19,6 +19,7 @@ const Profile = () => {
   const [availableAvatars, setAvailableAvatars] = useState([]);
   const [loading, setLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
+  const [sendingDisableCode, setSendingDisableCode] = useState(false);
   
   const [formData, setFormData] = useState({
     full_name: '',
@@ -40,6 +41,36 @@ const Profile = () => {
   });
 
   const [passwordErrors, setPasswordErrors] = useState({});
+
+const sendDisable2FACode = async () => {
+  if (!disable2FAForm.password) {
+    showToast('Please enter your password first', 'error');
+    return;
+  }
+
+  setSendingDisableCode(true);
+  try {
+    const response = await fetch(`${API_BASE}/auth/send-disable-2fa-code`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ password: disable2FAForm.password })
+    });
+
+    if (response.ok) {
+      showToast('Verification code sent to your email', 'success');
+    } else {
+      const data = await response.json();
+      showToast(data.detail || 'Failed to send code', 'error');
+    }
+  } catch (error) {
+    showToast('Failed to send verification code', 'error');
+  } finally {
+    setSendingDisableCode(false);
+  }
+};
 
   useEffect(() => {
     if (user) {
@@ -579,56 +610,75 @@ const Profile = () => {
           )}
 
           {/* 2FA Management Section */}
-          <div className="security-section">
-            <h2>🔐 Security Settings</h2>
-            <p>Manage your account security and two-factor authentication:</p>
-            
-            {!user?.two_factor_enabled ? (
-              <div className="security-actions">
-                <button 
-                  onClick={() => setShowTwoFactorSetup(true)}
-                  className="btn btn-primary"
-                  disabled={!user?.email_verified}
-                >
-                  🔐 Enable Two-Factor Authentication
-                </button>
-                {!user?.email_verified && (
-                  <p className="security-notice">
-                    ⚠️ You must verify your email before enabling 2FA
-                  </p>
-                )}
-              </div>
-            ) : (
-              <div className="security-actions">
-                <p className="security-status">
-                  ✅ Two-factor authentication is enabled
-                </p>
-                <form onSubmit={disable2FA} className="disable-2fa-form">
-                  <input
-                    type="password"
-                    placeholder="Current Password"
-                    value={disable2FAForm.password}
-                    onChange={(e) => setDisable2FAForm({...disable2FAForm, password: e.target.value})}
-                    required
-                  />
-                  <input
-                    type="text"
-                    placeholder="2FA Code"
-                    value={disable2FAForm.code}
-                    onChange={(e) => setDisable2FAForm({...disable2FAForm, code: e.target.value})}
-                    required
-                  />
-                  <button 
-                    type="submit" 
-                    className="btn btn-danger"
-                    disabled={disabling2FA}
-                  >
-                    {disabling2FA ? 'Disabling...' : '🔓 Disable 2FA'}
-                  </button>
-                </form>
-              </div>
-            )}
-          </div>
+<div className="security-section">
+  <h2>🔐 Security Settings</h2>
+  <p>Manage your account security and two-factor authentication:</p>
+  
+  {!user?.two_factor_enabled ? (
+    <div className="security-actions">
+      <button 
+        onClick={() => setShowTwoFactorSetup(true)}
+        className="btn btn-primary"
+        disabled={!user?.email_verified}
+      >
+        🔐 Enable Two-Factor Authentication
+      </button>
+      {!user?.email_verified && (
+        <p className="security-notice">
+          ⚠️ You must verify your email before enabling 2FA
+        </p>
+      )}
+    </div>
+  ) : (
+    <div className="security-actions">
+      <p className="security-status">
+        ✅ Two-factor authentication is enabled ({user?.two_factor_method === 'email' ? 'Email' : 'App'})
+      </p>
+      <form onSubmit={disable2FA} className="disable-2fa-form">
+        <input
+          type="password"
+          placeholder="Current Password"
+          value={disable2FAForm.password}
+          onChange={(e) => setDisable2FAForm({...disable2FAForm, password: e.target.value})}
+          required
+        />
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+          <input
+            type="text"
+            placeholder={user?.two_factor_method === 'email' ? 'Email Code' : 'Authenticator Code'}
+            value={disable2FAForm.code}
+            onChange={(e) => setDisable2FAForm({...disable2FAForm, code: e.target.value})}
+            required
+            style={{ flex: 1 }}
+          />
+          {user?.two_factor_method === 'email' && (
+            <button 
+              type="button"
+              onClick={sendDisable2FACode}
+              className="btn btn-outline"
+              disabled={sendingDisableCode}
+              style={{ minWidth: '100px' }}
+            >
+              {sendingDisableCode ? 'Sending...' : 'Send Code'}
+            </button>
+          )}
+        </div>
+        {user?.two_factor_method === 'app' && (
+          <p style={{ fontSize: '0.9rem', color: '#666', marginTop: '0.5rem' }}>
+            💡 Use your authenticator app to get the 6-digit code
+          </p>
+        )}
+        <button 
+          type="submit" 
+          className="btn btn-danger"
+          disabled={disabling2FA}
+        >
+          {disabling2FA ? 'Disabling...' : '🔓 Disable 2FA'}
+        </button>
+      </form>
+    </div>
+  )}
+</div>
 
           {/* Admin Panel Access */}
           {user?.is_admin && (
