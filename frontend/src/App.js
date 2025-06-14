@@ -1,4 +1,4 @@
-// frontend/src/App.js - Updated with email verification route
+// frontend/src/App.js - Updated with Footer
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { loadStripe } from '@stripe/stripe-js';
@@ -10,6 +10,7 @@ import { CartProvider } from './contexts/CartContext';
 import { ToastProvider } from './components/toast';
 
 import Header from './components/header';
+import Footer from './components/Footer';
 import PrivateRoute from './components/PrivateRoute';
 import Profile from './components/profile';
 
@@ -40,9 +41,9 @@ const App = () => {
         <AuthProvider>
           <CartProvider>
             <ToastProvider>
-              <div className="app">
+              <div className="app" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
                 <Header />
-                <main className="main">
+                <main className="main" style={{ flex: '1' }}>
                   <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/products" element={<Products />} />
@@ -125,6 +126,7 @@ const App = () => {
                     />
                   </Routes>
                 </main>
+                <Footer />
               </div>
             </ToastProvider>
           </CartProvider>
