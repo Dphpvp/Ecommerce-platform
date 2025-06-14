@@ -473,51 +473,35 @@ const Profile = () => {
             ) : (
               <>
                 <div className="info-group">
-                  <label>Username:</label>
-                  <span>{user?.username}</span>
-                </div>
-                <div className="info-group">
-                  <label>Email:</label>
-                  <div className="email-info">
-                    <span>{user?.email}</span>
-                    {user?.email_verified ? (
-                      <span className="verification-badge verified">✅ Verified</span>
-                    ) : (
-                      <div className="unverified-section">
-                        <span className="verification-badge unverified">❌ Unverified</span>
-                        <button 
-                          onClick={sendVerificationEmail}
-                          className="btn btn-sm btn-primary"
-                          disabled={sendingVerification}
-                        >
-                          {sendingVerification ? 'Sending...' : 'Send Verification Email'}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="info-group">
-                  <label>Full Name:</label>
-                  <span>{user?.full_name || 'Not provided'}</span>
-                </div>
-                <div className="info-group">
-                  <label>Phone:</label>
-                  <span>{user?.phone || 'Not provided'}</span>
-                </div>
-                <div className="info-group">
-                  <label>Address:</label>
-                  <span>{user?.address || 'Not provided'}</span>
-                </div>
-                <div className="info-group">
-                  <label>Two-Factor Auth:</label>
-                  <span>
-                    {user?.two_factor_enabled ? (
-                      <span className="verification-badge verified">🔐 Enabled</span>
-                    ) : (
-                      <span className="verification-badge unverified">🔓 Disabled</span>
-                    )}
-                  </span>
-                </div>
+  <label>Email:</label>
+  <div className="email-info">
+    <span>{user?.email}</span>
+    {user?.email_verified ? (
+      <span className="verification-badge verified">✅ Verified</span>
+    ) : (
+      <div className="unverified-section">
+        <span className="verification-badge unverified">❌ Unverified</span>
+        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+          <button 
+            onClick={sendVerificationEmail}
+            className="btn btn-sm btn-outline"
+            disabled={sendingVerification}
+            style={{ flex: 1 }}
+          >
+            {sendingVerification ? 'Sending...' : 'Resend'}
+          </button>
+          <button 
+            onClick={() => window.location.href = '/verify-email'}
+            className="btn btn-sm btn-primary"
+            style={{ flex: 1 }}
+          >
+            Verify Code
+          </button>
+        </div>
+      </div>
+    )}
+  </div>
+</div>
                 {user?.is_admin && (
                   <div className="info-group">
                     <label>Role:</label>
