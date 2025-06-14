@@ -19,6 +19,7 @@ const Profile = () => {
   const [availableAvatars, setAvailableAvatars] = useState([]);
   const [loading, setLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
+  const [step, setStep] = useState(1); // 1: request code, 2: disable 2FA
   const [sendingDisableCode, setSendingDisableCode] = useState(false);
   
   const [formData, setFormData] = useState({
@@ -228,34 +229,69 @@ const sendDisable2FACode = async () => {
     }
   };
 
-  const disable2FA = async (e) => {
-    e.preventDefault();
-    setDisabling2FA(true);
+  const requestDisableCode = async (e) => {
+  e.preventDefault();
+  
+  if (user?.two_factor_method === 'app') {
+    // For app-based 2FA, skip to step 2 directly
+    setStep(2);
+    return;
+  }
+const disable2FA = async (e) => {
+  e.preventDefault();
+  setDisabling2FA(true);
 
-    try {
-      const response = await fetch(`${API_BASE}/auth/disable-2fa`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify(disable2FAForm)
-      });
+  try {
+    const response = await fetch(`${API_BASE}/auth/disable-2fa`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify(disable2FAForm)
+    });
 
-      if (response.ok) {
-        showToast('2FA disabled successfully', 'success');
-        setDisable2FAForm({ password: '', code: '' });
-        refetchUser();
-      } else {
-        const data = await response.json();
-        showToast(data.detail || 'Failed to disable 2FA', 'error');
-      }
-    } catch (error) {
-      showToast('Failed to disable 2FA', 'error');
-    } finally {
-      setDisabling2FA(false);
+    if (response.ok) {
+      showToast('2FA disabled successfully', 'success');
+      setDisable2FAForm({ password: '', code: '' });
+      setStep(1); // Reset to step 1
+      refetchUser();
+    } else {
+      const data = await response.json();
+      showToast(data.detail || 'Failed to disable 2FA', 'error');
     }
-  };
+  } catch (error) {
+    showToast('Failed to disable 2FA', 'error');
+  } finally {
+    setDisabling2FA(false);
+  }
+};
+
+  // For email-based 2FA, send code
+  setSendingDisableCode(true);
+  try {
+    const response = await fetch(`${API_BASE}/auth/send-disable-2fa-code`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`
+      },
+      body: JSON.stringify({ password: disable2FAForm.password })
+    });
+
+    if (response.ok) {
+      showToast('Verification code sent to your email', 'success');
+      setStep(2);
+    } else {
+      const data = await response.json();
+      showToast(data.detail || 'Failed to send code', 'error');
+    }
+  } catch (error) {
+    showToast('Failed to send verification code', 'error');
+  } finally {
+    setSendingDisableCode(false);
+  }
+};
 
   const handleCancelEdit = () => {
     setIsEditing(false);
@@ -634,48 +670,66 @@ const sendDisable2FACode = async () => {
       <p className="security-status">
         ✅ Two-factor authentication is enabled ({user?.two_factor_method === 'email' ? 'Email' : 'App'})
       </p>
-      <form onSubmit={disable2FA} className="disable-2fa-form">
-        <input
-          type="password"
-          placeholder="Current Password"
-          value={disable2FAForm.password}
-          onChange={(e) => setDisable2FAForm({...disable2FAForm, password: e.target.value})}
-          required
-        />
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+      
+      {step === 1 ? (
+        <form onSubmit={requestDisableCode} className="disable-2fa-form">
+          <input
+            type="password"
+            placeholder="Enter your password"
+            value={disable2FAForm.password}
+            onChange={(e) => setDisable2FAForm({...disable2FAForm, password: e.target.value})}
+            required
+          />
+          <button 
+            type="submit" 
+            className="btn btn-primary"
+            disabled={sendingDisableCode}
+          >
+            {sendingDisableCode ? 'Sending...' : '📧 Request Code'}
+          </button>
+        </form>
+      ) : (
+        <form onSubmit={disable2FA} className="disable-2fa-form">
+          <input
+            type="password"
+            placeholder="Current Password"
+            value={disable2FAForm.password}
+            onChange={(e) => setDisable2FAForm({...disable2FAForm, password: e.target.value})}
+            required
+            disabled
+          />
           <input
             type="text"
             placeholder={user?.two_factor_method === 'email' ? 'Email Code' : 'Authenticator Code'}
             value={disable2FAForm.code}
             onChange={(e) => setDisable2FAForm({...disable2FAForm, code: e.target.value})}
             required
-            style={{ flex: 1 }}
+            autoFocus
           />
-          {user?.two_factor_method === 'email' && (
+          {user?.two_factor_method === 'app' && (
+            <p style={{ fontSize: '0.9rem', color: '#666', marginTop: '0.5rem' }}>
+              💡 Use your authenticator app to get the 6-digit code
+            </p>
+          )}
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button 
+              type="submit" 
+              className="btn btn-danger"
+              disabled={disabling2FA}
+              style={{ flex: 1 }}
+            >
+              {disabling2FA ? 'Disabling...' : '🔓 Disable 2FA'}
+            </button>
             <button 
               type="button"
-              onClick={sendDisable2FACode}
+              onClick={() => setStep(1)}
               className="btn btn-outline"
-              disabled={sendingDisableCode}
-              style={{ minWidth: '100px' }}
             >
-              {sendingDisableCode ? 'Sending...' : 'Send Code'}
+              ← Back
             </button>
-          )}
-        </div>
-        {user?.two_factor_method === 'app' && (
-          <p style={{ fontSize: '0.9rem', color: '#666', marginTop: '0.5rem' }}>
-            💡 Use your authenticator app to get the 6-digit code
-          </p>
-        )}
-        <button 
-          type="submit" 
-          className="btn btn-danger"
-          disabled={disabling2FA}
-        >
-          {disabling2FA ? 'Disabling...' : '🔓 Disable 2FA'}
-        </button>
-      </form>
+          </div>
+        </form>
+      )}
     </div>
   )}
 </div>
