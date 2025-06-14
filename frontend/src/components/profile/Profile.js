@@ -486,7 +486,6 @@ const Profile = () => {
             onClick={sendVerificationEmail}
             className="btn btn-sm btn-outline"
             disabled={sendingVerification}
-            style={{ flex: 1 }}
           >
             {sendingVerification ? 'Sending...' : 'Resend'}
           </button>
