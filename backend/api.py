@@ -171,19 +171,34 @@ async def register(user: User):
 async def verify_email(verification_data: EmailVerification):
     """Verify email with token"""
     try:
-        user = await db.users.find_one({"verification_token": verification_data.token})
+        token = verification_data.token
+        print(f"🔍 Verifying token: {token[:20]}..." if token else "❌ No token provided")
+        
+        if not token:
+            raise HTTPException(status_code=400, detail="Token is required")
+        
+        user = await db.users.find_one({"verification_token": token})
         if not user:
+            print(f"❌ No user found with token: {token[:20]}...")
             raise HTTPException(status_code=400, detail="Invalid verification token")
+        
+        print(f"✅ User found: {user['email']}")
+        
+        # Check if already verified
+        if user.get("email_verified", False):
+            print(f"✅ Email already verified: {user['email']}")
+            return {"message": "Email already verified"}
         
         # Check if token is expired (24 hours)
         token_created = user.get("verification_token_created")
         if token_created:
             expiry_time = token_created + timedelta(hours=24)
             if datetime.now(timezone.utc) > expiry_time:
+                print(f"❌ Token expired for: {user['email']}")
                 raise HTTPException(status_code=400, detail="Verification token expired")
         
         # Update user as verified
-        await db.users.update_one(
+        result = await db.users.update_one(
             {"_id": user["_id"]},
             {
                 "$set": {"email_verified": True},
@@ -191,10 +206,21 @@ async def verify_email(verification_data: EmailVerification):
             }
         )
         
-        return {"message": "Email verified successfully"}
+        if result.modified_count > 0:
+            print(f"✅ Email verified successfully: {user['email']}")
+            return {"message": "Email verified successfully"}
+        else:
+            print(f"❌ Failed to update user: {user['email']}")
+            raise HTTPException(status_code=500, detail="Failed to verify email")
         
+    except HTTPException:
+        raise
     except Exception as e:
+        print(f"❌ Verification error: {str(e)}")
         raise HTTPException(status_code=400, detail="Verification failed")
+
+# Also update the frontend verification component to handle the token properly
+# Make sure the token is being sent correctly from the URL params
 
 @router.post("/auth/resend-verification")
 async def resend_verification(email_data: ResendVerification):

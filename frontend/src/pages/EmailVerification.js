@@ -1,4 +1,3 @@
-// frontend/src/pages/EmailVerification.js
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useToastContext } from '../components/toast';
@@ -14,31 +13,41 @@ const EmailVerification = () => {
 
   useEffect(() => {
     const token = searchParams.get('token');
+    console.log('🔍 Token from URL:', token); // Debug log
+    
     if (token) {
       verifyEmail(token);
     } else {
+      console.error('❌ No token found in URL');
       setStatus('no-token');
     }
   }, [searchParams]);
 
   const verifyEmail = async (token) => {
+    console.log('📧 Verifying email with token:', token?.substring(0, 20) + '...');
+    
     try {
       const response = await fetch(`${API_BASE}/auth/verify-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token })
+        body: JSON.stringify({ token: token })
       });
+
+      console.log('📡 Response status:', response.status);
+      const data = await response.json();
+      console.log('📡 Response data:', data);
 
       if (response.ok) {
         setStatus('success');
         showToast('Email verified successfully!', 'success');
         setTimeout(() => navigate('/login'), 3000);
       } else {
-        const data = await response.json();
+        console.error('❌ Verification failed:', data);
         setStatus('error');
         showToast(data.detail || 'Verification failed', 'error');
       }
     } catch (error) {
+      console.error('❌ Network error:', error);
       setStatus('error');
       showToast('Verification failed', 'error');
     }
@@ -46,6 +55,11 @@ const EmailVerification = () => {
 
   const resendVerification = async (e) => {
     e.preventDefault();
+    if (!email) {
+      showToast('Please enter your email address', 'error');
+      return;
+    }
+
     try {
       const response = await fetch(`${API_BASE}/auth/resend-verification`, {
         method: 'POST',
@@ -53,14 +67,16 @@ const EmailVerification = () => {
         body: JSON.stringify({ email })
       });
 
+      const data = await response.json();
+      
       if (response.ok) {
         showToast('Verification email sent!', 'success');
         setEmail('');
       } else {
-        const data = await response.json();
         showToast(data.detail || 'Failed to send email', 'error');
       }
     } catch (error) {
+      console.error('❌ Resend error:', error);
       showToast('Failed to send email', 'error');
     }
   };
@@ -128,5 +144,3 @@ const EmailVerification = () => {
 };
 
 export default EmailVerification;
-
-
