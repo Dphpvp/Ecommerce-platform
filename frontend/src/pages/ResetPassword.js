@@ -154,7 +154,9 @@ const ResetPassword = () => {
               <p>We've sent a password reset link to <strong>{requestForm.email}</strong></p>
               <p>Check your inbox and click the link to reset your password.</p>
             </div>
-            <Link to="/login" className="btn btn-primary">Back to Login</Link>
+            <Link to="/login" className="btn btn-primary" style={{ display: 'inline-block', padding: '12px 30px', textDecoration: 'none', borderRadius: '6px', fontWeight: 'bold' }}>
+              Back to Login
+            </Link>
           </div>
         </div>
       </div>

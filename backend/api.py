@@ -17,6 +17,9 @@ import base64
 import secrets
 from captcha import verify_recaptcha
 from utils.email import send_password_reset_email
+import secrets
+import requests
+from datetime import datetime, timezone, timedelta
 
 # Import your database connection
 from database.connection import db
@@ -68,7 +71,7 @@ class PaymentIntent(BaseModel):
 class ContactForm(BaseModel):
     name: str
     email: str
-    phone: str = ""
+    phone: int = ""
     message: str
     
 class PasswordResetRequest(BaseModel):
@@ -946,6 +949,21 @@ async def update_profile(profile_data: UserProfileUpdate, current_user: dict = D
             "two_factor_enabled": updated_user.get("two_factor_enabled", False)
         }
     }
+    
+def verify_recaptcha(recaptcha_response: str) -> bool:
+    """Verify reCAPTCHA response"""
+    secret_key = os.getenv("RECAPTCHA_SECRET_KEY")
+    
+    response = requests.post(
+        'https://www.google.com/recaptcha/api/siteverify',
+        data={
+            'secret': secret_key,
+            'response': recaptcha_response
+        }
+    )
+    
+    result = response.json()
+    return result.get('success', False)
 
 @router.post("/auth/request-password-reset")
 async def request_password_reset(request: PasswordResetRequest):
@@ -1023,6 +1041,8 @@ async def change_password(password_data: PasswordChange, current_user: dict = De
         raise HTTPException(status_code=404, detail="User not found")
     
     return {"message": "Password changed successfully"}
+
+
 
 @router.post("/auth/upload-avatar")
 async def upload_avatar(current_user: dict = Depends(get_current_user)):
