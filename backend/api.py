@@ -17,8 +17,6 @@ import base64
 import secrets
 from captcha import verify_recaptcha
 from utils.email import send_password_reset_email
-import secrets
-import requests
 from datetime import datetime, timezone, timedelta
 
 # Import your database connection
@@ -997,6 +995,49 @@ async def request_password_reset(request: PasswordResetRequest):
     await send_password_reset_email(user["email"], user.get("full_name", ""), reset_url)
     
     return {"message": "If the email exists, a reset link has been sent"}
+
+@router.post("/auth/reset-password")
+async def reset_password(request: PasswordResetConfirm):
+    """Reset password using token"""
+    
+    # Find valid reset token
+    reset_record = await db.password_resets.find_one({
+        "token": request.token,
+        "used": False,
+        "expires_at": {"$gt": datetime.now(timezone.utc)}
+    })
+    
+    if not reset_record:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+    
+    # Validate new password
+    if len(request.new_password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters long")
+    
+    # Hash new password
+    new_hashed_password = hash_password(request.new_password)
+    
+    # Update user password
+    result = await db.users.update_one(
+        {"_id": reset_record["user_id"]},
+        {
+            "$set": {
+                "password": new_hashed_password,
+                "updated_at": datetime.now(timezone.utc)
+            }
+        }
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Mark token as used
+    await db.password_resets.update_one(
+        {"_id": reset_record["_id"]},
+        {"$set": {"used": True, "used_at": datetime.now(timezone.utc)}}
+    )
+    
+    return {"message": "Password reset successfully"}
 
 @router.put("/auth/change-password")
 async def change_password(password_data: PasswordChange, current_user: dict = Depends(get_current_user)):
