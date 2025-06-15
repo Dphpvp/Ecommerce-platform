@@ -24,8 +24,8 @@ app.add_middleware(
     allow_credentials==True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
-    expose_headers=["*"],
-)
+    expose_headers=["*"]
+    )
 
 # Stripe configuration
 if STRIPE_SECRET_KEY:
