@@ -15,6 +15,7 @@ import qrcode
 import io
 import base64
 import secrets
+from captcha import verify_recaptcha
 
 # Import your database connection
 from database.connection import db
@@ -179,9 +180,12 @@ async def get_next_order_number():
     return counter["value"]
 
 
-# Auth routes
 @router.post("/auth/register")
 async def register(user: User):
+    # Verify CAPTCHA first
+    if not await verify_recaptcha(user.captcha):
+        raise HTTPException(status_code=400, detail="Invalid CAPTCHA")
+    
     existing_user = await db.users.find_one({"email": user.email})
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")

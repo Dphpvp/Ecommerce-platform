@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import ReCAPTCHA from 'react-google-recaptcha';
 import { useAuth } from '../contexts/AuthContext';
 import { useToastContext } from '../components/toast';
 
@@ -13,21 +14,35 @@ const Register = () => {
     phone: ''
   });
   const [loading, setLoading] = useState(false);
+  const [captchaValue, setCaptchaValue] = useState(null);
   const { register } = useAuth();
   const { showToast } = useToastContext();
   const navigate = useNavigate();
+  const recaptchaRef = useRef();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    if (!captchaValue) {
+      showToast('Please complete the CAPTCHA', 'error');
+      return;
+    }
+    
     setLoading(true);
     
-    const result = await register(formData);
+    const result = await register({
+      ...formData,
+      captcha: captchaValue
+    });
     
     if (result.success) {
       showToast(result.message, 'success');
       navigate('/login');
     } else {
       showToast(result.message, 'error');
+      // Reset captcha on error
+      setCaptchaValue(null);
+      recaptchaRef.current?.reset();
     }
     
     setLoading(false);
@@ -92,7 +107,21 @@ const Register = () => {
               value={formData.phone}
               onChange={handleChange}
             />
-            <button type="submit" disabled={loading} className="btn btn-primary">
+            
+            <div style={{ margin: '1rem 0', display: 'flex', justifyContent: 'center' }}>
+              <ReCAPTCHA
+                ref={recaptchaRef}
+                sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY}
+                onChange={setCaptchaValue}
+                onExpired={() => setCaptchaValue(null)}
+              />
+            </div>
+            
+            <button 
+              type="submit" 
+              disabled={loading || !captchaValue} 
+              className="btn btn-primary"
+            >
               {loading ? 'Registering...' : 'Register'}
             </button>
           </form>

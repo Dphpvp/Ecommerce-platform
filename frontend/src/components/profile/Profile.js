@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToastContext } from '../toast';
@@ -19,8 +19,10 @@ const Profile = () => {
   const [availableAvatars, setAvailableAvatars] = useState([]);
   const [loading, setLoading] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
-  const [step, setStep] = useState(1); // 1: request code, 2: disable 2FA
+  const [step, setStep] = useState(1);
   const [sendingDisableCode, setSendingDisableCode] = useState(false);
+  
+  const recaptchaRef = useRef(null);
   
   const [formData, setFormData] = useState({
     full_name: '',
@@ -54,6 +56,19 @@ const Profile = () => {
       });
     }
   }, [user]);
+
+  useEffect(() => {
+    // Load reCAPTCHA script
+    const script = document.createElement('script');
+    script.src = 'https://www.google.com/recaptcha/api.js';
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
+
+    return () => {
+      document.head.removeChild(script);
+    };
+  }, []);
 
   const sendVerificationEmail = async () => {
     setSendingVerification(true);
@@ -165,6 +180,13 @@ const Profile = () => {
     if (!validatePasswordForm()) {
       return;
     }
+
+    // Get reCAPTCHA response
+    const recaptchaResponse = window.grecaptcha.getResponse(recaptchaRef.current);
+    if (!recaptchaResponse) {
+      showToast('Please complete the reCAPTCHA verification', 'error');
+      return;
+    }
     
     setPasswordLoading(true);
 
@@ -175,7 +197,10 @@ const Profile = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`
         },
-        body: JSON.stringify(passwordData)
+        body: JSON.stringify({
+          ...passwordData,
+          recaptcha_response: recaptchaResponse
+        })
       });
 
       if (response.ok) {
@@ -187,13 +212,16 @@ const Profile = () => {
           confirm_password: ''
         });
         setPasswordErrors({});
+        window.grecaptcha.reset(recaptchaRef.current);
       } else {
         const errorData = await response.json();
         showToast(errorData.detail || 'Failed to change password', 'error');
+        window.grecaptcha.reset(recaptchaRef.current);
       }
     } catch (error) {
       console.error('Password change error:', error);
       showToast('Failed to change password', 'error');
+      window.grecaptcha.reset(recaptchaRef.current);
     } finally {
       setPasswordLoading(false);
     }
@@ -203,12 +231,10 @@ const Profile = () => {
     e.preventDefault();
     
     if (user?.two_factor_method === 'app') {
-      // For app-based 2FA, skip to step 2 directly
       setStep(2);
       return;
     }
 
-    // For email-based 2FA, send code
     setSendingDisableCode(true);
     try {
       const response = await fetch(`${API_BASE}/auth/send-disable-2fa-code`, {
@@ -251,7 +277,7 @@ const Profile = () => {
       if (response.ok) {
         showToast('2FA disabled successfully', 'success');
         setDisable2FAForm({ password: '', code: '' });
-        setStep(1); // Reset to step 1
+        setStep(1);
         refetchUser();
       } else {
         const data = await response.json();
@@ -285,6 +311,9 @@ const Profile = () => {
       confirm_password: ''
     });
     setPasswordErrors({});
+    if (window.grecaptcha && recaptchaRef.current) {
+      window.grecaptcha.reset(recaptchaRef.current);
+    }
   };
 
   const handleChangeAvatar = async () => {
@@ -354,7 +383,6 @@ const Profile = () => {
           <h1>My Profile</h1>
         </div>
         
-        {/* Profile Avatar Section */}
         <div className="profile-avatar-section">
           <div className="avatar-container">
             <img 
@@ -375,7 +403,6 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Avatar Selection Modal */}
         {isChangingAvatar && (
           <div className="avatar-modal-overlay">
             <div className="avatar-modal">
@@ -403,7 +430,6 @@ const Profile = () => {
           </div>
         )}
 
-        {/* Profile Information */}
         <div className="profile-content">
           <div className="profile-info">
             {isEditing ? (
@@ -473,35 +499,35 @@ const Profile = () => {
             ) : (
               <>
                 <div className="info-group">
-  <label>Email:</label>
-  <div className="email-info">
-    <span>{user?.email}</span>
-    {user?.email_verified ? (
-      <span className="verification-badge verified">✅ Verified</span>
-    ) : (
-      <div className="unverified-section">
-        <span className="verification-badge unverified">❌ Unverified</span>
-        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-          <button 
-            onClick={sendVerificationEmail}
-            className="btn btn-sm btn-outline"
-            disabled={sendingVerification}
-            style={{ flex: 0 }}
-          >
-            {sendingVerification ? 'Sending...' : 'Resend'}
-          </button>
-          <button 
-            onClick={() => window.location.href = '/verify-email'}
-            className="btn btn-sm btn-primary"
-            style={{ flex: 2 }}
-          >
-            Verify Code
-          </button>
-        </div>
-      </div>
-    )}
-  </div>
-</div>
+                  <label>Email:</label>
+                  <div className="email-info">
+                    <span>{user?.email}</span>
+                    {user?.email_verified ? (
+                      <span className="verification-badge verified">✅ Verified</span>
+                    ) : (
+                      <div className="unverified-section">
+                        <span className="verification-badge unverified">❌ Unverified</span>
+                        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                          <button 
+                            onClick={sendVerificationEmail}
+                            className="btn btn-sm btn-outline"
+                            disabled={sendingVerification}
+                            style={{ flex: 0 }}
+                          >
+                            {sendingVerification ? 'Sending...' : 'Resend'}
+                          </button>
+                          <button 
+                            onClick={() => window.location.href = '/verify-email'}
+                            className="btn btn-sm btn-primary"
+                            style={{ flex: 2 }}
+                          >
+                            Verify Code
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
                 {user?.is_admin && (
                   <div className="info-group">
                     <label>Role:</label>
@@ -529,7 +555,6 @@ const Profile = () => {
             )}
           </div>
 
-          {/* Password Change Section */}
           {isChangingPassword && canChangePassword && (
             <div className="password-change-section">
               <h3>Change Password</h3>
@@ -579,6 +604,14 @@ const Profile = () => {
                   )}
                 </div>
 
+                <div className="form-group">
+                  <div 
+                    className="g-recaptcha" 
+                    data-sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY}
+                    ref={recaptchaRef}
+                  ></div>
+                </div>
+
                 <div className="form-actions">
                   <button 
                     type="submit" 
@@ -600,7 +633,6 @@ const Profile = () => {
             </div>
           )}
 
-          {/* 2FA Management Section */}
           <div className="security-section">
             <h2>🔐 Security Settings</h2>
             <p>Manage your account security and two-factor authentication:</p>
@@ -689,7 +721,6 @@ const Profile = () => {
             )}
           </div>
 
-          {/* Admin Panel Access */}
           {user?.is_admin && (
             <div className="admin-section">
               <h2>Admin Panel</h2>
@@ -712,7 +743,6 @@ const Profile = () => {
           )}
         </div>
 
-        {/* 2FA Setup Modal */}
         {showTwoFactorSetup && (
           <TwoFactorSetup 
             onClose={() => setShowTwoFactorSetup(false)}

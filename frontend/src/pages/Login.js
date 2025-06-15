@@ -168,6 +168,10 @@ const Login = () => {
             </button>
           </form>
 
+          <p className="forgot-password">
+            <Link to="/reset-password">Forgotten password? Click here to reset</Link>
+          </p>
+
           <div className="divider">
             <span>OR</span>
           </div>
