@@ -8,12 +8,13 @@ import stripe
 from bson import ObjectId
 import os
 from google.oauth2 import id_token
-from google.auth.transport import requests
+from google.auth.transport import requests as google_requests
 import re
 import pyotp
 import qrcode
 import io
 import base64
+import requests
 import secrets
 from captcha import verify_recaptcha
 from utils.email import send_password_reset_email
