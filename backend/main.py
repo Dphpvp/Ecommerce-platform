@@ -4,6 +4,7 @@ import stripe
 import os
 from api import router as api_router
 from routes.admin_routes import router as admin_router
+from captcha import verify_recaptcha
 
 # Configuration
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
@@ -12,13 +13,20 @@ FRONTEND_URL = os.getenv("FRONTEND_URL")
 # Initialize FastAPI
 app = FastAPI(title="E-commerce API")
 
+origins = [
+    "https://vergishop.vercel.app",
+    "https://vs1.vercel.app"
+]
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins for development; restrict in production
+    allow_origins=[
+        "https://vergishop.vercel.app",
+        "https://vs1.vercel.app",  
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
 
 # Stripe configuration
