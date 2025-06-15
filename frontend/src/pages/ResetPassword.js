@@ -77,7 +77,7 @@ const ResetPassword = () => {
       return;
     }
 
-    const recaptchaResponse = window.grecaptcha.getResponse(recaptchaRef.current);
+    const recaptchaResponse = window.grecaptcha.getResponse();
     if (!recaptchaResponse) {
       showToast('Please complete the reCAPTCHA verification', 'error');
       return;
@@ -102,11 +102,11 @@ const ResetPassword = () => {
         setStep('sent');
       } else {
         showToast(data.detail || 'Failed to send reset email', 'error');
-        window.grecaptcha.reset(recaptchaRef.current);
+        window.grecaptcha.reset();
       }
     } catch (error) {
       showToast('Network error. Please try again.', 'error');
-      window.grecaptcha.reset(recaptchaRef.current);
+              window.grecaptcha.reset();
     } finally {
       setLoading(false);
     }
