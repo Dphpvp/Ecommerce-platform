@@ -3,6 +3,8 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import jwt, JWTError
 from datetime import datetime, timezone
 from bson import ObjectId
+import requests
+import os
 
 from database.connection import db
 
@@ -34,3 +36,18 @@ async def get_admin_user(current_user: dict = Depends(get_current_user)):
     if not current_user.get("is_admin", False):
         raise HTTPException(status_code=403, detail="Admin access required")
     return current_user
+
+def verify_recaptcha(recaptcha_response: str) -> bool:
+    """Verify reCAPTCHA response"""
+    secret_key = os.getenv("RECAPTCHA_SECRET_KEY")
+    
+    response = requests.post(
+        'https://www.google.com/recaptcha/api/siteverify',
+        data={
+            'secret': secret_key,
+            'response': recaptcha_response
+        }
+    )
+    
+    result = response.json()
+    return result.get('success', False)

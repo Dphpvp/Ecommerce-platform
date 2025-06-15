@@ -57,6 +57,64 @@ async def send_email(to_email: str, subject: str, body: str):
         print(f"❌ Email sending failed: {e}")
         return False
 
+async def send_password_reset_email(user_email: str, user_name: str, reset_url: str):
+    """Send password reset email"""
+    
+    subject = f"🔐 Reset Your Password - {os.getenv('FRONTEND_URL', 'E-Commerce')}"
+    
+    body = f"""
+    <html>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #dc3545, #ffc107); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="margin: 0; font-size: 28px;">🔐 Reset Your Password</h1>
+            <p style="margin: 10px 0 0 0; font-size: 18px;">Security request for {user_name}</p>
+        </div>
+        
+        <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <div style="background: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #dc3545;">
+                <h3 style="margin-top: 0; color: #dc3545;">🔑 Password Reset Request</h3>
+                <p style="margin-bottom: 0;">We received a request to reset your password. Click the button below to create a new password:</p>
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="{reset_url}" 
+                   style="background-color: #dc3545; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block; font-size: 16px;">
+                    🔐 Reset Password
+                </a>
+            </div>
+            
+            <div style="background: #fff3cd; padding: 20px; margin: 30px 0; border-radius: 8px; border: 1px solid #ffeaa7;">
+                <h4 style="color: #856404; margin-top: 0;">⚠️ Security Notice</h4>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                    <li>This reset link will expire in 1 hour</li>
+                    <li>If you didn't request this reset, please ignore this email</li>
+                    <li>For security, never share this link with others</li>
+                    <li>Your current password remains unchanged until you complete the reset</li>
+                </ul>
+            </div>
+            
+            <div style="background: #f8f9fa; padding: 20px; margin: 30px 0; border-radius: 8px; text-align: center;">
+                <p style="margin: 0; color: #666; font-size: 14px;">
+                    <strong>Can't click the button?</strong><br>
+                    Copy and paste this URL into your browser:<br>
+                    <span style="color: #dc3545; word-break: break-all;">{reset_url}</span>
+                </p>
+            </div>
+            
+            <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee;">
+                <p style="color: #666; font-size: 14px; margin: 0;">
+                    Need help? Contact our support team<br>
+                    📧 {EMAIL_USER}<br>
+                    <em>This is an automated security email.</em>
+                </p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    return await send_email(user_email, subject, body)
+
 async def send_contact_email(name: str, email: str, phone: str, message: str) -> bool:
     """Send contact form email to admin"""
     try:
@@ -361,7 +419,8 @@ async def send_admin_order_notification(order_id: str, user_email: str, user_nam
     </body>
     </html>
     """
-# Updated backend/utils/email.py - Add this function
+    
+    return await send_email(ADMIN_EMAIL, subject, body)
 
 async def send_verification_email(user_email: str, user_name: str, verification_url: str):
     """Send email verification email"""
@@ -419,4 +478,3 @@ async def send_verification_email(user_email: str, user_name: str, verification_
     """
     
     return await send_email(user_email, subject, body)
-    

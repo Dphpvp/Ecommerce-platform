@@ -16,6 +16,7 @@ import io
 import base64
 import secrets
 from captcha import verify_recaptcha
+from utils.email import send_password_reset_email
 
 # Import your database connection
 from database.connection import db
@@ -69,6 +70,20 @@ class ContactForm(BaseModel):
     email: str
     phone: str = ""
     message: str
+    
+class PasswordResetRequest(BaseModel):
+    email: str
+    recaptcha_response: str
+
+class PasswordResetConfirm(BaseModel):
+    token: str
+    new_password: str
+    
+class PasswordChange(BaseModel):
+    old_password: str
+    new_password: str
+    confirm_password: str
+    recaptcha_response: str
 
 # 🆕 NEW: Profile Update Models
 class UserProfileUpdate(BaseModel):
@@ -932,9 +947,47 @@ async def update_profile(profile_data: UserProfileUpdate, current_user: dict = D
         }
     }
 
+@router.post("/auth/request-password-reset")
+async def request_password_reset(request: PasswordResetRequest):
+    """Request password reset email"""
+    
+    # Verify reCAPTCHA
+    if not verify_recaptcha(request.recaptcha_response):
+        raise HTTPException(status_code=400, detail="reCAPTCHA verification failed")
+    
+    # Find user by email
+    user = await db.users.find_one({"email": request.email})
+    if not user:
+        # Don't reveal if email exists - security best practice
+        return {"message": "If the email exists, a reset link has been sent"}
+    
+    # Generate reset token
+    reset_token = secrets.token_urlsafe(32)
+    expires_at = datetime.now(timezone.utc) + timedelta(hours=1)  # 1 hour expiry
+    
+    # Store reset token in database
+    await db.password_resets.insert_one({
+        "user_id": user["_id"],
+        "token": reset_token,
+        "expires_at": expires_at,
+        "used": False,
+        "created_at": datetime.now(timezone.utc)
+    })
+    
+    # Send reset email
+    reset_url = f"{os.getenv('FRONTEND_URL')}/reset-password?token={reset_token}"
+    await send_password_reset_email(user["email"], user.get("full_name", ""), reset_url)
+    
+    return {"message": "If the email exists, a reset link has been sent"}
+
 @router.put("/auth/change-password")
 async def change_password(password_data: PasswordChange, current_user: dict = Depends(get_current_user)):
     """Change user password"""
+    
+    # Verify reCAPTCHA
+    if not verify_recaptcha(password_data.recaptcha_response):
+        raise HTTPException(status_code=400, detail="reCAPTCHA verification failed")
+    
     user_id = str(current_user["_id"])
     
     # Validate password confirmation
