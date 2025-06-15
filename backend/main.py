@@ -20,14 +20,12 @@ origins = [
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "https://vergishop.vercel.app",
-        "https://vs1.vercel.app",  
+    allow_origins=origins, 
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
     expose_headers=["*"],
-    ]
+
 )
 
 # Stripe configuration
