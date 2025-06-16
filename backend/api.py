@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, Request, Header
+from fastapi import APIRouter, HTTPException, Depends, Request, Header, Response
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List
 from datetime import datetime, timezone, timedelta
@@ -413,16 +413,14 @@ async def debug_token(token: str):
 
     
 @router.post("/auth/login")
-async def login(user_login: UserLogin, request: Request):
+async def login(user_login: UserLogin, request: Request, response: Response):
     client_ip = get_client_ip(request)
     
-    # Rate limiting for login attempts
-    if not rate_limiter.is_allowed(f"{client_ip}:login", max_requests=5, window=900):  # 5 attempts per 15 minutes
+    if not rate_limiter.is_allowed(f"{client_ip}:login", max_requests=5, window=900):
         raise HTTPException(status_code=429, detail="Too many login attempts")
     
     identifier_type = get_identifier_type(user_login.identifier)
     
-    # Sanitize identifier
     if identifier_type == "email":
         user_login.identifier = SecurityValidator.validate_email_format(user_login.identifier)
         query = {"email": user_login.identifier}
@@ -435,11 +433,9 @@ async def login(user_login: UserLogin, request: Request):
     
     user = await db.users.find_one(query)
     if not user or not verify_password(user_login.password, user["password"]):
-        # Log failed login attempt
         print(f"Failed login attempt from {client_ip} for {user_login.identifier}")
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
-    # Check email verification
     if not user.get("email_verified", False):
         raise HTTPException(
             status_code=401, 
@@ -448,16 +444,23 @@ async def login(user_login: UserLogin, request: Request):
     
     # Check if 2FA is enabled
     if user.get("two_factor_enabled"):
-        temp_token = create_jwt_token(str(user["_id"]), expires_in=timedelta(minutes=5))
+        # Create temporary session for 2FA
+        temp_token = session_manager.create_session_token(
+            str(user["_id"]), 
+            expires_in=timedelta(minutes=5)
+        )
+        session_manager.set_session_cookie(response, temp_token)
         return {
             "requires_2fa": True,
-            "temp_token": temp_token,
             "message": "Please enter your 2FA code"
         }
     
-    token = create_jwt_token(str(user["_id"]))
+    # Create session
+    token = session_manager.create_session_token(str(user["_id"]))
+    session_manager.set_session_cookie(response, token)
+    
     return {
-        "token": token, 
+        "success": True,
         "user": {
             "id": str(user["_id"]), 
             "email": user["email"], 
@@ -471,20 +474,23 @@ async def login(user_login: UserLogin, request: Request):
             "two_factor_enabled": user.get("two_factor_enabled", False)
         }
     }
+
 @router.post("/auth/verify-2fa")
 @rate_limit(max_attempts=10, window_minutes=15, endpoint_name="2fa")
-async def verify_2fa_login(verification_data: dict, request: Request):
-    """Verify 2FA with rate limiting"""
+async def verify_2fa_login(verification_data: dict, request: Request, response: Response):
+    """Verify 2FA and establish session"""
     try:
-        temp_token = verification_data.get("temp_token")
         code = verification_data.get("code")
         
-        payload = jwt.decode(temp_token, JWT_SECRET, algorithms=["HS256"])
+        # Get temp session token
+        temp_token = session_manager.get_session_token(request)
+        payload = session_manager.verify_session_token(temp_token)
+        
         user_id = payload.get("user_id")
         user = await db.users.find_one({"_id": ObjectId(user_id)})
         
         if not user:
-            raise HTTPException(status_code=401, detail="Invalid token")
+            raise HTTPException(status_code=401, detail="Invalid session")
         
         method = user.get("two_factor_method", "app")
         verified = False
@@ -516,7 +522,7 @@ async def verify_2fa_login(verification_data: dict, request: Request):
                     {"$unset": {"email_2fa_code": "", "email_2fa_code_created": ""}}
                 )
         
-        # Check backup codes if primary method failed
+        # Check backup codes
         if not verified:
             backup_codes = user.get("backup_codes", [])
             if code.upper() in backup_codes:
@@ -530,21 +536,42 @@ async def verify_2fa_login(verification_data: dict, request: Request):
         if not verified:
             raise HTTPException(status_code=401, detail="Invalid verification code")
         
-        token = create_jwt_token(str(user["_id"]))
-        response = create_user_response(token, user)
+        # Create full session
+        token = session_manager.create_session_token(str(user["_id"]))
+        session_manager.set_session_cookie(response, token)
+        
+        user_response = {
+            "success": True,
+            "user": {
+                "id": str(user["_id"]), 
+                "email": user["email"], 
+                "username": user["username"],
+                "full_name": user.get("full_name", ""),
+                "address": user.get("address"),
+                "phone": user.get("phone"),
+                "profile_image_url": user.get("profile_image_url"),
+                "is_admin": user.get("is_admin", False),
+                "email_verified": user.get("email_verified", False),
+                "two_factor_enabled": user.get("two_factor_enabled", False),
+                "two_factor_method": user.get("two_factor_method", "app")
+            }
+        }
+        
         if code.upper() in user.get("backup_codes", []):
-            response["backup_code_used"] = True
-        return response
+            user_response["backup_code_used"] = True
+            
+        return user_response
         
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="2FA verification expired")
     except jwt.JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+        raise HTTPException(status_code=401, detail="Invalid session")
     except HTTPException:
         raise
     except Exception as e:
         print(f"2FA verification error: {e}")
         raise HTTPException(status_code=500, detail="2FA verification failed")
+
 
 @router.post("/auth/send-2fa-email")
 async def send_2fa_email(verification_data: dict):
@@ -932,7 +959,7 @@ async def google_login(google_login: GoogleLogin):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/auth/me")
-async def get_me(current_user: dict = Depends(get_current_user)):
+async def get_me(current_user: dict = Depends(get_current_user_from_session)):
     return {
         "id": str(current_user["_id"]),
         "username": current_user["username"],
@@ -945,6 +972,7 @@ async def get_me(current_user: dict = Depends(get_current_user)):
         "email_verified": current_user.get("email_verified", False),
         "two_factor_enabled": current_user.get("two_factor_enabled", False)
     }
+
 
 # 🆕 NEW: Profile Update Routes
 @router.put("/auth/update-profile")
@@ -1199,7 +1227,7 @@ async def get_product(product_id: str):
 
 # Cart routes
 @router.post("/cart/add")
-async def add_to_cart(cart_item: CartItem, current_user: dict = Depends(get_current_user)):
+async def add_to_cart(cart_item: CartItem, current_user: dict = Depends(get_current_user_from_session)):
     user_id = str(current_user["_id"])
     
     product = await db.products.find_one({"_id": ObjectId(cart_item.product_id)})
@@ -1226,6 +1254,8 @@ async def add_to_cart(cart_item: CartItem, current_user: dict = Depends(get_curr
         await db.cart.insert_one(cart_data)
     
     return {"message": "Item added to cart"}
+    pass
+
 
 @router.get("/products/search")
 async def search_products(
@@ -1274,7 +1304,7 @@ async def search_products(
 
 
 @router.get("/cart")
-async def get_cart(current_user: dict = Depends(get_current_user)):
+async def get_cart(current_user: dict = Depends(get_current_user_from_session)):
     user_id = str(current_user["_id"])
     
     pipeline = [
@@ -1304,9 +1334,10 @@ async def get_cart(current_user: dict = Depends(get_current_user)):
         })
     
     return cart_items
+    pass
 
 @router.delete("/cart/{item_id}")
-async def remove_from_cart(item_id: str, current_user: dict = Depends(get_current_user)):
+async def remove_from_cart(item_id: str, current_user: dict = Depends(get_current_user_from_session)):
     user_id = str(current_user["_id"])
     result = await db.cart.delete_one({"_id": ObjectId(item_id), "user_id": user_id})
     
@@ -1327,10 +1358,11 @@ async def create_payment_intent(payment: PaymentIntent):
         return {"client_secret": intent.client_secret}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+    pass
 
 # 🆕 UPDATED ORDER ROUTES WITH EMAIL NOTIFICATIONS
 @router.post("/orders")
-async def create_order(order_data: dict, current_user: dict = Depends(get_current_user)):
+async def create_order(order_data: dict, current_user: dict = Depends(get_current_user_from_session)):
     user_id = str(current_user["_id"])
     
     # Get cart items using the get_cart function
@@ -1406,9 +1438,10 @@ async def create_order(order_data: dict, current_user: dict = Depends(get_curren
         # Don't fail the order creation if email fails
     
     return {"message": "Order created successfully", "order_id": order_id, "order_number": order["order_number"]}
+    pass
 
 @router.get("/orders")
-async def get_orders(current_user: dict = Depends(get_current_user)):
+async def get_orders(current_user: dict = Depends(get_current_user_from_session)):
     user_id = str(current_user["_id"])
     
     cursor = db.orders.find({"user_id": user_id}).sort("created_at", -1)
@@ -1419,8 +1452,9 @@ async def get_orders(current_user: dict = Depends(get_current_user)):
     
     return orders
 
+
 @router.get("/orders/{order_id}")
-async def get_order(order_id: str, current_user: dict = Depends(get_current_user)):
+async def get_orders(current_user: dict = Depends(get_current_user_from_session)):
     user_id = str(current_user["_id"])
     
     order = await db.orders.find_one({"_id": ObjectId(order_id), "user_id": user_id})
@@ -1429,6 +1463,7 @@ async def get_order(order_id: str, current_user: dict = Depends(get_current_user
     
     order["_id"] = str(order["_id"])
     return order
+    pass
 
 @router.post("/contact")
 async def submit_contact_form(
@@ -1486,3 +1521,8 @@ async def get_csrf_token(request: Request):
     csrf_token = csrf_protection.generate_token(session_id)
     return {"csrf_token": csrf_token}
 
+@router.post("/auth/logout")
+async def logout(response: Response, current_user: dict = Depends(get_current_user_from_session)):
+    """Logout and clear session"""
+    session_manager.clear_session_cookie(response)
+    return {"message": "Logged out successfully"}
