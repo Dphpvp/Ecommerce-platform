@@ -1302,7 +1302,7 @@ async def search_products(
 
 
 @router.get("/cart")
-async def get_cart(current_user: dict = Depends(get_current_user_from_session)):
+async def get_cart(current_user: dict = Depends(get_current_user)):
     user_id = str(current_user["_id"])
     
     pipeline = [
@@ -1335,7 +1335,7 @@ async def get_cart(current_user: dict = Depends(get_current_user_from_session)):
     pass
 
 @router.delete("/cart/{item_id}")
-async def remove_from_cart(item_id: str, current_user: dict = Depends(get_current_user_from_session)):
+async def remove_from_cart(item_id: str, current_user: dict = Depends(get_current_user)):
     user_id = str(current_user["_id"])
     result = await db.cart.delete_one({"_id": ObjectId(item_id), "user_id": user_id})
     
@@ -1360,7 +1360,7 @@ async def create_payment_intent(payment: PaymentIntent):
 
 # 🆕 UPDATED ORDER ROUTES WITH EMAIL NOTIFICATIONS
 @router.post("/orders")
-async def create_order(order_data: dict, current_user: dict = Depends(get_current_user_from_session)):
+async def create_order(order_data: dict, current_user: dict = Depends(get_current_user)):
     user_id = str(current_user["_id"])
     
     # Get cart items using the get_cart function
@@ -1439,7 +1439,7 @@ async def create_order(order_data: dict, current_user: dict = Depends(get_curren
     pass
 
 @router.get("/orders")
-async def get_orders(current_user: dict = Depends(get_current_user_from_session)):
+async def get_orders(current_user: dict = Depends(get_current_user)):
     user_id = str(current_user["_id"])
     
     cursor = db.orders.find({"user_id": user_id}).sort("created_at", -1)
@@ -1452,7 +1452,7 @@ async def get_orders(current_user: dict = Depends(get_current_user_from_session)
 
 
 @router.get("/orders/{order_id}")
-async def get_orders(current_user: dict = Depends(get_current_user_from_session)):
+async def get_orders(current_user: dict = Depends(get_current_user), order_id: str):
     user_id = str(current_user["_id"])
     
     order = await db.orders.find_one({"_id": ObjectId(order_id), "user_id": user_id})
@@ -1520,7 +1520,7 @@ async def get_csrf_token(request: Request):
     return {"csrf_token": csrf_token}
 
 @router.post("/auth/logout")
-async def logout(response: Response, current_user: dict = Depends(get_current_user_from_session)):
+async def logout(response: Response, current_user: dict = Depends(get_current_user)):
     """Logout and clear session"""
     session_manager.clear_session_cookie(response)
     return {"message": "Logged out successfully"}
