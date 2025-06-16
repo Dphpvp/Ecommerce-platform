@@ -17,7 +17,7 @@ import base64
 import requests
 import secrets
 from captcha import verify_recaptcha
-from middleware.rate_limiter import rate_limiter
+from middleware.rate_limiter import rate_limiter, rate_limit
 from middleware.csrf import csrf_protection
 from middleware.session import session_manager  
 from database.connection import db
