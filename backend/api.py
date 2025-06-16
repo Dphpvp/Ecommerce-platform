@@ -30,6 +30,13 @@ from utils.email import send_order_confirmation_email, send_admin_order_notifica
 
 router = APIRouter()
 
+# Security settings
+from middleware.validation import (
+    SecureUser, SecureProduct, SecureContactForm, 
+    SecureUserProfileUpdate, SecurityValidator, 
+    rate_limiter, get_client_ip
+)
+
 # Configuration
 JWT_SECRET = os.getenv("JWT_SECRET", "your-jwt-secret-key")
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
@@ -199,16 +206,20 @@ async def get_next_order_number():
 
 
 @router.post("/auth/register")
-@rate_limit(max_attempts=5, window_minutes=60, endpoint_name="register")
-async def register(user: User, request: Request):
-    """Register with rate limiting"""
-    # Verify CAPTCHA first
-    if not await verify_recaptcha(user.captcha):
-        raise HTTPException(status_code=400, detail="Invalid CAPTCHA")
+async def register(user: SecureUser, request: Request):
+    # Rate limiting check
+    client_ip = get_client_ip(request)
+    if not rate_limiter.is_allowed(f"{client_ip}:register", max_requests=3, window=3600):
+        raise HTTPException(status_code=429, detail="Too many registration attempts")
     
+    # Check for existing user
     existing_user = await db.users.find_one({"email": user.email})
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
+    
+    existing_username = await db.users.find_one({"username": user.username})
+    if existing_username:
+        raise HTTPException(status_code=400, detail="Username already taken")
     
     # Generate verification token
     verification_token = secrets.token_urlsafe(32)
@@ -237,12 +248,11 @@ async def register(user: User, request: Request):
     try:
         verification_url = f"{os.getenv('FRONTEND_URL')}/verify-email?token={verification_token}"
         await send_verification_email(user.email, user.full_name, verification_url)
-        print(f"✅ Verification email sent to {user.email}")
     except Exception as e:
         print(f"❌ Failed to send verification email: {e}")
     
     return {"message": "User registered successfully. Please check your email to verify your account."}
-    
+
 @router.post("/auth/verify-email")
 async def verify_email(request_data: dict):
     """Verify email with token"""
@@ -374,60 +384,64 @@ async def debug_token(token: str):
 
     
 @router.post("/auth/login")
-@rate_limit(max_attempts=5, window_minutes=15, endpoint_name="login")
 async def login(user_login: UserLogin, request: Request):
-    """Login with rate limiting"""
-    try:
-        identifier_type = get_identifier_type(user_login.identifier)
-        
-        if identifier_type == "email":
-            query = {"email": user_login.identifier}
-        elif identifier_type == "phone":
-            query = {"phone": user_login.identifier}
-        else:
-            query = {"username": user_login.identifier}
-        
-        user = await db.users.find_one(query)
-        if not user or not verify_password(user_login.password, user["password"]):
-            raise HTTPException(status_code=401, detail="Invalid credentials")
-        
-        if not user.get("email_verified", False):
-            raise HTTPException(
-                status_code=401, 
-                detail="Email not verified. Please check your email and verify your account."
-            )
-        
-        if user.get("two_factor_enabled"):
-            temp_token = create_jwt_token(str(user["_id"]), expires_in=timedelta(minutes=5))
-            return {
-                "requires_2fa": True,
-                "temp_token": temp_token,
-                "message": "Please enter your 2FA code"
-            }
-        
-        token = create_jwt_token(str(user["_id"]))
+    client_ip = get_client_ip(request)
+    
+    # Rate limiting for login attempts
+    if not rate_limiter.is_allowed(f"{client_ip}:login", max_requests=5, window=900):  # 5 attempts per 15 minutes
+        raise HTTPException(status_code=429, detail="Too many login attempts")
+    
+    identifier_type = get_identifier_type(user_login.identifier)
+    
+    # Sanitize identifier
+    if identifier_type == "email":
+        user_login.identifier = SecurityValidator.validate_email_format(user_login.identifier)
+        query = {"email": user_login.identifier}
+    elif identifier_type == "phone":
+        user_login.identifier = SecurityValidator.validate_phone(user_login.identifier)
+        query = {"phone": user_login.identifier}
+    else:
+        user_login.identifier = SecurityValidator.validate_username(user_login.identifier)
+        query = {"username": user_login.identifier}
+    
+    user = await db.users.find_one(query)
+    if not user or not verify_password(user_login.password, user["password"]):
+        # Log failed login attempt
+        print(f"Failed login attempt from {client_ip} for {user_login.identifier}")
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    # Check email verification
+    if not user.get("email_verified", False):
+        raise HTTPException(
+            status_code=401, 
+            detail="Email not verified. Please check your email and verify your account."
+        )
+    
+    # Check if 2FA is enabled
+    if user.get("two_factor_enabled"):
+        temp_token = create_jwt_token(str(user["_id"]), expires_in=timedelta(minutes=5))
         return {
-            "token": token, 
-            "user": {
-                "id": str(user["_id"]), 
-                "email": user["email"], 
-                "username": user["username"],
-                "full_name": user.get("full_name", ""),
-                "address": user.get("address"),
-                "phone": user.get("phone"),
-                "profile_image_url": user.get("profile_image_url"),
-                "is_admin": user.get("is_admin", False),
-                "email_verified": user.get("email_verified", False),
-                "two_factor_enabled": user.get("two_factor_enabled", False)
-            }
+            "requires_2fa": True,
+            "temp_token": temp_token,
+            "message": "Please enter your 2FA code"
         }
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        print(f"Login error: {e}")
-        raise HTTPException(status_code=500, detail="Login failed")
-
+    
+    token = create_jwt_token(str(user["_id"]))
+    return {
+        "token": token, 
+        "user": {
+            "id": str(user["_id"]), 
+            "email": user["email"], 
+            "username": user["username"],
+            "full_name": user.get("full_name", ""),
+            "address": user.get("address"),
+            "phone": user.get("phone"),
+            "profile_image_url": user.get("profile_image_url"),
+            "is_admin": user.get("is_admin", False),
+            "email_verified": user.get("email_verified", False),
+            "two_factor_enabled": user.get("two_factor_enabled", False)
+        }
+    }
 @router.post("/auth/verify-2fa")
 @rate_limit(max_attempts=10, window_minutes=15, endpoint_name="2fa")
 async def verify_2fa_login(verification_data: dict, request: Request):
@@ -905,29 +919,24 @@ async def get_me(current_user: dict = Depends(get_current_user)):
 
 # 🆕 NEW: Profile Update Routes
 @router.put("/auth/update-profile")
-async def update_profile(profile_data: UserProfileUpdate, current_user: dict = Depends(get_current_user)):
-    """Update user profile information"""
+async def update_profile(profile_data: SecureUserProfileUpdate, current_user: dict = Depends(get_current_user)):
     user_id = str(current_user["_id"])
     
-    # Prepare update data - only include fields that were provided
+    # Prepare update data - only include non-None fields
     update_data = {}
-    if profile_data.full_name is not None:
-        update_data["full_name"] = profile_data.full_name
-    if profile_data.email is not None:
-        # Check if email already exists for another user
-        existing_user = await db.users.find_one({
-            "email": profile_data.email, 
-            "_id": {"$ne": ObjectId(user_id)}
-        })
-        if existing_user:
-            raise HTTPException(status_code=400, detail="Email already exists")
-        update_data["email"] = profile_data.email
-    if profile_data.phone is not None:
-        update_data["phone"] = profile_data.phone
-    if profile_data.address is not None:
-        update_data["address"] = profile_data.address
-    if profile_data.profile_image_url is not None:
-        update_data["profile_image_url"] = profile_data.profile_image_url
+    
+    for field, value in profile_data.dict(exclude_unset=True).items():
+        if value is not None:
+            if field == "email" and value != current_user.get("email"):
+                # Check if email already exists for another user
+                existing_user = await db.users.find_one({
+                    "email": value, 
+                    "_id": {"$ne": ObjectId(user_id)}
+                })
+                if existing_user:
+                    raise HTTPException(status_code=400, detail="Email already exists")
+            
+            update_data[field] = value
     
     if not update_data:
         raise HTTPException(status_code=400, detail="No valid fields to update")
@@ -958,21 +967,6 @@ async def update_profile(profile_data: UserProfileUpdate, current_user: dict = D
             "two_factor_enabled": updated_user.get("two_factor_enabled", False)
         }
     }
-    
-def verify_recaptcha(recaptcha_response: str) -> bool:
-    """Verify reCAPTCHA response"""
-    secret_key = os.getenv("RECAPTCHA_SECRET_KEY")
-    
-    response = requests.post(
-        'https://www.google.com/recaptcha/api/siteverify',
-        data={
-            'secret': secret_key,
-            'response': recaptcha_response
-        }
-    )
-    
-    result = response.json()
-    return result.get('success', False)
 
 @router.post("/auth/request-password-reset")
 @rate_limit(max_attempts=3, window_minutes=60, endpoint_name="password_reset")
@@ -1127,9 +1121,11 @@ async def upload_avatar(current_user: dict = Depends(get_current_user)):
 
 # Product routes
 @router.post("/products")
-async def create_product(product: Product):
+async def create_product(product: SecureProduct, current_user: dict = Depends(get_admin_user)):
     product_data = product.dict()
     product_data["created_at"] = datetime.utcnow()
+    product_data["created_by"] = str(current_user["_id"])
+    
     result = await db.products.insert_one(product_data)
     return {"message": "Product created", "id": str(result.inserted_id)}
 
@@ -1185,6 +1181,52 @@ async def add_to_cart(cart_item: CartItem, current_user: dict = Depends(get_curr
         await db.cart.insert_one(cart_data)
     
     return {"message": "Item added to cart"}
+
+@router.get("/products/search")
+async def search_products(
+    q: str = "",
+    category: str = "",
+    min_price: float = 0,
+    max_price: float = 999999,
+    limit: int = 50,
+    skip: int = 0
+):
+    # Sanitize search query
+    q = SecurityValidator.sanitize_string(q, 100)
+    category = SecurityValidator.sanitize_string(category, 100)
+    
+    # Validate price range
+    if min_price < 0 or max_price < 0 or min_price > max_price:
+        raise HTTPException(status_code=400, detail="Invalid price range")
+    
+    # Limit pagination
+    limit = min(limit, 100)  # Max 100 items per request
+    skip = max(skip, 0)
+    
+    query = {}
+    
+    if q:
+        query["$text"] = {"$search": q}
+    
+    if category:
+        query["category"] = category
+    
+    if min_price > 0 or max_price < 999999:
+        query["price"] = {}
+        if min_price > 0:
+            query["price"]["$gte"] = min_price
+        if max_price < 999999:
+            query["price"]["$lte"] = max_price
+    
+    cursor = db.products.find(query).skip(skip).limit(limit)
+    products = []
+    async for product in cursor:
+        product["_id"] = str(product["_id"])
+        products.append(product)
+    
+    return {"products": products, "count": len(products)}
+
+
 
 @router.get("/cart")
 async def get_cart(current_user: dict = Depends(get_current_user)):
@@ -1344,8 +1386,14 @@ async def get_order(order_id: str, current_user: dict = Depends(get_current_user
     return order
 
 @router.post("/contact")
-async def submit_contact_form(contact_data: ContactForm):
-    """Handle contact form submissions"""
+async def submit_contact_form(contact_data: SecureContactForm, request: Request):
+    """Handle contact form submissions with security"""
+    client_ip = get_client_ip(request)
+    
+    # Rate limiting for contact form
+    if not rate_limiter.is_allowed(f"{client_ip}:contact", max_requests=3, window=3600):
+        raise HTTPException(status_code=429, detail="Too many contact form submissions")
+    
     try:
         from utils.email import send_contact_email
         

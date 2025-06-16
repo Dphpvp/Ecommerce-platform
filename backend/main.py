@@ -1,81 +1,97 @@
-# backend/main.py - Production-ready with rate limiting for Render deployment
-
-from fastapi import FastAPI, Request
+# backend/main.py - Updated with security middleware
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 import stripe
 import os
 from api import router as api_router
 from routes.admin_routes import router as admin_router
-from middleware.rate_limiter import rate_limiter
+from middleware.csrf import csrf_middleware
+from middleware.validation import rate_limiter, get_client_ip
 
 # Configuration
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
 FRONTEND_URL = os.getenv("FRONTEND_URL")
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1,vergishop.vercel.app,vs1.vercel.app").split(",")
 
-# Initialize FastAPI
-app = FastAPI(title="E-commerce API")
+# Initialize FastAPI with security headers
+app = FastAPI(
+    title="E-commerce API",
+    docs_url="/api/docs" if os.getenv("ENVIRONMENT") == "development" else None,
+    redoc_url="/api/redoc" if os.getenv("ENVIRONMENT") == "development" else None,
+)
 
-# Origins for production
+# Security middleware
+app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS)
+
+# CORS configuration with stricter settings
 origins = [
     "https://vergishop.vercel.app",
-    "https://vs1.vercel.app",
-    os.getenv("FRONTEND_URL")  # Dynamic frontend URL
+    "https://vs1.vercel.app"
 ]
 
-# Remove None values
-origins = [origin for origin in origins if origin]
+if os.getenv("ENVIRONMENT") == "development":
+    origins.extend(["http://localhost:3000", "http://127.0.0.1:3000"])
 
-# Global rate limiting middleware for general API protection
-@app.middleware("http")
-async def global_rate_limit_middleware(request: Request, call_next):
-    """Global rate limiting for general API protection"""
-    
-    # Skip rate limiting for health checks and docs
-    skip_paths = ["/health", "/", "/docs", "/openapi.json", "/favicon.ico"]
-    if request.url.path in skip_paths:
-        return await call_next(request)
-    
-    # Apply general rate limiting (200 requests per minute per IP)
-    client_ip = rate_limiter.get_client_ip(request)
-    key = f"general:{client_ip}"
-    
-    try:
-        is_limited, error_data = rate_limiter.is_rate_limited(key, 200, 1)
-        if is_limited:
-            return JSONResponse(
-                status_code=429,
-                content=error_data,
-                headers={
-                    "Retry-After": str(error_data.get('retry_after', 60)),
-                    "X-RateLimit-Limit": "200",
-                    "X-RateLimit-Remaining": "0"
-                }
-            )
-        
-        rate_limiter.record_attempt(key)
-        response = await call_next(request)
-        
-        # Add rate limit headers to response
-        response.headers["X-RateLimit-Limit"] = "200"
-        response.headers["X-RateLimit-Window"] = "60"
-        
-        return response
-        
-    except Exception as e:
-        print(f"Rate limiting error: {e}")
-        # Continue without rate limiting if there's an error
-        return await call_next(request)
-
-# CORS configuration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
-    expose_headers=["*"]
+    expose_headers=["X-CSRF-Token"],
 )
+
+# Rate limiting middleware
+@app.middleware("http")
+async def rate_limit_middleware(request: Request, call_next):
+    """Rate limiting middleware"""
+    client_ip = get_client_ip(request)
+    
+    # Different limits for different endpoints
+    sensitive_endpoints = ["/api/auth/login", "/api/auth/register", "/api/contact"]
+    
+    if any(request.url.path.startswith(endpoint) for endpoint in sensitive_endpoints):
+        if not rate_limiter.is_allowed(f"{client_ip}:sensitive", max_requests=5, window=300):  # 5 requests per 5 minutes
+            raise HTTPException(status_code=429, detail="Too many requests")
+    else:
+        if not rate_limiter.is_allowed(f"{client_ip}:general", max_requests=100, window=60):  # 100 requests per minute
+            raise HTTPException(status_code=429, detail="Too many requests")
+    
+    response = await call_next(request)
+    return response
+
+# CSRF middleware
+app.middleware("http")(csrf_middleware)
+
+# Security headers middleware
+@app.middleware("http")
+async def security_headers_middleware(request: Request, call_next):
+    """Add security headers"""
+    response = await call_next(request)
+    
+    # Security headers
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), location=()"
+    
+    # Content Security Policy
+    csp = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline' https://accounts.google.com https://www.google.com https://www.paypal.com; "
+        "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+        "font-src 'self' https://fonts.gstatic.com; "
+        "img-src 'self' data: https: blob:; "
+        "connect-src 'self' https://api.dicebear.com; "
+        "frame-src https://accounts.google.com https://www.google.com https://www.paypal.com; "
+        "object-src 'none'; "
+        "base-uri 'self'"
+    )
+    response.headers["Content-Security-Policy"] = csp
+    
+    return response
 
 # Stripe configuration
 if STRIPE_SECRET_KEY:
@@ -97,8 +113,16 @@ async def health_check():
         "status": "healthy",
         "email_configured": email_configured,
         "frontend_url": FRONTEND_URL,
-        "rate_limiting": "enabled"
+        "security": "enabled"
     }
+
+# CSRF token endpoint
+@app.get("/api/csrf-token")
+async def get_csrf_token():
+    """Get CSRF token for frontend"""
+    from middleware.csrf import csrf_protection
+    token = csrf_protection.generate_token()
+    return {"csrf_token": token}
 
 # Startup event
 @app.on_event("startup")
@@ -106,13 +130,6 @@ async def startup_event():
     """Create indexes and print configuration status on startup"""
     print("🚀 E-commerce Backend Starting Up...")
     print("=" * 50)
-    
-    # Rate limiting info
-    print("🛡️  Rate Limiting: ENABLED")
-    print("   - Login: 5 attempts per 15 minutes")
-    print("   - 2FA: 10 attempts per 15 minutes")
-    print("   - Password Reset: 3 attempts per hour")
-    print("   - General API: 200 requests per minute")
     
     # Create database indexes
     try:
@@ -148,31 +165,21 @@ async def startup_event():
     email_user = os.getenv("EMAIL_USER")
     email_password = os.getenv("EMAIL_PASSWORD")
     admin_email = os.getenv("ADMIN_EMAIL")
+    csrf_secret = os.getenv("CSRF_SECRET")
     
     if email_user and email_password:
         print(f"📧 Email Configuration: ✅ CONFIGURED")
-        print(f"📧 Email User: {email_user}")
-        print(f"📧 Admin Email: {admin_email}")
     else:
         print(f"📧 Email Configuration: ❌ NOT CONFIGURED")
     
-    frontend_url = os.getenv("FRONTEND_URL")
-    backend_url = os.getenv("BACKEND_URL")
-    
-    print(f"🌐 Frontend URL: {frontend_url}")
-    print(f"🖥️  Backend URL: {backend_url}")
-    
-    mongodb_url = os.getenv("MONGODB_URL")
-    if mongodb_url:
-        print(f"💾 Database: ✅ CONFIGURED")
+    if csrf_secret:
+        print(f"🔒 CSRF Protection: ✅ CONFIGURED")
     else:
-        print(f"💾 Database: ❌ NOT CONFIGURED")
+        print(f"🔒 CSRF Protection: ⚠️ USING DEFAULT SECRET")
     
-    if STRIPE_SECRET_KEY:
-        key_preview = STRIPE_SECRET_KEY[:7] + "..." + STRIPE_SECRET_KEY[-4:]
-        print(f"💳 Stripe: ✅ CONFIGURED ({key_preview})")
-    else:
-        print(f"💳 Stripe: ❌ NOT CONFIGURED")
+    print(f"🛡️ Security Headers: ✅ ENABLED")
+    print(f"⏱️ Rate Limiting: ✅ ENABLED")
+    print(f"🔍 Input Validation: ✅ ENABLED")
     
     print("=" * 50)
     print("🎯 Ready to handle requests!")
