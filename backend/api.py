@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Request
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List
 from datetime import datetime, timezone, timedelta
@@ -19,6 +19,7 @@ import secrets
 from captcha import verify_recaptcha
 from utils.email import send_password_reset_email
 from datetime import datetime, timezone, timedelta
+from middleware.rate_limiter import rate_limit
 
 # Import your database connection
 from database.connection import db
@@ -198,7 +199,9 @@ async def get_next_order_number():
 
 
 @router.post("/auth/register")
-async def register(user: User):
+@rate_limit(max_attempts=5, window_minutes=60, endpoint_name="register")
+async def register(user: User, request: Request):
+    """Register with rate limiting"""
     # Verify CAPTCHA first
     if not await verify_recaptcha(user.captcha):
         raise HTTPException(status_code=400, detail="Invalid CAPTCHA")
@@ -239,7 +242,7 @@ async def register(user: User):
         print(f"❌ Failed to send verification email: {e}")
     
     return {"message": "User registered successfully. Please check your email to verify your account."}
-
+    
 @router.post("/auth/verify-email")
 async def verify_email(request_data: dict):
     """Verify email with token"""
@@ -371,58 +374,64 @@ async def debug_token(token: str):
 
     
 @router.post("/auth/login")
-async def login(user_login: UserLogin):
-    identifier_type = get_identifier_type(user_login.identifier)
-    
-    # Create query based on identifier type
-    if identifier_type == "email":
-        query = {"email": user_login.identifier}
-    elif identifier_type == "phone":
-        query = {"phone": user_login.identifier}
-    else:
-        query = {"username": user_login.identifier}
-    
-    user = await db.users.find_one(query)
-    if not user or not verify_password(user_login.password, user["password"]):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    
-    # Check email verification
-    if not user.get("email_verified", False):
-        raise HTTPException(
-            status_code=401, 
-            detail="Email not verified. Please check your email and verify your account."
-        )
-    
-    # Check if 2FA is enabled
-    if user.get("two_factor_enabled"):
-        # Return temporary token for 2FA verification
-        temp_token = create_jwt_token(str(user["_id"]), expires_in=timedelta(minutes=5))
+@rate_limit(max_attempts=5, window_minutes=15, endpoint_name="login")
+async def login(user_login: UserLogin, request: Request):
+    """Login with rate limiting"""
+    try:
+        identifier_type = get_identifier_type(user_login.identifier)
+        
+        if identifier_type == "email":
+            query = {"email": user_login.identifier}
+        elif identifier_type == "phone":
+            query = {"phone": user_login.identifier}
+        else:
+            query = {"username": user_login.identifier}
+        
+        user = await db.users.find_one(query)
+        if not user or not verify_password(user_login.password, user["password"]):
+            raise HTTPException(status_code=401, detail="Invalid credentials")
+        
+        if not user.get("email_verified", False):
+            raise HTTPException(
+                status_code=401, 
+                detail="Email not verified. Please check your email and verify your account."
+            )
+        
+        if user.get("two_factor_enabled"):
+            temp_token = create_jwt_token(str(user["_id"]), expires_in=timedelta(minutes=5))
+            return {
+                "requires_2fa": True,
+                "temp_token": temp_token,
+                "message": "Please enter your 2FA code"
+            }
+        
+        token = create_jwt_token(str(user["_id"]))
         return {
-            "requires_2fa": True,
-            "temp_token": temp_token,
-            "message": "Please enter your 2FA code"
+            "token": token, 
+            "user": {
+                "id": str(user["_id"]), 
+                "email": user["email"], 
+                "username": user["username"],
+                "full_name": user.get("full_name", ""),
+                "address": user.get("address"),
+                "phone": user.get("phone"),
+                "profile_image_url": user.get("profile_image_url"),
+                "is_admin": user.get("is_admin", False),
+                "email_verified": user.get("email_verified", False),
+                "two_factor_enabled": user.get("two_factor_enabled", False)
+            }
         }
-    
-    token = create_jwt_token(str(user["_id"]))
-    return {
-        "token": token, 
-        "user": {
-            "id": str(user["_id"]), 
-            "email": user["email"], 
-            "username": user["username"],
-            "full_name": user.get("full_name", ""),
-            "address": user.get("address"),
-            "phone": user.get("phone"),
-            "profile_image_url": user.get("profile_image_url"),
-            "is_admin": user.get("is_admin", False),
-            "email_verified": user.get("email_verified", False),
-            "two_factor_enabled": user.get("two_factor_enabled", False)
-        }
-    }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Login error: {e}")
+        raise HTTPException(status_code=500, detail="Login failed")
 
 @router.post("/auth/verify-2fa")
-async def verify_2fa_login(verification_data: dict):
-    """Verify 2FA during login - handles both app and email"""
+@rate_limit(max_attempts=10, window_minutes=15, endpoint_name="2fa")
+async def verify_2fa_login(verification_data: dict, request: Request):
+    """Verify 2FA with rate limiting"""
     try:
         temp_token = verification_data.get("temp_token")
         code = verification_data.get("code")
@@ -435,25 +444,20 @@ async def verify_2fa_login(verification_data: dict):
             raise HTTPException(status_code=401, detail="Invalid token")
         
         method = user.get("two_factor_method", "app")
+        verified = False
         
         if method == "app":
-            # Verify TOTP code
             secret = user.get("two_factor_secret")
             totp = pyotp.TOTP(secret)
-            
-            if totp.verify(code, valid_window=1):
-                token = create_jwt_token(str(user["_id"]))
-                return create_user_response(token, user)
+            verified = totp.verify(code, valid_window=1)
                 
         elif method == "email":
-            # Verify email code
             stored_code = user.get("email_2fa_code")
             code_created = user.get("email_2fa_code_created")
             
             if not stored_code:
                 raise HTTPException(status_code=401, detail="No verification code found")
             
-            # Check if code expired (5 minutes)
             if code_created:
                 if isinstance(code_created, datetime):
                     if code_created.tzinfo is None:
@@ -462,37 +466,43 @@ async def verify_2fa_login(verification_data: dict):
                     if datetime.now(timezone.utc) > code_created + timedelta(minutes=5):
                         raise HTTPException(status_code=401, detail="Verification code expired")
             
-            if code == stored_code:
-                # Clear the used code
+            verified = (code == stored_code)
+            if verified:
                 await db.users.update_one(
                     {"_id": user["_id"]},
                     {"$unset": {"email_2fa_code": "", "email_2fa_code_created": ""}}
                 )
-                
-                token = create_jwt_token(str(user["_id"]))
-                return create_user_response(token, user)
         
-        # Check backup codes (works for both methods)
-        backup_codes = user.get("backup_codes", [])
-        if code.upper() in backup_codes:
-            backup_codes.remove(code.upper())
-            await db.users.update_one(
-                {"_id": user["_id"]},
-                {"$set": {"backup_codes": backup_codes}}
-            )
-            
-            token = create_jwt_token(str(user["_id"]))
-            response = create_user_response(token, user)
+        # Check backup codes if primary method failed
+        if not verified:
+            backup_codes = user.get("backup_codes", [])
+            if code.upper() in backup_codes:
+                backup_codes.remove(code.upper())
+                await db.users.update_one(
+                    {"_id": user["_id"]},
+                    {"$set": {"backup_codes": backup_codes}}
+                )
+                verified = True
+        
+        if not verified:
+            raise HTTPException(status_code=401, detail="Invalid verification code")
+        
+        token = create_jwt_token(str(user["_id"]))
+        response = create_user_response(token, user)
+        if code.upper() in user.get("backup_codes", []):
             response["backup_code_used"] = True
-            return response
-        
-        raise HTTPException(status_code=401, detail="Invalid verification code")
+        return response
         
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="2FA verification expired")
     except jwt.JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
-    
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"2FA verification error: {e}")
+        raise HTTPException(status_code=500, detail="2FA verification failed")
+
 @router.post("/auth/send-2fa-email")
 async def send_2fa_email(verification_data: dict):
     """Send 2FA code via email during login"""
@@ -965,37 +975,43 @@ def verify_recaptcha(recaptcha_response: str) -> bool:
     return result.get('success', False)
 
 @router.post("/auth/request-password-reset")
-async def request_password_reset(request: PasswordResetRequest):
-    """Request password reset email"""
-    
-    # Verify reCAPTCHA
-    if not verify_recaptcha(request.recaptcha_response):
-        raise HTTPException(status_code=400, detail="reCAPTCHA verification failed")
-    
-    # Find user by email
-    user = await db.users.find_one({"email": request.email})
-    if not user:
-        # Don't reveal if email exists - security best practice
+@rate_limit(max_attempts=3, window_minutes=60, endpoint_name="password_reset")
+async def request_password_reset(request_data: PasswordResetRequest, request: Request):
+    """Request password reset with rate limiting"""
+    try:
+        # Verify reCAPTCHA
+        if not verify_recaptcha(request_data.recaptcha_response):
+            raise HTTPException(status_code=400, detail="reCAPTCHA verification failed")
+        
+        user = await db.users.find_one({"email": request_data.email})
+        if not user:
+            # Don't reveal if email exists
+            return {"message": "If the email exists, a reset link has been sent"}
+        
+        # Generate reset token
+        reset_token = secrets.token_urlsafe(32)
+        expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
+        
+        await db.password_resets.insert_one({
+            "user_id": user["_id"],
+            "token": reset_token,
+            "expires_at": expires_at,
+            "used": False,
+            "created_at": datetime.now(timezone.utc)
+        })
+        
+        # Send reset email
+        reset_url = f"{os.getenv('FRONTEND_URL')}/reset-password?token={reset_token}"
+        await send_password_reset_email(user["email"], user.get("full_name", ""), reset_url)
+        
         return {"message": "If the email exists, a reset link has been sent"}
-    
-    # Generate reset token
-    reset_token = secrets.token_urlsafe(32)
-    expires_at = datetime.now(timezone.utc) + timedelta(hours=1)  # 1 hour expiry
-    
-    # Store reset token in database
-    await db.password_resets.insert_one({
-        "user_id": user["_id"],
-        "token": reset_token,
-        "expires_at": expires_at,
-        "used": False,
-        "created_at": datetime.now(timezone.utc)
-    })
-    
-    # Send reset email
-    reset_url = f"{os.getenv('FRONTEND_URL')}/reset-password?token={reset_token}"
-    await send_password_reset_email(user["email"], user.get("full_name", ""), reset_url)
-    
-    return {"message": "If the email exists, a reset link has been sent"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Password reset request error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to process password reset request")
+
 
 @router.post("/auth/reset-password")
 async def reset_password(request: PasswordResetConfirm):
