@@ -4,7 +4,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 import stripe
 import os
-import api, api_router
 from routes.api_routes import router as api_router
 #from api import router as api_router
 from routes.admin_routes import router as admin_router
