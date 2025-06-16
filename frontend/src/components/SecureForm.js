@@ -1,21 +1,104 @@
-// frontend/src/components/SecureForm.js
+// frontend/src/components/SecureForm.js - Enhanced version
 import React, { useState, useEffect } from 'react';
 import { csrfManager, sanitizeInput, validateInput } from '../utils/csrf';
+import { useToastContext } from './toast';
 
 const SecureForm = ({ 
   onSubmit, 
   children, 
   validate = true, 
   className = "",
+  requireAuth = false,
   ...props 
 }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
+  const [csrfToken, setCsrfToken] = useState(null);
+  const { showToast } = useToastContext();
+
+  useEffect(() => {
+    // Get CSRF token when component mounts
+    const getCsrfToken = async () => {
+      try {
+        const token = await csrfManager.getToken();
+        setCsrfToken(token);
+      } catch (error) {
+        console.error('Failed to get CSRF token:', error);
+        showToast('Security token failed to load', 'error');
+      }
+    };
+    getCsrfToken();
+  }, [showToast]);
+
+  const validateField = (key, value) => {
+    const errors = {};
+    
+    // Email validation
+    if (key.includes('email') && value) {
+      if (!validateInput.email(value)) {
+        errors[key] = 'Please enter a valid email address';
+      }
+    }
+    
+    // Password validation
+    if (key.includes('password') && value) {
+      const result = validateInput.password(value);
+      if (!result.valid) {
+        errors[key] = result.message;
+      }
+    }
+    
+    // Username validation
+    if (key.includes('username') && value) {
+      const result = validateInput.username(value);
+      if (!result.valid) {
+        errors[key] = result.message;
+      }
+    }
+    
+    // URL validation
+    if (key.includes('url') && value) {
+      const result = validateInput.url(value);
+      if (!result.valid) {
+        errors[key] = result.message;
+      }
+    }
+    
+    // Phone validation
+    if (key.includes('phone') && value) {
+      if (!validateInput.phone(value)) {
+        errors[key] = 'Please enter a valid phone number';
+      }
+    }
+    
+    // Required field validation
+    if (value === '' && key !== 'phone' && key !== 'address') {
+      errors[key] = 'This field is required';
+    }
+    
+    // Length validation for message/description
+    if ((key.includes('message') || key.includes('description')) && value) {
+      if (value.length < 20) {
+        errors[key] = 'Must be at least 20 characters long';
+      }
+      if (value.length > 2000) {
+        errors[key] = 'Must be less than 2000 characters';
+      }
+    }
+    
+    return errors;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     setErrors({});
+
+    if (!csrfToken) {
+      showToast('Security token not available. Please refresh the page.', 'error');
+      setIsSubmitting(false);
+      return;
+    }
 
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData.entries());
@@ -25,38 +108,8 @@ const SecureForm = ({
       const validationErrors = {};
       
       Object.entries(data).forEach(([key, value]) => {
-        if (key.includes('email') && value) {
-          if (!validateInput.email(value)) {
-            validationErrors[key] = 'Invalid email format';
-          }
-        }
-        
-        if (key.includes('password') && value) {
-          const result = validateInput.password(value);
-          if (!result.valid) {
-            validationErrors[key] = result.message;
-          }
-        }
-        
-        if (key.includes('username') && value) {
-          const result = validateInput.username(value);
-          if (!result.valid) {
-            validationErrors[key] = result.message;
-          }
-        }
-        
-        if (key.includes('url') && value) {
-          const result = validateInput.url(value);
-          if (!result.valid) {
-            validationErrors[key] = result.message;
-          }
-        }
-        
-        if (key.includes('phone') && value) {
-          if (!validateInput.phone(value)) {
-            validationErrors[key] = 'Invalid phone format';
-          }
-        }
+        const fieldErrors = validateField(key, value);
+        Object.assign(validationErrors, fieldErrors);
       });
 
       if (Object.keys(validationErrors).length > 0) {
@@ -83,10 +136,14 @@ const SecureForm = ({
     });
 
     try {
-      await onSubmit(sanitizedData);
+      await onSubmit(sanitizedData, csrfToken);
     } catch (error) {
       console.error('Form submission error:', error);
-      setErrors({ general: 'Form submission failed. Please try again.' });
+      if (error.message.includes('CSRF')) {
+        showToast('Security token expired. Please refresh the page.', 'error');
+      } else {
+        setErrors({ general: error.message || 'Form submission failed. Please try again.' });
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -116,7 +173,7 @@ const SecureForm = ({
               }
             }),
             ...(child.type === 'button' && child.props.type === 'submit' && {
-              disabled: isSubmitting
+              disabled: isSubmitting || !csrfToken
             })
           });
         }
@@ -131,112 +188,6 @@ const SecureForm = ({
         )
       )}
     </form>
-  );
-};
-
-// Secure input components
-export const SecureInput = ({ sanitize = 'text', validate: validateType, ...props }) => {
-  const [value, setValue] = useState(props.defaultValue || '');
-  const [error, setError] = useState('');
-
-  const handleChange = (e) => {
-    let newValue = e.target.value;
-    
-    // Apply sanitization
-    switch (sanitize) {
-      case 'email':
-        newValue = sanitizeInput.email(newValue);
-        break;
-      case 'phone':
-        newValue = sanitizeInput.phone(newValue);
-        break;
-      case 'html':
-        newValue = sanitizeInput.html(newValue);
-        break;
-      default:
-        newValue = sanitizeInput.text(newValue);
-    }
-    
-    setValue(newValue);
-    
-    // Apply validation
-    if (validateType && newValue) {
-      const result = validateInput[validateType]?.(newValue);
-      if (result && !result.valid) {
-        setError(result.message);
-      } else {
-        setError('');
-      }
-    }
-    
-    if (props.onChange) {
-      e.target.value = newValue;
-      props.onChange(e);
-    }
-  };
-
-  return (
-    <div>
-      <input 
-        {...props} 
-        value={value}
-        onChange={handleChange}
-        style={{
-          ...props.style,
-          ...(error && { borderColor: '#dc3545' })
-        }}
-      />
-      {error && (
-        <div style={{ color: '#dc3545', fontSize: '0.9rem', marginTop: '0.25rem' }}>
-          {error}
-        </div>
-      )}
-    </div>
-  );
-};
-
-export const SecureTextarea = ({ sanitize = 'html', maxLength = 2000, ...props }) => {
-  const [value, setValue] = useState(props.defaultValue || '');
-  const [charCount, setCharCount] = useState(0);
-
-  const handleChange = (e) => {
-    let newValue = e.target.value;
-    
-    // Apply sanitization
-    if (sanitize === 'html') {
-      newValue = sanitizeInput.html(newValue);
-    } else {
-      newValue = sanitizeInput.text(newValue, maxLength);
-    }
-    
-    if (newValue.length <= maxLength) {
-      setValue(newValue);
-      setCharCount(newValue.length);
-      
-      if (props.onChange) {
-        e.target.value = newValue;
-        props.onChange(e);
-      }
-    }
-  };
-
-  return (
-    <div>
-      <textarea 
-        {...props} 
-        value={value}
-        onChange={handleChange}
-        maxLength={maxLength}
-      />
-      <div style={{ 
-        textAlign: 'right', 
-        fontSize: '0.8rem', 
-        color: charCount > maxLength * 0.9 ? '#dc3545' : '#6c757d',
-        marginTop: '0.25rem'
-      }}>
-        {charCount}/{maxLength}
-      </div>
-    </div>
   );
 };
 

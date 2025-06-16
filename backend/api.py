@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, Request
+from fastapi import APIRouter, HTTPException, Depends, Request, Header
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List
 from datetime import datetime, timezone, timedelta
@@ -20,6 +20,7 @@ from captcha import verify_recaptcha
 from utils.email import send_password_reset_email
 from datetime import datetime, timezone, timedelta
 from middleware.rate_limiter import rate_limit
+from middleware.csrf import csrf_protection
 
 # Import your database connection
 from database.connection import db
@@ -195,6 +196,29 @@ async def send_2fa_email_code(email: str, code: str, user_name: str = "User"):
     from utils.email import send_email
     return await send_email(email, subject, body)
 
+def require_csrf_token(request: Request, x_csrf_token: str = Header(None)):
+    """Validate CSRF token for state-changing operations"""
+    if request.method in {"POST", "PUT", "DELETE", "PATCH"}:
+        if not x_csrf_token:
+            raise HTTPException(status_code=403, detail="CSRF token missing")
+        
+        # Get session info from JWT if available
+        auth_header = request.headers.get("Authorization")
+        session_id = None
+        if auth_header and auth_header.startswith("Bearer "):
+            try:
+                from jose import jwt
+                token = auth_header.split(" ")[1]
+                payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+                session_id = payload.get("user_id")
+            except:
+                session_id = None
+        
+        if not csrf_protection.validate_token(x_csrf_token, session_id):
+            raise HTTPException(status_code=403, detail="Invalid CSRF token")
+    
+    return True
+
 async def get_next_order_number():
     counter = await db.counters.find_one_and_update(
         {"_id": "order_number"},
@@ -206,13 +230,20 @@ async def get_next_order_number():
 
 
 @router.post("/auth/register")
-async def register(user: SecureUser, request: Request):
-    # Rate limiting check
+async def register(user: SecureUser, request: Request, csrf_valid: bool = Depends(require_csrf_token)):
     client_ip = get_client_ip(request)
     if not rate_limiter.is_allowed(f"{client_ip}:register", max_requests=3, window=3600):
         raise HTTPException(status_code=429, detail="Too many registration attempts")
     
-    # Check for existing user
+    # Additional server-side validation
+    if len(user.password) < 8:
+        raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
+    
+    # Check password complexity
+    if not SecurityValidator.validate_password_complexity(user.password):
+        raise HTTPException(status_code=400, detail="Password must contain uppercase, lowercase, number, and special character")
+    
+    # Existing registration logic...
     existing_user = await db.users.find_one({"email": user.email})
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -1121,7 +1152,23 @@ async def upload_avatar(current_user: dict = Depends(get_current_user)):
 
 # Product routes
 @router.post("/products")
-async def create_product(product: SecureProduct, current_user: dict = Depends(get_admin_user)):
+async def create_product(
+    product: SecureProduct, 
+    request: Request,
+    current_user: dict = Depends(get_admin_user),
+    csrf_valid: bool = Depends(require_csrf_token)
+):
+    # Additional validation
+    if product.price <= 0:
+        raise HTTPException(status_code=400, detail="Price must be positive")
+    
+    if product.stock < 0:
+        raise HTTPException(status_code=400, detail="Stock cannot be negative")
+    
+    # Validate image URL
+    if not SecurityValidator.validate_image_url(product.image_url):
+        raise HTTPException(status_code=400, detail="Invalid image URL")
+    
     product_data = product.dict()
     product_data["created_at"] = datetime.utcnow()
     product_data["created_by"] = str(current_user["_id"])
@@ -1386,13 +1433,24 @@ async def get_order(order_id: str, current_user: dict = Depends(get_current_user
     return order
 
 @router.post("/contact")
-async def submit_contact_form(contact_data: SecureContactForm, request: Request):
-    """Handle contact form submissions with security"""
+async def submit_contact_form(
+    contact_data: SecureContactForm, 
+    request: Request,
+    csrf_valid: bool = Depends(require_csrf_token)
+):
     client_ip = get_client_ip(request)
-    
-    # Rate limiting for contact form
     if not rate_limiter.is_allowed(f"{client_ip}:contact", max_requests=3, window=3600):
         raise HTTPException(status_code=429, detail="Too many contact form submissions")
+    
+    # Additional validation
+    if len(contact_data.message.strip()) < 20:
+        raise HTTPException(status_code=400, detail="Message must be at least 20 characters")
+    
+    # Check for spam patterns
+    spam_patterns = ['http://', 'https://', 'www.', '.com', '.net', '.org']
+    message_lower = contact_data.message.lower()
+    if sum(1 for pattern in spam_patterns if pattern in message_lower) > 2:
+        raise HTTPException(status_code=400, detail="Message appears to be spam")
     
     try:
         from utils.email import send_contact_email
@@ -1412,3 +1470,21 @@ async def submit_contact_form(contact_data: SecureContactForm, request: Request)
     except Exception as e:
         print(f"Contact form error: {e}")
         raise HTTPException(status_code=500, detail="Failed to send message")
+
+@router.get("/csrf-token")
+async def get_csrf_token(request: Request):
+    """Get CSRF token for forms"""
+    # Get session ID if user is authenticated
+    session_id = None
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        try:
+            token = auth_header.split(" ")[1]
+            payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+            session_id = payload.get("user_id")
+        except:
+            pass
+    
+    csrf_token = csrf_protection.generate_token(session_id)
+    return {"csrf_token": csrf_token}
+
