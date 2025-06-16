@@ -9,6 +9,13 @@ import os
 from routes.admin_routes import router as admin_router
 from middleware.csrf import csrf_middleware
 from middleware.validation import rate_limiter, get_client_ip
+from routes.auth_routes import router as auth_router
+from routes.product_routes import router as product_router
+from routes.cart_routes import router as cart_router
+from routes.order_routes import router as order_router
+from routes.review_routes import router as review_router
+# Add others as needed...
+from middleware.rate_limiter import RateLimiter
 
 # Configuration
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
@@ -22,6 +29,11 @@ app = FastAPI(
     title="E-commerce API",
     docs_url="/api/docs" if os.getenv("ENVIRONMENT") == "development" else None,
     redoc_url="/api/redoc" if os.getenv("ENVIRONMENT") == "development" else None,
+    app.include_router(auth_router, prefix="/api"),
+    app.include_router(cart_router, prefix="/api"),
+    app.include_router(order_router, prefix="/api"),
+    app.include_router(review_router, prefix="/api"),
+    app.include_router(admin_router, prefix="/api")
 )
 
 # Security middleware
