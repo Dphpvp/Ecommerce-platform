@@ -47,7 +47,7 @@ class User(BaseModel):
     password: str
     full_name: str
     address: Optional[str] = None
-    phone: Optional[str] = None
+    phone: constr(min_length=5, max_length=20)
 
 class UserLogin(BaseModel):
     identifier: str  # Can be email, username, or phone
@@ -96,7 +96,7 @@ class PasswordChange(BaseModel):
 class UserProfileUpdate(BaseModel):
     full_name: Optional[str] = None
     email: Optional[str] = None
-    phone: Optional[str] = None
+    phone: constr(min_length=5, max_length=20)
     address: Optional[str] = None
     profile_image_url: Optional[str] = None
 
@@ -1225,7 +1225,7 @@ async def get_product(product_id: str):
 
 # Cart routes
 @router.post("/cart/add")
-async def add_to_cart(cart_item: CartItem, current_user: dict = Depends(get_current_user_from_session)):
+async def add_to_cart(cart_item: CartItem, current_user: dict = Depends(get_current_user)):
     user_id = str(current_user["_id"])
     
     product = await db.products.find_one({"_id": ObjectId(cart_item.product_id)})
