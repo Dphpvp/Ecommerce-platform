@@ -47,7 +47,9 @@ class User(BaseModel):
     password: str
     full_name: str
     address: Optional[str] = None
-    phone: constr(min_length=5, max_length=20)
+
+class UserCreate(BaseModel):
+    phone: constr(strip_whitespace=True, min_length=10, max_length=20)
 
 class UserLogin(BaseModel):
     identifier: str  # Can be email, username, or phone
@@ -96,7 +98,7 @@ class PasswordChange(BaseModel):
 class UserProfileUpdate(BaseModel):
     full_name: Optional[str] = None
     email: Optional[str] = None
-    phone: constr(min_length=5, max_length=20)
+    phone: constr(min_length=10, max_length=20)
     address: Optional[str] = None
     profile_image_url: Optional[str] = None
 
