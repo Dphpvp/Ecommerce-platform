@@ -22,19 +22,19 @@ STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
 FRONTEND_URL = os.getenv("FRONTEND_URL")
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "vergishop.vercel.app,vs1.vercel.app").split(",")
 
-
-
 # Initialize FastAPI with security headers
 app = FastAPI(
     title="E-commerce API",
     docs_url="/api/docs" if os.getenv("ENVIRONMENT") == "development" else None,
     redoc_url="/api/redoc" if os.getenv("ENVIRONMENT") == "development" else None,
-    app.include_router(auth_router, prefix="/api"),
-    app.include_router(cart_router, prefix="/api"),
-    app.include_router(order_router, prefix="/api"),
-    app.include_router(review_router, prefix="/api"),
-    app.include_router(admin_router, prefix="/api")
 )
+
+# Include routers after app creation
+app.include_router(auth_router, prefix="/api")
+app.include_router(cart_router, prefix="/api")
+app.include_router(order_router, prefix="/api")
+app.include_router(review_router, prefix="/api")
+app.include_router(admin_router, prefix="/api")
 
 # Security middleware
 app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS)
@@ -111,10 +111,6 @@ async def security_headers_middleware(request: Request, call_next):
 # Stripe configuration
 if STRIPE_SECRET_KEY:
     stripe.api_key = STRIPE_SECRET_KEY
-
-# Include routers
-#app.include_router(api_router)
-app.include_router(admin_router)
 
 # Health check endpoints
 @app.get("/")
