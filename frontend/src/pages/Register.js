@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext'; // ⚠️ Not used – can be removed if unnecessary
 import { useToastContext } from '../components/toast';
 import SecureForm from '../components/SecureForm';
 import { csrfManager } from '../utils/csrf';
@@ -14,7 +13,7 @@ const Register = () => {
     setLoading(true);
     try {
       const response = await csrfManager.makeSecureRequest(
-        `${import.meta.env.VITE_API_BASE_URL}/auth/register`, // ✅ Vite uses import.meta.env
+        `${process.env.REACT_APP_API_BASE_URL}/auth/register`,
         {
           method: 'POST',
           headers: {
@@ -73,7 +72,6 @@ const Register = () => {
               placeholder="Password (min 8 chars with uppercase, lowercase, number, special char)"
               minLength={8}
               maxLength={128}
-              pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*(),.?\":{}|<>]).{8,}$"
               title="Password must be at least 8 characters with uppercase, lowercase, number, and special character"
               required
             />
