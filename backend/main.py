@@ -99,7 +99,7 @@ if STRIPE_SECRET_KEY:
     stripe.api_key = STRIPE_SECRET_KEY
 
 # Include routers
-app.include_router(api_router, prefix="/api")
+app.include_router(api_router)
 app.include_router(admin_router)
 
 # Health check endpoints
