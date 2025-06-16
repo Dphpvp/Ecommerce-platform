@@ -15,6 +15,8 @@ STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
 FRONTEND_URL = os.getenv("FRONTEND_URL")
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "vergishop.vercel.app,vs1.vercel.app").split(",")
 
+
+
 # Initialize FastAPI with security headers
 app = FastAPI(
     title="E-commerce API",
