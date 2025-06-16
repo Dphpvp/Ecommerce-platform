@@ -5,7 +5,6 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 import stripe
 import api
 import os
-from routes.api_routes import router as api_router
 #from api import router as api_router
 from routes.admin_routes import router as admin_router
 from middleware.csrf import csrf_middleware
