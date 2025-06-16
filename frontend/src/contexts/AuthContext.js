@@ -6,27 +6,37 @@ const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('token'));
   const [loading, setLoading] = useState(true);
   const [requires2FA, setRequires2FA] = useState(false);
   const [tempToken, setTempToken] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   
   // Auto-logout state
   const timeoutRef = useRef(null);
   const TIMEOUT_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
 
-  const logout = useCallback(() => {
-    localStorage.removeItem('token');
-    setToken(null);
-    setUser(null);
-    setRequires2FA(false);
-    setTempToken(null);
-    setLoading(false);
-    
-    // Clear auto-logout timer
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
+  const logout = useCallback(async () => {
+    try {
+      await fetch(`${API_BASE}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setUser(null);
+      setRequires2FA(false);
+      setTempToken(null);
+      setLoading(false);
+      
+      // Clear auto-logout timer
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
     }
   }, []);
 
@@ -72,23 +82,20 @@ export const AuthProvider = ({ children }) => {
   }, [user, handleActivity, resetTimeout]);
 
   const fetchUser = useCallback(async () => {
-    if (!token) {
-      setLoading(false);
-      return;
-    }
-
     try {
       const response = await fetch(`${API_BASE}/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` }
+        credentials: 'include', // Include cookies
+        headers: {
+          'Content-Type': 'application/json',
+        }
       });
       
       if (response.ok) {
         const userData = await response.json();
         setUser(userData);
       } else if (response.status === 401) {
-        // Token is invalid, logout without retry
-        logout();
-        return;
+        // Session expired or invalid
+        setUser(null);
       }
     } catch (error) {
       console.error('Failed to fetch user:', error);
@@ -96,16 +103,14 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setLoading(false);
     }
-  }, [token, logout]);
+  }, []);
 
-  // FIX: Add this useEffect to fetch user on app load
+  // Check user session on app load
   useEffect(() => {
     fetchUser();
   }, [fetchUser]);
 
-  const login = (token, userData) => {
-    localStorage.setItem('token', token);
-    setToken(token);
+  const login = (userData) => {
     setUser(userData);
     setRequires2FA(false);
     setTempToken(null);
@@ -122,6 +127,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await fetch(`${API_BASE}/auth/register`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userData)
       });
@@ -139,10 +145,18 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Get token for API calls that still need it (backward compatibility)
+  const getToken = useCallback(() => {
+    // For session-based auth, we don't expose tokens
+    // The session cookie handles authentication
+    return null;
+  }, []);
+
   return (
     <AuthContext.Provider value={{ 
       user, 
-      token, 
+      token: null, // No longer expose token
+      getToken,
       login, 
       register, 
       logout, 

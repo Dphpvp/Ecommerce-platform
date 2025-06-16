@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import TwoFactorVerification from '../components/TwoFactor/TwoFactorVerification';
 import { useToastContext } from '../components/toast';
+import { secureFetch } from '../utils/csrf';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
@@ -15,7 +16,7 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [show2FA, setShow2FA] = useState(false);
   const [tempToken, setTempToken] = useState('');
-  const { login } = useAuth();
+  const { login, refetchUser } = useAuth();
   const { showToast } = useToastContext();
   const navigate = useNavigate();
 
@@ -48,9 +49,8 @@ const Login = () => {
 
   const handleGoogleLogin = async (response) => {
     try {
-      const apiResponse = await fetch(`${API_BASE}/auth/google`, {
+      const apiResponse = await secureFetch(`${API_BASE}/auth/google`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: response.credential }),
       });
 
@@ -61,7 +61,8 @@ const Login = () => {
           setTempToken(data.temp_token);
           setShow2FA(true);
         } else {
-          login(data.token, data.user);
+          login(data.user);
+          await refetchUser(); // Fetch user data from session
           navigate('/');
         }
       } else {
@@ -85,9 +86,8 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE}/auth/login`, {
+      const response = await secureFetch(`${API_BASE}/auth/login`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 
@@ -95,13 +95,12 @@ const Login = () => {
 
       if (response.ok) {
         if (data.requires_2fa) {
-          // User has 2FA enabled - show 2FA verification
-          setTempToken(data.temp_token);
+          // Session cookie is already set, just need 2FA
           setShow2FA(true);
           showToast('Please enter your 2FA code', 'info');
         } else {
-          // Normal login
-          login(data.token, data.user);
+          // Session cookie is set, update local state
+          login(data.user);
           navigate('/');
         }
       } else {

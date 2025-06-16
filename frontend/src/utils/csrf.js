@@ -14,7 +14,9 @@ class CSRFManager {
     }
 
     try {
-      const response = await fetch(`${API_BASE}/csrf-token`);
+      const response = await fetch(`${API_BASE}/csrf-token`, {
+        credentials: 'include'
+      });
       if (response.ok) {
         const data = await response.json();
         this.token = data.csrf_token;
@@ -40,21 +42,105 @@ class CSRFManager {
       headers['X-CSRF-Token'] = token;
     }
 
-    // Add auth token if available
-    const authToken = localStorage.getItem('token');
-    if (authToken) {
-      headers['Authorization'] = `Bearer ${authToken}`;
+    // Add request signing for state-changing operations
+    if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(options.method?.toUpperCase())) {
+      const timestamp = Math.floor(Date.now() / 1000);
+      const signature = await requestSigner.signRequest(
+        options.method || 'POST',
+        new URL(url).pathname,
+        options.body || '',
+        timestamp
+      );
+      
+      headers['X-Request-Signature'] = signature;
+      headers['X-Request-Timestamp'] = timestamp.toString();
     }
 
     return fetch(url, {
       ...options,
       headers,
+      credentials: 'include', // Always include cookies for session
     });
   }
 }
 
-// Create singleton instance
+// Request signing implementation
+class RequestSigner {
+  constructor() {
+    // In production, this would be derived from a secure key exchange
+    // For now, using a placeholder that matches backend
+    this.secret = process.env.REACT_APP_SESSION_SECRET || 'default-secret';
+  }
+
+  async signRequest(method, path, body, timestamp) {
+    const message = `${method}|${path}|${body}|${timestamp}`;
+    
+    // Use Web Crypto API for HMAC-SHA256
+    const encoder = new TextEncoder();
+    const key = await crypto.subtle.importKey(
+      'raw',
+      encoder.encode(this.secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    );
+    
+    const signature = await crypto.subtle.sign(
+      'HMAC',
+      key,
+      encoder.encode(message)
+    );
+    
+    // Convert to hex string
+    return Array.from(new Uint8Array(signature))
+      .map(b => b.toString(16).padStart(2, '0'))
+      .join('');
+  }
+
+  verifyTimestamp(timestamp) {
+    const currentTime = Math.floor(Date.now() / 1000);
+    const timeDiff = Math.abs(currentTime - timestamp);
+    // Allow 5 minutes time difference
+    return timeDiff <= 300;
+  }
+}
+
+// Create singleton instances
 export const csrfManager = new CSRFManager();
+export const requestSigner = new RequestSigner();
+
+// Updated secure fetch wrapper
+export const secureFetch = async (url, options = {}) => {
+  const defaultOptions = {
+    credentials: 'include', // Always include cookies
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  };
+
+  // Get CSRF token for state-changing operations
+  if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(options.method?.toUpperCase())) {
+    const token = await csrfManager.getToken();
+    if (token) {
+      defaultOptions.headers['X-CSRF-Token'] = token;
+    }
+
+    // Add request signing
+    const timestamp = Math.floor(Date.now() / 1000);
+    const signature = await requestSigner.signRequest(
+      options.method,
+      new URL(url).pathname,
+      options.body || '',
+      timestamp
+    );
+    
+    defaultOptions.headers['X-Request-Signature'] = signature;
+    defaultOptions.headers['X-Request-Timestamp'] = timestamp.toString();
+  }
+
+  return fetch(url, { ...defaultOptions, ...options });
+};
 
 // Input sanitization utilities
 export const sanitizeInput = {
