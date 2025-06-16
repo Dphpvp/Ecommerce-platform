@@ -1,4 +1,4 @@
-# backend/middleware/session.py
+# backend/middleware/session.py - Fixed version
 import hmac
 import hashlib
 import time
@@ -11,7 +11,9 @@ import os
 
 JWT_SECRET = os.getenv("JWT_SECRET", "your-jwt-secret-key")
 SESSION_SECRET = os.getenv("SESSION_SECRET", secrets.token_hex(32))
-COOKIE_DOMAIN = os.getenv("COOKIE_DOMAIN", "vergishop.vercel.app","vs1.vercel.app")
+
+# Fixed cookie domain configuration
+COOKIE_DOMAIN = os.getenv("COOKIE_DOMAIN")  # Will be None for localhost
 SECURE_COOKIES = os.getenv("ENVIRONMENT") == "production"
 
 class SecureSessionManager:
@@ -30,32 +32,48 @@ class SecureSessionManager:
     
     def set_session_cookie(self, response: Response, token: str):
         """Set secure httpOnly cookie"""
-        response.set_cookie(
-            key="session_token",
-            value=token,
-            max_age=8 * 60 * 60,  # 8 hours
-            httponly=True,
-            secure=SECURE_COOKIES,
-            samesite="strict" if SECURE_COOKIES else "lax",
-            domain=COOKIE_DOMAIN if SECURE_COOKIES else None
-        )
+        cookie_kwargs = {
+            "key": "session_token",
+            "value": token,
+            "max_age": 8 * 60 * 60,  # 8 hours
+            "httponly": True,
+            "secure": SECURE_COOKIES,
+            "samesite": "strict" if SECURE_COOKIES else "lax",
+        }
+        
+        # Only set domain if specified and in production
+        if COOKIE_DOMAIN and SECURE_COOKIES:
+            cookie_kwargs["domain"] = COOKIE_DOMAIN
+            
+        response.set_cookie(**cookie_kwargs)
     
     def clear_session_cookie(self, response: Response):
         """Clear session cookie"""
-        response.delete_cookie(
-            key="session_token",
-            domain=COOKIE_DOMAIN if SECURE_COOKIES else None,
-            secure=SECURE_COOKIES,
-            httponly=True,
-            samesite="strict" if SECURE_COOKIES else "lax"
-        )
+        cookie_kwargs = {
+            "key": "session_token",
+            "secure": SECURE_COOKIES,
+            "httponly": True,
+            "samesite": "strict" if SECURE_COOKIES else "lax"
+        }
+        
+        if COOKIE_DOMAIN and SECURE_COOKIES:
+            cookie_kwargs["domain"] = COOKIE_DOMAIN
+            
+        response.delete_cookie(**cookie_kwargs)
     
     def get_session_token(self, request: Request) -> str:
-        """Extract token from cookie"""
+        """Extract token from cookie or Authorization header"""
+        # Try cookie first
         token = request.cookies.get("session_token")
-        if not token:
-            raise HTTPException(status_code=401, detail="No session token")
-        return token
+        if token:
+            return token
+            
+        # Fallback to Authorization header
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            return auth_header.split(" ")[1]
+            
+        raise HTTPException(status_code=401, detail="No session token")
     
     def verify_session_token(self, token: str) -> dict:
         """Verify and decode session token"""
@@ -118,18 +136,24 @@ async def get_current_user_from_session(request: Request):
     from database.connection import db
     from bson import ObjectId
     
-    token = session_manager.get_session_token(request)
-    payload = session_manager.verify_session_token(token)
-    
-    user_id = payload.get("user_id")
-    if not user_id:
-        raise HTTPException(status_code=401, detail="Invalid session")
-    
-    user = await db.users.find_one({"_id": ObjectId(user_id)})
-    if not user:
-        raise HTTPException(status_code=401, detail="User not found")
-    
-    return user
+    try:
+        token = session_manager.get_session_token(request)
+        payload = session_manager.verify_session_token(token)
+        
+        user_id = payload.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Invalid session")
+        
+        user = await db.users.find_one({"_id": ObjectId(user_id)})
+        if not user:
+            raise HTTPException(status_code=401, detail="User not found")
+        
+        return user
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Session verification error: {e}")
+        raise HTTPException(status_code=401, detail="Session verification failed")
 
 async def verify_request_signature(request: Request, body: str = ""):
     """Middleware to verify request signatures"""

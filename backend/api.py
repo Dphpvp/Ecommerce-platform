@@ -16,13 +16,16 @@ import io
 import base64
 import requests
 import secrets
-from captcha import verify_recaptcha
-from middleware.rate_limiter import rate_limit
+
+# Fixed imports
+from captcha.verification import verify_recaptcha
+from middleware.rate_limiter import rate_limiter
 from middleware.csrf import csrf_protection
+from middleware.session import session_manager  # Fixed import
 from database.connection import db
 from dependencies import get_current_user, get_admin_user, security
 
-# 🆕 ADD EMAIL IMPORT
+# Email import
 from utils.email import send_order_confirmation_email, send_admin_order_notification, send_verification_email, send_password_reset_email
 
 router = APIRouter()
@@ -38,7 +41,8 @@ from middleware.validation import (
 JWT_SECRET = os.getenv("JWT_SECRET", "your-jwt-secret-key")
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
-stripe.api_key = STRIPE_SECRET_KEY
+if STRIPE_SECRET_KEY:
+    stripe.api_key = STRIPE_SECRET_KEY
 
 # Pydantic models
 class User(BaseModel):
@@ -47,9 +51,10 @@ class User(BaseModel):
     password: str
     full_name: str
     address: Optional[str] = None
+    phone: Optional[str] = None
 
 class UserCreate(BaseModel):
-    phone: constr(strip_whitespace=True, min_length=10, max_length=20)
+    phone: Optional[constr(strip_whitespace=True, min_length=10, max_length=20)] = None
 
 class UserLogin(BaseModel):
     identifier: str  # Can be email, username, or phone
@@ -77,7 +82,7 @@ class PaymentIntent(BaseModel):
 class ContactForm(BaseModel):
     name: str
     email: str
-    phone: int = ""
+    phone: str = ""
     message: str
     
 class PasswordResetRequest(BaseModel):
@@ -94,21 +99,15 @@ class PasswordChange(BaseModel):
     confirm_password: str
     recaptcha_response: str
 
-# 🆕 NEW: Profile Update Models
+# Profile Update Models
 class UserProfileUpdate(BaseModel):
     full_name: Optional[str] = None
     email: Optional[str] = None
-    phone: constr(min_length=10, max_length=20)
+    phone: Optional[constr(min_length=10, max_length=20)] = None
     address: Optional[str] = None
     profile_image_url: Optional[str] = None
 
-class PasswordChange(BaseModel):
-    old_password: str
-    new_password: str
-    confirm_password: str
-
 # 2FA Models
-
 class TwoFactorSetup(BaseModel):
     code: str
     
@@ -205,6 +204,37 @@ def require_csrf_token(request: Request, x_csrf_token: str = Header(None)):
         session_id = None
         if auth_header and auth_header.startswith("Bearer "):
             try:
+                token = auth_header.split(" ")[1]
+                payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+                session_id = payload.get("user_id")
+            except:
+                session_id = None
+        
+        if not csrf_protection.validate_token(x_csrf_token, session_id):
+            raise HTTPException(status_code=403, detail="Invalid CSRF token")
+    
+    return True
+
+async def get_next_order_number():
+    counter = await db.counters.find_one_and_update(
+        {"_id": "order_number"},
+        {"$inc": {"value": 1}},
+        upsert=True,
+        return_document=True
+    )
+    return counter["value"]
+
+def require_csrf_token(request: Request, x_csrf_token: str = Header(None)):
+    """Validate CSRF token for state-changing operations"""
+    if request.method in {"POST", "PUT", "DELETE", "PATCH"}:
+        if not x_csrf_token:
+            raise HTTPException(status_code=403, detail="CSRF token missing")
+        
+        # Get session info from JWT if available
+        auth_header = request.headers.get("Authorization")
+        session_id = None
+        if auth_header and auth_header.startswith("Bearer "):
+            try:
                 from jose import jwt
                 token = auth_header.split(" ")[1]
                 payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
@@ -241,7 +271,7 @@ async def register(user: SecureUser, request: Request, csrf_valid: bool = Depend
     if not SecurityValidator.validate_password_complexity(user.password):
         raise HTTPException(status_code=400, detail="Password must contain uppercase, lowercase, number, and special character")
     
-    # Existing registration logic...
+    # Check existing users
     existing_user = await db.users.find_one({"email": user.email})
     if existing_user:
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -259,8 +289,8 @@ async def register(user: SecureUser, request: Request, csrf_valid: bool = Depend
         "email": user.email,
         "password": hashed_password,
         "full_name": user.full_name,
-        "address": user.address,
-        "phone": user.phone,
+        "address": user.address or "",
+        "phone": user.phone or "",
         "is_admin": False,
         "email_verified": False,
         "verification_token": verification_token,
@@ -299,10 +329,9 @@ async def verify_email(request_data: dict):
         if user.get("email_verified", False):
             return {"message": "Email already verified"}
         
-        # Fix datetime comparison - ensure both are timezone-aware
+        # Check token expiry
         token_created = user.get("verification_token_created")
         if token_created:
-            # Make sure both datetimes have timezone info
             if isinstance(token_created, datetime):
                 if token_created.tzinfo is None:
                     token_created = token_created.replace(tzinfo=timezone.utc)
@@ -336,7 +365,6 @@ async def resend_verification(email_data: ResendVerification):
     try:
         print(f"📧 Attempting to resend verification for: {email_data.email}")
         
-        # Find user by email regardless of verification status
         user = await db.users.find_one({"email": email_data.email})
         
         if not user:
@@ -363,12 +391,8 @@ async def resend_verification(email_data: ResendVerification):
         frontend_url = os.getenv('FRONTEND_URL')
         verification_url = f"{frontend_url}/verify-email?token={verification_token}"
         
-        print(f"📧 Sending verification email to: {email_data.email}")
-        print(f"🔗 Verification URL: {verification_url}")
-        
         await send_verification_email(email_data.email, user.get("full_name", "User"), verification_url)
         
-        print(f"✅ Verification email sent successfully to: {email_data.email}")
         return {"message": "Verification email sent"}
         
     except HTTPException:
@@ -376,6 +400,7 @@ async def resend_verification(email_data: ResendVerification):
     except Exception as e:
         print(f"❌ Error in resend_verification: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to send verification email: {str(e)}")
+
 
 # Also add a debug route
 @router.get("/auth/debug-user/{email}")
@@ -1504,10 +1529,15 @@ async def submit_contact_form(
         print(f"Contact form error: {e}")
         raise HTTPException(status_code=500, detail="Failed to send message")
 
+@router.post("/auth/logout")
+async def logout(response: Response, current_user: dict = Depends(get_current_user)):
+    """Logout and clear session"""
+    session_manager.clear_session_cookie(response)
+    return {"message": "Logged out successfully"}
+
 @router.get("/csrf-token")
 async def get_csrf_token(request: Request):
     """Get CSRF token for forms"""
-    # Get session ID if user is authenticated
     session_id = None
     auth_header = request.headers.get("Authorization")
     if auth_header and auth_header.startswith("Bearer "):
@@ -1520,9 +1550,3 @@ async def get_csrf_token(request: Request):
     
     csrf_token = csrf_protection.generate_token(session_id)
     return {"csrf_token": csrf_token}
-
-@router.post("/auth/logout")
-async def logout(response: Response, current_user: dict = Depends(get_current_user)):
-    """Logout and clear session"""
-    session_manager.clear_session_cookie(response)
-    return {"message": "Logged out successfully"}

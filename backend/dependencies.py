@@ -3,7 +3,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import jwt
 from bson import ObjectId
 import os
-
+from middleware.session import session_manager
 # Import database from your database connection file
 from database.connection import db
 
@@ -12,9 +12,10 @@ JWT_SECRET = os.getenv("JWT_SECRET", "your-jwt-secret")
 
 security = HTTPBearer()
 
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
+async def get_current_user(request: Request):
     try:
-        payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=["HS256"])
+        token = session_manager.get_session_token(request)
+        payload = session_manager.verify_session_token(token)
         user_id = payload.get("user_id")
         if user_id is None:
             raise HTTPException(status_code=401, detail="Invalid token")

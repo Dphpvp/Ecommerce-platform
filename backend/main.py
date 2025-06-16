@@ -1,52 +1,50 @@
-# backend/main.py - Updated with security middleware
+# backend/main.py - Fixed version
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 import stripe
-import api
 import os
-#from api import router as api_router
+
+# Import API router properly
+from api import router as api_router
 from routes.admin_routes import router as admin_router
 from middleware.csrf import csrf_middleware
 from middleware.validation import rate_limiter, get_client_ip
-from routes.auth_routes import router as auth_router
-from routes.product_routes import router as product_router
-from routes.cart_routes import router as cart_router
-from routes.order_routes import router as order_router
-from routes.review_routes import router as review_router
-# Add others as needed...
 from middleware.rate_limiter import RateLimiter
 
 # Configuration
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
-FRONTEND_URL = os.getenv("FRONTEND_URL")
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "vergishop.vercel.app,vs1.vercel.app").split(",")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
+ALLOWED_HOSTS_STR = os.getenv("ALLOWED_HOSTS", "vergishop.vercel.app,vs1.vercel.app")
+ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS_STR.split(",") if host.strip()]
 
-# Initialize FastAPI with security headers
+# Add localhost for development
+if os.getenv("ENVIRONMENT") == "development":
+    ALLOWED_HOSTS.extend(["localhost", "127.0.0.1"])
+
+# Initialize FastAPI
 app = FastAPI(
     title="E-commerce API",
     docs_url="/api/docs" if os.getenv("ENVIRONMENT") == "development" else None,
     redoc_url="/api/redoc" if os.getenv("ENVIRONMENT") == "development" else None,
 )
 
-# Include routers after app creation
-app.include_router(auth_router, prefix="/api")
-app.include_router(cart_router, prefix="/api")
-app.include_router(order_router, prefix="/api")
-app.include_router(review_router, prefix="/api")
-app.include_router(admin_router, prefix="/api")
+# Include routers
+app.include_router(api_router, prefix="/api")
+app.include_router(admin_router)
 
 # Security middleware
-app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS)
+if ALLOWED_HOSTS:
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS)
 
-# CORS configuration with stricter settings
+# CORS configuration
 origins = [
     "https://vergishop.vercel.app",
     "https://vs1.vercel.app"
 ]
 
-# if os.getenv("ENVIRONMENT") == "development":
-#     origins.extend(["http://localhost:3000", "http://127.0.0.1:3000"])
+if os.getenv("ENVIRONMENT") == "development":
+    origins.extend(["http://localhost:3000", "http://127.0.0.1:3000"])
 
 app.add_middleware(
     CORSMiddleware,
@@ -67,10 +65,10 @@ async def rate_limit_middleware(request: Request, call_next):
     sensitive_endpoints = ["/api/auth/login", "/api/auth/register", "/api/contact"]
     
     if any(request.url.path.startswith(endpoint) for endpoint in sensitive_endpoints):
-        if not rate_limiter.is_allowed(f"{client_ip}:sensitive", max_requests=5, window=300):  # 5 requests per 5 minutes
+        if not rate_limiter.is_allowed(f"{client_ip}:sensitive", max_requests=5, window=300):
             raise HTTPException(status_code=429, detail="Too many requests")
     else:
-        if not rate_limiter.is_allowed(f"{client_ip}:general", max_requests=100, window=60):  # 100 requests per minute
+        if not rate_limiter.is_allowed(f"{client_ip}:general", max_requests=100, window=60):
             raise HTTPException(status_code=429, detail="Too many requests")
     
     response = await call_next(request)
@@ -155,13 +153,13 @@ async def startup_event():
         # Users indexes
         await db.users.create_index("email", unique=True)
         await db.users.create_index("username", unique=True)
-        await db.users.create_index("phone", unique=True)
+        await db.users.create_index("phone", sparse=True)  # Changed to sparse for optional field
         
         # Orders indexes
         await db.orders.create_index("user_id")
         await db.orders.create_index("status")
         await db.orders.create_index("created_at")
-        await db.orders.create_index("order_number")
+        await db.orders.create_index("order_number", unique=True)
         
         # Cart indexes
         await db.cart.create_index("user_id")
@@ -175,7 +173,6 @@ async def startup_event():
     # Configuration status check
     email_user = os.getenv("EMAIL_USER")
     email_password = os.getenv("EMAIL_PASSWORD")
-    admin_email = os.getenv("ADMIN_EMAIL")
     csrf_secret = os.getenv("CSRF_SECRET")
     
     if email_user and email_password:
