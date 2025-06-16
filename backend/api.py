@@ -20,7 +20,7 @@ from captcha import verify_recaptcha
 from middleware.rate_limiter import rate_limit
 from middleware.csrf import csrf_protection
 from database.connection import db
-from dependencies import get_current_user, get_admin_user, security, get_current_user_from_session
+from dependencies import get_current_user, get_admin_user, security
 
 # 🆕 ADD EMAIL IMPORT
 from utils.email import send_order_confirmation_email, send_admin_order_notification, send_verification_email, send_password_reset_email
