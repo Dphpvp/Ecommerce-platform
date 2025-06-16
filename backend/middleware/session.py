@@ -11,7 +11,7 @@ import os
 
 JWT_SECRET = os.getenv("JWT_SECRET", "your-jwt-secret-key")
 SESSION_SECRET = os.getenv("SESSION_SECRET", secrets.token_hex(32))
-COOKIE_DOMAIN = os.getenv("COOKIE_DOMAIN", "localhost")
+COOKIE_DOMAIN = os.getenv("COOKIE_DOMAIN", "vergishop.vercel.app","vs1.vercel.app")
 SECURE_COOKIES = os.getenv("ENVIRONMENT") == "production"
 
 class SecureSessionManager:

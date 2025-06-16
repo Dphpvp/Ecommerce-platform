@@ -17,15 +17,13 @@ import base64
 import requests
 import secrets
 from captcha import verify_recaptcha
-from utils.email import send_password_reset_email
-from datetime import datetime, timezone, timedelta
 from middleware.rate_limiter import rate_limit
 from middleware.csrf import csrf_protection
 from database.connection import db
-from dependencies import get_current_user, get_admin_user, security
+from dependencies import get_current_user, get_admin_user, security, get_current_user_from_session
 
 # 🆕 ADD EMAIL IMPORT
-from utils.email import send_order_confirmation_email, send_admin_order_notification, send_verification_email
+from utils.email import send_order_confirmation_email, send_admin_order_notification, send_verification_email, send_password_reset_email
 
 router = APIRouter()
 
@@ -959,7 +957,7 @@ async def google_login(google_login: GoogleLogin):
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/auth/me")
-async def get_me(current_user: dict = Depends(get_current_user_from_session)):
+async def get_me(current_user: dict = Depends(get_current_user)):
     return {
         "id": str(current_user["_id"]),
         "username": current_user["username"],
