@@ -1452,7 +1452,7 @@ async def get_orders(current_user: dict = Depends(get_current_user)):
 
 
 @router.get("/orders/{order_id}")
-async def get_orders(current_user: dict = Depends(get_current_user), order_id: str):
+async def get_orders(current_user: dict = Depends(get_current_user)):
     user_id = str(current_user["_id"])
     
     order = await db.orders.find_one({"_id": ObjectId(order_id), "user_id": user_id})
