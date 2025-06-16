@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends, Request, Header, Response
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, constr
 from typing import Optional, List
 from datetime import datetime, timezone, timedelta
 from jose import jwt

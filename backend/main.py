@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 import stripe
 import os
+import api
 #from api import router as api_router
 from routes.admin_routes import router as admin_router
 from middleware.csrf import csrf_middleware
@@ -12,7 +13,7 @@ from middleware.validation import rate_limiter, get_client_ip
 # Configuration
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
 FRONTEND_URL = os.getenv("FRONTEND_URL")
-ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1,vergishop.vercel.app,vs1.vercel.app").split(",")
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "vergishop.vercel.app,vs1.vercel.app").split(",")
 
 # Initialize FastAPI with security headers
 app = FastAPI(
@@ -30,8 +31,8 @@ origins = [
     "https://vs1.vercel.app"
 ]
 
-if os.getenv("ENVIRONMENT") == "development":
-    origins.extend(["http://localhost:3000", "http://127.0.0.1:3000"])
+# if os.getenv("ENVIRONMENT") == "development":
+#     origins.extend(["http://localhost:3000", "http://127.0.0.1:3000"])
 
 app.add_middleware(
     CORSMiddleware,
