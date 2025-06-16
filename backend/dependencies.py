@@ -1,21 +1,17 @@
-from fastapi import Depends, HTTPException
+from fastapi import Depends, HTTPException, Request  # Add Request import
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from jose import jwt
+from jose import jwt, JWTError
 from bson import ObjectId
 import os
-from middleware.session import session_manager
-# Import database from your database connection file
 from database.connection import db
 
 # Configuration
-JWT_SECRET = os.getenv("JWT_SECRET", "your-jwt-secret")
-
+JWT_SECRET = os.getenv("JWT_SECRET", "your-jwt-secret-key")
 security = HTTPBearer()
 
-async def get_current_user(request: Request):
+async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     try:
-        token = session_manager.get_session_token(request)
-        payload = session_manager.verify_session_token(token)
+        payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=["HS256"])
         user_id = payload.get("user_id")
         if user_id is None:
             raise HTTPException(status_code=401, detail="Invalid token")
@@ -27,9 +23,9 @@ async def get_current_user(request: Request):
         return user
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=401, detail="Token expired")
-    except jwt.JWTError:
+    except JWTError:
         raise HTTPException(status_code=401, detail="Invalid token")
-    
+
 async def get_admin_user(current_user: dict = Depends(get_current_user)):
     if not current_user.get("is_admin", False):
         raise HTTPException(status_code=403, detail="Admin access required")

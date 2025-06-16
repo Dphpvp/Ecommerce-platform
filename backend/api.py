@@ -16,12 +16,10 @@ import io
 import base64
 import requests
 import secrets
-
-# Fixed imports
-from captcha.verification import verify_recaptcha
+from captcha import verify_recaptcha
 from middleware.rate_limiter import rate_limiter
 from middleware.csrf import csrf_protection
-from middleware.session import session_manager  # Fixed import
+from middleware.session import session_manager  
 from database.connection import db
 from dependencies import get_current_user, get_admin_user, security
 

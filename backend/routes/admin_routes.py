@@ -5,9 +5,8 @@ import motor.motor_asyncio
 from datetime import datetime
 import re
 from urllib.parse import unquote
-from dependencies import get_current_user, db
 from api import Product
-
+from dependencies import get_admin_user
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
 # Admin middleware

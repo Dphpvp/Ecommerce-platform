@@ -69,7 +69,6 @@ from bson import ObjectId
 from datetime import datetime
 import re
 from urllib.parse import unquote
-from dependencies import get_current_user  # Fixed: correct import
 from database.connection import db  # Fixed: correct import
 
 # backend/middleware/validation.py - Fix phone validation

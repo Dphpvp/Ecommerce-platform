@@ -136,36 +136,25 @@ async def get_csrf_token():
 # Startup event
 @app.on_event("startup")
 async def startup_event():
-    """Create indexes and print configuration status on startup"""
+    """Simplified startup without complex imports"""
     print("🚀 E-commerce Backend Starting Up...")
-    print("=" * 50)
     
-    # Create database indexes
     try:
         from database.connection import db
         
-        # Products indexes
-        await db.products.create_index("category")
-        await db.products.create_index("name")
-        await db.products.create_index("price")
-        await db.products.create_index([("name", "text"), ("description", "text")])
-        
-        # Users indexes
+        # Create basic indexes only
         await db.users.create_index("email", unique=True)
-        await db.users.create_index("username", unique=True)
-        await db.users.create_index("phone", sparse=True)  # Changed to sparse for optional field
-        
-        # Orders indexes
+        await db.products.create_index("category")
         await db.orders.create_index("user_id")
-        await db.orders.create_index("status")
-        await db.orders.create_index("created_at")
-        await db.orders.create_index("order_number", unique=True)
         
-        # Cart indexes
-        await db.cart.create_index("user_id")
-        await db.cart.create_index([("user_id", 1), ("product_id", 1)], unique=True)
+        print("📊 Basic indexes created")
         
-        print("📊 Database indexes created successfully")
+    except Exception as e:
+        print(f"⚠️ Startup warning: {e}")
+        # Don't fail startup on index issues
+    
+    print("🎯 Server ready!")
+
         
     except Exception as e:
         print(f"⚠️ Index creation failed: {e}")
