@@ -366,7 +366,7 @@ async def create_category(category_data: dict, admin_user: dict = Depends(get_ad
             "description": "Placeholder product - edit or delete as needed",
             "price": 0.01,
             "category": full_category_name,
-            "image_url": "https://via.placeholder.com/400x300?text=Sample+Product",
+            "image_url": "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop",
             "stock": 0,
             "created_at": datetime.utcnow()
         }
