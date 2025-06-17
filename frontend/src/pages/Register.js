@@ -43,12 +43,50 @@ const Register = () => {
     }
   };
 
+  // Client-side validation function
+  const validateForm = (formData) => {
+    const errors = {};
+
+    // Username validation
+    if (!formData.username || formData.username.length < 3) {
+      errors.username = 'Username must be at least 3 characters';
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!formData.email || !emailRegex.test(formData.email)) {
+      errors.email = 'Please enter a valid email address';
+    }
+
+    // Password validation
+    if (!formData.password || formData.password.length < 8) {
+      errors.password = 'Password must be at least 8 characters';
+    }
+
+    // Phone validation - NOW REQUIRED
+    if (!formData.phone || formData.phone.trim() === '') {
+      errors.phone = 'Phone number is required';
+    } else {
+      const phoneRegex = /^[\+]?[1-9][\d\s\-\(\)]{7,20}$/;
+      if (!phoneRegex.test(formData.phone)) {
+        errors.phone = 'Please enter a valid phone number';
+      }
+    }
+
+    // Full name validation
+    if (!formData.full_name || formData.full_name.trim().length < 2) {
+      errors.full_name = 'Full name must be at least 2 characters';
+    }
+
+    return errors;
+  };
+
   return (
     <div className="auth-page">
       <div className="container">
         <div className="auth-form">
           <h1>Register</h1>
-          <SecureForm onSubmit={handleSubmit} validate={true}>
+          <SecureForm onSubmit={handleSubmit} validate={validateForm}>
             <input
               type="text"
               name="username"
@@ -92,8 +130,11 @@ const Register = () => {
             <input
               type="tel"
               name="phone"
-              placeholder="Phone Number (optional)"
+              placeholder="Phone Number (required)"
               maxLength={20}
+              pattern="^[\+]?[1-9][\d\s\-\(\)]{7,20}$"
+              title="Please enter a valid phone number"
+              required
             />
 
             <button type="submit" disabled={loading} className="btn btn-primary">

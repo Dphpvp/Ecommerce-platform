@@ -1088,10 +1088,8 @@ async def generate_backup_codes(current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=500, detail="Failed to generate backup codes")
     
 @router.post("/auth/google")
-async def google_login(
-    google_login: GoogleLogin,
-    db: AsyncIOMotorDatabase = Depends(get_database)
-):
+async def google_login(google_login: GoogleLogin):
+    """Fixed Google OAuth login"""
     try:
         # Verify the Google token
         idinfo = id_token.verify_oauth2_token(
@@ -1104,12 +1102,55 @@ async def google_login(
         email = idinfo['email']
         name = idinfo['name']
         google_id = idinfo['sub']
+        picture = idinfo.get('picture', '')
 
+        # Check if user exists
         user = await db.users.find_one({"email": email})
 
         if user:
+            # Check if 2FA is enabled
+            if user.get("two_factor_enabled"):
+                temp_token = create_jwt_token(str(user["_id"]), expires_in=timedelta(minutes=10))
+                
+                # Auto-send email for email 2FA
+                if user.get("two_factor_method") == "email":
+                    try:
+                        code = generate_email_2fa_code()
+                        await db.users.update_one(
+                            {"_id": user["_id"]},
+                            {
+                                "$set": {
+                                    "email_2fa_code": code,
+                                    "email_2fa_code_created": datetime.now(timezone.utc)
+                                }
+                            }
+                        )
+                        
+                        user_name = user.get("full_name", user.get("username", "User"))
+                        await send_2fa_email_code(user["email"], code, user_name)
+                    except Exception as e:
+                        print(f"❌ Failed to send 2FA email: {e}")
+                
+                return {
+                    "requires_2fa": True,
+                    "method": user.get("two_factor_method", "app"),
+                    "temp_token": temp_token,
+                    "message": "Please enter your 2FA code",
+                    "email_hint": f"***{user['email'][-10:]}" if user.get("two_factor_method") == "email" else None
+                }
+            
+            # Update user's profile image if Google has one
+            if picture and not user.get("profile_image_url"):
+                await db.users.update_one(
+                    {"_id": user["_id"]},
+                    {"$set": {"profile_image_url": picture}}
+                )
+                user["profile_image_url"] = picture
+            
+            # Regular login response
             token = create_jwt_token(str(user["_id"]))
             return {
+                "success": True,
                 "token": token,
                 "user": {
                     "id": str(user["_id"]),
@@ -1125,22 +1166,36 @@ async def google_login(
                 }
             }
         else:
+            # Create new user
             username = email.split('@')[0]
             counter = 1
             original_username = username
+            
+            # Ensure username is unique
             while await db.users.find_one({"username": username}):
                 username = f"{original_username}{counter}"
                 counter += 1
 
+            # Generate a unique phone number for new Google users
+            import secrets
+            phone = f"+1-555-{secrets.randbelow(9000) + 1000:04d}"
+            while await db.users.find_one({"phone": phone}):
+                phone = f"+1-555-{secrets.randbelow(9000) + 1000:04d}"
+
             user_data = {
                 "username": username,
                 "email": email,
-                "password": "",
+                "password": "",  # No password for OAuth users
                 "full_name": name,
+                "phone": phone,  # Required field
+                "address": "",
                 "google_id": google_id,
+                "profile_image_url": picture,
                 "is_admin": False,
-                "email_verified": True,
+                "email_verified": True,  # Google emails are pre-verified
                 "two_factor_enabled": False,
+                "two_factor_secret": None,
+                "backup_codes": [],
                 "created_at": datetime.now(timezone.utc)
             }
 
@@ -1148,27 +1203,28 @@ async def google_login(
             token = create_jwt_token(str(result.inserted_id))
 
             return {
+                "success": True,
                 "token": token,
                 "user": {
                     "id": str(result.inserted_id),
                     "email": email,
                     "username": username,
                     "full_name": name,
-                    "address": None,
-                    "phone": None,
-                    "profile_image_url": None,
+                    "address": "",
+                    "phone": phone,
+                    "profile_image_url": picture,
                     "is_admin": False,
                     "email_verified": True,
                     "two_factor_enabled": False
                 }
             }
 
-    except ValueError:
+    except ValueError as e:
+        print(f"Google token verification error: {e}")
         raise HTTPException(status_code=400, detail="Invalid Google token")
     except Exception as e:
-        print("Google OAuth error:", str(e))  # Or use logging
-        raise HTTPException(status_code=500, detail="Google login failed.")
-
+        print(f"Google OAuth error: {e}")
+        raise HTTPException(status_code=500, detail="Google login failed")
 
 # FIXED: Add GET decorator to auth/me endpoint
 @router.get("/auth/me")
@@ -1471,8 +1527,10 @@ async def get_product(product_id: str):
 
 # Cart routes
 @router.post("/cart/add")
-async def add_to_cart(cart_item: CartItem, current_user: dict = Depends(get_current_user)):
-    user_id = str(current_user["_id"])
+async def add_to_cart(cart_item: CartItem, request: Request):
+    """Add to cart - session or token auth"""
+    user = await get_current_user_flexible(request)
+    user_id = str(user["_id"])
     
     product = await db.products.find_one({"_id": ObjectId(cart_item.product_id)})
     if not product:
@@ -1545,32 +1603,16 @@ async def search_products(
 
 @router.get("/cart")
 async def get_cart(request: Request):
-    """Get user cart"""
+    """Get user cart - session or token auth"""
     try:
-        # Get user from token
-        auth_header = request.headers.get("Authorization")
-        if not auth_header or not auth_header.startswith("Bearer "):
-            return []  # Return empty cart if not authenticated
+        user = await get_current_user_flexible(request)
+        user_id = str(user["_id"])
         
-        token = auth_header.split(" ")[1]
-        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
-        user_id = payload.get("user_id")
-        
-        if not user_id:
-            return []
-        
-        # Get cart items
         cart_items = []
         async for item in db.cart.find({"user_id": user_id}):
             try:
-                # Get product details
                 product = await db.products.find_one({"_id": ObjectId(item["product_id"])})
                 if product:
-                    # Fix image URL if needed
-                    image_url = product.get("image_url", "")
-                    if "via.placeholder.com" in image_url or not image_url:
-                        image_url = "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop&q=80"
-                    
                     cart_items.append({
                         "id": str(item["_id"]),
                         "product_id": item["product_id"],
@@ -1579,18 +1621,21 @@ async def get_cart(request: Request):
                             "id": str(product["_id"]),
                             "name": product["name"],
                             "price": product["price"],
-                            "image_url": image_url
+                            "image_url": product.get("image_url", "")
                         }
                     })
-            except Exception as item_error:
-                print(f"❌ Cart item error: {item_error}")
+            except Exception as e:
+                print(f"❌ Cart item error: {e}")
                 continue
         
         return cart_items
         
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"❌ Get cart error: {e}")
         return []
+
 
 @router.delete("/cart/{item_id}")
 async def remove_from_cart(item_id: str, current_user: dict = Depends(get_current_user)):

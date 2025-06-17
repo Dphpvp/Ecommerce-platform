@@ -21,8 +21,8 @@ app = FastAPI(
     title="E-commerce API",
     version="1.0.0",
     description="E-commerce Platform API",
-    docs_url=None,  # Disabled in production
-    redoc_url=None,  # Disabled in production
+    docs_url=None,
+    redoc_url=None,
 )
 
 # Include routers
@@ -33,7 +33,7 @@ app.include_router(admin_router)
 if ALLOWED_HOSTS:
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS)
 
-# CORS configuration - FIXED FOR CREDENTIALS
+# CORS configuration - FIXED
 origins = [
     "https://vergishop.vercel.app",
     "https://vs1.vercel.app"
@@ -43,15 +43,14 @@ origins = [
 if FRONTEND_URL and FRONTEND_URL not in origins:
     origins.append(FRONTEND_URL)
 
-# Add development origins only if in development
 if os.getenv("ENVIRONMENT") == "development":
     origins.extend(["http://localhost:3000", "http://127.0.0.1:3000"])
 
 # CRITICAL: NO WILDCARDS when using credentials
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,  # Specific origins only - NO "*"
-    allow_credentials=True,  # This requires specific origins
+    allow_origins=origins,
+    allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=[
         "Accept",
@@ -62,8 +61,8 @@ app.add_middleware(
         "X-CSRF-Token",
         "X-Request-Signature",
         "X-Request-Timestamp"
-    ],  # Explicit headers instead of "*"
-    expose_headers=["*"],
+    ],
+    expose_headers=["Set-Cookie"],
     max_age=3600,
 )
 
@@ -91,15 +90,14 @@ async def handle_options(path: str, request: Request):
 async def security_headers_middleware(request: Request, call_next):
     response = await call_next(request)
     
+    # Security headers
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-    
-    # FIXED: Relaxed Cross-Origin-Opener-Policy for Google Auth
     response.headers["Cross-Origin-Opener-Policy"] = "same-origin-allow-popups"
     
-    # Simplified CSP for credentials
+    # CSP for Google OAuth
     csp = (
         "default-src 'self'; "
         "script-src 'self' 'unsafe-inline' https://accounts.google.com; "
@@ -114,27 +112,27 @@ async def security_headers_middleware(request: Request, call_next):
     return response
 
 # Security headers middleware (simplified)
-@app.middleware("http")
-async def security_headers_middleware(request: Request, call_next):
-    response = await call_next(request)
+# @app.middleware("http")
+# async def security_headers_middleware(request: Request, call_next):
+#     response = await call_next(request)
     
-    response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["X-Frame-Options"] = "DENY"
-    response.headers["X-XSS-Protection"] = "1; mode=block"
-    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+#     response.headers["X-Content-Type-Options"] = "nosniff"
+#     response.headers["X-Frame-Options"] = "DENY"
+#     response.headers["X-XSS-Protection"] = "1; mode=block"
+#     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     
-    # Simplified CSP for credentials
-    csp = (
-        "default-src 'self'; "
-        "script-src 'self' 'unsafe-inline'; "
-        "style-src 'self' 'unsafe-inline'; "
-        "img-src 'self' data: https: blob:; "
-        "connect-src 'self' " + " ".join(origins) + "; "
-        "object-src 'none'"
-    )
-    response.headers["Content-Security-Policy"] = csp
+#     # Simplified CSP for credentials
+#     csp = (
+#         "default-src 'self'; "
+#         "script-src 'self' 'unsafe-inline'; "
+#         "style-src 'self' 'unsafe-inline'; "
+#         "img-src 'self' data: https: blob:; "
+#         "connect-src 'self' " + " ".join(origins) + "; "
+#         "object-src 'none'"
+#     )
+#     response.headers["Content-Security-Policy"] = csp
     
-    return response
+#     return response
 
 # Stripe configuration
 if STRIPE_SECRET_KEY:
@@ -216,13 +214,11 @@ async def startup_event():
     print("🚀 E-commerce Backend Starting Up...")
     print(f"🌐 Frontend URL: {FRONTEND_URL}")
     print(f"🔗 CORS Origins: {origins}")
-    print(f"🍪 Credentials: ENABLED")
-    print(f"🛡️ CSRF: Temporarily disabled")
     
     try:
         from database.connection import db, client
         
-        # Test database connection - FIXED
+        # Test database connection
         await client.admin.command('ping')
         print("📡 Database connection successful")
         
@@ -231,26 +227,27 @@ async def startup_event():
             await db.users.create_index("email", unique=True)
             print("✅ Users email index created")
         except Exception as e:
-            print(f"⚠️ Users index: {e}")
+            print(f"⚠️ Users email index: {e}")
+        
+        try:
+            # Drop old phone index if exists and recreate
+            try:
+                await db.users.drop_index("phone_1")
+            except:
+                pass
+            await db.users.create_index("phone", unique=True, sparse=True)
+            print("✅ Users phone index created")
+        except Exception as e:
+            print(f"⚠️ Users phone index: {e}")
         
         try:
             await db.products.create_index("category")
-            print("✅ Products category index created")
-        except Exception as e:
-            print(f"⚠️ Products index: {e}")
-        
-        try:
             await db.orders.create_index("user_id")
-            print("✅ Orders user_id index created")
-        except Exception as e:
-            print(f"⚠️ Orders index: {e}")
-        
-        try:
             await db.cart.create_index("user_id")
-            print("✅ Cart user_id index created")
+            print("✅ Other indexes created")
         except Exception as e:
-            print(f"⚠️ Cart index: {e}")
-        
+            print(f"⚠️ Other indexes: {e}")
+            
     except Exception as e:
         print(f"❌ Database setup error: {e}")
         print("💡 Check MONGODB_URL environment variable")
