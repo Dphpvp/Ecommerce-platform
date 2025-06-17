@@ -1,12 +1,13 @@
 from fastapi import APIRouter, HTTPException, Depends
-from typing import List
+from typing import List, Optional
 from bson import ObjectId
-import motor.motor_asyncio
 from datetime import datetime
 import re
 from urllib.parse import unquote
-from api import Product
-from dependencies import get_admin_user
+
+from dependencies import get_current_user, get_admin_user
+from database.connection import db
+
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
 # Admin middleware
@@ -97,13 +98,11 @@ async def delete_product(product_id: str, admin_user: dict = Depends(get_admin_u
 
 # Order management
 @router.get("/orders")
-async def get_all_orders(status: str = None, admin_user: dict = Depends(get_admin_user)):
-    # Build match stage for aggregation
+async def get_all_orders(status: Optional[str] = None, admin_user: dict = Depends(get_admin_user)):
     match_stage = {}
     if status:
         match_stage["status"] = status
     
-    # Add match stage to pipeline if needed
     pipeline = []
     if match_stage:
         pipeline.append({"$match": match_stage})
