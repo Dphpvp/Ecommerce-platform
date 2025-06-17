@@ -1,7 +1,8 @@
-# backend/main.py - Syntax fixed
+# backend/main.py - Updated with fixes
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from datetime import datetime
 import stripe
 import os
 
@@ -22,6 +23,8 @@ if os.getenv("ENVIRONMENT") == "development":
 # Initialize FastAPI
 app = FastAPI(
     title="E-commerce API",
+    version="1.0.0",
+    description="E-commerce Platform API",
     docs_url="/api/docs" if os.getenv("ENVIRONMENT") == "development" else None,
     redoc_url="/api/redoc" if os.getenv("ENVIRONMENT") == "development" else None,
 )
@@ -34,22 +37,33 @@ app.include_router(admin_router)
 if ALLOWED_HOSTS:
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS)
 
-# CORS configuration
+# Enhanced CORS configuration
 origins = [
     "https://vergishop.vercel.app",
-    "https://vs1.vercel.app"
+    "https://vs1.vercel.app",
+    # Add your actual frontend domains here
 ]
 
+# Add environment-specific origins
 if os.getenv("ENVIRONMENT") == "development":
-    origins.extend(["http://localhost:3000", "http://127.0.0.1:3000"])
+    origins.extend([
+        "http://localhost:3000", 
+        "http://127.0.0.1:3000",
+        "http://localhost:3001"
+    ])
+
+# If FRONTEND_URL is set and not in origins, add it
+if FRONTEND_URL and FRONTEND_URL not in origins:
+    origins.append(FRONTEND_URL)
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
-    expose_headers=["X-CSRF-Token"],
+    expose_headers=["*"],
+    max_age=3600,
 )
 
 # Rate limiting middleware
@@ -114,7 +128,18 @@ async def health_check():
         "status": "healthy",
         "email_configured": email_configured,
         "frontend_url": FRONTEND_URL,
-        "security": "enabled"
+        "security": "enabled",
+        "timestamp": datetime.now().isoformat()
+    }
+
+@app.get("/api/test")
+async def test_endpoint():
+    """Test endpoint to verify API is working"""
+    return {
+        "message": "API is working", 
+        "timestamp": datetime.now().isoformat(),
+        "environment": os.getenv("ENVIRONMENT", "unknown"),
+        "cors_origins": origins[:3] if len(origins) > 3 else origins  # Show first 3 for security
     }
 
 @app.get("/api/csrf-token")
@@ -123,22 +148,44 @@ async def get_csrf_token():
     token = csrf_protection.generate_token()
     return {"csrf_token": token}
 
+# Global exception handler
+@app.exception_handler(500)
+async def internal_server_error(request: Request, exc: Exception):
+    print(f"Internal Server Error: {exc}")
+    return HTTPException(status_code=500, detail="Internal server error")
+
 # Startup event
 @app.on_event("startup")
 async def startup_event():
     print("🚀 E-commerce Backend Starting Up...")
+    print(f"📍 Environment: {os.getenv('ENVIRONMENT', 'unknown')}")
+    print(f"🌐 Frontend URL: {FRONTEND_URL}")
+    print(f"🔗 CORS Origins: {origins}")
     
     try:
         from database.connection import db
         
+        # Test database connection
+        await db.admin.command('ping')
+        print("📡 Database connection successful")
+        
+        # Create indexes
         await db.users.create_index("email", unique=True)
         await db.products.create_index("category")
         await db.orders.create_index("user_id")
+        await db.cart.create_index("user_id")
         
-        print("📊 Basic indexes created")
+        print("📊 Database indexes created")
         
     except Exception as e:
-        print(f"⚠️ Startup warning: {e}")
+        print(f"⚠️ Database setup warning: {e}")
+        print("💡 Make sure MONGODB_URL is set correctly")
+    
+    # Print environment status
+    env_vars = ["MONGODB_URL", "JWT_SECRET", "EMAIL_USER", "FRONTEND_URL"]
+    for var in env_vars:
+        status = "✅" if os.getenv(var) else "❌"
+        print(f"{status} {var}: {'Set' if os.getenv(var) else 'Not set'}")
     
     print("🎯 Server ready!")
 
