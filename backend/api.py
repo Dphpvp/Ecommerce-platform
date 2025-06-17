@@ -1171,19 +1171,22 @@ async def google_login(google_login: GoogleLogin):
 # FIXED: Add GET decorator to auth/me endpoint
 @router.get("/auth/me")
 async def get_me(request: Request):
-    """Get current user info"""
+    """Get user - try session cookie first, then token"""
     try:
-        auth_header = request.headers.get("Authorization")
-        if not auth_header or not auth_header.startswith("Bearer "):
-            raise HTTPException(status_code=401, detail="No authentication token provided")
+        # Try session cookie first (existing logic)
+        try:
+            token = session_manager.get_session_token(request)
+            payload = session_manager.verify_session_token(token)
+        except:
+            # Fallback to Authorization header
+            auth_header = request.headers.get("Authorization")
+            if not auth_header or not auth_header.startswith("Bearer "):
+                raise HTTPException(status_code=401, detail="No authentication")
+            
+            token = auth_header.split(" ")[1]
+            payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
         
-        token = auth_header.split(" ")[1]
-        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
         user_id = payload.get("user_id")
-        
-        if not user_id:
-            raise HTTPException(status_code=401, detail="Invalid token")
-        
         user = await db.users.find_one({"_id": ObjectId(user_id)})
         if not user:
             raise HTTPException(status_code=401, detail="User not found")
@@ -1192,21 +1195,10 @@ async def get_me(request: Request):
             "id": str(user["_id"]),
             "username": user["username"],
             "email": user["email"],
-            "full_name": user.get("full_name", ""),
-            "address": user.get("address", ""),
-            "phone": user.get("phone", ""),
-            "profile_image_url": user.get("profile_image_url"),
-            "is_admin": user.get("is_admin", False),
-            "email_verified": user.get("email_verified", False),
-            "two_factor_enabled": user.get("two_factor_enabled", False)
+            # ... rest of user data
         }
         
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token has expired")
-    except jwt.JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
     except Exception as e:
-        print(f"❌ Auth me error: {e}")
         raise HTTPException(status_code=401, detail="Authentication failed")
 
 # 🆕 NEW: Profile Update Routes

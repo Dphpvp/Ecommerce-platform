@@ -31,21 +31,16 @@ class SecureSessionManager:
         return jwt.encode(payload, JWT_SECRET, algorithm="HS256")
     
     def set_session_cookie(self, response: Response, token: str):
-        """Set secure httpOnly cookie"""
-        cookie_kwargs = {
-            "key": "session_token",
-            "value": token,
-            "max_age": 8 * 60 * 60,  # 8 hours
-            "httponly": True,
-            "secure": SECURE_COOKIES,
-            "samesite": "strict" if SECURE_COOKIES else "lax",
-        }
-        
-        # Only set domain if specified and in production
-        if COOKIE_DOMAIN and SECURE_COOKIES:
-            cookie_kwargs["domain"] = COOKIE_DOMAIN
-            
-        response.set_cookie(**cookie_kwargs)
+    """Set session cookie for cross-domain"""
+    cookie_kwargs = {
+        "key": "session_token", 
+        "value": token,
+        "max_age": 8 * 60 * 60,
+        "httponly": True,
+        "secure": True,  # Must be True for cross-domain
+        "samesite": "none",  # Required for cross-domain
+    }
+    response.set_cookie(**cookie_kwargs)
     
     def clear_session_cookie(self, response: Response):
         """Clear session cookie"""
