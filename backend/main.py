@@ -88,20 +88,28 @@ async def handle_options(path: str, request: Request):
 
 # CORS middleware - Fixed for credentials
 @app.middleware("http")
-async def cors_credentials_middleware(request: Request, call_next):
-    """Ensure CORS headers work properly with credentials"""
+async def security_headers_middleware(request: Request, call_next):
     response = await call_next(request)
     
-    # Get the origin from the request
-    origin = request.headers.get("origin")
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     
-    # Only set CORS headers if origin is in our allowed list
-    if origin and origin in origins:
-        response.headers["Access-Control-Allow-Origin"] = origin  # Specific origin
-        response.headers["Access-Control-Allow-Credentials"] = "true"
-        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
-        response.headers["Access-Control-Allow-Headers"] = "Accept, Accept-Language, Content-Language, Content-Type, Authorization, X-CSRF-Token, X-Request-Signature, X-Request-Timestamp"
-        response.headers["Access-Control-Expose-Headers"] = "*"
+    # FIXED: Relaxed Cross-Origin-Opener-Policy for Google Auth
+    response.headers["Cross-Origin-Opener-Policy"] = "same-origin-allow-popups"
+    
+    # Simplified CSP for credentials
+    csp = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline' https://accounts.google.com; "
+        "style-src 'self' 'unsafe-inline'; "
+        "img-src 'self' data: https: blob:; "
+        "connect-src 'self' " + " ".join(origins) + "; "
+        "frame-src 'self' https://accounts.google.com; "
+        "object-src 'none'"
+    )
+    response.headers["Content-Security-Policy"] = csp
     
     return response
 

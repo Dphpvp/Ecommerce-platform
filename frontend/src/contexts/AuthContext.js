@@ -9,29 +9,25 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [requires2FA, setRequires2FA] = useState(false);
   const [tempToken, setTempToken] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   
   // Auto-logout state
   const timeoutRef = useRef(null);
-  const TIMEOUT_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
+  const TIMEOUT_DURATION = 60 * 60 * 1000; // 1 hour
 
   const logout = useCallback(async () => {
     try {
-      // Use GET to avoid CORS preflight issues
       await fetch(`${API_BASE}/auth/logout`, {
         method: 'GET',
         credentials: 'include'
       });
     } catch (error) {
       console.error('Logout error:', error);
-      // Continue with logout even if request fails
     } finally {
       setUser(null);
       setRequires2FA(false);
       setTempToken(null);
       setLoading(false);
       
-      // Clear auto-logout timer
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
         timeoutRef.current = null;
@@ -39,7 +35,6 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // Auto-logout functions
   const resetTimeout = useCallback(() => {
     if (!user) return;
     
@@ -57,7 +52,6 @@ export const AuthProvider = ({ children }) => {
     resetTimeout();
   }, [resetTimeout]);
 
-  // Activity event listeners
   useEffect(() => {
     if (!user) return;
 
@@ -67,7 +61,6 @@ export const AuthProvider = ({ children }) => {
       document.addEventListener(event, handleActivity, true);
     });
 
-    // Start the initial timeout
     resetTimeout();
 
     return () => {
@@ -92,29 +85,48 @@ export const AuthProvider = ({ children }) => {
       if (response.ok) {
         const userData = await response.json();
         setUser(userData);
+        return userData;
       } else if (response.status === 401) {
-        // Session expired or invalid
         setUser(null);
+        return null;
       }
     } catch (error) {
       console.error('Failed to fetch user:', error);
-      // Don't logout on network errors, only on auth errors
+      return null;
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // Check user session on app load
   useEffect(() => {
     fetchUser();
   }, [fetchUser]);
 
-  const login = (userData) => {
-    setUser(userData);
+  // FIXED: Better login handling
+  const login = useCallback(async (userData) => {
+    if (userData) {
+      setUser(userData);
+    } else {
+      // If no userData provided, fetch from session
+      await fetchUser();
+    }
     setRequires2FA(false);
     setTempToken(null);
     setLoading(false);
-  };
+  }, [fetchUser]);
+
+  // FIXED: Post-2FA success handler
+  const complete2FA = useCallback(async () => {
+    setRequires2FA(false);
+    setTempToken(null);
+    // Fetch user data from established session
+    const userData = await fetchUser();
+    if (userData) {
+      setUser(userData);
+      return true;
+    }
+    return false;
+  }, [fetchUser]);
 
   const handle2FARequired = (tempToken) => {
     setRequires2FA(true);
@@ -144,17 +156,14 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Get token for API calls that still need it (backward compatibility)
   const getToken = useCallback(() => {
-    // For session-based auth, we don't expose tokens
-    // The session cookie handles authentication
-    return null;
+    return null; // Session-based auth
   }, []);
 
   return (
     <AuthContext.Provider value={{ 
       user, 
-      token: null, // No longer expose token
+      token: null,
       getToken,
       login, 
       register, 
@@ -163,6 +172,7 @@ export const AuthProvider = ({ children }) => {
       requires2FA,
       tempToken,
       handle2FARequired,
+      complete2FA, // NEW: For post-2FA handling
       refetchUser: fetchUser
     }}>
       {children}
