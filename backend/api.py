@@ -404,152 +404,59 @@ async def debug_token(token: str):
 
 @router.post("/auth/login")
 async def login(user_login: UserLogin, request: Request, response: Response):
-    client_ip = get_client_ip(request)
+    # ... existing login logic ...
     
-    if not rate_limiter.is_allowed(f"{client_ip}:login", max_requests=5, window=900):
-        raise HTTPException(status_code=429, detail="Too many login attempts")
-    
-    identifier_type = get_identifier_type(user_login.identifier)
-    
-    if identifier_type == "email":
-        user_login.identifier = SecurityValidator.validate_email_format(user_login.identifier)
-        query = {"email": user_login.identifier}
-    elif identifier_type == "phone":
-        user_login.identifier = SecurityValidator.validate_phone(user_login.identifier)
-        query = {"phone": user_login.identifier}
-    else:
-        user_login.identifier = SecurityValidator.validate_username(user_login.identifier)
-        query = {"username": user_login.identifier}
-    
-    user = await db.users.find_one(query)
-    if not user or not verify_password(user_login.password, user["password"]):
-        print(f"Failed login attempt from {client_ip} for {user_login.identifier}")
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    
-    if not user.get("email_verified", False):
-        raise HTTPException(
-            status_code=401, 
-            detail="Email not verified. Please check your email and verify your account."
-        )
-    
-    # Check if 2FA is enabled
-    if user.get("two_factor_enabled"):
-        temp_token = create_jwt_token(str(user["_id"]), expires_in=timedelta(minutes=10))
+    # After successful authentication (regular login or post-2FA):
+    if not requires_2fa:  # Regular login success
+        token = create_jwt_token(str(user["_id"]))
         
-        # Auto-send email for email 2FA
-        if user.get("two_factor_method") == "email":
-            try:
-                code = generate_email_2fa_code()
-                await db.users.update_one(
-                    {"_id": user["_id"]},
-                    {
-                        "$set": {
-                            "email_2fa_code": code,
-                            "email_2fa_code_created": datetime.now(timezone.utc)
-                        }
-                    }
-                )
-                
-                user_name = user.get("full_name", user.get("username", "User"))
-                await send_2fa_email_code(user["email"], code, user_name)
-                print(f"✅ Auto-sent 2FA code to {user['email']}")
-            except Exception as e:
-                print(f"❌ Failed to auto-send 2FA email: {e}")
+        # Set session cookie
+        response.set_cookie(
+            key="session_token",
+            value=token,
+            max_age=8 * 60 * 60,  # 8 hours
+            httponly=True,
+            secure=True,  # HTTPS only
+            samesite="none",  # Cross-domain
+            domain=None  # Don't set domain for better compatibility
+        )
         
         return {
-            "requires_2fa": True,
-            "method": user.get("two_factor_method", "app"),
-            "temp_token": temp_token,
-            "message": "Please enter your 2FA code",
-            "email_hint": f"***{user['email'][-10:]}" if user.get("two_factor_method") == "email" else None
+            "success": True,
+            "token": token,  # Still return token for backward compatibility
+            "user": {
+                "id": str(user["_id"]), 
+                "email": user["email"], 
+                "username": user["username"],
+                "full_name": user.get("full_name", ""),
+                "address": user.get("address"),
+                "phone": user.get("phone"),
+                "profile_image_url": user.get("profile_image_url"),
+                "is_admin": user.get("is_admin", False),
+                "email_verified": user.get("email_verified", False),
+                "two_factor_enabled": user.get("two_factor_enabled", False)
+            }
         }
-    
-    # Regular login
-    token = create_jwt_token(str(user["_id"]))
-    
-    return {
-        "success": True,
-        "token": token,
-        "user": {
-            "id": str(user["_id"]), 
-            "email": user["email"], 
-            "username": user["username"],
-            "full_name": user.get("full_name", ""),
-            "address": user.get("address"),
-            "phone": user.get("phone"),
-            "profile_image_url": user.get("profile_image_url"),
-            "is_admin": user.get("is_admin", False),
-            "email_verified": user.get("email_verified", False),
-            "two_factor_enabled": user.get("two_factor_enabled", False)
-        }
-    }
 
 
 @router.post("/auth/verify-2fa")
 async def verify_2fa_login(verification_data: dict, response: Response):
-    """Verify 2FA and complete login"""
-    try:
-        code = verification_data.get("code")
-        temp_token = verification_data.get("temp_token")
-        
-        if not code or not temp_token:
-            raise HTTPException(status_code=400, detail="Code and temp_token are required")
-        
-        try:
-            payload = jwt.decode(temp_token, JWT_SECRET, algorithms=["HS256"])
-            user_id = payload.get("user_id")
-        except jwt.ExpiredSignatureError:
-            raise HTTPException(status_code=401, detail="2FA session expired. Please login again.")
-        except jwt.JWTError:
-            raise HTTPException(status_code=401, detail="Invalid session")
-        
-        user = await db.users.find_one({"_id": ObjectId(user_id)})
-        if not user or not user.get("two_factor_enabled"):
-            raise HTTPException(status_code=401, detail="Invalid 2FA state")
-        
-        method = user.get("two_factor_method", "app")
-        verified = False
-        
-        if method == "app":
-            secret = user.get("two_factor_secret")
-            if secret:
-                totp = pyotp.TOTP(secret)
-                verified = totp.verify(code, valid_window=1)
-        elif method == "email":
-            stored_code = user.get("email_2fa_code")
-            code_created = user.get("email_2fa_code_created")
-            
-            if stored_code and code_created:
-                if isinstance(code_created, datetime):
-                    if code_created.tzinfo is None:
-                        code_created = code_created.replace(tzinfo=timezone.utc)
-                    
-                    # Check if code expired (5 minutes)
-                    if datetime.now(timezone.utc) <= code_created + timedelta(minutes=5):
-                        verified = (code == stored_code)
-                        if verified:
-                            # Clear used code
-                            await db.users.update_one(
-                                {"_id": user["_id"]},
-                                {"$unset": {"email_2fa_code": "", "email_2fa_code_created": ""}}
-                            )
-        
-        # Check backup codes if primary failed
-        if not verified:
-            backup_codes = user.get("backup_codes", [])
-            if code.upper() in backup_codes:
-                backup_codes.remove(code.upper())
-                await db.users.update_one(
-                    {"_id": user["_id"]},
-                    {"$set": {"backup_codes": backup_codes}}
-                )
-                verified = True
-        
-        if not verified:
-            raise HTTPException(status_code=400, detail="Invalid verification code")
-        
+    # ... existing 2FA verification logic ...
+    
+    if verified:
         # Create full session token
         token = create_jwt_token(str(user["_id"]))
+        
+        # Set session cookie
+        response.set_cookie(
+            key="session_token",
+            value=token,
+            max_age=8 * 60 * 60,
+            httponly=True,
+            secure=True,
+            samesite="none",
+            domain=None
+        )
         
         return {
             "success": True,
@@ -567,6 +474,7 @@ async def verify_2fa_login(verification_data: dict, response: Response):
                 "two_factor_enabled": user.get("two_factor_enabled", False)
             }
         }
+
         
     except HTTPException:
         raise
@@ -1229,22 +1137,37 @@ async def google_login(google_login: GoogleLogin):
 # FIXED: Add GET decorator to auth/me endpoint
 @router.get("/auth/me")
 async def get_me(request: Request):
-    """Get user - try session cookie first, then token"""
+    """Get current user from session or token"""
     try:
-        # Try session cookie first (existing logic)
-        try:
-            token = session_manager.get_session_token(request)
-            payload = session_manager.verify_session_token(token)
-        except:
+        # Try session cookie first
+        session_token = request.cookies.get("session_token")
+        
+        if session_token:
+            try:
+                payload = jwt.decode(session_token, JWT_SECRET, algorithms=["HS256"])
+                user_id = payload.get("user_id")
+            except jwt.ExpiredSignatureError:
+                raise HTTPException(status_code=401, detail="Session expired")
+            except jwt.JWTError:
+                raise HTTPException(status_code=401, detail="Invalid session")
+        else:
             # Fallback to Authorization header
             auth_header = request.headers.get("Authorization")
             if not auth_header or not auth_header.startswith("Bearer "):
                 raise HTTPException(status_code=401, detail="No authentication")
             
             token = auth_header.split(" ")[1]
-            payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+            try:
+                payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+                user_id = payload.get("user_id")
+            except jwt.ExpiredSignatureError:
+                raise HTTPException(status_code=401, detail="Token expired")
+            except jwt.JWTError:
+                raise HTTPException(status_code=401, detail="Invalid token")
         
-        user_id = payload.get("user_id")
+        if not user_id:
+            raise HTTPException(status_code=401, detail="Invalid authentication")
+        
         user = await db.users.find_one({"_id": ObjectId(user_id)})
         if not user:
             raise HTTPException(status_code=401, detail="User not found")
@@ -1253,62 +1176,21 @@ async def get_me(request: Request):
             "id": str(user["_id"]),
             "username": user["username"],
             "email": user["email"],
-            # ... rest of user data
+            "full_name": user.get("full_name", ""),
+            "address": user.get("address"),
+            "phone": user.get("phone"),
+            "profile_image_url": user.get("profile_image_url"),
+            "is_admin": user.get("is_admin", False),
+            "email_verified": user.get("email_verified", False),
+            "two_factor_enabled": user.get("two_factor_enabled", False)
         }
         
+    except HTTPException:
+        raise
     except Exception as e:
+        print(f"Auth check error: {e}")
         raise HTTPException(status_code=401, detail="Authentication failed")
 
-# 🆕 NEW: Profile Update Routes
-@router.put("/auth/update-profile")
-async def update_profile(profile_data: SecureUserProfileUpdate, current_user: dict = Depends(get_current_user)):
-    user_id = str(current_user["_id"])
-    
-    # Prepare update data - only include non-None fields
-    update_data = {}
-    
-    for field, value in profile_data.dict(exclude_unset=True).items():
-        if value is not None:
-            if field == "email" and value != current_user.get("email"):
-                # Check if email already exists for another user
-                existing_user = await db.users.find_one({
-                    "email": value, 
-                    "_id": {"$ne": ObjectId(user_id)}
-                })
-                if existing_user:
-                    raise HTTPException(status_code=400, detail="Email already exists")
-            
-            update_data[field] = value
-    
-    if not update_data:
-        raise HTTPException(status_code=400, detail="No valid fields to update")
-    
-    # Update user in database
-    result = await db.users.update_one(
-        {"_id": ObjectId(user_id)},
-        {"$set": update_data}
-    )
-    
-    if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    # Return updated user data
-    updated_user = await db.users.find_one({"_id": ObjectId(user_id)})
-    return {
-        "message": "Profile updated successfully",
-        "user": {
-            "id": str(updated_user["_id"]),
-            "username": updated_user["username"],
-            "email": updated_user["email"],
-            "full_name": updated_user.get("full_name", ""),
-            "address": updated_user.get("address"),
-            "phone": updated_user.get("phone"),
-            "profile_image_url": updated_user.get("profile_image_url"),
-            "is_admin": updated_user.get("is_admin", False),
-            "email_verified": updated_user.get("email_verified", False),
-            "two_factor_enabled": updated_user.get("two_factor_enabled", False)
-        }
-    }
 
 @router.post("/auth/request-password-reset")
 @rate_limit(max_attempts=3, window_minutes=60, endpoint_name="password_reset")
@@ -1803,15 +1685,15 @@ async def submit_contact_form(
 
 @router.post("/auth/logout")
 async def logout(response: Response):
-    """Logout and clear session - No authentication required"""
-    try:
-        session_manager.clear_session_cookie(response)
-        return {"message": "Logged out successfully"}
-    except Exception as e:
-        print(f"❌ Logout error: {e}")
-        # Always return success for logout to prevent issues
-        return {"message": "Logged out successfully"}
-
+    """Clear session cookie on logout"""
+    response.delete_cookie(
+        key="session_token",
+        secure=True,
+        httponly=True,
+        samesite="none"
+    )
+    return {"message": "Logged out successfully"}
+    
 # Also add a GET version for easier frontend handling
 @router.get("/auth/logout")
 async def logout_get(response: Response):
