@@ -223,39 +223,6 @@ async def get_next_order_number():
     )
     return counter["value"]
 
-def require_csrf_token(request: Request, x_csrf_token: str = Header(None)):
-    """Validate CSRF token for state-changing operations"""
-    if request.method in {"POST", "PUT", "DELETE", "PATCH"}:
-        if not x_csrf_token:
-            raise HTTPException(status_code=403, detail="CSRF token missing")
-        
-        # Get session info from JWT if available
-        auth_header = request.headers.get("Authorization")
-        session_id = None
-        if auth_header and auth_header.startswith("Bearer "):
-            try:
-                from jose import jwt
-                token = auth_header.split(" ")[1]
-                payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
-                session_id = payload.get("user_id")
-            except:
-                session_id = None
-        
-        if not csrf_protection.validate_token(x_csrf_token, session_id):
-            raise HTTPException(status_code=403, detail="Invalid CSRF token")
-    
-    return True
-
-async def get_next_order_number():
-    counter = await db.counters.find_one_and_update(
-        {"_id": "order_number"},
-        {"$inc": {"value": 1}},
-        upsert=True,
-        return_document=True
-    )
-    return counter["value"]
-
-
 @router.post("/auth/register")
 async def register(user: SecureUser, request: Request, csrf_valid: bool = Depends(require_csrf_token)):
     client_ip = get_client_ip(request)
@@ -400,8 +367,6 @@ async def resend_verification(email_data: ResendVerification):
         print(f"❌ Error in resend_verification: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Failed to send verification email: {str(e)}")
 
-
-# Also add a debug route
 @router.get("/auth/debug-user/{email}")
 async def debug_user(email: str):
     """Debug route to check user status"""
@@ -435,7 +400,6 @@ async def debug_token(token: str):
     except Exception as e:
         return {"error": str(e)}
 
-    
 @router.post("/auth/login")
 async def login(user_login: UserLogin, request: Request, response: Response):
     client_ip = get_client_ip(request)
@@ -474,8 +438,11 @@ async def login(user_login: UserLogin, request: Request, response: Response):
             expires_in=timedelta(minutes=5)
         )
         session_manager.set_session_cookie(response, temp_token)
+        
+        # FIXED: Return temp_token in response body
         return {
             "requires_2fa": True,
+            "temp_token": temp_token,  # Added this line
             "message": "Please enter your 2FA code"
         }
     
@@ -644,10 +611,21 @@ async def verify_2fa_login(verification_data: dict, request: Request, response: 
         raise HTTPException(status_code=500, detail="2FA verification failed")
 
 @router.post("/auth/send-2fa-email")
-async def send_2fa_email(verification_data: dict):
-    """Send 2FA code via email during login - Enhanced version"""
+async def send_2fa_email(verification_data: dict, request: Request):
+    """Send 2FA code via email during login - Fixed version"""
     try:
         temp_token = verification_data.get("temp_token")
+        
+        # FIXED: Try to get temp_token from multiple sources
+        if not temp_token:
+            try:
+                # Try to get from session cookie first
+                temp_token = session_manager.get_session_token(request)
+            except:
+                # Try to get from Authorization header as fallback
+                auth_header = request.headers.get("Authorization")
+                if auth_header and auth_header.startswith("Bearer "):
+                    temp_token = auth_header.split(" ")[1]
         
         if not temp_token:
             raise HTTPException(status_code=400, detail="Temporary token is required")
@@ -1264,7 +1242,8 @@ async def google_login(google_login: GoogleLogin):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-router.get("/auth/me")
+# FIXED: Add GET decorator to auth/me endpoint
+@router.get("/auth/me")
 async def get_me(request: Request):
     """Get current user info - handles JWT tokens"""
     try:
@@ -1312,7 +1291,6 @@ async def get_me(request: Request):
     except Exception as e:
         print(f"❌ Auth me error: {e}")
         raise HTTPException(status_code=401, detail="Authentication failed")
-
 
 # 🆕 NEW: Profile Update Routes
 @router.put("/auth/update-profile")
@@ -1403,7 +1381,6 @@ async def request_password_reset(request_data: PasswordResetRequest, request: Re
         print(f"Password reset request error: {e}")
         raise HTTPException(status_code=500, detail="Failed to process password reset request")
 
-
 @router.post("/auth/reset-password")
 async def reset_password(request: PasswordResetConfirm):
     """Reset password using token"""
@@ -1490,8 +1467,6 @@ async def change_password(password_data: PasswordChange, current_user: dict = De
         raise HTTPException(status_code=404, detail="User not found")
     
     return {"message": "Password changed successfully"}
-
-
 
 @router.post("/auth/upload-avatar")
 async def upload_avatar(current_user: dict = Depends(get_current_user)):
@@ -1612,8 +1587,6 @@ async def add_to_cart(cart_item: CartItem, current_user: dict = Depends(get_curr
         await db.cart.insert_one(cart_data)
     
     return {"message": "Item added to cart"}
-    pass
-
 
 @router.get("/products/search")
 async def search_products(
@@ -1658,8 +1631,6 @@ async def search_products(
         products.append(product)
     
     return {"products": products, "count": len(products)}
-
-
 
 @router.get("/cart")
 async def get_cart(request: Request):
@@ -1710,7 +1681,6 @@ async def get_cart(request: Request):
         print(f"❌ Get cart error: {e}")
         return []
 
-
 @router.delete("/cart/{item_id}")
 async def remove_from_cart(item_id: str, current_user: dict = Depends(get_current_user)):
     user_id = str(current_user["_id"])
@@ -1733,7 +1703,6 @@ async def create_payment_intent(payment: PaymentIntent):
         return {"client_secret": intent.client_secret}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
-    pass
 
 # 🆕 UPDATED ORDER ROUTES WITH EMAIL NOTIFICATIONS
 @router.post("/orders")
@@ -1813,7 +1782,6 @@ async def create_order(order_data: dict, current_user: dict = Depends(get_curren
         # Don't fail the order creation if email fails
     
     return {"message": "Order created successfully", "order_id": order_id, "order_number": order["order_number"]}
-    pass
 
 @router.get("/orders")
 async def get_orders(current_user: dict = Depends(get_current_user)):
@@ -1827,9 +1795,8 @@ async def get_orders(current_user: dict = Depends(get_current_user)):
     
     return orders
 
-
 @router.get("/orders/{order_id}")
-async def get_orders(current_user: dict = Depends(get_current_user)):
+async def get_order(order_id: str, current_user: dict = Depends(get_current_user)):
     user_id = str(current_user["_id"])
     
     order = await db.orders.find_one({"_id": ObjectId(order_id), "user_id": user_id})
@@ -1838,7 +1805,6 @@ async def get_orders(current_user: dict = Depends(get_current_user)):
     
     order["_id"] = str(order["_id"])
     return order
-    pass
 
 @router.post("/contact")
 async def submit_contact_form(
@@ -1916,8 +1882,6 @@ async def get_csrf_token(request: Request):
     
     csrf_token = csrf_protection.generate_token(session_id)
     return {"csrf_token": csrf_token}
-
-    #Debug 
 
 @router.get("/debug")
 async def debug_info():
