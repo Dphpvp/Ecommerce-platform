@@ -1088,6 +1088,7 @@ async def generate_backup_codes(current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=500, detail="Failed to generate backup codes")
     
 @router.post("/auth/google")
+@csrf_exempt
 async def google_login(google_login: GoogleLogin):
     try:
         # Verify the Google token
