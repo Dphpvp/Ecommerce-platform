@@ -404,39 +404,96 @@ async def debug_token(token: str):
 
 @router.post("/auth/login")
 async def login(user_login: UserLogin, request: Request, response: Response):
-    # ... existing login logic ...
+    client_ip = get_client_ip(request)
     
-    # After successful authentication (regular login or post-2FA):
-    if not requires_2fa:  # Regular login success
-        token = create_jwt_token(str(user["_id"]))
-        
-        # Set session cookie
-        response.set_cookie(
-            key="session_token",
-            value=token,
-            max_age=8 * 60 * 60,  # 8 hours
-            httponly=True,
-            secure=True,  # HTTPS only
-            samesite="none",  # Cross-domain
-            domain=None  # Don't set domain for better compatibility
+    if not rate_limiter.is_allowed(f"{client_ip}:login", max_requests=5, window=900):
+        raise HTTPException(status_code=429, detail="Too many login attempts")
+    
+    identifier_type = get_identifier_type(user_login.identifier)
+    
+    if identifier_type == "email":
+        user_login.identifier = SecurityValidator.validate_email_format(user_login.identifier)
+        query = {"email": user_login.identifier}
+    elif identifier_type == "phone":
+        user_login.identifier = SecurityValidator.validate_phone(user_login.identifier)
+        query = {"phone": user_login.identifier}
+    else:
+        user_login.identifier = SecurityValidator.validate_username(user_login.identifier)
+        query = {"username": user_login.identifier}
+    
+    user = await db.users.find_one(query)
+    if not user or not verify_password(user_login.password, user["password"]):
+        print(f"Failed login attempt from {client_ip} for {user_login.identifier}")
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    if not user.get("email_verified", False):
+        raise HTTPException(
+            status_code=401, 
+            detail="Email not verified. Please check your email and verify your account."
         )
+    
+    # Check if 2FA is enabled
+    if user.get("two_factor_enabled"):
+        temp_token = create_jwt_token(str(user["_id"]), expires_in=timedelta(minutes=10))
+        
+        # Auto-send email for email 2FA
+        if user.get("two_factor_method") == "email":
+            try:
+                code = generate_email_2fa_code()
+                await db.users.update_one(
+                    {"_id": user["_id"]},
+                    {
+                        "$set": {
+                            "email_2fa_code": code,
+                            "email_2fa_code_created": datetime.now(timezone.utc)
+                        }
+                    }
+                )
+                
+                user_name = user.get("full_name", user.get("username", "User"))
+                await send_2fa_email_code(user["email"], code, user_name)
+                print(f"✅ Auto-sent 2FA code to {user['email']}")
+            except Exception as e:
+                print(f"❌ Failed to auto-send 2FA email: {e}")
         
         return {
-            "success": True,
-            "token": token,  # Still return token for backward compatibility
-            "user": {
-                "id": str(user["_id"]), 
-                "email": user["email"], 
-                "username": user["username"],
-                "full_name": user.get("full_name", ""),
-                "address": user.get("address"),
-                "phone": user.get("phone"),
-                "profile_image_url": user.get("profile_image_url"),
-                "is_admin": user.get("is_admin", False),
-                "email_verified": user.get("email_verified", False),
-                "two_factor_enabled": user.get("two_factor_enabled", False)
-            }
+            "requires_2fa": True,
+            "method": user.get("two_factor_method", "app"),
+            "temp_token": temp_token,
+            "message": "Please enter your 2FA code",
+            "email_hint": f"***{user['email'][-10:]}" if user.get("two_factor_method") == "email" else None
         }
+    
+    # Regular login - create token and set session cookie
+    token = create_jwt_token(str(user["_id"]))
+    
+    # Set session cookie for persistence
+    response.set_cookie(
+        key="session_token",
+        value=token,
+        max_age=8 * 60 * 60,  # 8 hours
+        httponly=True,
+        secure=True,
+        samesite="none",
+        domain=None
+    )
+    
+    return {
+        "success": True,
+        "token": token,
+        "user": {
+            "id": str(user["_id"]), 
+            "email": user["email"], 
+            "username": user["username"],
+            "full_name": user.get("full_name", ""),
+            "address": user.get("address"),
+            "phone": user.get("phone"),
+            "profile_image_url": user.get("profile_image_url"),
+            "is_admin": user.get("is_admin", False),
+            "email_verified": user.get("email_verified", False),
+            "two_factor_enabled": user.get("two_factor_enabled", False)
+        }
+    }
 
 
 @router.post("/auth/verify-2fa")
@@ -1194,7 +1251,7 @@ async def google_login(google_login: GoogleLogin):
 # FIXED: Add GET decorator to auth/me endpoint
 @router.get("/auth/me")
 async def get_me(request: Request):
-    """Get current user from session or token"""
+    """Get current user from session cookie or token"""
     try:
         # Try session cookie first
         session_token = request.cookies.get("session_token")
