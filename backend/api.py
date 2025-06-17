@@ -441,17 +441,75 @@ async def login(user_login: UserLogin, request: Request, response: Response):
 
 @router.post("/auth/verify-2fa")
 async def verify_2fa_login(verification_data: dict, response: Response):
-    # ... existing 2FA verification logic ...
-    
-    if verified:
+    """Verify 2FA and complete login"""
+    try:
+        code = verification_data.get("code")
+        temp_token = verification_data.get("temp_token")
+        
+        if not code or not temp_token:
+            raise HTTPException(status_code=400, detail="Code and temp_token are required")
+        
+        try:
+            payload = jwt.decode(temp_token, JWT_SECRET, algorithms=["HS256"])
+            user_id = payload.get("user_id")
+        except jwt.ExpiredSignatureError:
+            raise HTTPException(status_code=401, detail="2FA session expired. Please login again.")
+        except jwt.JWTError:
+            raise HTTPException(status_code=401, detail="Invalid session")
+        
+        user = await db.users.find_one({"_id": ObjectId(user_id)})
+        if not user or not user.get("two_factor_enabled"):
+            raise HTTPException(status_code=401, detail="Invalid 2FA state")
+        
+        method = user.get("two_factor_method", "app")
+        verified = False
+        
+        if method == "app":
+            secret = user.get("two_factor_secret")
+            if secret:
+                totp = pyotp.TOTP(secret)
+                verified = totp.verify(code, valid_window=1)
+        elif method == "email":
+            stored_code = user.get("email_2fa_code")
+            code_created = user.get("email_2fa_code_created")
+            
+            if stored_code and code_created:
+                if isinstance(code_created, datetime):
+                    if code_created.tzinfo is None:
+                        code_created = code_created.replace(tzinfo=timezone.utc)
+                    
+                    # Check if code expired (5 minutes)
+                    if datetime.now(timezone.utc) <= code_created + timedelta(minutes=5):
+                        verified = (code == stored_code)
+                        if verified:
+                            # Clear used code
+                            await db.users.update_one(
+                                {"_id": user["_id"]},
+                                {"$unset": {"email_2fa_code": "", "email_2fa_code_created": ""}}
+                            )
+        
+        # Check backup codes if primary failed
+        if not verified:
+            backup_codes = user.get("backup_codes", [])
+            if code.upper() in backup_codes:
+                backup_codes.remove(code.upper())
+                await db.users.update_one(
+                    {"_id": user["_id"]},
+                    {"$set": {"backup_codes": backup_codes}}
+                )
+                verified = True
+        
+        if not verified:
+            raise HTTPException(status_code=400, detail="Invalid verification code")
+        
         # Create full session token
         token = create_jwt_token(str(user["_id"]))
         
-        # Set session cookie
+        # Set session cookie for persistence
         response.set_cookie(
             key="session_token",
             value=token,
-            max_age=8 * 60 * 60,
+            max_age=8 * 60 * 60,  # 8 hours
             httponly=True,
             secure=True,
             samesite="none",
@@ -474,10 +532,9 @@ async def verify_2fa_login(verification_data: dict, response: Response):
                 "two_factor_enabled": user.get("two_factor_enabled", False)
             }
         }
-
         
     except HTTPException:
-        raise e
+        raise
     except Exception as e:
         print(f"❌ 2FA verification error: {e}")
         raise HTTPException(status_code=500, detail="2FA verification failed")
