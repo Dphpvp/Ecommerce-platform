@@ -1,4 +1,4 @@
-# backend/main.py - Production ready with CORS fixes
+# backend/main.py - CORS Credentials Fixed
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
@@ -34,22 +34,25 @@ app.include_router(admin_router)
 if ALLOWED_HOSTS:
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS)
 
-# CORS configuration - More permissive for debugging
+# CORS configuration - FIXED FOR CREDENTIALS
 origins = [
     "https://vergishop.vercel.app",
-    "https://vs1.vercel.app",
-    "https://*.vercel.app",  # Allow all Vercel subdomains
+    "https://vs1.vercel.app"
 ]
 
-# If FRONTEND_URL is set and not in origins, add it
+# Add FRONTEND_URL if set and not already included
 if FRONTEND_URL and FRONTEND_URL not in origins:
     origins.append(FRONTEND_URL)
 
-# Temporarily allow all origins to debug CORS issues
+# Add development origins only if in development
+if os.getenv("ENVIRONMENT") == "development":
+    origins.extend(["http://localhost:3000", "http://127.0.0.1:3000"])
+
+# CRITICAL: NO WILDCARDS when using credentials
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins for debugging
-    allow_credentials=True,
+    allow_origins=origins,  # Specific origins only - NO "*"
+    allow_credentials=True,  # This requires specific origins
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=["*"],
     expose_headers=["*"],
@@ -58,25 +61,41 @@ app.add_middleware(
 
 # Handle OPTIONS requests for CORS preflight
 @app.options("/{path:path}")
-async def handle_options(path: str):
-    return {"message": "OK"}
-
-# Simplified rate limiting middleware
-@app.middleware("http")
-async def simplified_middleware(request: Request, call_next):
-    # Add CORS headers manually as backup
-    response = await call_next(request)
+async def handle_options(path: str, request: Request):
+    """Handle CORS preflight requests"""
+    origin = request.headers.get("origin")
     
-    # Ensure CORS headers are present
-    response.headers["Access-Control-Allow-Origin"] = "*"
-    response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
-    response.headers["Access-Control-Allow-Headers"] = "*"
-    response.headers["Access-Control-Allow-Credentials"] = "true"
+    # Create response with proper CORS headers
+    from fastapi.responses import Response
+    response = Response()
+    
+    if origin in origins:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        response.headers["Access-Control-Max-Age"] = "3600"
     
     return response
 
-# CSRF middleware - TEMPORARILY DISABLED for debugging
-# app.middleware("http")(csrf_middleware)
+# CORS middleware - Fixed for credentials
+@app.middleware("http")
+async def cors_credentials_middleware(request: Request, call_next):
+    """Ensure CORS headers work properly with credentials"""
+    response = await call_next(request)
+    
+    # Get the origin from the request
+    origin = request.headers.get("origin")
+    
+    # Only set CORS headers if origin is in our allowed list
+    if origin and origin in origins:
+        response.headers["Access-Control-Allow-Origin"] = origin  # Specific origin
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+        response.headers["Access-Control-Allow-Headers"] = "*"
+        response.headers["Access-Control-Expose-Headers"] = "*"
+    
+    return response
 
 # Security headers middleware (simplified)
 @app.middleware("http")
@@ -88,13 +107,13 @@ async def security_headers_middleware(request: Request, call_next):
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     
-    # Simplified CSP for debugging
+    # Simplified CSP for credentials
     csp = (
         "default-src 'self'; "
         "script-src 'self' 'unsafe-inline'; "
         "style-src 'self' 'unsafe-inline'; "
         "img-src 'self' data: https: blob:; "
-        "connect-src 'self' *; "
+        "connect-src 'self' " + " ".join(origins) + "; "
         "object-src 'none'"
     )
     response.headers["Content-Security-Policy"] = csp
@@ -125,7 +144,8 @@ async def health_check():
         "email_configured": email_configured,
         "mongodb_configured": mongodb_configured,
         "frontend_url": FRONTEND_URL,
-        "cors": "enabled",
+        "cors_origins": origins,
+        "credentials_enabled": True,
         "timestamp": datetime.now().isoformat()
     }
 
@@ -136,24 +156,32 @@ async def test_endpoint():
         "message": "API is working", 
         "timestamp": datetime.now().isoformat(),
         "environment": "production",
-        "cors": "enabled",
-        "frontend_url": FRONTEND_URL
+        "cors": "credentials-enabled",
+        "origins": origins
     }
 
 @app.get("/api/cors-test")
-async def cors_test():
-    """Test CORS configuration"""
+async def cors_test(request: Request):
+    """Test CORS configuration with credentials"""
+    origin = request.headers.get("origin")
+    
     return {
         "cors": "working",
-        "message": "CORS is properly configured",
-        "origins": ["*"],  # Showing all origins allowed
+        "message": "CORS is properly configured for credentials",
+        "request_origin": origin,
+        "allowed_origins": origins,
+        "credentials_supported": True,
         "timestamp": datetime.now().isoformat()
     }
 
 @app.get("/api/csrf-token")
 async def get_csrf_token():
     """CSRF token endpoint - disabled for debugging"""
-    return {"csrf_token": "disabled-for-debugging", "message": "CSRF temporarily disabled"}
+    return {
+        "csrf_token": "disabled-for-debugging", 
+        "message": "CSRF temporarily disabled",
+        "note": "Remove this when re-enabling CSRF"
+    }
 
 # Global exception handler
 @app.exception_handler(500)
@@ -171,7 +199,8 @@ async def not_found_handler(request: Request, exc: HTTPException):
 async def startup_event():
     print("🚀 E-commerce Backend Starting Up...")
     print(f"🌐 Frontend URL: {FRONTEND_URL}")
-    print(f"🔗 CORS: Allowing all origins for debugging")
+    print(f"🔗 CORS Origins: {origins}")
+    print(f"🍪 Credentials: ENABLED")
     print(f"🛡️ CSRF: Temporarily disabled")
     
     try:
@@ -186,25 +215,25 @@ async def startup_event():
             await db.users.create_index("email", unique=True)
             print("✅ Users email index created")
         except Exception as e:
-            print(f"⚠️ Users index warning: {e}")
+            print(f"⚠️ Users index: {e}")
         
         try:
             await db.products.create_index("category")
             print("✅ Products category index created")
         except Exception as e:
-            print(f"⚠️ Products index warning: {e}")
+            print(f"⚠️ Products index: {e}")
         
         try:
             await db.orders.create_index("user_id")
             print("✅ Orders user_id index created")
         except Exception as e:
-            print(f"⚠️ Orders index warning: {e}")
+            print(f"⚠️ Orders index: {e}")
         
         try:
             await db.cart.create_index("user_id")
             print("✅ Cart user_id index created")
         except Exception as e:
-            print(f"⚠️ Cart index warning: {e}")
+            print(f"⚠️ Cart index: {e}")
         
     except Exception as e:
         print(f"❌ Database setup error: {e}")
@@ -220,13 +249,13 @@ async def startup_event():
         "STRIPE_SECRET_KEY": bool(os.getenv("STRIPE_SECRET_KEY"))
     }
     
-    print("\n📊 Environment Variables Status:")
+    print("\n📊 Environment Variables:")
     for var, is_set in env_vars.items():
         status = "✅" if is_set else "❌"
         print(f"{status} {var}: {'Set' if is_set else 'Not set'}")
     
-    print(f"\n🎯 Server ready at: https://ecommerce-platform-nizy.onrender.com")
-    print(f"🔧 Frontend should use: REACT_APP_API_URL=https://ecommerce-platform-nizy.onrender.com")
+    print(f"\n🎯 Server ready!")
+    print(f"🔧 Test CORS: https://ecommerce-platform-nizy.onrender.com/api/cors-test")
 
 if __name__ == "__main__":
     import uvicorn
