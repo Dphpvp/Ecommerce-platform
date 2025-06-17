@@ -1,4 +1,4 @@
-# backend/middleware/session.py - Fixed version
+# backend/middleware/session.py - Fixed indentation
 import hmac
 import hashlib
 import time
@@ -13,7 +13,7 @@ JWT_SECRET = os.getenv("JWT_SECRET", "your-jwt-secret-key")
 SESSION_SECRET = os.getenv("SESSION_SECRET", secrets.token_hex(32))
 
 # Fixed cookie domain configuration
-COOKIE_DOMAIN = os.getenv("COOKIE_DOMAIN")  # Will be None for localhost
+COOKIE_DOMAIN = os.getenv("COOKIE_DOMAIN")
 SECURE_COOKIES = os.getenv("ENVIRONMENT") == "production"
 
 class SecureSessionManager:
@@ -31,24 +31,28 @@ class SecureSessionManager:
         return jwt.encode(payload, JWT_SECRET, algorithm="HS256")
     
     def set_session_cookie(self, response: Response, token: str):
-    """Set session cookie for cross-domain"""
-    cookie_kwargs = {
-        "key": "session_token", 
-        "value": token,
-        "max_age": 8 * 60 * 60,
-        "httponly": True,
-        "secure": True,  # Must be True for cross-domain
-        "samesite": "none",  # Required for cross-domain
-    }
-    response.set_cookie(**cookie_kwargs)
+        """Set session cookie for cross-domain"""
+        cookie_kwargs = {
+            "key": "session_token",
+            "value": token,
+            "max_age": 8 * 60 * 60,
+            "httponly": True,
+            "secure": True,
+            "samesite": "none",
+        }
+        
+        if COOKIE_DOMAIN and SECURE_COOKIES:
+            cookie_kwargs["domain"] = COOKIE_DOMAIN
+            
+        response.set_cookie(**cookie_kwargs)
     
     def clear_session_cookie(self, response: Response):
         """Clear session cookie"""
         cookie_kwargs = {
             "key": "session_token",
-            "secure": SECURE_COOKIES,
+            "secure": True,
             "httponly": True,
-            "samesite": "strict" if SECURE_COOKIES else "lax"
+            "samesite": "none"
         }
         
         if COOKIE_DOMAIN and SECURE_COOKIES:
