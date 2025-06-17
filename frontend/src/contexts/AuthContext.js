@@ -17,15 +17,14 @@ export const AuthProvider = ({ children }) => {
 
   const logout = useCallback(async () => {
     try {
+      // Use GET to avoid CORS preflight issues
       await fetch(`${API_BASE}/auth/logout`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        }
+        method: 'GET',
+        credentials: 'include'
       });
     } catch (error) {
       console.error('Logout error:', error);
+      // Continue with logout even if request fails
     } finally {
       setUser(null);
       setRequires2FA(false);
@@ -84,9 +83,9 @@ export const AuthProvider = ({ children }) => {
   const fetchUser = useCallback(async () => {
     try {
       const response = await fetch(`${API_BASE}/auth/me`, {
-        credentials: 'include', // Include cookies
+        credentials: 'include',
         headers: {
-          'Content-Type': 'application/json',
+          'Accept': 'application/json',
         }
       });
       

@@ -1880,10 +1880,26 @@ async def submit_contact_form(
         raise HTTPException(status_code=500, detail="Failed to send message")
 
 @router.post("/auth/logout")
-async def logout(response: Response, current_user: dict = Depends(get_current_user)):
-    """Logout and clear session"""
-    session_manager.clear_session_cookie(response)
-    return {"message": "Logged out successfully"}
+async def logout(response: Response):
+    """Logout and clear session - No authentication required"""
+    try:
+        session_manager.clear_session_cookie(response)
+        return {"message": "Logged out successfully"}
+    except Exception as e:
+        print(f"❌ Logout error: {e}")
+        # Always return success for logout to prevent issues
+        return {"message": "Logged out successfully"}
+
+# Also add a GET version for easier frontend handling
+@router.get("/auth/logout")
+async def logout_get(response: Response):
+    """Logout via GET - No authentication required"""
+    try:
+        session_manager.clear_session_cookie(response)
+        return {"message": "Logged out successfully"}
+    except Exception as e:
+        print(f"❌ Logout error: {e}")
+        return {"message": "Logged out successfully"}
 
 @router.get("/csrf-token")
 async def get_csrf_token(request: Request):

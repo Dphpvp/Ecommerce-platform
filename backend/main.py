@@ -1,4 +1,4 @@
-# backend/main.py - CORS Credentials Fixed
+# backend/main.py - CORS and Database Fixed
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
@@ -8,7 +8,6 @@ import os
 
 from api import router as api_router
 from routes.admin_routes import router as admin_router
-# from middleware.csrf import csrf_middleware  # Temporarily disabled
 from middleware.validation import rate_limiter, get_client_ip
 
 # Configuration
@@ -54,7 +53,16 @@ app.add_middleware(
     allow_origins=origins,  # Specific origins only - NO "*"
     allow_credentials=True,  # This requires specific origins
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-    allow_headers=["*"],
+    allow_headers=[
+        "Accept",
+        "Accept-Language", 
+        "Content-Language",
+        "Content-Type",
+        "Authorization",
+        "X-CSRF-Token",
+        "X-Request-Signature",
+        "X-Request-Timestamp"
+    ],  # Explicit headers instead of "*"
     expose_headers=["*"],
     max_age=3600,
 )
@@ -72,7 +80,7 @@ async def handle_options(path: str, request: Request):
     if origin in origins:
         response.headers["Access-Control-Allow-Origin"] = origin
         response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
-        response.headers["Access-Control-Allow-Headers"] = "*"
+        response.headers["Access-Control-Allow-Headers"] = "Accept, Accept-Language, Content-Language, Content-Type, Authorization, X-CSRF-Token, X-Request-Signature, X-Request-Timestamp"
         response.headers["Access-Control-Allow-Credentials"] = "true"
         response.headers["Access-Control-Max-Age"] = "3600"
     
@@ -92,7 +100,7 @@ async def cors_credentials_middleware(request: Request, call_next):
         response.headers["Access-Control-Allow-Origin"] = origin  # Specific origin
         response.headers["Access-Control-Allow-Credentials"] = "true"
         response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
-        response.headers["Access-Control-Allow-Headers"] = "*"
+        response.headers["Access-Control-Allow-Headers"] = "Accept, Accept-Language, Content-Language, Content-Type, Authorization, X-CSRF-Token, X-Request-Signature, X-Request-Timestamp"
         response.headers["Access-Control-Expose-Headers"] = "*"
     
     return response
@@ -204,10 +212,10 @@ async def startup_event():
     print(f"🛡️ CSRF: Temporarily disabled")
     
     try:
-        from database.connection import db
+        from database.connection import db, client
         
-        # Test database connection
-        await db.admin.command('ping')
+        # Test database connection - FIXED
+        await client.admin.command('ping')
         print("📡 Database connection successful")
         
         # Create indexes with error handling
