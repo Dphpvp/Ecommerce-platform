@@ -477,7 +477,7 @@ async def verify_2fa_login(verification_data: dict, response: Response):
 
         
     except HTTPException:
-        raise
+        raise e
     except Exception as e:
         print(f"❌ 2FA verification error: {e}")
         raise HTTPException(status_code=500, detail="2FA verification failed")
@@ -1693,7 +1693,7 @@ async def logout(response: Response):
         samesite="none"
     )
     return {"message": "Logged out successfully"}
-    
+
 # Also add a GET version for easier frontend handling
 @router.get("/auth/logout")
 async def logout_get(response: Response):
