@@ -1,4 +1,6 @@
 from fastapi import APIRouter, HTTPException, Depends, Request, Header, Response
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from pydantic import BaseModel, EmailStr, constr
 from typing import Optional, List
 from datetime import datetime, timezone, timedelta
@@ -8,7 +10,7 @@ import stripe
 from bson import ObjectId
 import os
 from google.oauth2 import id_token
-from google.auth.transport import requests as google_requests
+from google.auth.transport import requests
 import re
 import pyotp
 import qrcode
