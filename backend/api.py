@@ -432,26 +432,42 @@ async def login(user_login: UserLogin, request: Request, response: Response):
     
     # Check if 2FA is enabled
     if user.get("two_factor_enabled"):
-        # Create temporary session for 2FA
-        temp_token = session_manager.create_session_token(
-            str(user["_id"]), 
-            expires_in=timedelta(minutes=5)
-        )
-        session_manager.set_session_cookie(response, temp_token)
+        temp_token = create_jwt_token(str(user["_id"]), expires_in=timedelta(minutes=10))
         
-        # FIXED: Return temp_token in response body
+        # Auto-send email for email 2FA
+        if user.get("two_factor_method") == "email":
+            try:
+                code = generate_email_2fa_code()
+                await db.users.update_one(
+                    {"_id": user["_id"]},
+                    {
+                        "$set": {
+                            "email_2fa_code": code,
+                            "email_2fa_code_created": datetime.now(timezone.utc)
+                        }
+                    }
+                )
+                
+                user_name = user.get("full_name", user.get("username", "User"))
+                await send_2fa_email_code(user["email"], code, user_name)
+                print(f"✅ Auto-sent 2FA code to {user['email']}")
+            except Exception as e:
+                print(f"❌ Failed to auto-send 2FA email: {e}")
+        
         return {
             "requires_2fa": True,
-            "temp_token": temp_token,  # Added this line
-            "message": "Please enter your 2FA code"
+            "method": user.get("two_factor_method", "app"),
+            "temp_token": temp_token,
+            "message": "Please enter your 2FA code",
+            "email_hint": f"***{user['email'][-10:]}" if user.get("two_factor_method") == "email" else None
         }
     
-    # Create session
-    token = session_manager.create_session_token(str(user["_id"]))
-    session_manager.set_session_cookie(response, token)
+    # Regular login
+    token = create_jwt_token(str(user["_id"]))
     
     return {
         "success": True,
+        "token": token,
         "user": {
             "id": str(user["_id"]), 
             "email": user["email"], 
@@ -466,96 +482,57 @@ async def login(user_login: UserLogin, request: Request, response: Response):
         }
     }
 
+
 @router.post("/auth/verify-2fa")
-async def verify_2fa_login(verification_data: dict, request: Request, response: Response):
-    """Verify 2FA and establish session - Fixed version"""
+async def verify_2fa_login(verification_data: dict, response: Response):
+    """Verify 2FA and complete login"""
     try:
         code = verification_data.get("code")
-        temp_token = verification_data.get("temp_token")  # Also accept from body
+        temp_token = verification_data.get("temp_token")
         
-        if not code:
-            raise HTTPException(status_code=400, detail="Verification code is required")
+        if not code or not temp_token:
+            raise HTTPException(status_code=400, detail="Code and temp_token are required")
         
-        # Get temp session token (try both cookie and body)
-        if not temp_token:
-            try:
-                temp_token = session_manager.get_session_token(request)
-            except:
-                raise HTTPException(status_code=401, detail="No temporary session found")
-        
-        # Verify temp token
         try:
-            payload = session_manager.verify_session_token(temp_token)
+            payload = jwt.decode(temp_token, JWT_SECRET, algorithms=["HS256"])
+            user_id = payload.get("user_id")
         except jwt.ExpiredSignatureError:
             raise HTTPException(status_code=401, detail="2FA session expired. Please login again.")
         except jwt.JWTError:
-            # Try JWT decode as fallback
-            try:
-                payload = jwt.decode(temp_token, JWT_SECRET, algorithms=["HS256"])
-            except:
-                raise HTTPException(status_code=401, detail="Invalid session")
+            raise HTTPException(status_code=401, detail="Invalid session")
         
-        user_id = payload.get("user_id")
         user = await db.users.find_one({"_id": ObjectId(user_id)})
-        
-        if not user:
-            raise HTTPException(status_code=401, detail="User not found")
-        
-        if not user.get("two_factor_enabled"):
-            raise HTTPException(status_code=400, detail="2FA is not enabled for this account")
+        if not user or not user.get("two_factor_enabled"):
+            raise HTTPException(status_code=401, detail="Invalid 2FA state")
         
         method = user.get("two_factor_method", "app")
         verified = False
-        backup_code_used = False
-        
-        # Validate code format
-        if not code or len(code.strip()) == 0:
-            raise HTTPException(status_code=400, detail="Please enter a verification code")
-        
-        code = code.strip()
         
         if method == "app":
             secret = user.get("two_factor_secret")
-            if not secret:
-                raise HTTPException(status_code=400, detail="2FA secret not found")
-            
-            try:
+            if secret:
                 totp = pyotp.TOTP(secret)
                 verified = totp.verify(code, valid_window=1)
-            except Exception as e:
-                print(f"❌ TOTP verification error: {e}")
-                verified = False
-                
         elif method == "email":
             stored_code = user.get("email_2fa_code")
             code_created = user.get("email_2fa_code_created")
             
-            if not stored_code:
-                raise HTTPException(status_code=400, detail="No verification code found. Please request a new code.")
-            
-            # Check if code expired (5 minutes)
-            if code_created:
+            if stored_code and code_created:
                 if isinstance(code_created, datetime):
                     if code_created.tzinfo is None:
                         code_created = code_created.replace(tzinfo=timezone.utc)
                     
-                    if datetime.now(timezone.utc) > code_created + timedelta(minutes=5):
-                        # Clear expired code
-                        await db.users.update_one(
-                            {"_id": user["_id"]},
-                            {"$unset": {"email_2fa_code": "", "email_2fa_code_created": ""}}
-                        )
-                        raise HTTPException(status_code=400, detail="Verification code expired. Please request a new code.")
-            
-            verified = (code == stored_code)
-            if verified:
-                # Clear used code
-                await db.users.update_one(
-                    {"_id": user["_id"]},
-                    {"$unset": {"email_2fa_code": "", "email_2fa_code_created": ""}}
-                )
+                    # Check if code expired (5 minutes)
+                    if datetime.now(timezone.utc) <= code_created + timedelta(minutes=5):
+                        verified = (code == stored_code)
+                        if verified:
+                            # Clear used code
+                            await db.users.update_one(
+                                {"_id": user["_id"]},
+                                {"$unset": {"email_2fa_code": "", "email_2fa_code_created": ""}}
+                            )
         
-        # Check backup codes if primary method failed
+        # Check backup codes if primary failed
         if not verified:
             backup_codes = user.get("backup_codes", [])
             if code.upper() in backup_codes:
@@ -565,22 +542,16 @@ async def verify_2fa_login(verification_data: dict, request: Request, response: 
                     {"$set": {"backup_codes": backup_codes}}
                 )
                 verified = True
-                backup_code_used = True
         
         if not verified:
-            # Rate limiting for failed attempts
-            client_ip = get_client_ip(request)
-            if not rate_limiter.is_allowed(f"{client_ip}:2fa_failed", max_requests=5, window=900):
-                raise HTTPException(status_code=429, detail="Too many failed 2FA attempts. Please try again later.")
-            
             raise HTTPException(status_code=400, detail="Invalid verification code")
         
-        # Create full session
-        token = session_manager.create_session_token(str(user["_id"]))
-        session_manager.set_session_cookie(response, token)
+        # Create full session token
+        token = create_jwt_token(str(user["_id"]))
         
-        user_response = {
+        return {
             "success": True,
+            "token": token,
             "user": {
                 "id": str(user["_id"]), 
                 "email": user["email"], 
@@ -591,18 +562,9 @@ async def verify_2fa_login(verification_data: dict, request: Request, response: 
                 "profile_image_url": user.get("profile_image_url"),
                 "is_admin": user.get("is_admin", False),
                 "email_verified": user.get("email_verified", False),
-                "two_factor_enabled": user.get("two_factor_enabled", False),
-                "two_factor_method": user.get("two_factor_method", "app")
+                "two_factor_enabled": user.get("two_factor_enabled", False)
             }
         }
-        
-        if backup_code_used:
-            user_response["backup_code_used"] = True
-            user_response["backup_codes_remaining"] = len(backup_codes)
-            if len(backup_codes) <= 2:
-                user_response["warning"] = "You have few backup codes remaining. Consider generating new ones."
-            
-        return user_response
         
     except HTTPException:
         raise
@@ -611,21 +573,10 @@ async def verify_2fa_login(verification_data: dict, request: Request, response: 
         raise HTTPException(status_code=500, detail="2FA verification failed")
 
 @router.post("/auth/send-2fa-email")
-async def send_2fa_email(verification_data: dict, request: Request):
-    """Send 2FA code via email during login - Fixed version"""
+async def send_2fa_email(request_data: dict):
+    """Send 2FA code via email"""
     try:
-        temp_token = verification_data.get("temp_token")
-        
-        # FIXED: Try to get temp_token from multiple sources
-        if not temp_token:
-            try:
-                # Try to get from session cookie first
-                temp_token = session_manager.get_session_token(request)
-            except:
-                # Try to get from Authorization header as fallback
-                auth_header = request.headers.get("Authorization")
-                if auth_header and auth_header.startswith("Bearer "):
-                    temp_token = auth_header.split(" ")[1]
+        temp_token = request_data.get("temp_token")
         
         if not temp_token:
             raise HTTPException(status_code=400, detail="Temporary token is required")
@@ -633,10 +584,6 @@ async def send_2fa_email(verification_data: dict, request: Request):
         try:
             payload = jwt.decode(temp_token, JWT_SECRET, algorithms=["HS256"])
             user_id = payload.get("user_id")
-            
-            if not user_id:
-                raise HTTPException(status_code=400, detail="Invalid temporary token")
-                
         except jwt.ExpiredSignatureError:
             raise HTTPException(status_code=400, detail="Session expired. Please login again.")
         except jwt.JWTError:
@@ -646,56 +593,35 @@ async def send_2fa_email(verification_data: dict, request: Request):
         if not user:
             raise HTTPException(status_code=400, detail="User not found")
         
-        if not user.get("two_factor_enabled"):
-            raise HTTPException(status_code=400, detail="2FA is not enabled for this account")
+        if not user.get("two_factor_enabled") or user.get("two_factor_method") != "email":
+            raise HTTPException(status_code=400, detail="Email 2FA is not enabled")
         
-        if user.get("two_factor_method") != "email":
-            raise HTTPException(status_code=400, detail="Email 2FA is not enabled for this account")
-        
-        # Check for rate limiting
-        last_sent = user.get("last_2fa_email_sent")
-        if last_sent:
-            if isinstance(last_sent, datetime):
-                if last_sent.tzinfo is None:
-                    last_sent = last_sent.replace(tzinfo=timezone.utc)
-                
-                # Minimum 30 seconds between email requests
-                if datetime.now(timezone.utc) < last_sent + timedelta(seconds=30):
-                    raise HTTPException(status_code=429, detail="Please wait before requesting another code")
-        
-        # Generate and store code
+        # Generate and send new code
         code = generate_email_2fa_code()
         await db.users.update_one(
             {"_id": user["_id"]},
             {
                 "$set": {
                     "email_2fa_code": code,
-                    "email_2fa_code_created": datetime.now(timezone.utc),
-                    "last_2fa_email_sent": datetime.now(timezone.utc)
+                    "email_2fa_code_created": datetime.now(timezone.utc)
                 }
             }
         )
         
-        # Send email
-        try:
-            user_name = user.get("full_name", user.get("username", "User"))
-            await send_2fa_email_code(user["email"], code, user_name)
-            
-            return {
-                "message": "Verification code sent to your email",
-                "email_hint": f"***{user['email'][-10:]}",
-                "expires_in": 300  # 5 minutes
-            }
-            
-        except Exception as email_error:
-            print(f"❌ Failed to send 2FA email: {email_error}")
-            raise HTTPException(status_code=500, detail="Failed to send verification email")
+        user_name = user.get("full_name", user.get("username", "User"))
+        await send_2fa_email_code(user["email"], code, user_name)
+        
+        return {
+            "message": "Verification code sent to your email",
+            "email_hint": f"***{user['email'][-10:]}",
+            "expires_in": 300
+        }
         
     except HTTPException:
         raise
     except Exception as e:
         print(f"❌ Send 2FA email error: {e}")
-        raise HTTPException(status_code=500, detail="Failed to process request")
+        raise HTTPException(status_code=500, detail=str(e))
 
 # Helper function for user response
 def create_user_response(token, user):
@@ -1245,34 +1171,23 @@ async def google_login(google_login: GoogleLogin):
 # FIXED: Add GET decorator to auth/me endpoint
 @router.get("/auth/me")
 async def get_me(request: Request):
-    """Get current user info - handles JWT tokens"""
+    """Get current user info"""
     try:
-        # Get token from Authorization header
         auth_header = request.headers.get("Authorization")
         if not auth_header or not auth_header.startswith("Bearer "):
             raise HTTPException(status_code=401, detail="No authentication token provided")
         
         token = auth_header.split(" ")[1]
+        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+        user_id = payload.get("user_id")
         
-        # Decode JWT token
-        try:
-            payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
-            user_id = payload.get("user_id")
-            
-            if not user_id:
-                raise HTTPException(status_code=401, detail="Invalid token payload")
-            
-        except jwt.ExpiredSignatureError:
-            raise HTTPException(status_code=401, detail="Token has expired")
-        except jwt.JWTError:
+        if not user_id:
             raise HTTPException(status_code=401, detail="Invalid token")
         
-        # Get user from database
         user = await db.users.find_one({"_id": ObjectId(user_id)})
         if not user:
             raise HTTPException(status_code=401, detail="User not found")
         
-        # Return user info
         return {
             "id": str(user["_id"]),
             "username": user["username"],
@@ -1286,8 +1201,10 @@ async def get_me(request: Request):
             "two_factor_enabled": user.get("two_factor_enabled", False)
         }
         
-    except HTTPException:
-        raise
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(status_code=401, detail="Token has expired")
+    except jwt.JWTError:
+        raise HTTPException(status_code=401, detail="Invalid token")
     except Exception as e:
         print(f"❌ Auth me error: {e}")
         raise HTTPException(status_code=401, detail="Authentication failed")
