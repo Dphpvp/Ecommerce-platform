@@ -10,7 +10,7 @@ import stripe
 from bson import ObjectId
 import os
 from google.oauth2 import id_token
-from google.auth.transport import requests
+from google.auth.transport import requests as google_requests
 import re
 import pyotp
 import qrcode
@@ -1088,26 +1088,26 @@ async def generate_backup_codes(current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=500, detail="Failed to generate backup codes")
     
 @router.post("/auth/google")
-@csrf_exempt
-async def google_login(google_login: GoogleLogin):
+async def google_login(
+    google_login: GoogleLogin,
+    db: AsyncIOMotorDatabase = Depends(get_database)
+):
     try:
         # Verify the Google token
         idinfo = id_token.verify_oauth2_token(
-            google_login.token, requests.Request(), GOOGLE_CLIENT_ID
+            google_login.token, google_requests.Request(), GOOGLE_CLIENT_ID
         )
-        
+
         if idinfo['iss'] not in ['accounts.google.com', 'https://accounts.google.com']:
             raise ValueError('Wrong issuer.')
-        
+
         email = idinfo['email']
         name = idinfo['name']
         google_id = idinfo['sub']
-        
-        # Check if user exists
+
         user = await db.users.find_one({"email": email})
-        
+
         if user:
-            # User exists, log them in
             token = create_jwt_token(str(user["_id"]))
             return {
                 "token": token,
@@ -1120,36 +1120,33 @@ async def google_login(google_login: GoogleLogin):
                     "phone": user.get("phone"),
                     "profile_image_url": user.get("profile_image_url"),
                     "is_admin": user.get("is_admin", False),
-                    "email_verified": user.get("email_verified", True),  # Google accounts are verified
+                    "email_verified": user.get("email_verified", True),
                     "two_factor_enabled": user.get("two_factor_enabled", False)
                 }
             }
         else:
-            # Create new user
-            username = email.split('@')[0]  # Use email prefix as username
-            
-            # Ensure username is unique
+            username = email.split('@')[0]
             counter = 1
             original_username = username
             while await db.users.find_one({"username": username}):
                 username = f"{original_username}{counter}"
                 counter += 1
-            
+
             user_data = {
                 "username": username,
                 "email": email,
-                "password": "",  # No password for Google users
+                "password": "",
                 "full_name": name,
                 "google_id": google_id,
                 "is_admin": False,
-                "email_verified": True,  # Google accounts are pre-verified
+                "email_verified": True,
                 "two_factor_enabled": False,
                 "created_at": datetime.now(timezone.utc)
             }
-            
+
             result = await db.users.insert_one(user_data)
             token = create_jwt_token(str(result.inserted_id))
-            
+
             return {
                 "token": token,
                 "user": {
@@ -1165,11 +1162,13 @@ async def google_login(google_login: GoogleLogin):
                     "two_factor_enabled": False
                 }
             }
-            
-    except ValueError as e:
+
+    except ValueError:
         raise HTTPException(status_code=400, detail="Invalid Google token")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        print("Google OAuth error:", str(e))  # Or use logging
+        raise HTTPException(status_code=500, detail="Google login failed.")
+
 
 # FIXED: Add GET decorator to auth/me endpoint
 @router.get("/auth/me")
