@@ -1,228 +1,166 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { useAuth } from './AuthContext';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
-const CartContext = createContext();
+const AuthContext = createContext();
 
-export const CartProvider = ({ children }) => {
-  const [cartItems, setCartItems] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const { user } = useAuth();
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [token, setToken] = useState(localStorage.getItem('token'));
+  const [loading, setLoading] = useState(true);
+  const [requires2FA, setRequires2FA] = useState(false);
+  const [tempToken, setTempToken] = useState(null);
+  
+  // Auto-logout state
+  const timeoutRef = useRef(null);
+  const TIMEOUT_DURATION = 60 * 60 * 1000; // 1 hour in milliseconds
 
-  const fetchCart = useCallback(async () => {
-    if (!user) {
-      setCartItems([]);
-      return;
+  const logout = useCallback(() => {
+    localStorage.removeItem('token');
+    setToken(null);
+    setUser(null);
+    setRequires2FA(false);
+    setTempToken(null);
+    setLoading(false);
+    
+    // Clear auto-logout timer
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+  }, []);
+
+  // Auto-logout functions
+  const resetTimeout = useCallback(() => {
+    if (!user) return;
+    
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
     }
     
-    setLoading(true);
-    try {
-      // Try with both cookie and token
-      const token = localStorage.getItem('auth_token');
-      const headers = {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      };
-      
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+    timeoutRef.current = setTimeout(() => {
+      console.log('Auto-logout due to inactivity');
+      logout();
+    }, TIMEOUT_DURATION);
+  }, [user, logout, TIMEOUT_DURATION]);
+
+  const handleActivity = useCallback(() => {
+    resetTimeout();
+  }, [resetTimeout]);
+
+  // Activity event listeners
+  useEffect(() => {
+    if (!user) return;
+
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
+    
+    events.forEach(event => {
+      document.addEventListener(event, handleActivity, true);
+    });
+
+    // Start the initial timeout
+    resetTimeout();
+
+    return () => {
+      events.forEach(event => {
+        document.removeEventListener(event, handleActivity, true);
+      });
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
       }
-      
-      const response = await fetch(`${API_BASE}/cart`, {
-        method: 'GET',
-        credentials: 'include',
-        headers
+    };
+  }, [user, handleActivity, resetTimeout]);
+
+  const fetchUser = useCallback(async () => {
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE}/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` }
       });
       
       if (response.ok) {
-        const data = await response.json();
-        setCartItems(Array.isArray(data) ? data : []);
+        const userData = await response.json();
+        setUser(userData);
       } else if (response.status === 401) {
-        setCartItems([]);
-      } else {
-        console.error('Failed to fetch cart:', response.status);
-        setCartItems([]);
+        // Token is invalid, logout without retry
+        logout();
+        return;
       }
     } catch (error) {
-      console.error('Failed to fetch cart:', error);
-      setCartItems([]);
+      console.error('Failed to fetch user:', error);
+      // Don't logout on network errors, only on auth errors
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [token, logout]);
 
-  const addToCart = async (productId, quantity = 1) => {
-    if (!user) {
-      console.warn('User not authenticated');
-      return false;
-    }
+  // FIX: Add this useEffect to fetch user on app load
+  useEffect(() => {
+    fetchUser();
+  }, [fetchUser]);
 
-    if (!productId || quantity < 1) {
-      console.error('Invalid product ID or quantity');
-      return false;
-    }
+  const login = (token, userData) => {
+    localStorage.setItem('token', token);
+    setToken(token);
+    setUser(userData);
+    setRequires2FA(false);
+    setTempToken(null);
+    setLoading(false);
+  };
 
+  const handle2FARequired = (tempToken) => {
+    setRequires2FA(true);
+    setTempToken(tempToken);
+  };
+
+  const register = async (userData) => {
+    setLoading(true);
     try {
-      // Use token from localStorage if available
-      const token = localStorage.getItem('auth_token');
-      const headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      };
-      
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-      
-      const response = await fetch(`${API_BASE}/cart/add`, {
+      const response = await fetch(`${API_BASE}/auth/register`, {
         method: 'POST',
-        credentials: 'include',
-        headers,
-        body: JSON.stringify({ 
-          product_id: productId, 
-          quantity: parseInt(quantity) 
-        })
-      });
-
-      const data = await response.json();
-      
-      if (response.ok) {
-        await fetchCart();
-        return true;
-      } else {
-        console.error('Failed to add to cart:', data.detail || 'Unknown error');
-        return false;
-      }
-    } catch (error) {
-      console.error('Failed to add to cart:', error);
-      return false;
-    }
-  };
-
-  const removeFromCart = async (itemId) => {
-    if (!user || !itemId) {
-      console.warn('User not authenticated or invalid item ID');
-      return false;
-    }
-
-    try {
-      const token = localStorage.getItem('auth_token');
-      const headers = {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json'
-      };
-      
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-      
-      const response = await fetch(`${API_BASE}/cart/${itemId}`, {
-        method: 'DELETE',
-        credentials: 'include',
-        headers
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData)
       });
 
       if (response.ok) {
-        await fetchCart();
-        return true;
+        return { success: true, message: 'Registration successful! Please check your email to verify your account.' };
       } else {
-        const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
-        console.error('Failed to remove from cart:', error.detail);
-        return false;
+        const data = await response.json();
+        return { success: false, message: data.detail || 'Registration failed' };
       }
     } catch (error) {
-      console.error('Failed to remove from cart:', error);
-      return false;
+      return { success: false, message: 'Registration failed' };
+    } finally {
+      setLoading(false);
     }
-  };
-
-  const updateCartItemQuantity = async (itemId, newQuantity) => {
-    if (!user || !itemId || newQuantity < 1) {
-      return false;
-    }
-
-    try {
-      const token = localStorage.getItem('auth_token');
-      const headers = {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      };
-      
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-      
-      const response = await fetch(`${API_BASE}/cart/${itemId}`, {
-        method: 'PUT',
-        credentials: 'include',
-        headers,
-        body: JSON.stringify({ quantity: parseInt(newQuantity) })
-      });
-
-      if (response.ok) {
-        await fetchCart();
-        return true;
-      } else {
-        console.error('Failed to update cart item quantity');
-        return false;
-      }
-    } catch (error) {
-      console.error('Failed to update cart item:', error);
-      return false;
-    }
-  };
-
-  const clearCart = useCallback(() => {
-    setCartItems([]);
-  }, []);
-
-  const getCartTotal = useCallback(() => {
-    return cartItems.reduce((total, item) => {
-      const price = item.product?.price || 0;
-      const quantity = item.quantity || 0;
-      return total + (price * quantity);
-    }, 0);
-  }, [cartItems]);
-
-  const getCartItemsCount = useCallback(() => {
-    return cartItems.reduce((total, item) => total + (item.quantity || 0), 0);
-  }, [cartItems]);
-
-  useEffect(() => {
-    fetchCart();
-  }, [fetchCart]);
-
-  useEffect(() => {
-    if (!user) {
-      setCartItems([]);
-    }
-  }, [user]);
-
-  const contextValue = {
-    cartItems,
-    loading,
-    addToCart,
-    removeFromCart,
-    updateCartItemQuantity,
-    clearCart,
-    fetchCart,
-    getCartTotal,
-    getCartItemsCount,
-    isAuthenticated: !!user
   };
 
   return (
-    <CartContext.Provider value={contextValue}>
+    <AuthContext.Provider value={{ 
+      user, 
+      token, 
+      login, 
+      register, 
+      logout, 
+      loading,
+      requires2FA,
+      tempToken,
+      handle2FARequired,
+      refetchUser: fetchUser
+    }}>
       {children}
-    </CartContext.Provider>
+    </AuthContext.Provider>
   );
 };
 
-export const useCart = () => {
-  const context = useContext(CartContext);
+export const useAuth = () => {
+  const context = useContext(AuthContext);
   if (!context) {
-    throw new Error('useCart must be used within a CartProvider');
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
 };
