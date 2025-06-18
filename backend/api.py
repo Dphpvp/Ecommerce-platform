@@ -24,8 +24,8 @@ from middleware.rate_limiter import rate_limit
 from middleware.csrf import csrf_protection
 from middleware.session import session_manager  
 from database.connection import db
-from dependencies import get_current_user, get_admin_user, security
-#from dependencies import get_current_user_from_session
+from auth.dependencies import get_current_user, get_admin_user, security
+from auth.dependencies import get_current_user_from_session, get_current_user_flexible
 
 
 # Email import
@@ -226,102 +226,6 @@ async def get_next_order_number():
         return_document=True
     )
     return counter["value"]
-
-async def get_current_user_from_session(request: Request):
-    """Get current user from session cookie - FIXED for proper error handling"""
-    try:
-        # Try session cookie first
-        session_token = request.cookies.get("session_token")
-        
-        if session_token:
-            try:
-                payload = jwt.decode(session_token, JWT_SECRET, algorithms=["HS256"])
-                user_id = payload.get("user_id")
-                
-                if not user_id:
-                    raise HTTPException(
-                        status_code=status.HTTP_401_UNAUTHORIZED,
-                        detail="Invalid session token",
-                        headers={"WWW-Authenticate": "Bearer"},
-                    )
-                
-                user = await db.users.find_one({"_id": ObjectId(user_id)})
-                if not user:
-                    raise HTTPException(
-                        status_code=status.HTTP_401_UNAUTHORIZED,
-                        detail="User not found",
-                        headers={"WWW-Authenticate": "Bearer"},
-                    )
-                
-                return user
-                
-            except jwt.ExpiredSignatureError:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Session expired",
-                    headers={"WWW-Authenticate": "Bearer"},
-                )
-            except jwt.JWTError:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Invalid session token",
-                    headers={"WWW-Authenticate": "Bearer"},
-                )
-        
-        # Fallback to Authorization header
-        auth_header = request.headers.get("Authorization")
-        if auth_header and auth_header.startswith("Bearer "):
-            token = auth_header.split(" ")[1]
-            try:
-                payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
-                user_id = payload.get("user_id")
-                
-                if not user_id:
-                    raise HTTPException(
-                        status_code=status.HTTP_401_UNAUTHORIZED,
-                        detail="Invalid token",
-                        headers={"WWW-Authenticate": "Bearer"},
-                    )
-                
-                user = await db.users.find_one({"_id": ObjectId(user_id)})
-                if not user:
-                    raise HTTPException(
-                        status_code=status.HTTP_401_UNAUTHORIZED,
-                        detail="User not found",
-                        headers={"WWW-Authenticate": "Bearer"},
-                    )
-                
-                return user
-                
-            except jwt.ExpiredSignatureError:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Token expired",
-                    headers={"WWW-Authenticate": "Bearer"},
-                )
-            except jwt.JWTError:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Invalid token",
-                    headers={"WWW-Authenticate": "Bearer"},
-                )
-        
-        # No authentication found
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authentication required",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        print(f"Authentication error: {e}")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Authentication failed",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
 
 
 async def get_current_user_flexible(request: Request):

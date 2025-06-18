@@ -166,21 +166,63 @@ async def get_admin_user(current_user: dict = Depends(get_current_user_from_sess
     return current_user
 
 # FIXED: Flexible authentication for different endpoints
-async def get_current_user_flexible(request: Request):
-    """Get user from session cookie or authorization header - FIXED"""
-    try:
-        return await get_current_user_from_session(request)
-    except HTTPException as e:
-        # Re-raise with proper status code
-        if e.status_code == 401:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Authentication failed",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-        raise e
+# async def get_current_user_flexible(request: Request):
+#     """Get user from session cookie or authorization header - FIXED"""
+#     try:
+#         return await get_current_user_from_session(request)
+#     except HTTPException as e:
+#         # Re-raise with proper status code
+#         if e.status_code == 401:
+#             raise HTTPException(
+#                 status_code=status.HTTP_401_UNAUTHORIZED,
+#                 detail="Authentication failed",
+#                 headers={"WWW-Authenticate": "Bearer"},
+#             )
+#         raise e
 
 # Alternative function for backward compatibility
 async def get_current_user_from_cookie_or_header(request: Request):
     """Alias for get_current_user_flexible"""
     return await get_current_user_flexible(request)
+
+async def get_current_user_flexible(request: Request):
+    """Get current user from session cookie or Authorization header"""
+    try:
+        # Try Authorization header first (for better compatibility)
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.split(" ")[1]
+            try:
+                payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+                user_id = payload.get("user_id")
+                if user_id:
+                    user = await db.users.find_one({"_id": ObjectId(user_id)})
+                    if user:
+                        return user
+            except jwt.ExpiredSignatureError:
+                pass  # Try cookie next
+            except jwt.JWTError:
+                pass  # Try cookie next
+        
+        # Try session cookie
+        session_token = request.cookies.get("session_token")
+        if session_token:
+            try:
+                payload = jwt.decode(session_token, JWT_SECRET, algorithms=["HS256"])
+                user_id = payload.get("user_id")
+                if user_id:
+                    user = await db.users.find_one({"_id": ObjectId(user_id)})
+                    if user:
+                        return user
+            except jwt.ExpiredSignatureError:
+                raise HTTPException(status_code=401, detail="Session expired")
+            except jwt.JWTError:
+                raise HTTPException(status_code=401, detail="Invalid session")
+        
+        raise HTTPException(status_code=401, detail="Authentication required")
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Authentication error: {e}")
+        raise HTTPException(status_code=401, detail="Authentication failed")
