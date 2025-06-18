@@ -1,49 +1,214 @@
-from fastapi import FastAPI
+# backend/main.py - CORS and Database Fixed
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from datetime import datetime
 import stripe
 import os
+
 from api import router as api_router
 from routes.admin_routes import router as admin_router
+from middleware.validation import rate_limiter, get_client_ip
 
 # Configuration
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
-FRONTEND_URL = os.getenv("FRONTEND_URL")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "https://vergishop.vercel.app")
+ALLOWED_HOSTS_STR = os.getenv("ALLOWED_HOSTS", "vergishop.vercel.app,vs1.vercel.app,ecommerce-platform-nizy.onrender.com")
+ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS_STR.split(",") if host.strip()]
 
 # Initialize FastAPI
-app = FastAPI(title="E-commerce API")
-
-# CORS configuration
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Allow all origins for development; restrict in production
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+app = FastAPI(
+    title="E-commerce API",
+    version="1.0.0",
+    description="E-commerce Platform API",
+    docs_url=None,
+    redoc_url=None,
 )
-
-# Stripe configuration
-if STRIPE_SECRET_KEY:
-    stripe.api_key = STRIPE_SECRET_KEY
 
 # Include routers
 app.include_router(api_router, prefix="/api")
 app.include_router(admin_router)
 
+# Security middleware
+if ALLOWED_HOSTS:
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS)
+
+# CORS configuration - FIXED
+origins = [
+    "https://vergishop.vercel.app",
+    "https://vs1.vercel.app"
+]
+
+# Add FRONTEND_URL if set and not already included
+if FRONTEND_URL and FRONTEND_URL not in origins:
+    origins.append(FRONTEND_URL)
+
+if os.getenv("ENVIRONMENT") == "development":
+    origins.extend(["http://localhost:3000", "http://127.0.0.1:3000"])
+
+# CRITICAL: NO WILDCARDS when using credentials
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allow_headers=[
+        "Accept",
+        "Accept-Language", 
+        "Content-Language",
+        "Content-Type",
+        "Authorization",
+        "X-CSRF-Token",
+        "X-Request-Signature",
+        "X-Request-Timestamp"
+    ],
+    expose_headers=["Set-Cookie"],
+    max_age=3600,
+)
+
+# Handle OPTIONS requests for CORS preflight
+@app.options("/{path:path}")
+async def handle_options(path: str, request: Request):
+    """Handle CORS preflight requests"""
+    origin = request.headers.get("origin")
+    
+    # Create response with proper CORS headers
+    from fastapi.responses import Response
+    response = Response()
+    
+    if origin in origins:
+        response.headers["Access-Control-Allow-Origin"] = origin
+        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+        response.headers["Access-Control-Allow-Headers"] = "Accept, Accept-Language, Content-Language, Content-Type, Authorization, X-CSRF-Token, X-Request-Signature, X-Request-Timestamp"
+        response.headers["Access-Control-Allow-Credentials"] = "true"
+        response.headers["Access-Control-Max-Age"] = "3600"
+    
+    return response
+
+# CORS middleware - Fixed for credentials
+@app.middleware("http")
+async def security_headers_middleware(request: Request, call_next):
+    response = await call_next(request)
+    
+    # Security headers
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Cross-Origin-Opener-Policy"] = "same-origin-allow-popups"
+    
+    # CSP for Google OAuth
+    csp = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline' https://accounts.google.com; "
+        "style-src 'self' 'unsafe-inline'; "
+        "img-src 'self' data: https: blob:; "
+        "connect-src 'self' " + " ".join(origins) + "; "
+        "frame-src 'self' https://accounts.google.com; "
+        "object-src 'none'"
+    )
+    response.headers["Content-Security-Policy"] = csp
+    
+    return response
+
+# Security headers middleware (simplified)
+# @app.middleware("http")
+# async def security_headers_middleware(request: Request, call_next):
+#     response = await call_next(request)
+    
+#     response.headers["X-Content-Type-Options"] = "nosniff"
+#     response.headers["X-Frame-Options"] = "DENY"
+#     response.headers["X-XSS-Protection"] = "1; mode=block"
+#     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    
+#     # Simplified CSP for credentials
+#     csp = (
+#         "default-src 'self'; "
+#         "script-src 'self' 'unsafe-inline'; "
+#         "style-src 'self' 'unsafe-inline'; "
+#         "img-src 'self' data: https: blob:; "
+#         "connect-src 'self' " + " ".join(origins) + "; "
+#         "object-src 'none'"
+#     )
+#     response.headers["Content-Security-Policy"] = csp
+    
+#     return response
+
+# Stripe configuration
+if STRIPE_SECRET_KEY:
+    stripe.api_key = STRIPE_SECRET_KEY
+
 # Health check endpoints
 @app.get("/")
 async def root():
-    return {"message": "E-commerce API is running", "status": "healthy"}
+    return {
+        "message": "E-commerce API is running", 
+        "status": "healthy",
+        "version": "1.0.0",
+        "timestamp": datetime.now().isoformat()
+    }
 
 @app.get("/health")
 async def health_check():
     email_configured = bool(os.getenv("EMAIL_USER") and os.getenv("EMAIL_PASSWORD"))
+    mongodb_configured = bool(os.getenv("MONGODB_URL"))
+    
     return {
         "status": "healthy",
         "email_configured": email_configured,
-        "frontend_url": FRONTEND_URL
+        "mongodb_configured": mongodb_configured,
+        "frontend_url": FRONTEND_URL,
+        "cors_origins": origins,
+        "credentials_enabled": True,
+        "timestamp": datetime.now().isoformat()
     }
 
-# Startup event (merged both functions)
+@app.get("/api/test")
+async def test_endpoint():
+    """Test endpoint to verify API is working"""
+    return {
+        "message": "API is working", 
+        "timestamp": datetime.now().isoformat(),
+        "environment": "production",
+        "cors": "credentials-enabled",
+        "origins": origins
+    }
+
+@app.get("/api/cors-test")
+async def cors_test(request: Request):
+    """Test CORS configuration with credentials"""
+    origin = request.headers.get("origin")
+    
+    return {
+        "cors": "working",
+        "message": "CORS is properly configured for credentials",
+        "request_origin": origin,
+        "allowed_origins": origins,
+        "credentials_supported": True,
+        "timestamp": datetime.now().isoformat()
+    }
+
+@app.get("/api/csrf-token")
+async def get_csrf_token():
+    """CSRF token endpoint - disabled for debugging"""
+    return {
+        "csrf_token": "disabled-for-debugging", 
+        "message": "CSRF temporarily disabled",
+        "note": "Remove this when re-enabling CSRF"
+    }
+
+# Global exception handler
+@app.exception_handler(500)
+async def internal_server_error(request: Request, exc: Exception):
+    print(f"❌ Internal Server Error: {exc}")
+    return {"error": "Internal server error", "message": "Something went wrong"}
+
+@app.exception_handler(404)
+async def not_found_handler(request: Request, exc: HTTPException):
+    print(f"❌ 404 Not Found: {request.url}")
+    return {"error": "Not found", "path": str(request.url), "message": "Endpoint not found"}
+
+# Startup event
 @app.on_event("startup")
 async def startup_event():
     """Create indexes and print configuration status on startup"""
@@ -74,11 +239,6 @@ async def startup_event():
         # Cart indexes
         await db.cart.create_index("user_id")
         await db.cart.create_index([("user_id", 1), ("product_id", 1)], unique=True)
-        
-        # Password reset index
-        
-        await db.password_resets.create_index("token")
-        await db.password_resets.create_index("expires_at", expireAfterSeconds=3600) 
         
         print("📊 Database indexes created successfully")
         

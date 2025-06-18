@@ -1,7 +1,7 @@
 import motor.motor_asyncio
 import os
 
-# MongoDB configuration - you can move this to a config file
+# MongoDB configuration
 MONGODB_URL = os.getenv("MONGODB_URL")
 
 # MongoDB connection

@@ -1,68 +1,41 @@
-import React, { useState, useRef } from 'react';
-import ReCAPTCHA from 'react-google-recaptcha';
+import React, { useState } from 'react';
 import { useToastContext } from '../components/toast';
+import SecureForm from '../components/SecureForm';
+import { csrfManager } from '../utils/csrf';
 import '../styles/contact.css';
 
 const Contact = () => {
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    message: ''
-  });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [captchaValue, setCaptchaValue] = useState(null);
   const { showToast } = useToastContext();
-  const recaptchaRef = useRef();
 
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!captchaValue) {
-      showToast('Please complete the CAPTCHA', 'error');
-      return;
-    }
-    
+  const handleSubmit = async (sanitizedData, csrfToken) => {
     setIsSubmitting(true);
     
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/contact`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...formData,
-          captcha: captchaValue
-        })
-      });
+      const response = await csrfManager.makeSecureRequest(
+        `${process.env.REACT_APP_API_BASE_URL}/contact`,
+        {
+          method: 'POST',
+          headers: {
+            'X-CSRF-Token': csrfToken,
+          },
+          body: JSON.stringify(sanitizedData)
+        }
+      );
 
       if (response.ok) {
         showToast('Message sent successfully! We will get back to you soon.', 'success');
-        setFormData({
-          name: '',
-          email: '',
-          phone: '',
-          message: ''
-        });
-        setCaptchaValue(null);
-        recaptchaRef.current?.reset();
+        // Reset form
+        document.querySelector('form').reset();
       } else {
-        throw new Error('Failed to send message');
+        const error = await response.json();
+        throw new Error(error.detail || 'Failed to send message');
       }
     } catch (error) {
-      console.error('Error sending message:', error);
-      showToast('Failed to send message. Please try again.', 'error');
+      throw error; // Let SecureForm handle the error display
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    setIsSubmitting(false);
   };
 
   return (
@@ -101,15 +74,15 @@ const Contact = () => {
           </div>
 
           <div className="contact-form-container">
-            <form className="contact-form" onSubmit={handleSubmit}>
+            <SecureForm onSubmit={handleSubmit} className="contact-form" validate={true}>
               <div className="form-group">
                 <label htmlFor="name">Name *</label>
                 <input
                   type="text"
                   id="name"
                   name="name"
-                  value={formData.name}
-                  onChange={handleChange}
+                  minLength="2"
+                  maxLength="100"
                   required
                 />
               </div>
@@ -120,8 +93,7 @@ const Contact = () => {
                   type="email"
                   id="email"
                   name="email"
-                  value={formData.email}
-                  onChange={handleChange}
+                  maxLength="254"
                   required
                 />
               </div>
@@ -132,8 +104,7 @@ const Contact = () => {
                   type="tel"
                   id="phone"
                   name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
+                  maxLength="20"
                   placeholder="+1 (555) 123-4567"
                 />
               </div>
@@ -144,36 +115,25 @@ const Contact = () => {
                   id="message"
                   name="message"
                   rows="6"
-                  value={formData.message}
-                  onChange={handleChange}
+                  minLength="20"
+                  maxLength="2000"
                   required
                 ></textarea>
-              </div>
-
-              <div className="form-group">
-                <ReCAPTCHA
-                  ref={recaptchaRef}
-                  sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY}
-                  onChange={setCaptchaValue}
-                  onExpired={() => setCaptchaValue(null)}
-                />
               </div>
 
               <button 
                 type="submit" 
                 className="btn btn-primary"
-                disabled={isSubmitting || !captchaValue}
+                disabled={isSubmitting}
               >
                 {isSubmitting ? 'Sending...' : 'Send Message'}
               </button>
-            </form>
+            </SecureForm>
           </div>
         </div>
       </div>
     </div>
   );
 };
-
-console.log('Site key:', process.env.REACT_APP_RECAPTCHA_SITE_KEY)
 
 export default Contact;

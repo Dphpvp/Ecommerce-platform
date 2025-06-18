@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import TwoFactorVerification from '../components/TwoFactor/TwoFactorVerification';
 import { useToastContext } from '../components/toast';
+import { secureFetch } from '../utils/csrf';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
@@ -15,7 +16,8 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [show2FA, setShow2FA] = useState(false);
   const [tempToken, setTempToken] = useState('');
-  const { login } = useAuth();
+  const [twoFactorMethod, setTwoFactorMethod] = useState('');
+  const { login, refetchUser } = useAuth();
   const { showToast } = useToastContext();
   const navigate = useNavigate();
 
@@ -48,9 +50,8 @@ const Login = () => {
 
   const handleGoogleLogin = async (response) => {
     try {
-      const apiResponse = await fetch(`${API_BASE}/auth/google`, {
+      const apiResponse = await secureFetch(`${API_BASE}/auth/google`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: response.credential }),
       });
 
@@ -59,9 +60,11 @@ const Login = () => {
       if (apiResponse.ok) {
         if (data.requires_2fa) {
           setTempToken(data.temp_token);
+          setTwoFactorMethod(data.method || 'app');
           setShow2FA(true);
         } else {
-          login(data.token, data.user);
+          login(data.user);
+          await refetchUser();
           navigate('/');
         }
       } else {
@@ -85,9 +88,8 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE}/auth/login`, {
+      const response = await secureFetch(`${API_BASE}/auth/login`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 
@@ -95,13 +97,18 @@ const Login = () => {
 
       if (response.ok) {
         if (data.requires_2fa) {
-          // User has 2FA enabled - show 2FA verification
+          // FIXED: Capture temp_token from response
           setTempToken(data.temp_token);
+          setTwoFactorMethod(data.method || 'app');
           setShow2FA(true);
-          showToast('Please enter your 2FA code', 'info');
+          
+          if (data.method === 'email') {
+            showToast('Verification code sent to your email', 'info');
+          } else {
+            showToast('Please enter your 2FA code', 'info');
+          }
         } else {
-          // Normal login
-          login(data.token, data.user);
+          login(data.user);
           navigate('/');
         }
       } else {
@@ -111,6 +118,7 @@ const Login = () => {
         }
       }
     } catch (error) {
+      console.error('Login error:', error);
       setError('Network error. Please try again.');
     } finally {
       setLoading(false);
@@ -119,19 +127,23 @@ const Login = () => {
 
   const handle2FASuccess = () => {
     setShow2FA(false);
+    setTempToken('');
+    setTwoFactorMethod('');
     navigate('/');
   };
 
   const handle2FACancel = () => {
     setShow2FA(false);
     setTempToken('');
+    setTwoFactorMethod('');
   };
 
   // Show 2FA verification if required
   if (show2FA) {
     return (
       <TwoFactorVerification 
-        tempToken={tempToken} 
+        tempToken={tempToken}
+        method={twoFactorMethod}
         onSuccess={handle2FASuccess}
         onCancel={handle2FACancel}
       />
