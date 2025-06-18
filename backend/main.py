@@ -75,6 +75,11 @@ async def startup_event():
         await db.cart.create_index("user_id")
         await db.cart.create_index([("user_id", 1), ("product_id", 1)], unique=True)
         
+        # Password reset index
+        
+        await db.password_resets.create_index("token")
+        await db.password_resets.create_index("expires_at", expireAfterSeconds=3600) 
+        
         print("📊 Database indexes created successfully")
         
     except Exception as e:
