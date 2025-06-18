@@ -8,7 +8,7 @@ from database.connection import db
 
 # Configuration
 JWT_SECRET = os.getenv("JWT_SECRET", "your-jwt-secret-key")
-security = HTTPBearer()
+#security = HTTPBearer()
 
 # FIXED: Use OAuth2PasswordBearer instead of HTTPBearer to avoid 403 bug
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token", auto_error=False)
