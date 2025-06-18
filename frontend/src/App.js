@@ -13,7 +13,7 @@ import Header from './components/header';
 import Footer from './components/Footer';
 import PrivateRoute from './components/PrivateRoute';
 import Profile from './components/profile';
-import ErrorBoundary from '/components/ErrorBoundary';
+import ErrorBoundary from './components/ErrorBoundary';
 
 import Home from './pages/Home';
 import Products from './pages/Products';
