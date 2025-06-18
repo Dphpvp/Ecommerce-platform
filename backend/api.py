@@ -25,6 +25,7 @@ from middleware.csrf import csrf_protection
 from middleware.session import session_manager  
 from database.connection import db
 from dependencies import get_current_user, get_admin_user, security
+from dependencies import get_current_user_from_session, get_current_user_flexible
 
 # Email import
 from utils.email import send_order_confirmation_email, send_admin_order_notification, send_verification_email, send_password_reset_email
@@ -1296,40 +1297,9 @@ async def google_login(google_login: GoogleLogin):
 # FIXED: Add GET decorator to auth/me endpoint
 @router.get("/auth/me")
 async def get_me(request: Request):
-    """Get current user from session cookie or token"""
+    """Get current user from session cookie or token - FIXED"""
     try:
-        # Try session cookie first
-        session_token = request.cookies.get("session_token")
-        
-        if session_token:
-            try:
-                payload = jwt.decode(session_token, JWT_SECRET, algorithms=["HS256"])
-                user_id = payload.get("user_id")
-            except jwt.ExpiredSignatureError:
-                raise HTTPException(status_code=401, detail="Session expired")
-            except jwt.JWTError:
-                raise HTTPException(status_code=401, detail="Invalid session")
-        else:
-            # Fallback to Authorization header
-            auth_header = request.headers.get("Authorization")
-            if not auth_header or not auth_header.startswith("Bearer "):
-                raise HTTPException(status_code=401, detail="No authentication")
-            
-            token = auth_header.split(" ")[1]
-            try:
-                payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
-                user_id = payload.get("user_id")
-            except jwt.ExpiredSignatureError:
-                raise HTTPException(status_code=401, detail="Token expired")
-            except jwt.JWTError:
-                raise HTTPException(status_code=401, detail="Invalid token")
-        
-        if not user_id:
-            raise HTTPException(status_code=401, detail="Invalid authentication")
-        
-        user = await db.users.find_one({"_id": ObjectId(user_id)})
-        if not user:
-            raise HTTPException(status_code=401, detail="User not found")
+        user = await get_current_user_from_session(request)
         
         return {
             "id": str(user["_id"]),
@@ -1349,7 +1319,6 @@ async def get_me(request: Request):
     except Exception as e:
         print(f"Auth check error: {e}")
         raise HTTPException(status_code=401, detail="Authentication failed")
-
 
 @router.post("/auth/request-password-reset")
 @rate_limit(max_attempts=3, window_minutes=60, endpoint_name="password_reset")
@@ -1568,9 +1537,9 @@ async def get_product(product_id: str):
 
 @router.get("/cart")
 async def get_cart(request: Request):
-    """Get user cart - session or token auth"""
+    """Get user cart - FIXED session authentication"""
     try:
-        user = await get_current_user_flexible(request)
+        user = await get_current_user_from_session(request)
         user_id = str(user["_id"])
         
         cart_items = []
@@ -1586,8 +1555,7 @@ async def get_cart(request: Request):
                             "id": str(product["_id"]),
                             "name": product["name"],
                             "price": product["price"],
-                            "image_url": product.get("image_url", ""),
-                            "stock": product.get("stock", 0)
+                            "image_url": product.get("image_url", "")
                         }
                     })
             except Exception as e:
@@ -1600,26 +1568,18 @@ async def get_cart(request: Request):
         raise
     except Exception as e:
         print(f"❌ Get cart error: {e}")
-        return []
+        raise HTTPException(status_code=500, detail="Failed to get cart")
+
 
 # Cart routes
 @router.post("/cart/add")
 async def add_to_cart(cart_item: CartItem, request: Request):
-    """Add to cart - session or token auth"""
+    """Add to cart - FIXED session authentication"""
     try:
-        user = await get_current_user_flexible(request)
+        user = await get_current_user_from_session(request)
         user_id = str(user["_id"])
         
-        # Validate input
-        if not cart_item.product_id or cart_item.quantity < 1:
-            raise HTTPException(status_code=400, detail="Invalid product ID or quantity")
-        
-        # Check if product exists
-        try:
-            product = await db.products.find_one({"_id": ObjectId(cart_item.product_id)})
-        except:
-            raise HTTPException(status_code=400, detail="Invalid product ID format")
-            
+        product = await db.products.find_one({"_id": ObjectId(cart_item.product_id)})
         if not product:
             raise HTTPException(status_code=404, detail="Product not found")
         
@@ -1635,25 +1595,21 @@ async def add_to_cart(cart_item: CartItem, request: Request):
         
         existing_item = await db.cart.find_one({"user_id": user_id, "product_id": cart_item.product_id})
         if existing_item:
-            # Update quantity
-            new_quantity = existing_item["quantity"] + cart_item.quantity
-            if new_quantity > product["stock"]:
-                raise HTTPException(status_code=400, detail="Insufficient stock for total quantity")
-                
             await db.cart.update_one(
                 {"user_id": user_id, "product_id": cart_item.product_id},
-                {"$set": {"quantity": new_quantity}}
+                {"$inc": {"quantity": cart_item.quantity}}
             )
         else:
             await db.cart.insert_one(cart_data)
         
-        return {"message": "Item added to cart", "success": True}
+        return {"message": "Item added to cart"}
         
     except HTTPException:
         raise
     except Exception as e:
         print(f"Add to cart error: {e}")
         raise HTTPException(status_code=500, detail="Failed to add item to cart")
+
 
 @router.get("/products/search")
 async def search_products(
@@ -1701,15 +1657,25 @@ async def search_products(
 
 
 @router.delete("/cart/{item_id}")
-async def remove_from_cart(item_id: str, current_user: dict = Depends(get_current_user)):
-    user_id = str(current_user["_id"])
-    result = await db.cart.delete_one({"_id": ObjectId(item_id), "user_id": user_id})
+async def remove_from_cart(item_id: str, request: Request):
+    """Remove from cart - FIXED session authentication"""
+    try:
+        user = await get_current_user_from_session(request)
+        user_id = str(user["_id"])
+        
+        result = await db.cart.delete_one({"_id": ObjectId(item_id), "user_id": user_id})
+        
+        if result.deleted_count == 0:
+            raise HTTPException(status_code=404, detail="Cart item not found")
+        
+        return {"message": "Item removed from cart"}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Remove from cart error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to remove item from cart")
     
-    if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Cart item not found")
-    
-    return {"message": "Item removed from cart"}
-
 # Payment route
 @router.post("/payment/create-intent")
 async def create_payment_intent(payment: PaymentIntent):
@@ -1725,105 +1691,154 @@ async def create_payment_intent(payment: PaymentIntent):
 
 # 🆕 UPDATED ORDER ROUTES WITH EMAIL NOTIFICATIONS
 @router.post("/orders")
-async def create_order(order_data: dict, current_user: dict = Depends(get_current_user)):
-    user_id = str(current_user["_id"])
-    
-    # Get cart items using the get_cart function
-    cart_items = await get_cart(current_user)
-    if not cart_items:
-        raise HTTPException(status_code=400, detail="Cart is empty")
-    
-    total = sum(item["product"]["price"] * item["quantity"] for item in cart_items)
-    
-    # Get next order number
-    order_number = await get_next_order_number()
-    
-    order = {
-        "order_number": f"{order_number:05d}",  # Format as 00001, 00002, etc.
-        "user_id": user_id,
-        "items": cart_items,
-        "total_amount": total,
-        "shipping_address": order_data.get("shipping_address"),
-        "payment_method": order_data.get("payment_method"),
-        "status": "pending",
-        "created_at": datetime.utcnow()
-    }
-    
-    result = await db.orders.insert_one(order)
-    order_id = str(result.inserted_id)
-    
-    # Clear cart
-    await db.cart.delete_many({"user_id": user_id})
-    
-    # Update product stock
-    for item in cart_items:
-        await db.products.update_one(
-            {"_id": ObjectId(item["product_id"])},
-            {"$inc": {"stock": -item["quantity"]}}
-        )
-    
-    # 🆕 SEND EMAIL NOTIFICATIONS
+async def create_order(order_data: dict, request: Request):
+    """Create order - FIXED with session authentication"""
     try:
-        user_name = current_user.get("full_name", current_user.get("username", "Customer"))
-        user_email = current_user["email"]
+        user = await get_current_user_from_session(request)
+        user_id = str(user["_id"])
         
-        print(f"📧 Sending emails for order {order['order_number']}...")
+        # Get cart items
+        cart_items = []
+        async for item in db.cart.find({"user_id": user_id}):
+            try:
+                product = await db.products.find_one({"_id": ObjectId(item["product_id"])})
+                if product:
+                    cart_items.append({
+                        "id": str(item["_id"]),
+                        "product_id": item["product_id"],
+                        "quantity": item["quantity"],
+                        "product": {
+                            "id": str(product["_id"]),
+                            "name": product["name"],
+                            "price": product["price"],
+                            "image_url": product.get("image_url", "")
+                        }
+                    })
+            except Exception as e:
+                print(f"❌ Cart item error during order: {e}")
+                continue
         
-        # Send confirmation email to customer
-        customer_email_sent = await send_order_confirmation_email(
-            user_email=user_email,
-            user_name=user_name,
-            order_id=order["order_number"],
-            total_amount=total,
-            items=cart_items
-        )
+        if not cart_items:
+            raise HTTPException(status_code=400, detail="Cart is empty")
         
-        # Send notification email to admin
-        admin_email_sent = await send_admin_order_notification(
-            order_id=order["order_number"],
-            user_email=user_email,
-            user_name=user_name,
-            total_amount=total,
-            items=cart_items
-        )
+        total = sum(item["product"]["price"] * item["quantity"] for item in cart_items)
         
-        if customer_email_sent and admin_email_sent:
-            print(f"✅ Both emails sent successfully for order {order['order_number']}")
-        elif customer_email_sent:
-            print(f"✅ Customer email sent, ❌ admin email failed for order {order['order_number']}")
-        elif admin_email_sent:
-            print(f"❌ Customer email failed, ✅ admin email sent for order {order['order_number']}")
-        else:
-            print(f"❌ Both emails failed for order {order['order_number']}")
+        # Get next order number
+        order_number = await get_next_order_number()
+        
+        order = {
+            "order_number": f"{order_number:05d}",  # Format as 00001, 00002, etc.
+            "user_id": user_id,
+            "items": cart_items,
+            "total_amount": total,
+            "shipping_address": order_data.get("shipping_address"),
+            "payment_method": order_data.get("payment_method"),
+            "payment_intent_id": order_data.get("payment_intent_id"),
+            "status": "pending",
+            "created_at": datetime.utcnow()
+        }
+        
+        result = await db.orders.insert_one(order)
+        order_id = str(result.inserted_id)
+        
+        # Clear cart
+        await db.cart.delete_many({"user_id": user_id})
+        
+        # Update product stock
+        for item in cart_items:
+            await db.products.update_one(
+                {"_id": ObjectId(item["product_id"])},
+                {"$inc": {"stock": -item["quantity"]}}
+            )
+        
+        # Send email notifications
+        try:
+            user_name = user.get("full_name", user.get("username", "Customer"))
+            user_email = user["email"]
             
+            print(f"📧 Sending emails for order {order['order_number']}...")
+            
+            # Send confirmation email to customer
+            customer_email_sent = await send_order_confirmation_email(
+                user_email=user_email,
+                user_name=user_name,
+                order_id=order["order_number"],
+                total_amount=total,
+                items=cart_items
+            )
+            
+            # Send notification email to admin
+            admin_email_sent = await send_admin_order_notification(
+                order_id=order["order_number"],
+                user_email=user_email,
+                user_name=user_name,
+                total_amount=total,
+                items=cart_items
+            )
+            
+            if customer_email_sent and admin_email_sent:
+                print(f"✅ Both emails sent successfully for order {order['order_number']}")
+            else:
+                print(f"⚠️ Some emails failed for order {order['order_number']}")
+                
+        except Exception as e:
+            print(f"❌ Email notification error for order {order['order_number']}: {str(e)}")
+            # Don't fail the order creation if email fails
+        
+        return {
+            "message": "Order created successfully", 
+            "order_id": order_id, 
+            "order_number": order["order_number"]
+        }
+        
+    except HTTPException:
+        raise
     except Exception as e:
-        print(f"❌ Email notification error for order {order['order_number']}: {str(e)}")
-        # Don't fail the order creation if email fails
-    
-    return {"message": "Order created successfully", "order_id": order_id, "order_number": order["order_number"]}
+        print(f"❌ Order creation error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to create order")
+
 
 @router.get("/orders")
-async def get_orders(current_user: dict = Depends(get_current_user)):
-    user_id = str(current_user["_id"])
-    
-    cursor = db.orders.find({"user_id": user_id}).sort("created_at", -1)
-    orders = []
-    async for order in cursor:
-        order["_id"] = str(order["_id"])
-        orders.append(order)
-    
-    return orders
+async def get_orders(request: Request):
+    """Get user orders - FIXED session authentication"""
+    try:
+        user = await get_current_user_from_session(request)
+        user_id = str(user["_id"])
+        
+        cursor = db.orders.find({"user_id": user_id}).sort("created_at", -1)
+        orders = []
+        async for order in cursor:
+            order["_id"] = str(order["_id"])
+            orders.append(order)
+        
+        return orders
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Get orders error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get orders")
 
 @router.get("/orders/{order_id}")
-async def get_order(order_id: str, current_user: dict = Depends(get_current_user)):
-    user_id = str(current_user["_id"])
-    
-    order = await db.orders.find_one({"_id": ObjectId(order_id), "user_id": user_id})
-    if not order:
-        raise HTTPException(status_code=404, detail="Order not found")
-    
-    order["_id"] = str(order["_id"])
-    return order
+async def get_order(order_id: str, request: Request):
+    """Get specific order - FIXED session authentication"""
+    try:
+        user = await get_current_user_from_session(request)
+        user_id = str(user["_id"])
+        
+        order = await db.orders.find_one({"_id": ObjectId(order_id), "user_id": user_id})
+        if not order:
+            raise HTTPException(status_code=404, detail="Order not found")
+        
+        order["_id"] = str(order["_id"])
+        return order
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Get order error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get order")
+
 
 @router.post("/contact")
 async def submit_contact_form(

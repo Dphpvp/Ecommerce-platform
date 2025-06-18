@@ -1,94 +1,181 @@
-# backend/dependencies.py - Fixed and consolidated version
-from fastapi import Depends, HTTPException, Request
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+# backend/dependencies.py - FIXED Authentication Dependencies
+from fastapi import Depends, HTTPException, Request, status
+from fastapi.security import OAuth2PasswordBearer
 from jose import jwt, JWTError
 from bson import ObjectId
 import os
-
-# Import database from your database connection file
 from database.connection import db
 
 # Configuration
 JWT_SECRET = os.getenv("JWT_SECRET", "your-jwt-secret-key")
 
-security = HTTPBearer()
+# FIXED: Use OAuth2PasswordBearer instead of HTTPBearer to avoid 403 bug
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token", auto_error=False)
 
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """Get current authenticated user from JWT token"""
+async def get_current_user_from_session(request: Request):
+    """Get current user from session cookie - FIXED for proper error handling"""
     try:
-        payload = jwt.decode(credentials.credentials, JWT_SECRET, algorithms=["HS256"])
-        user_id = payload.get("user_id")
-        if user_id is None:
-            raise HTTPException(status_code=401, detail="Invalid token")
+        # Try session cookie first
+        session_token = request.cookies.get("session_token")
         
-        user = await db.users.find_one({"_id": ObjectId(user_id)})
-        if user is None:
-            raise HTTPException(status_code=401, detail="User not found")
-        
-        return user
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token expired")
-    except JWTError:
-        raise HTTPException(status_code=401, detail="Invalid token")
-
-async def get_current_user_optional(request: Request):
-    """Get current user without requiring authentication"""
-    try:
-        auth_header = request.headers.get("Authorization")
-        if not auth_header or not auth_header.startswith("Bearer "):
-            return None
-        
-        token = auth_header.split(" ")[1]
-        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
-        user_id = payload.get("user_id")
-        
-        if user_id:
-            user = await db.users.find_one({"_id": ObjectId(user_id)})
-            return user
-    except:
-        pass
-    return None
-
-async def get_admin_user(current_user: dict = Depends(get_current_user)):
-    """Check if user is admin"""
-    if not current_user.get("is_admin", False):
-        raise HTTPException(status_code=403, detail="Admin access required")
-    return current_user
-
-async def get_current_user_from_cookie_or_header(request: Request):
-    """Get user from session cookie or authorization header"""
-    try:
-        # Try session manager first
-        from middleware.session import session_manager
-        
-        try:
-            token = session_manager.get_session_token(request)
-            payload = session_manager.verify_session_token(token)
-            
-            user_id = payload.get("user_id")
-            if user_id:
+        if session_token:
+            try:
+                payload = jwt.decode(session_token, JWT_SECRET, algorithms=["HS256"])
+                user_id = payload.get("user_id")
+                
+                if not user_id:
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail="Invalid session token",
+                        headers={"WWW-Authenticate": "Bearer"},
+                    )
+                
                 user = await db.users.find_one({"_id": ObjectId(user_id)})
-                if user:
-                    return user
-        except:
-            pass
+                if not user:
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail="User not found",
+                        headers={"WWW-Authenticate": "Bearer"},
+                    )
+                
+                return user
+                
+            except jwt.ExpiredSignatureError:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Session expired",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+            except jwt.JWTError:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid session token",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
         
-        # Fallback to JWT header
+        # Fallback to Authorization header
         auth_header = request.headers.get("Authorization")
         if auth_header and auth_header.startswith("Bearer "):
             token = auth_header.split(" ")[1]
-            payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
-            user_id = payload.get("user_id")
-            
-            if user_id:
+            try:
+                payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+                user_id = payload.get("user_id")
+                
+                if not user_id:
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail="Invalid token",
+                        headers={"WWW-Authenticate": "Bearer"},
+                    )
+                
                 user = await db.users.find_one({"_id": ObjectId(user_id)})
-                if user:
-                    return user
+                if not user:
+                    raise HTTPException(
+                        status_code=status.HTTP_401_UNAUTHORIZED,
+                        detail="User not found",
+                        headers={"WWW-Authenticate": "Bearer"},
+                    )
+                
+                return user
+                
+            except jwt.ExpiredSignatureError:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Token expired",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+            except jwt.JWTError:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid token",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
         
-        raise HTTPException(status_code=401, detail="Authentication required")
+        # No authentication found
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
         
     except HTTPException:
         raise
     except Exception as e:
         print(f"Authentication error: {e}")
-        raise HTTPException(status_code=401, detail="Authentication failed")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication failed",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+async def get_current_user(token: str = Depends(oauth2_scheme)):
+    """Get current authenticated user from JWT token - FIXED for 401 errors"""
+    if not token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+        
+    try:
+        payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+        user_id = payload.get("user_id")
+        if user_id is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid token",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        user = await db.users.find_one({"_id": ObjectId(user_id)})
+        if user is None:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="User not found",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        
+        return user
+    except jwt.ExpiredSignatureError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token expired",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    except jwt.JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+async def get_current_user_optional(request: Request):
+    """Get current user without requiring authentication"""
+    try:
+        return await get_current_user_from_session(request)
+    except HTTPException:
+        return None
+
+async def get_admin_user(current_user: dict = Depends(get_current_user_from_session)):
+    """Check if user is admin - FIXED to use session-based auth"""
+    if not current_user.get("is_admin", False):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Admin access required"
+        )
+    return current_user
+
+# FIXED: Flexible authentication for different endpoints
+async def get_current_user_flexible(request: Request):
+    """Get user from session cookie or authorization header - FIXED"""
+    try:
+        return await get_current_user_from_session(request)
+    except HTTPException as e:
+        # Re-raise with proper status code
+        if e.status_code == 401:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Authentication failed",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        raise e
