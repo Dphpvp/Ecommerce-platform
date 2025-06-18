@@ -7,7 +7,7 @@ import re
 from urllib.parse import unquote
 from pydantic import BaseModel
 
-from dependencies import get_admin_user
+from auth.dependencies import get_admin_user
 from database.connection import db
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
