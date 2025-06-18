@@ -25,7 +25,8 @@ from middleware.csrf import csrf_protection
 from middleware.session import session_manager  
 from database.connection import db
 from dependencies import get_current_user, get_admin_user, security
-from dependencies import get_current_user_from_session, get_current_user_flexible
+from dependencies import get_current_user_from_session
+
 
 # Email import
 from utils.email import send_order_confirmation_email, send_admin_order_notification, send_verification_email, send_password_reset_email
