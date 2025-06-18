@@ -225,6 +225,49 @@ async def get_next_order_number():
     )
     return counter["value"]
 
+async def get_current_user_flexible(request: Request):
+    """Get current user from session cookie or Authorization header"""
+    try:
+        # Try session cookie first
+        session_token = request.cookies.get("session_token")
+        
+        if session_token:
+            try:
+                payload = jwt.decode(session_token, JWT_SECRET, algorithms=["HS256"])
+                user_id = payload.get("user_id")
+                if user_id:
+                    user = await db.users.find_one({"_id": ObjectId(user_id)})
+                    if user:
+                        return user
+            except jwt.ExpiredSignatureError:
+                pass  # Try Authorization header next
+            except jwt.JWTError:
+                pass  # Try Authorization header next
+        
+        # Fallback to Authorization header
+        auth_header = request.headers.get("Authorization")
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.split(" ")[1]
+            try:
+                payload = jwt.decode(token, JWT_SECRET, algorithms=["HS256"])
+                user_id = payload.get("user_id")
+                if user_id:
+                    user = await db.users.find_one({"_id": ObjectId(user_id)})
+                    if user:
+                        return user
+            except jwt.ExpiredSignatureError:
+                raise HTTPException(status_code=401, detail="Token expired")
+            except jwt.JWTError:
+                raise HTTPException(status_code=401, detail="Invalid token")
+        
+        raise HTTPException(status_code=401, detail="Authentication required")
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Authentication error: {e}")
+        raise HTTPException(status_code=401, detail="Authentication failed")
+
 @router.post("/auth/register")
 async def register(user: SecureUser, request: Request, csrf_valid: bool = Depends(require_csrf_token)):
     client_ip = get_client_ip(request)
@@ -1521,37 +1564,94 @@ async def get_product(product_id: str):
     product["_id"] = str(product["_id"])
     return product
 
+@router.get("/cart")
+async def get_cart(request: Request):
+    """Get user cart - session or token auth"""
+    try:
+        user = await get_current_user_flexible(request)
+        user_id = str(user["_id"])
+        
+        cart_items = []
+        async for item in db.cart.find({"user_id": user_id}):
+            try:
+                product = await db.products.find_one({"_id": ObjectId(item["product_id"])})
+                if product:
+                    cart_items.append({
+                        "id": str(item["_id"]),
+                        "product_id": item["product_id"],
+                        "quantity": item["quantity"],
+                        "product": {
+                            "id": str(product["_id"]),
+                            "name": product["name"],
+                            "price": product["price"],
+                            "image_url": product.get("image_url", ""),
+                            "stock": product.get("stock", 0)
+                        }
+                    })
+            except Exception as e:
+                print(f"❌ Cart item error: {e}")
+                continue
+        
+        return cart_items
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Get cart error: {e}")
+        return []
+
 # Cart routes
 @router.post("/cart/add")
 async def add_to_cart(cart_item: CartItem, request: Request):
     """Add to cart - session or token auth"""
-    user = await get_current_user_flexible(request)
-    user_id = str(user["_id"])
-    
-    product = await db.products.find_one({"_id": ObjectId(cart_item.product_id)})
-    if not product:
-        raise HTTPException(status_code=404, detail="Product not found")
-    
-    if product["stock"] < cart_item.quantity:
-        raise HTTPException(status_code=400, detail="Insufficient stock")
-    
-    cart_data = {
-        "user_id": user_id,
-        "product_id": cart_item.product_id,
-        "quantity": cart_item.quantity,
-        "added_at": datetime.utcnow()
-    }
-    
-    existing_item = await db.cart.find_one({"user_id": user_id, "product_id": cart_item.product_id})
-    if existing_item:
-        await db.cart.update_one(
-            {"user_id": user_id, "product_id": cart_item.product_id},
-            {"$inc": {"quantity": cart_item.quantity}}
-        )
-    else:
-        await db.cart.insert_one(cart_data)
-    
-    return {"message": "Item added to cart"}
+    try:
+        user = await get_current_user_flexible(request)
+        user_id = str(user["_id"])
+        
+        # Validate input
+        if not cart_item.product_id or cart_item.quantity < 1:
+            raise HTTPException(status_code=400, detail="Invalid product ID or quantity")
+        
+        # Check if product exists
+        try:
+            product = await db.products.find_one({"_id": ObjectId(cart_item.product_id)})
+        except:
+            raise HTTPException(status_code=400, detail="Invalid product ID format")
+            
+        if not product:
+            raise HTTPException(status_code=404, detail="Product not found")
+        
+        if product["stock"] < cart_item.quantity:
+            raise HTTPException(status_code=400, detail="Insufficient stock")
+        
+        cart_data = {
+            "user_id": user_id,
+            "product_id": cart_item.product_id,
+            "quantity": cart_item.quantity,
+            "added_at": datetime.utcnow()
+        }
+        
+        existing_item = await db.cart.find_one({"user_id": user_id, "product_id": cart_item.product_id})
+        if existing_item:
+            # Update quantity
+            new_quantity = existing_item["quantity"] + cart_item.quantity
+            if new_quantity > product["stock"]:
+                raise HTTPException(status_code=400, detail="Insufficient stock for total quantity")
+                
+            await db.cart.update_one(
+                {"user_id": user_id, "product_id": cart_item.product_id},
+                {"$set": {"quantity": new_quantity}}
+            )
+        else:
+            await db.cart.insert_one(cart_data)
+        
+        return {"message": "Item added to cart", "success": True}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Add to cart error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to add item to cart")
 
 @router.get("/products/search")
 async def search_products(
@@ -1596,41 +1696,6 @@ async def search_products(
         products.append(product)
     
     return {"products": products, "count": len(products)}
-
-@router.get("/cart")
-async def get_cart(request: Request):
-    """Get user cart - session or token auth"""
-    try:
-        user = await get_current_user_flexible(request)
-        user_id = str(user["_id"])
-        
-        cart_items = []
-        async for item in db.cart.find({"user_id": user_id}):
-            try:
-                product = await db.products.find_one({"_id": ObjectId(item["product_id"])})
-                if product:
-                    cart_items.append({
-                        "id": str(item["_id"]),
-                        "product_id": item["product_id"],
-                        "quantity": item["quantity"],
-                        "product": {
-                            "id": str(product["_id"]),
-                            "name": product["name"],
-                            "price": product["price"],
-                            "image_url": product.get("image_url", "")
-                        }
-                    })
-            except Exception as e:
-                print(f"❌ Cart item error: {e}")
-                continue
-        
-        return cart_items
-        
-    except HTTPException:
-        raise
-    except Exception as e:
-        print(f"❌ Get cart error: {e}")
-        return []
 
 
 @router.delete("/cart/{item_id}")

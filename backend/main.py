@@ -1,7 +1,8 @@
-# backend/main.py - CORS and Database Fixed
+# backend/main.py - Fixed CORS for credentials
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.responses import Response
 from datetime import datetime
 import stripe
 import os
@@ -33,7 +34,7 @@ app.include_router(admin_router)
 if ALLOWED_HOSTS:
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS)
 
-# CORS configuration - FIXED
+# CORS configuration - FIXED for credentials
 origins = [
     "https://vergishop.vercel.app",
     "https://vs1.vercel.app"
@@ -46,7 +47,7 @@ if FRONTEND_URL and FRONTEND_URL not in origins:
 if os.getenv("ENVIRONMENT") == "development":
     origins.extend(["http://localhost:3000", "http://127.0.0.1:3000"])
 
-# CRITICAL: NO WILDCARDS when using credentials
+# CRITICAL: Proper CORS with credentials
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -60,79 +61,46 @@ app.add_middleware(
         "Authorization",
         "X-CSRF-Token",
         "X-Request-Signature",
-        "X-Request-Timestamp"
+        "X-Request-Timestamp",
+        "Cookie",
+        "Set-Cookie"
     ],
-    expose_headers=["Set-Cookie"],
+    expose_headers=["Set-Cookie", "Content-Type"],
     max_age=3600,
 )
 
-# Handle OPTIONS requests for CORS preflight
-@app.options("/{path:path}")
-async def handle_options(path: str, request: Request):
-    """Handle CORS preflight requests"""
+# Custom CORS middleware for better control
+@app.middleware("http")
+async def custom_cors_middleware(request: Request, call_next):
     origin = request.headers.get("origin")
     
-    # Create response with proper CORS headers
-    from fastapi.responses import Response
-    response = Response()
+    # Handle preflight requests
+    if request.method == "OPTIONS":
+        response = Response(content="", status_code=200)
+        if origin in origins:
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+            response.headers["Access-Control-Allow-Headers"] = "Accept, Accept-Language, Content-Language, Content-Type, Authorization, X-CSRF-Token, X-Request-Signature, X-Request-Timestamp, Cookie"
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+            response.headers["Access-Control-Max-Age"] = "3600"
+        return response
     
+    # Process the request
+    response = await call_next(request)
+    
+    # Add CORS headers to all responses
     if origin in origins:
         response.headers["Access-Control-Allow-Origin"] = origin
-        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
-        response.headers["Access-Control-Allow-Headers"] = "Accept, Accept-Language, Content-Language, Content-Type, Authorization, X-CSRF-Token, X-Request-Signature, X-Request-Timestamp"
         response.headers["Access-Control-Allow-Credentials"] = "true"
-        response.headers["Access-Control-Max-Age"] = "3600"
-    
-    return response
-
-# CORS middleware - Fixed for credentials
-@app.middleware("http")
-async def security_headers_middleware(request: Request, call_next):
-    response = await call_next(request)
+        response.headers["Vary"] = "Origin"
     
     # Security headers
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-    response.headers["Cross-Origin-Opener-Policy"] = "same-origin-allow-popups"
-    
-    # CSP for Google OAuth
-    csp = (
-        "default-src 'self'; "
-        "script-src 'self' 'unsafe-inline' https://accounts.google.com; "
-        "style-src 'self' 'unsafe-inline'; "
-        "img-src 'self' data: https: blob:; "
-        "connect-src 'self' " + " ".join(origins) + "; "
-        "frame-src 'self' https://accounts.google.com; "
-        "object-src 'none'"
-    )
-    response.headers["Content-Security-Policy"] = csp
     
     return response
-
-# Security headers middleware (simplified)
-# @app.middleware("http")
-# async def security_headers_middleware(request: Request, call_next):
-#     response = await call_next(request)
-    
-#     response.headers["X-Content-Type-Options"] = "nosniff"
-#     response.headers["X-Frame-Options"] = "DENY"
-#     response.headers["X-XSS-Protection"] = "1; mode=block"
-#     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-    
-#     # Simplified CSP for credentials
-#     csp = (
-#         "default-src 'self'; "
-#         "script-src 'self' 'unsafe-inline'; "
-#         "style-src 'self' 'unsafe-inline'; "
-#         "img-src 'self' data: https: blob:; "
-#         "connect-src 'self' " + " ".join(origins) + "; "
-#         "object-src 'none'"
-#     )
-#     response.headers["Content-Security-Policy"] = csp
-    
-#     return response
 
 # Stripe configuration
 if STRIPE_SECRET_KEY:
@@ -188,15 +156,6 @@ async def cors_test(request: Request):
         "timestamp": datetime.now().isoformat()
     }
 
-@app.get("/api/csrf-token")
-async def get_csrf_token():
-    """CSRF token endpoint - disabled for debugging"""
-    return {
-        "csrf_token": "disabled-for-debugging", 
-        "message": "CSRF temporarily disabled",
-        "note": "Remove this when re-enabling CSRF"
-    }
-
 # Global exception handler
 @app.exception_handler(500)
 async def internal_server_error(request: Request, exc: Exception):
@@ -246,36 +205,9 @@ async def startup_event():
         print(f"⚠️ Index creation failed: {e}")
     
     # Configuration status check
-    email_user = os.getenv("EMAIL_USER")
-    email_password = os.getenv("EMAIL_PASSWORD")
-    admin_email = os.getenv("ADMIN_EMAIL")
-    
-    if email_user and email_password:
-        print(f"📧 Email Configuration: ✅ CONFIGURED")
-        print(f"📧 Email User: {email_user}")
-        print(f"📧 Admin Email: {admin_email}")
-    else:
-        print(f"📧 Email Configuration: ❌ NOT CONFIGURED")
-        print("⚠️  Add EMAIL_USER and EMAIL_PASSWORD to environment variables")
-    
-    frontend_url = os.getenv("FRONTEND_URL")
-    backend_url = os.getenv("BACKEND_URL")
-    
-    print(f"🌐 Frontend URL: {frontend_url}")
-    print(f"🖥️  Backend URL: {backend_url}")
-    
-    mongodb_url = os.getenv("MONGODB_URL")
-    if mongodb_url:
-        print(f"💾 Database: ✅ CONFIGURED")
-    else:
-        print(f"💾 Database: ❌ NOT CONFIGURED")
-    
-    if STRIPE_SECRET_KEY:
-        key_preview = STRIPE_SECRET_KEY[:7] + "..." + STRIPE_SECRET_KEY[-4:]
-        print(f"💳 Stripe: ✅ CONFIGURED ({key_preview})")
-    else:
-        print(f"💳 Stripe: ❌ NOT CONFIGURED")
-    
+    print(f"🌐 Frontend URL: {FRONTEND_URL}")
+    print(f"🌐 CORS Origins: {origins}")
+    print(f"🔐 Credentials: Enabled")
     print("=" * 50)
     print("🎯 Ready to handle requests!")
 

@@ -76,9 +76,11 @@ export const AuthProvider = ({ children }) => {
   const fetchUser = useCallback(async () => {
     try {
       const response = await fetch(`${API_BASE}/auth/me`, {
+        method: 'GET',
         credentials: 'include',
         headers: {
           'Accept': 'application/json',
+          'Content-Type': 'application/json'
         }
       });
       
@@ -102,12 +104,16 @@ export const AuthProvider = ({ children }) => {
     fetchUser();
   }, [fetchUser]);
 
-  // FIXED: Better login handling
-  const login = useCallback(async (userData) => {
-    if (userData) {
+  // Updated login to handle session properly
+  const login = useCallback(async (token, userData) => {
+    // If both token and userData provided (from login response)
+    if (token && userData) {
+      setUser(userData);
+    } else if (userData) {
+      // Just userData provided
       setUser(userData);
     } else {
-      // If no userData provided, fetch from session
+      // No data provided, fetch from session
       await fetchUser();
     }
     setRequires2FA(false);
@@ -115,7 +121,7 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, [fetchUser]);
 
-  // FIXED: Post-2FA success handler
+  // Post-2FA success handler
   const complete2FA = useCallback(async () => {
     setRequires2FA(false);
     setTempToken(null);
@@ -157,13 +163,14 @@ export const AuthProvider = ({ children }) => {
   };
 
   const getToken = useCallback(() => {
-    return null; // Session-based auth
+    // For session-based auth, we don't expose tokens
+    return null;
   }, []);
 
   return (
     <AuthContext.Provider value={{ 
       user, 
-      token: null,
+      token: null, // Session-based, no token needed
       getToken,
       login, 
       register, 
@@ -172,7 +179,7 @@ export const AuthProvider = ({ children }) => {
       requires2FA,
       tempToken,
       handle2FARequired,
-      complete2FA, // NEW: For post-2FA handling
+      complete2FA,
       refetchUser: fetchUser
     }}>
       {children}
