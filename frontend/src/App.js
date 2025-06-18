@@ -7,6 +7,7 @@ import './App.css';
 
 import { AuthProvider } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
+import { ErrorBoundary } from './components/ErrorBoundary';
 import { ToastProvider } from './components/toast';
 
 import Header from './components/header';
