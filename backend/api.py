@@ -25,7 +25,7 @@ from middleware.csrf import csrf_protection
 from middleware.session import session_manager  
 from database.connection import db
 from auth.dependencies import get_current_user, get_admin_user, security
-from auth.dependencies import get_current_user_from_session, get_current_user_flexible
+from auth.dependencies import get_current_user_from_session
 
 
 # Email import
