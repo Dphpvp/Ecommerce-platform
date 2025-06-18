@@ -87,52 +87,51 @@ const Login = () => {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setLoading(true);
+  e.preventDefault();
+  setError('');
+  setLoading(true);
 
-    try {
-      const response = await fetch(`${API_BASE}/auth/login`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
-      });
+  try {
+    const response = await fetch(`${API_BASE}/auth/login`, {
+      method: 'POST',
+      credentials: 'include', // CRITICAL for session cookies
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(formData),
+    });
 
-      const data = await response.json();
+    const data = await response.json();
 
-      if (response.ok) {
-        if (data.requires_2fa) {
-          setTempToken(data.temp_token);
-          setTwoFactorMethod(data.method || 'app');
-          setShow2FA(true);
-          
-          if (data.method === 'email') {
-            showToast('Verification code sent to your email', 'info');
-          } else {
-            showToast('Please enter your 2FA code', 'info');
-          }
+    if (response.ok) {
+      if (data.requires_2fa) {
+        setTempToken(data.temp_token);
+        setTwoFactorMethod(data.method || 'app');
+        setShow2FA(true);
+        
+        if (data.method === 'email') {
+          showToast('Verification code sent to your email', 'info');
         } else {
-          // Store token in localStorage for fallback
-          if (data.token) {
-            localStorage.setItem('auth_token', data.token);
-          }
-          login(data.token, data.user);
-          navigate('/');
+          showToast('Please enter your 2FA code', 'info');
         }
       } else {
-        setError(data.detail || 'Login failed');
-        if (data.detail && data.detail.includes('Email not verified')) {
-          showToast('Please verify your email address', 'error');
-        }
+        // FIXED: Login successful with session cookie
+        login(data.user); // Pass user data directly
+        navigate('/');
       }
-    } catch (error) {
-      console.error('Login error:', error);
-      setError('Network error. Please try again.');
-    } finally {
-      setLoading(false);
+    } else {
+      setError(data.detail || 'Login failed');
+      if (data.detail && data.detail.includes('Email not verified')) {
+        showToast('Please verify your email address', 'error');
+      }
     }
-  };
+  } catch (error) {
+    console.error('Login error:', error);
+    setError('Network error. Please try again.');
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handle2FASuccess = () => {
     setShow2FA(false);

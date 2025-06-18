@@ -509,25 +509,22 @@ async def login(user_login: UserLogin, request: Request, response: Response):
             "email_hint": f"***{user['email'][-10:]}" if user.get("two_factor_method") == "email" else None
         }
     
-    # Regular login - create token and set session cookie
+    # FIXED: Create token and set secure session cookie
     token = create_jwt_token(str(user["_id"]))
     
-    # FIXED: Set session cookie with proper settings for cross-domain
+    # Set session cookie for persistence - FIXED for cross-origin
     response.set_cookie(
         key="session_token",
         value=token,
-        max_age=7 * 24 * 60 * 60,  # 7 days
+        max_age=8 * 60 * 60,  # 8 hours
         httponly=True,
-        secure=True,  # Required for cross-site cookies
-        samesite="none",  # Required for cross-site cookies
-        path="/",  # Available for all paths
-        domain=None  # Let browser handle domain
+        secure=os.getenv("ENVIRONMENT") == "production",  # False for dev, True for prod
+        samesite="none" if os.getenv("ENVIRONMENT") == "production" else "lax",
+        domain=None  # Let browser determine
     )
     
-    # Also return token in response for Authorization header fallback
     return {
         "success": True,
-        "token": token,
         "user": {
             "id": str(user["_id"]), 
             "email": user["email"], 
@@ -541,7 +538,6 @@ async def login(user_login: UserLogin, request: Request, response: Response):
             "two_factor_enabled": user.get("two_factor_enabled", False)
         }
     }
-
 
 @router.post("/auth/verify-2fa")
 async def verify_2fa_login(verification_data: dict, response: Response):
