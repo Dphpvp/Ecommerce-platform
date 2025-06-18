@@ -31,7 +31,7 @@ const Checkout = () => {
     event.preventDefault();
     
     if (!stripe || !elements) return;
-    
+
     setProcessing(true);
 
     try {
@@ -40,6 +40,11 @@ const Checkout = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount: Math.round(total * 100) })
       });
+
+      if (!intentResponse.ok) {
+        const errorText = await intentResponse.text();
+        throw new Error(`Failed to create payment intent: ${errorText}`);
+      }
 
       const { client_secret } = await intentResponse.json();
 
@@ -54,13 +59,18 @@ const Checkout = () => {
       } else if (paymentIntent.status === 'succeeded') {
         const orderResponse = await fetch(`${API_BASE}/orders`, {
           method: 'POST',
+          credentials: 'include',
           headers: {
             'Content-Type': 'application/json',
             Authorization: `Bearer ${token}`
           },
           body: JSON.stringify({
             shipping_address: shippingAddress,
-            payment_method: 'card'
+            payment_method: 'card',
+            items: cartItems.map(item => ({
+              product_id: item.product.id,
+              quantity: item.quantity
+            }))
           })
         });
 
@@ -69,6 +79,8 @@ const Checkout = () => {
           showToast('Order placed successfully!', 'success');
           navigate('/orders');
         } else {
+          const errorText = await orderResponse.text();
+          console.error('Order creation failed:', orderResponse.status, errorText);
           showToast('Failed to create order', 'error');
         }
       }
@@ -106,35 +118,35 @@ const Checkout = () => {
                 type="text"
                 placeholder="Street Address"
                 value={shippingAddress.street}
-                onChange={(e) => setShippingAddress({...shippingAddress, street: e.target.value})}
+                onChange={(e) => setShippingAddress({ ...shippingAddress, street: e.target.value })}
                 required
               />
               <input
                 type="text"
                 placeholder="City"
                 value={shippingAddress.city}
-                onChange={(e) => setShippingAddress({...shippingAddress, city: e.target.value})}
+                onChange={(e) => setShippingAddress({ ...shippingAddress, city: e.target.value })}
                 required
               />
               <input
                 type="text"
                 placeholder="State"
                 value={shippingAddress.state}
-                onChange={(e) => setShippingAddress({...shippingAddress, state: e.target.value})}
+                onChange={(e) => setShippingAddress({ ...shippingAddress, state: e.target.value })}
                 required
               />
               <input
                 type="text"
                 placeholder="Zip Code"
                 value={shippingAddress.zipCode}
-                onChange={(e) => setShippingAddress({...shippingAddress, zipCode: e.target.value})}
+                onChange={(e) => setShippingAddress({ ...shippingAddress, zipCode: e.target.value })}
                 required
               />
               <input
                 type="text"
                 placeholder="Country"
                 value={shippingAddress.country}
-                onChange={(e) => setShippingAddress({...shippingAddress, country: e.target.value})}
+                onChange={(e) => setShippingAddress({ ...shippingAddress, country: e.target.value })}
                 required
               />
             </div>
