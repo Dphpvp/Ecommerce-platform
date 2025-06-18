@@ -13,7 +13,7 @@ from middleware.validation import rate_limiter, get_client_ip
 
 # Configuration
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
-FRONTEND_URL = os.getenv("FRONTEND_URL", "https://vergishop.vercel.app", "vs1.vercel.app")
+FRONTEND_URL = os.getenv("FRONTEND_URL", "https://vergishop.vercel.app", "https://vs1.vercel.app")
 ALLOWED_HOSTS_STR = os.getenv("ALLOWED_HOSTS", "vergishop.vercel.app,vs1.vercel.app,ecommerce-platform-nizy.onrender.com")
 ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS_STR.split(",") if host.strip()]
 
