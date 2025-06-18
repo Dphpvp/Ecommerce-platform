@@ -13,6 +13,7 @@ import Header from './components/header';
 import Footer from './components/Footer';
 import PrivateRoute from './components/PrivateRoute';
 import Profile from './components/profile';
+import ErrorBoundary from '/components/ErrorBoundary';
 
 import Home from './pages/Home';
 import Products from './pages/Products';
@@ -33,7 +34,7 @@ import AdminProducts from './components/admin/AdminProducts';
 import AdminRoute from './components/admin/AdminRoute';
 import AdminCategories from './components/admin/AdminCategories';
 
-import ErrorBoundary from '/components/ErrorBoundary';
+
 
 const stripePromise = loadStripe(
   process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY
