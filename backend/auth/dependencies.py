@@ -179,3 +179,8 @@ async def get_current_user_flexible(request: Request):
                 headers={"WWW-Authenticate": "Bearer"},
             )
         raise e
+
+# Alternative function for backward compatibility
+async def get_current_user_from_cookie_or_header(request: Request):
+    """Alias for get_current_user_flexible"""
+    return await get_current_user_flexible(request)
