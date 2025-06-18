@@ -3,7 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import TwoFactorVerification from '../components/TwoFactor/TwoFactorVerification';
 import { useToastContext } from '../components/toast';
-import { secureFetch } from '../utils/csrf';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
@@ -50,8 +49,10 @@ const Login = () => {
 
   const handleGoogleLogin = async (response) => {
     try {
-      const apiResponse = await secureFetch(`${API_BASE}/auth/google`, {
+      const apiResponse = await fetch(`${API_BASE}/auth/google`, {
         method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: response.credential }),
       });
 
@@ -63,8 +64,11 @@ const Login = () => {
           setTwoFactorMethod(data.method || 'app');
           setShow2FA(true);
         } else {
-          login(data.user);
-          await refetchUser();
+          // Store token in localStorage for fallback
+          if (data.token) {
+            localStorage.setItem('auth_token', data.token);
+          }
+          login(data.token, data.user);
           navigate('/');
         }
       } else {
@@ -88,8 +92,10 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const response = await secureFetch(`${API_BASE}/auth/login`, {
+      const response = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 
@@ -97,7 +103,6 @@ const Login = () => {
 
       if (response.ok) {
         if (data.requires_2fa) {
-          // FIXED: Capture temp_token from response
           setTempToken(data.temp_token);
           setTwoFactorMethod(data.method || 'app');
           setShow2FA(true);
@@ -108,7 +113,11 @@ const Login = () => {
             showToast('Please enter your 2FA code', 'info');
           }
         } else {
-          login(data.user);
+          // Store token in localStorage for fallback
+          if (data.token) {
+            localStorage.setItem('auth_token', data.token);
+          }
+          login(data.token, data.user);
           navigate('/');
         }
       } else {

@@ -16,6 +16,7 @@ const TwoFactorVerification = ({ tempToken, onSuccess, onCancel }) => {
     try {
       const response = await fetch(`${API_BASE}/auth/send-2fa-email`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ temp_token: tempToken })
       });
@@ -41,6 +42,7 @@ const TwoFactorVerification = ({ tempToken, onSuccess, onCancel }) => {
     try {
       const response = await fetch(`${API_BASE}/auth/verify-2fa`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ temp_token: tempToken, code })
       });
@@ -48,10 +50,17 @@ const TwoFactorVerification = ({ tempToken, onSuccess, onCancel }) => {
       const data = await response.json();
 
       if (response.ok) {
+        // Store token in localStorage for fallback
+        if (data.token) {
+          localStorage.setItem('auth_token', data.token);
+        }
+        
         login(data.token, data.user);
+        
         if (data.backup_code_used) {
           showToast('Backup code used. Consider regenerating backup codes.', 'info');
         }
+        
         onSuccess();
       } else {
         showToast(data.detail || '2FA verification failed', 'error');

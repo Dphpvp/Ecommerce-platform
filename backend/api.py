@@ -228,23 +228,7 @@ async def get_next_order_number():
 async def get_current_user_flexible(request: Request):
     """Get current user from session cookie or Authorization header"""
     try:
-        # Try session cookie first
-        session_token = request.cookies.get("session_token")
-        
-        if session_token:
-            try:
-                payload = jwt.decode(session_token, JWT_SECRET, algorithms=["HS256"])
-                user_id = payload.get("user_id")
-                if user_id:
-                    user = await db.users.find_one({"_id": ObjectId(user_id)})
-                    if user:
-                        return user
-            except jwt.ExpiredSignatureError:
-                pass  # Try Authorization header next
-            except jwt.JWTError:
-                pass  # Try Authorization header next
-        
-        # Fallback to Authorization header
+        # Try Authorization header first (for better compatibility)
         auth_header = request.headers.get("Authorization")
         if auth_header and auth_header.startswith("Bearer "):
             token = auth_header.split(" ")[1]
@@ -256,9 +240,24 @@ async def get_current_user_flexible(request: Request):
                     if user:
                         return user
             except jwt.ExpiredSignatureError:
-                raise HTTPException(status_code=401, detail="Token expired")
+                pass  # Try cookie next
             except jwt.JWTError:
-                raise HTTPException(status_code=401, detail="Invalid token")
+                pass  # Try cookie next
+        
+        # Try session cookie
+        session_token = request.cookies.get("session_token")
+        if session_token:
+            try:
+                payload = jwt.decode(session_token, JWT_SECRET, algorithms=["HS256"])
+                user_id = payload.get("user_id")
+                if user_id:
+                    user = await db.users.find_one({"_id": ObjectId(user_id)})
+                    if user:
+                        return user
+            except jwt.ExpiredSignatureError:
+                raise HTTPException(status_code=401, detail="Session expired")
+            except jwt.JWTError:
+                raise HTTPException(status_code=401, detail="Invalid session")
         
         raise HTTPException(status_code=401, detail="Authentication required")
         
@@ -510,17 +509,19 @@ async def login(user_login: UserLogin, request: Request, response: Response):
     # Regular login - create token and set session cookie
     token = create_jwt_token(str(user["_id"]))
     
-    # Set session cookie for persistence
+    # FIXED: Set session cookie with proper settings for cross-domain
     response.set_cookie(
         key="session_token",
         value=token,
-        max_age=8 * 60 * 60,  # 8 hours
+        max_age=7 * 24 * 60 * 60,  # 7 days
         httponly=True,
-        secure=True,
-        samesite="none",
-        domain=None
+        secure=True,  # Required for cross-site cookies
+        samesite="none",  # Required for cross-site cookies
+        path="/",  # Available for all paths
+        domain=None  # Let browser handle domain
     )
     
+    # Also return token in response for Authorization header fallback
     return {
         "success": True,
         "token": token,
@@ -605,14 +606,15 @@ async def verify_2fa_login(verification_data: dict, response: Response):
         # Create full session token
         token = create_jwt_token(str(user["_id"]))
         
-        # Set session cookie for persistence
+        # FIXED: Set session cookie with proper settings
         response.set_cookie(
             key="session_token",
             value=token,
-            max_age=8 * 60 * 60,  # 8 hours
+            max_age=7 * 24 * 60 * 60,  # 7 days
             httponly=True,
             secure=True,
             samesite="none",
+            path="/",
             domain=None
         )
         
@@ -638,7 +640,7 @@ async def verify_2fa_login(verification_data: dict, response: Response):
     except Exception as e:
         print(f"❌ 2FA verification error: {e}")
         raise HTTPException(status_code=500, detail="2FA verification failed")
-
+    
 @router.post("/auth/send-2fa-email")
 async def send_2fa_email(request_data: dict):
     """Send 2FA code via email"""

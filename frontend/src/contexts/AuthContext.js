@@ -1,196 +1,228 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { useAuth } from './AuthContext';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
-const AuthContext = createContext();
+const CartContext = createContext();
 
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [requires2FA, setRequires2FA] = useState(false);
-  const [tempToken, setTempToken] = useState(null);
-  
-  // Auto-logout state
-  const timeoutRef = useRef(null);
-  const TIMEOUT_DURATION = 60 * 60 * 1000; // 1 hour
+export const CartProvider = ({ children }) => {
+  const [cartItems, setCartItems] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const { user } = useAuth();
 
-  const logout = useCallback(async () => {
-    try {
-      await fetch(`${API_BASE}/auth/logout`, {
-        method: 'GET',
-        credentials: 'include'
-      });
-    } catch (error) {
-      console.error('Logout error:', error);
-    } finally {
-      setUser(null);
-      setRequires2FA(false);
-      setTempToken(null);
-      setLoading(false);
-      
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-        timeoutRef.current = null;
-      }
-    }
-  }, []);
-
-  const resetTimeout = useCallback(() => {
-    if (!user) return;
-    
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
+  const fetchCart = useCallback(async () => {
+    if (!user) {
+      setCartItems([]);
+      return;
     }
     
-    timeoutRef.current = setTimeout(() => {
-      console.log('Auto-logout due to inactivity');
-      logout();
-    }, TIMEOUT_DURATION);
-  }, [user, logout, TIMEOUT_DURATION]);
-
-  const handleActivity = useCallback(() => {
-    resetTimeout();
-  }, [resetTimeout]);
-
-  useEffect(() => {
-    if (!user) return;
-
-    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
-    
-    events.forEach(event => {
-      document.addEventListener(event, handleActivity, true);
-    });
-
-    resetTimeout();
-
-    return () => {
-      events.forEach(event => {
-        document.removeEventListener(event, handleActivity, true);
-      });
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
-  }, [user, handleActivity, resetTimeout]);
-
-  const fetchUser = useCallback(async () => {
-    try {
-      const response = await fetch(`${API_BASE}/auth/me`, {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      if (response.ok) {
-        const userData = await response.json();
-        setUser(userData);
-        return userData;
-      } else if (response.status === 401) {
-        setUser(null);
-        return null;
-      }
-    } catch (error) {
-      console.error('Failed to fetch user:', error);
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchUser();
-  }, [fetchUser]);
-
-  // Updated login to handle session properly
-  const login = useCallback(async (token, userData) => {
-    // If both token and userData provided (from login response)
-    if (token && userData) {
-      setUser(userData);
-    } else if (userData) {
-      // Just userData provided
-      setUser(userData);
-    } else {
-      // No data provided, fetch from session
-      await fetchUser();
-    }
-    setRequires2FA(false);
-    setTempToken(null);
-    setLoading(false);
-  }, [fetchUser]);
-
-  // Post-2FA success handler
-  const complete2FA = useCallback(async () => {
-    setRequires2FA(false);
-    setTempToken(null);
-    // Fetch user data from established session
-    const userData = await fetchUser();
-    if (userData) {
-      setUser(userData);
-      return true;
-    }
-    return false;
-  }, [fetchUser]);
-
-  const handle2FARequired = (tempToken) => {
-    setRequires2FA(true);
-    setTempToken(tempToken);
-  };
-
-  const register = async (userData) => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE}/auth/register`, {
-        method: 'POST',
+      // Try with both cookie and token
+      const token = localStorage.getItem('auth_token');
+      const headers = {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      const response = await fetch(`${API_BASE}/cart`, {
+        method: 'GET',
         credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(userData)
+        headers
       });
-
+      
       if (response.ok) {
-        return { success: true, message: 'Registration successful! Please check your email to verify your account.' };
-      } else {
         const data = await response.json();
-        return { success: false, message: data.detail || 'Registration failed' };
+        setCartItems(Array.isArray(data) ? data : []);
+      } else if (response.status === 401) {
+        setCartItems([]);
+      } else {
+        console.error('Failed to fetch cart:', response.status);
+        setCartItems([]);
       }
     } catch (error) {
-      return { success: false, message: 'Registration failed' };
+      console.error('Failed to fetch cart:', error);
+      setCartItems([]);
     } finally {
       setLoading(false);
     }
+  }, [user]);
+
+  const addToCart = async (productId, quantity = 1) => {
+    if (!user) {
+      console.warn('User not authenticated');
+      return false;
+    }
+
+    if (!productId || quantity < 1) {
+      console.error('Invalid product ID or quantity');
+      return false;
+    }
+
+    try {
+      // Use token from localStorage if available
+      const token = localStorage.getItem('auth_token');
+      const headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      const response = await fetch(`${API_BASE}/cart/add`, {
+        method: 'POST',
+        credentials: 'include',
+        headers,
+        body: JSON.stringify({ 
+          product_id: productId, 
+          quantity: parseInt(quantity) 
+        })
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        await fetchCart();
+        return true;
+      } else {
+        console.error('Failed to add to cart:', data.detail || 'Unknown error');
+        return false;
+      }
+    } catch (error) {
+      console.error('Failed to add to cart:', error);
+      return false;
+    }
   };
 
-  const getToken = useCallback(() => {
-    // For session-based auth, we don't expose tokens
-    return null;
+  const removeFromCart = async (itemId) => {
+    if (!user || !itemId) {
+      console.warn('User not authenticated or invalid item ID');
+      return false;
+    }
+
+    try {
+      const token = localStorage.getItem('auth_token');
+      const headers = {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      const response = await fetch(`${API_BASE}/cart/${itemId}`, {
+        method: 'DELETE',
+        credentials: 'include',
+        headers
+      });
+
+      if (response.ok) {
+        await fetchCart();
+        return true;
+      } else {
+        const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
+        console.error('Failed to remove from cart:', error.detail);
+        return false;
+      }
+    } catch (error) {
+      console.error('Failed to remove from cart:', error);
+      return false;
+    }
+  };
+
+  const updateCartItemQuantity = async (itemId, newQuantity) => {
+    if (!user || !itemId || newQuantity < 1) {
+      return false;
+    }
+
+    try {
+      const token = localStorage.getItem('auth_token');
+      const headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      const response = await fetch(`${API_BASE}/cart/${itemId}`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers,
+        body: JSON.stringify({ quantity: parseInt(newQuantity) })
+      });
+
+      if (response.ok) {
+        await fetchCart();
+        return true;
+      } else {
+        console.error('Failed to update cart item quantity');
+        return false;
+      }
+    } catch (error) {
+      console.error('Failed to update cart item:', error);
+      return false;
+    }
+  };
+
+  const clearCart = useCallback(() => {
+    setCartItems([]);
   }, []);
 
+  const getCartTotal = useCallback(() => {
+    return cartItems.reduce((total, item) => {
+      const price = item.product?.price || 0;
+      const quantity = item.quantity || 0;
+      return total + (price * quantity);
+    }, 0);
+  }, [cartItems]);
+
+  const getCartItemsCount = useCallback(() => {
+    return cartItems.reduce((total, item) => total + (item.quantity || 0), 0);
+  }, [cartItems]);
+
+  useEffect(() => {
+    fetchCart();
+  }, [fetchCart]);
+
+  useEffect(() => {
+    if (!user) {
+      setCartItems([]);
+    }
+  }, [user]);
+
+  const contextValue = {
+    cartItems,
+    loading,
+    addToCart,
+    removeFromCart,
+    updateCartItemQuantity,
+    clearCart,
+    fetchCart,
+    getCartTotal,
+    getCartItemsCount,
+    isAuthenticated: !!user
+  };
+
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      token: null, // Session-based, no token needed
-      getToken,
-      login, 
-      register, 
-      logout, 
-      loading,
-      requires2FA,
-      tempToken,
-      handle2FARequired,
-      complete2FA,
-      refetchUser: fetchUser
-    }}>
+    <CartContext.Provider value={contextValue}>
       {children}
-    </AuthContext.Provider>
+    </CartContext.Provider>
   );
 };
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
+export const useCart = () => {
+  const context = useContext(CartContext);
   if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useCart must be used within a CartProvider');
   }
   return context;
 };
