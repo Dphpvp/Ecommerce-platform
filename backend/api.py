@@ -269,6 +269,99 @@ async def get_current_user_flexible(request: Request):
     except Exception as e:
         print(f"Authentication error: {e}")
         raise HTTPException(status_code=401, detail="Authentication failed")
+    
+@router.post("/auth/login")
+async def login(user_login: UserLogin, request: Request, response: Response):
+    client_ip = get_client_ip(request)
+    
+    if not rate_limiter.is_allowed(f"{client_ip}:login", max_requests=5, window=900):
+        raise HTTPException(status_code=429, detail="Too many login attempts")
+    
+    identifier_type = get_identifier_type(user_login.identifier)
+    
+    if identifier_type == "email":
+        user_login.identifier = SecurityValidator.validate_email_format(user_login.identifier)
+        query = {"email": user_login.identifier}
+    elif identifier_type == "phone":
+        user_login.identifier = SecurityValidator.validate_phone(user_login.identifier)
+        query = {"phone": user_login.identifier}
+    else:
+        user_login.identifier = SecurityValidator.validate_username(user_login.identifier)
+        query = {"username": user_login.identifier}
+    
+    user = await db.users.find_one(query)
+    if not user or not verify_password(user_login.password, user["password"]):
+        print(f"Failed login attempt from {client_ip} for {user_login.identifier}")
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    if not user.get("email_verified", False):
+        raise HTTPException(
+            status_code=401, 
+            detail="Email not verified. Please check your email and verify your account."
+        )
+    
+    # Check if 2FA is enabled
+    if user.get("two_factor_enabled"):
+        temp_token = create_jwt_token(str(user["_id"]), expires_in=timedelta(minutes=10))
+        
+        if user.get("two_factor_method") == "email":
+            try:
+                code = generate_email_2fa_code()
+                await db.users.update_one(
+                    {"_id": user["_id"]},
+                    {
+                        "$set": {
+                            "email_2fa_code": code,
+                            "email_2fa_code_created": datetime.now(timezone.utc)
+                        }
+                    }
+                )
+                
+                user_name = user.get("full_name", user.get("username", "User"))
+                await send_2fa_email_code(user["email"], code, user_name)
+                print(f"✅ Auto-sent 2FA code to {user['email']}")
+            except Exception as e:
+                print(f"❌ Failed to auto-send 2FA email: {e}")
+        
+        return {
+            "requires_2fa": True,
+            "method": user.get("two_factor_method", "app"),
+            "temp_token": temp_token,
+            "message": "Please enter your 2FA code",
+            "email_hint": f"***{user['email'][-10:]}" if user.get("two_factor_method") == "email" else None
+        }
+    
+    # FIXED: Create session token
+    token = create_jwt_token(str(user["_id"]))
+    
+    # FIXED: Set session cookie with proper cross-origin settings
+    response.set_cookie(
+        key="session_token",
+        value=token,
+        max_age=7 * 24 * 60 * 60,  # 7 days
+        httponly=True,
+        secure=True,  # Always secure for production
+        samesite="none",  # Required for cross-origin
+        path="/",  # Ensure cookie works for all paths
+        domain=None  # Let browser set domain
+    )
+    
+    return {
+        "success": True,
+        "user": {
+            "id": str(user["_id"]), 
+            "email": user["email"], 
+            "username": user["username"],
+            "full_name": user.get("full_name", ""),
+            "address": user.get("address"),
+            "phone": user.get("phone"),
+            "profile_image_url": user.get("profile_image_url"),
+            "is_admin": user.get("is_admin", False),
+            "email_verified": user.get("email_verified", False),
+            "two_factor_enabled": user.get("two_factor_enabled", False)
+        }
+    }
+
 
 @router.post("/auth/register")
 async def register(user: SecureUser, request: Request, csrf_valid: bool = Depends(require_csrf_token)):
@@ -447,98 +540,6 @@ async def debug_token(token: str):
     except Exception as e:
         return {"error": str(e)}
 
-@router.post("/auth/login")
-async def login(user_login: UserLogin, request: Request, response: Response):
-    client_ip = get_client_ip(request)
-    
-    if not rate_limiter.is_allowed(f"{client_ip}:login", max_requests=5, window=900):
-        raise HTTPException(status_code=429, detail="Too many login attempts")
-    
-    identifier_type = get_identifier_type(user_login.identifier)
-    
-    if identifier_type == "email":
-        user_login.identifier = SecurityValidator.validate_email_format(user_login.identifier)
-        query = {"email": user_login.identifier}
-    elif identifier_type == "phone":
-        user_login.identifier = SecurityValidator.validate_phone(user_login.identifier)
-        query = {"phone": user_login.identifier}
-    else:
-        user_login.identifier = SecurityValidator.validate_username(user_login.identifier)
-        query = {"username": user_login.identifier}
-    
-    user = await db.users.find_one(query)
-    if not user or not verify_password(user_login.password, user["password"]):
-        print(f"Failed login attempt from {client_ip} for {user_login.identifier}")
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    
-    if not user.get("email_verified", False):
-        raise HTTPException(
-            status_code=401, 
-            detail="Email not verified. Please check your email and verify your account."
-        )
-    
-    # Check if 2FA is enabled
-    if user.get("two_factor_enabled"):
-        temp_token = create_jwt_token(str(user["_id"]), expires_in=timedelta(minutes=10))
-        
-        # Auto-send email for email 2FA
-        if user.get("two_factor_method") == "email":
-            try:
-                code = generate_email_2fa_code()
-                await db.users.update_one(
-                    {"_id": user["_id"]},
-                    {
-                        "$set": {
-                            "email_2fa_code": code,
-                            "email_2fa_code_created": datetime.now(timezone.utc)
-                        }
-                    }
-                )
-                
-                user_name = user.get("full_name", user.get("username", "User"))
-                await send_2fa_email_code(user["email"], code, user_name)
-                print(f"✅ Auto-sent 2FA code to {user['email']}")
-            except Exception as e:
-                print(f"❌ Failed to auto-send 2FA email: {e}")
-        
-        return {
-            "requires_2fa": True,
-            "method": user.get("two_factor_method", "app"),
-            "temp_token": temp_token,
-            "message": "Please enter your 2FA code",
-            "email_hint": f"***{user['email'][-10:]}" if user.get("two_factor_method") == "email" else None
-        }
-    
-    # FIXED: Create token and set secure session cookie
-    token = create_jwt_token(str(user["_id"]))
-    
-    # Set session cookie for persistence - FIXED for cross-origin
-    response.set_cookie(
-        key="session_token",
-        value=token,
-        max_age=8 * 60 * 60,  # 8 hours
-        httponly=True,
-        secure=os.getenv("ENVIRONMENT") == "production",  # False for dev, True for prod
-        samesite="none" if os.getenv("ENVIRONMENT") == "production" else "lax",
-        domain=None  # Let browser determine
-    )
-    
-    return {
-        "success": True,
-        "user": {
-            "id": str(user["_id"]), 
-            "email": user["email"], 
-            "username": user["username"],
-            "full_name": user.get("full_name", ""),
-            "address": user.get("address"),
-            "phone": user.get("phone"),
-            "profile_image_url": user.get("profile_image_url"),
-            "is_admin": user.get("is_admin", False),
-            "email_verified": user.get("email_verified", False),
-            "two_factor_enabled": user.get("two_factor_enabled", False)
-        }
-    }
-
 @router.post("/auth/verify-2fa")
 async def verify_2fa_login(verification_data: dict, response: Response):
     """Verify 2FA and complete login"""
@@ -578,11 +579,9 @@ async def verify_2fa_login(verification_data: dict, response: Response):
                     if code_created.tzinfo is None:
                         code_created = code_created.replace(tzinfo=timezone.utc)
                     
-                    # Check if code expired (5 minutes)
                     if datetime.now(timezone.utc) <= code_created + timedelta(minutes=5):
                         verified = (code == stored_code)
                         if verified:
-                            # Clear used code
                             await db.users.update_one(
                                 {"_id": user["_id"]},
                                 {"$unset": {"email_2fa_code": "", "email_2fa_code_created": ""}}
@@ -1154,10 +1153,9 @@ async def generate_backup_codes(current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=500, detail="Failed to generate backup codes")
     
 @router.post("/auth/google")
-async def google_login(google_login: GoogleLogin):
-    """Fixed Google OAuth login"""
+async def google_login(google_login: GoogleLogin, response: Response):
+    """Fixed Google OAuth login with session cookies"""
     try:
-        # Verify the Google token
         idinfo = id_token.verify_oauth2_token(
             google_login.token, google_requests.Request(), GOOGLE_CLIENT_ID
         )
@@ -1170,7 +1168,6 @@ async def google_login(google_login: GoogleLogin):
         google_id = idinfo['sub']
         picture = idinfo.get('picture', '')
 
-        # Check if user exists
         user = await db.users.find_one({"email": email})
 
         if user:
@@ -1178,7 +1175,6 @@ async def google_login(google_login: GoogleLogin):
             if user.get("two_factor_enabled"):
                 temp_token = create_jwt_token(str(user["_id"]), expires_in=timedelta(minutes=10))
                 
-                # Auto-send email for email 2FA
                 if user.get("two_factor_method") == "email":
                     try:
                         code = generate_email_2fa_code()
@@ -1205,7 +1201,7 @@ async def google_login(google_login: GoogleLogin):
                     "email_hint": f"***{user['email'][-10:]}" if user.get("two_factor_method") == "email" else None
                 }
             
-            # Update user's profile image if Google has one
+            # Update profile image if Google has one
             if picture and not user.get("profile_image_url"):
                 await db.users.update_one(
                     {"_id": user["_id"]},
@@ -1215,6 +1211,19 @@ async def google_login(google_login: GoogleLogin):
             
             # Regular login response
             token = create_jwt_token(str(user["_id"]))
+            
+            # FIXED: Set session cookie
+            response.set_cookie(
+                key="session_token",
+                value=token,
+                max_age=7 * 24 * 60 * 60,
+                httponly=True,
+                secure=True,
+                samesite="none",
+                path="/",
+                domain=None
+            )
+            
             return {
                 "success": True,
                 "token": token,
@@ -1237,12 +1246,10 @@ async def google_login(google_login: GoogleLogin):
             counter = 1
             original_username = username
             
-            # Ensure username is unique
             while await db.users.find_one({"username": username}):
                 username = f"{original_username}{counter}"
                 counter += 1
 
-            # Generate a unique phone number for new Google users
             import secrets
             phone = f"+1-555-{secrets.randbelow(9000) + 1000:04d}"
             while await db.users.find_one({"phone": phone}):
@@ -1251,14 +1258,14 @@ async def google_login(google_login: GoogleLogin):
             user_data = {
                 "username": username,
                 "email": email,
-                "password": "",  # No password for OAuth users
+                "password": "",
                 "full_name": name,
-                "phone": phone,  # Required field
+                "phone": phone,
                 "address": "",
                 "google_id": google_id,
                 "profile_image_url": picture,
                 "is_admin": False,
-                "email_verified": True,  # Google emails are pre-verified
+                "email_verified": True,
                 "two_factor_enabled": False,
                 "two_factor_secret": None,
                 "backup_codes": [],
@@ -1267,6 +1274,18 @@ async def google_login(google_login: GoogleLogin):
 
             result = await db.users.insert_one(user_data)
             token = create_jwt_token(str(result.inserted_id))
+
+            # FIXED: Set session cookie for new user
+            response.set_cookie(
+                key="session_token",
+                value=token,
+                max_age=7 * 24 * 60 * 60,
+                httponly=True,
+                secure=True,
+                samesite="none",
+                path="/",
+                domain=None
+            )
 
             return {
                 "success": True,
@@ -1291,7 +1310,7 @@ async def google_login(google_login: GoogleLogin):
     except Exception as e:
         print(f"Google OAuth error: {e}")
         raise HTTPException(status_code=500, detail="Google login failed")
-
+    
 # FIXED: Add GET decorator to auth/me endpoint
 @router.get("/auth/me")
 async def get_me(request: Request):
@@ -1877,16 +1896,33 @@ async def submit_contact_form(
         print(f"Contact form error: {e}")
         raise HTTPException(status_code=500, detail="Failed to send message")
 
-@router.post("/auth/logout")
-async def logout(response: Response):
-    """Clear session cookie on logout"""
-    response.delete_cookie(
-        key="session_token",
-        secure=True,
-        httponly=True,
-        samesite="none"
-    )
-    return {"message": "Logged out successfully"}
+@router.get("/auth/logout")
+async def logout_get(response: Response):
+    """Enhanced logout with proper cookie clearing"""
+    try:
+        # Clear session cookie with all possible settings
+        response.delete_cookie(
+            key="session_token",
+            path="/",
+            domain=None,
+            secure=True,
+            httponly=True,
+            samesite="none"
+        )
+        
+        # Also try clearing without domain specification
+        response.delete_cookie(
+            key="session_token",
+            path="/",
+            secure=True,
+            httponly=True,
+            samesite="none"
+        )
+        
+        return {"message": "Logged out successfully"}
+    except Exception as e:
+        print(f"❌ Logout error: {e}")
+        return {"message": "Logged out successfully"}
 
 # Also add a GET version for easier frontend handling
 @router.get("/auth/logout")
