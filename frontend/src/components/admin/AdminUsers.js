@@ -11,24 +11,18 @@ const AdminUsers = () => {
   const [editFormData, setEditFormData] = useState({});
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
-  const { token } = useAuth();
+  const { makeAuthenticatedRequest } = useAuth();
 
   const fetchUsers = useCallback(async () => {
     try {
-      const response = await fetch(`${API_BASE}/admin/users`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setUsers(data.users);
-      }
+      const data = await makeAuthenticatedRequest(`${API_BASE}/admin/users`);
+      setUsers(data.users || []);
     } catch (error) {
       console.error('Failed to fetch users:', error);
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [makeAuthenticatedRequest]);
 
   useEffect(() => {
     fetchUsers();
@@ -52,27 +46,18 @@ const AdminUsers = () => {
 
   const saveUser = async (userId) => {
     try {
-      const response = await fetch(`${API_BASE}/admin/users/${userId}`, {
+      await makeAuthenticatedRequest(`${API_BASE}/admin/users/${userId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
         body: JSON.stringify(editFormData)
       });
 
-      if (response.ok) {
-        alert('User updated successfully');
-        fetchUsers();
-        setEditingUser(null);
-        setEditFormData({});
-      } else {
-        const errorData = await response.json();
-        alert(errorData.detail || 'Failed to update user');
-      }
+      alert('User updated successfully');
+      fetchUsers();
+      setEditingUser(null);
+      setEditFormData({});
     } catch (error) {
       console.error('Failed to update user:', error);
-      alert('Failed to update user');
+      alert(error.message || 'Failed to update user');
     }
   };
 
@@ -80,54 +65,39 @@ const AdminUsers = () => {
     if (!window.confirm(`Delete user "${userName}"? This action cannot be undone.`)) return;
 
     try {
-      const response = await fetch(`${API_BASE}/admin/users/${userId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
+      await makeAuthenticatedRequest(`${API_BASE}/admin/users/${userId}`, {
+        method: 'DELETE'
       });
 
-      if (response.ok) {
-        alert('User deleted successfully');
-        fetchUsers();
-      } else {
-        const errorData = await response.json();
-        alert(errorData.detail || 'Failed to delete user');
-      }
+      alert('User deleted successfully');
+      fetchUsers();
     } catch (error) {
       console.error('Failed to delete user:', error);
-      alert('Failed to delete user');
+      alert(error.message || 'Failed to delete user');
     }
   };
 
   const updateUserRole = async (userId, isAdmin) => {
     try {
-      const response = await fetch(`${API_BASE}/admin/users/${userId}/admin`, {
+      await makeAuthenticatedRequest(`${API_BASE}/admin/users/${userId}/admin`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
         body: JSON.stringify({ is_admin: isAdmin })
       });
 
-      if (response.ok) {
-        const roleText = isAdmin ? 'admin' : 'regular user';
-        alert(`User role updated to ${roleText}`);
-        fetchUsers();
-      } else {
-        const errorData = await response.json();
-        alert(errorData.detail || 'Failed to update user role');
-      }
+      const roleText = isAdmin ? 'admin' : 'regular user';
+      alert(`User role updated to ${roleText}`);
+      fetchUsers();
     } catch (error) {
       console.error('Failed to update user role:', error);
-      alert('Failed to update user role');
+      alert(error.message || 'Failed to update user role');
     }
   };
 
   // Filter users based on search and role
   const filteredUsers = users.filter(user => {
-    const matchesSearch = user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                          user.username.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          user.username?.toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesRole = roleFilter === 'all' || 
                        (roleFilter === 'admin' && user.is_admin) ||
@@ -266,8 +236,8 @@ const AdminUsers = () => {
                           <p><strong>Username:</strong> {user.username}</p>
                           <p><strong>Phone:</strong> {user.phone || 'Not provided'}</p>
                           <p><strong>Address:</strong> {user.address || 'Not provided'}</p>
-                          <p><strong>Orders:</strong> {user.order_count}</p>
-                          <p><strong>Joined:</strong> {new Date(user.created_at).toLocaleDateString()}</p>
+                          <p><strong>Orders:</strong> {user.order_count || 0}</p>
+                          <p><strong>Joined:</strong> {user.created_at ? new Date(user.created_at).toLocaleDateString() : 'Unknown'}</p>
                         </div>
                       </div>
                       

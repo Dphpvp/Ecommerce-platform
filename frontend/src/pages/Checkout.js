@@ -11,7 +11,7 @@ const Checkout = () => {
   const stripe = useStripe();
   const elements = useElements();
   const { cartItems, clearCart } = useCart();
-  const { user, loading: authLoading } = useAuth(); // FIXED: Use user instead of token
+  const { user, makeAuthenticatedRequest, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { showToast } = useToastContext();
   const [processing, setProcessing] = useState(false);
@@ -24,45 +24,13 @@ const Checkout = () => {
     country: ''
   });
 
-  // FIXED: Redirect if not authenticated
+  // Redirect if not authenticated
   useEffect(() => {
     if (!authLoading && !user) {
       showToast('Please log in to complete your order', 'error');
       navigate('/login?redirect=/checkout');
     }
   }, [user, authLoading, navigate, showToast]);
-
-  // FIXED: Authenticated API request function
-  const makeAuthenticatedRequest = async (url, options = {}) => {
-    const defaultOptions = {
-      credentials: 'include', // CRITICAL for session cookies
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-      ...options,
-    };
-
-    try {
-      const response = await fetch(url, defaultOptions);
-      
-      if (!response.ok) {
-        if (response.status === 401) {
-          showToast('Session expired. Please log in again.', 'error');
-          navigate('/login?redirect=/checkout');
-          throw new Error('Authentication required');
-        }
-        
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('API request failed:', error);
-      throw error;
-    }
-  };
 
   const total = cartItems.reduce((sum, item) => 
     sum + (item.product.price * item.quantity), 0
@@ -92,7 +60,7 @@ const Checkout = () => {
     setProcessing(true);
 
     try {
-      // FIXED: Create payment intent with authentication
+      // Create payment intent with authentication
       const intentData = await makeAuthenticatedRequest(`${API_BASE}/payment/create-intent`, {
         method: 'POST',
         body: JSON.stringify({ amount: Math.round(total * 100) })
@@ -116,7 +84,7 @@ const Checkout = () => {
       }
 
       if (paymentIntent.status === 'succeeded') {
-        // FIXED: Create order with proper authentication
+        // Create order with proper authentication
         try {
           const orderData = await makeAuthenticatedRequest(`${API_BASE}/orders`, {
             method: 'POST',

@@ -62,10 +62,11 @@ app.add_middleware(
         "Authorization",
         "X-CSRF-Token",
         "X-Request-Signature",
-        "X-Request-Timestamp"
+        "X-Request-Timestamp",
+        "Cache-Control"
     ],
     expose_headers=["Set-Cookie"],  # Critical for cookie-based auth
-    max_age=3600,
+    max_age=600,
 )
 
 # FIXED COOP middleware for checkout authentication

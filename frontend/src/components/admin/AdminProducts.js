@@ -11,7 +11,7 @@ const AdminProducts = () => {
   const [loading, setLoading] = useState(true);
   const [editingProduct, setEditingProduct] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
-  const { token } = useAuth();
+  const { makeAuthenticatedRequest } = useAuth();
   const { showToast } = useToastContext();
 
   useEffect(() => {
@@ -21,14 +21,8 @@ const AdminProducts = () => {
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch(`${API_BASE}/admin/products`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setProducts(data.products);
-      }
+      const data = await makeAuthenticatedRequest(`${API_BASE}/admin/products`);
+      setProducts(data.products || []);
     } catch (error) {
       console.error('Failed to fetch products:', error);
     } finally {
@@ -38,11 +32,8 @@ const AdminProducts = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch(`${API_BASE}/admin/categories`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const data = await response.json();
-      const categoryNames = data.categories.map(cat => cat.name).sort();
+      const data = await makeAuthenticatedRequest(`${API_BASE}/admin/categories`);
+      const categoryNames = data.categories?.map(cat => cat.name).sort() || [];
       setCategories(categoryNames);
     } catch (error) {
       console.error('Failed to fetch categories:', error);
@@ -53,18 +44,13 @@ const AdminProducts = () => {
     if (!window.confirm('Are you sure you want to delete this product?')) return;
 
     try {
-      const response = await fetch(`${API_BASE}/admin/products/${productId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
+      await makeAuthenticatedRequest(`${API_BASE}/admin/products/${productId}`, {
+        method: 'DELETE'
       });
 
-      if (response.ok) {
-        showToast('Product deleted successfully', 'success');
-        fetchProducts();
-        fetchCategories();
-      } else {
-        showToast('Failed to delete product', 'error');
-      }
+      showToast('Product deleted successfully', 'success');
+      fetchProducts();
+      fetchCategories();
     } catch (error) {
       console.error('Failed to delete product:', error);
       showToast('Failed to delete product', 'error');
@@ -72,12 +58,12 @@ const AdminProducts = () => {
   };
 
   const handleAddProduct = () => {
-    setEditingProduct(null); // Close edit modal if open
+    setEditingProduct(null);
     setShowAddForm(true);
   };
 
   const handleEditProduct = (product) => {
-    setShowAddForm(false); // Close add modal if open
+    setShowAddForm(false);
     setEditingProduct(product);
   };
 
@@ -111,7 +97,6 @@ const AdminProducts = () => {
               fetchCategories();
             }}
             onCancel={closeModals}
-            token={token}
           />
         )}
 
@@ -126,7 +111,6 @@ const AdminProducts = () => {
               fetchCategories();
             }}
             onCancel={closeModals}
-            token={token}
             isEdit={true}
           />
         )}

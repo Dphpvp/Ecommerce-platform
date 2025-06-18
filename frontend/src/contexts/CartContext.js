@@ -8,7 +8,7 @@ const CartContext = createContext();
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(false);
-  const { user } = useAuth(); // Changed from token to user for session auth
+  const { user, makeAuthenticatedRequest } = useAuth(); // FIXED: Use user and makeAuthenticatedRequest
 
   const fetchCart = useCallback(async () => {
     if (!user) {
@@ -18,31 +18,18 @@ export const CartProvider = ({ children }) => {
     
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE}/cart`, {
-        credentials: 'include', // Use session cookies
-        headers: { 
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setCartItems(Array.isArray(data) ? data : []);
-      } else if (response.status === 401) {
-        // User not authenticated
-        setCartItems([]);
-      } else {
-        console.error('Failed to fetch cart:', response.status);
-        setCartItems([]);
-      }
+      // FIXED: Use makeAuthenticatedRequest instead of manual fetch
+      const data = await makeAuthenticatedRequest(`${API_BASE}/cart`);
+      setCartItems(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Failed to fetch cart:', error);
-      setCartItems([]);
+      if (error.message === 'Authentication required') {
+        setCartItems([]);
+      }
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user, makeAuthenticatedRequest]);
 
   const addToCart = async (productId, quantity = 1) => {
     if (!user) {
@@ -56,27 +43,17 @@ export const CartProvider = ({ children }) => {
     }
 
     try {
-      const response = await fetch(`${API_BASE}/cart/add`, {
+      // FIXED: Use makeAuthenticatedRequest
+      await makeAuthenticatedRequest(`${API_BASE}/cart/add`, {
         method: 'POST',
-        credentials: 'include', // Use session cookies
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
         body: JSON.stringify({ 
           product_id: productId, 
           quantity: parseInt(quantity) 
         })
       });
 
-      if (response.ok) {
-        await fetchCart(); // Refresh cart after adding
-        return true;
-      } else {
-        const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
-        console.error('Failed to add to cart:', error.detail);
-        return false;
-      }
+      await fetchCart(); // Refresh cart after adding
+      return true;
     } catch (error) {
       console.error('Failed to add to cart:', error);
       return false;
@@ -90,23 +67,13 @@ export const CartProvider = ({ children }) => {
     }
 
     try {
-      const response = await fetch(`${API_BASE}/cart/${itemId}`, {
-        method: 'DELETE',
-        credentials: 'include', // Use session cookies
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        }
+      // FIXED: Use makeAuthenticatedRequest
+      await makeAuthenticatedRequest(`${API_BASE}/cart/${itemId}`, {
+        method: 'DELETE'
       });
 
-      if (response.ok) {
-        await fetchCart(); // Refresh cart after removing
-        return true;
-      } else {
-        const error = await response.json().catch(() => ({ detail: 'Unknown error' }));
-        console.error('Failed to remove from cart:', error.detail);
-        return false;
-      }
+      await fetchCart(); // Refresh cart after removing
+      return true;
     } catch (error) {
       console.error('Failed to remove from cart:', error);
       return false;
@@ -119,23 +86,14 @@ export const CartProvider = ({ children }) => {
     }
 
     try {
-      const response = await fetch(`${API_BASE}/cart/${itemId}`, {
+      // FIXED: Use makeAuthenticatedRequest
+      await makeAuthenticatedRequest(`${API_BASE}/cart/${itemId}`, {
         method: 'PUT',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
         body: JSON.stringify({ quantity: parseInt(newQuantity) })
       });
 
-      if (response.ok) {
-        await fetchCart();
-        return true;
-      } else {
-        console.error('Failed to update cart item quantity');
-        return false;
-      }
+      await fetchCart();
+      return true;
     } catch (error) {
       console.error('Failed to update cart item:', error);
       return false;

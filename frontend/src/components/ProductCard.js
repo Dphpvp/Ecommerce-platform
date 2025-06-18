@@ -1,23 +1,24 @@
 import React from 'react';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
-
+import { useToastContext } from './toast';
 
 const ProductCard = ({ product }) => {
   const { addToCart } = useCart();
   const { user } = useAuth();
+  const { showToast } = useToastContext();
 
   const handleAddToCart = async () => {
     if (!user) {
-      alert('Please login to add items to cart');
+      showToast('Please login to add items to cart', 'error');
       return;
     }
     
     const success = await addToCart(product._id);
     if (success) {
-      alert('Added to cart!');
+      showToast('Added to cart!', 'success');
     } else {
-      alert('Failed to add to cart');
+      showToast('Failed to add to cart', 'error');
     }
   };
 

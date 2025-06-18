@@ -8,7 +8,7 @@ import '../../styles/profile.css';
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
 const Profile = () => {
-  const { user, token, login, refetchUser } = useAuth();
+  const { user, makeAuthenticatedRequest, login, refetchUser } = useAuth();
   const { showToast } = useToastContext();
   const [isEditing, setIsEditing] = useState(false);
   const [isChangingAvatar, setIsChangingAvatar] = useState(false);
@@ -148,27 +148,17 @@ const Profile = () => {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE}/auth/update-profile`, {
+      const data = await makeAuthenticatedRequest(`${API_BASE}/auth/update-profile`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
         body: JSON.stringify(formData)
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        login(token, data.user);
-        showToast('Profile updated successfully!', 'success');
-        setIsEditing(false);
-      } else {
-        const errorData = await response.json();
-        showToast(errorData.detail || 'Failed to update profile', 'error');
-      }
+      login(data.user);
+      showToast('Profile updated successfully!', 'success');
+      setIsEditing(false);
     } catch (error) {
       console.error('Profile update error:', error);
-      showToast('Failed to update profile', 'error');
+      showToast(error.message || 'Failed to update profile', 'error');
     } finally {
       setLoading(false);
     }
@@ -191,36 +181,26 @@ const Profile = () => {
     setPasswordLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE}/auth/change-password`, {
+      await makeAuthenticatedRequest(`${API_BASE}/auth/change-password`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
         body: JSON.stringify({
           ...passwordData,
           recaptcha_response: recaptchaResponse
         })
       });
 
-      if (response.ok) {
-        showToast('Password changed successfully!', 'success');
-        setIsChangingPassword(false);
-        setPasswordData({
-          old_password: '',
-          new_password: '',
-          confirm_password: ''
-        });
-        setPasswordErrors({});
-        window.grecaptcha.reset(recaptchaRef.current);
-      } else {
-        const errorData = await response.json();
-        showToast(errorData.detail || 'Failed to change password', 'error');
-        window.grecaptcha.reset(recaptchaRef.current);
-      }
+      showToast('Password changed successfully!', 'success');
+      setIsChangingPassword(false);
+      setPasswordData({
+        old_password: '',
+        new_password: '',
+        confirm_password: ''
+      });
+      setPasswordErrors({});
+      window.grecaptcha.reset(recaptchaRef.current);
     } catch (error) {
       console.error('Password change error:', error);
-      showToast('Failed to change password', 'error');
+      showToast(error.message || 'Failed to change password', 'error');
       window.grecaptcha.reset(recaptchaRef.current);
     } finally {
       setPasswordLoading(false);
@@ -237,24 +217,15 @@ const Profile = () => {
 
     setSendingDisableCode(true);
     try {
-      const response = await fetch(`${API_BASE}/auth/send-disable-2fa-code`, {
+      await makeAuthenticatedRequest(`${API_BASE}/auth/send-disable-2fa-code`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
         body: JSON.stringify({ password: disable2FAForm.password })
       });
 
-      if (response.ok) {
-        showToast('Verification code sent to your email', 'success');
-        setStep(2);
-      } else {
-        const data = await response.json();
-        showToast(data.detail || 'Failed to send code', 'error');
-      }
+      showToast('Verification code sent to your email', 'success');
+      setStep(2);
     } catch (error) {
-      showToast('Failed to send verification code', 'error');
+      showToast(error.message || 'Failed to send code', 'error');
     } finally {
       setSendingDisableCode(false);
     }
@@ -265,26 +236,17 @@ const Profile = () => {
     setDisabling2FA(true);
 
     try {
-      const response = await fetch(`${API_BASE}/auth/disable-2fa`, {
+      await makeAuthenticatedRequest(`${API_BASE}/auth/disable-2fa`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
         body: JSON.stringify(disable2FAForm)
       });
 
-      if (response.ok) {
-        showToast('2FA disabled successfully', 'success');
-        setDisable2FAForm({ password: '', code: '' });
-        setStep(1);
-        refetchUser();
-      } else {
-        const data = await response.json();
-        showToast(data.detail || 'Failed to disable 2FA', 'error');
-      }
+      showToast('2FA disabled successfully', 'success');
+      setDisable2FAForm({ password: '', code: '' });
+      setStep(1);
+      refetchUser();
     } catch (error) {
-      showToast('Failed to disable 2FA', 'error');
+      showToast(error.message || 'Failed to disable 2FA', 'error');
     } finally {
       setDisabling2FA(false);
     }
@@ -318,20 +280,12 @@ const Profile = () => {
 
   const handleChangeAvatar = async () => {
     try {
-      const response = await fetch(`${API_BASE}/auth/upload-avatar`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
+      const data = await makeAuthenticatedRequest(`${API_BASE}/auth/upload-avatar`, {
+        method: 'POST'
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        setAvailableAvatars(data.avatars);
-        setIsChangingAvatar(true);
-      } else {
-        showToast('Failed to load avatar options', 'error');
-      }
+      setAvailableAvatars(data.avatars);
+      setIsChangingAvatar(true);
     } catch (error) {
       console.error('Avatar loading error:', error);
       showToast('Failed to load avatar options', 'error');
@@ -341,24 +295,15 @@ const Profile = () => {
   const handleSelectAvatar = async (avatarUrl) => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE}/auth/update-profile`, {
+      const data = await makeAuthenticatedRequest(`${API_BASE}/auth/update-profile`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
         body: JSON.stringify({ profile_image_url: avatarUrl })
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        login(token, data.user);
-        showToast('Avatar updated successfully!', 'success');
-        setIsChangingAvatar(false);
-        setFormData(prev => ({ ...prev, profile_image_url: avatarUrl }));
-      } else {
-        showToast('Failed to update avatar', 'error');
-      }
+      login(data.user);
+      showToast('Avatar updated successfully!', 'success');
+      setIsChangingAvatar(false);
+      setFormData(prev => ({ ...prev, profile_image_url: avatarUrl }));
     } catch (error) {
       console.error('Avatar update error:', error);
       showToast('Failed to update avatar', 'error');

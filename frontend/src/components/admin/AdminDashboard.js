@@ -8,25 +8,19 @@ const API_BASE = process.env.REACT_APP_API_BASE_URL;
 const AdminDashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const { token } = useAuth();
+  const { makeAuthenticatedRequest } = useAuth();
 
   const fetchDashboardData = useCallback(async () => {
     try {
-      const response = await fetch(`${API_BASE}/admin/dashboard`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setDashboardData(data);
-      } else {
-        alert('Failed to fetch dashboard data');
-      }
+      const data = await makeAuthenticatedRequest(`${API_BASE}/admin/dashboard`);
+      setDashboardData(data);
     } catch (error) {
       console.error('Failed to fetch dashboard:', error);
+      alert('Failed to fetch dashboard data');
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [makeAuthenticatedRequest]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -48,27 +42,27 @@ const AdminDashboard = () => {
           <div className="dashboard-stats">
             <div className="stat-card total">
               <h3>Total Orders</h3>
-              <p className="stat-number">{statistics.orders.total_orders}</p>
+              <p className="stat-number">{statistics.orders?.total_orders || 0}</p>
             </div>
             <div className="stat-card pending">
               <h3>Pending</h3>
-              <p className="stat-number">{statistics.orders.pending_orders}</p>
+              <p className="stat-number">{statistics.orders?.pending_orders || 0}</p>
             </div>
             <div className="stat-card accepted">
               <h3>Accepted</h3>
-              <p className="stat-number">{statistics.orders.accepted_orders}</p>
+              <p className="stat-number">{statistics.orders?.accepted_orders || 0}</p>
             </div>
             <div className="stat-card processing">
               <h3>Processing</h3>
-              <p className="stat-number">{statistics.orders.processing_orders}</p>
+              <p className="stat-number">{statistics.orders?.processing_orders || 0}</p>
             </div>
             <div className="stat-card shipped">
               <h3>Shipped</h3>
-              <p className="stat-number">{statistics.orders.shipped_orders}</p>
+              <p className="stat-number">{statistics.orders?.shipped_orders || 0}</p>
             </div>
             <div className="stat-card delivered">
               <h3>Delivered</h3>
-              <p className="stat-number">{statistics.orders.delivered_orders}</p>
+              <p className="stat-number">{statistics.orders?.delivered_orders || 0}</p>
             </div>
           </div>
         </div>
@@ -79,19 +73,19 @@ const AdminDashboard = () => {
           <div className="dashboard-stats">
             <div className="stat-card revenue">
               <h3>Total Revenue</h3>
-              <p className="stat-number">${statistics.revenue.total_revenue.toFixed(2)}</p>
+              <p className="stat-number">${statistics.revenue?.total_revenue?.toFixed(2) || '0.00'}</p>
             </div>
             <div className="stat-card users">
               <h3>Total Users</h3>
-              <p className="stat-number">{statistics.users.total_users}</p>
+              <p className="stat-number">{statistics.users?.total_users || 0}</p>
             </div>
             <div className="stat-card admins">
               <h3>Admin Users</h3>
-              <p className="stat-number">{statistics.users.admin_users}</p>
+              <p className="stat-number">{statistics.users?.admin_users || 0}</p>
             </div>
             <div className="stat-card products">
               <h3>Total Products</h3>
-              <p className="stat-number">{statistics.products.total_products}</p>
+              <p className="stat-number">{statistics.products?.total_products || 0}</p>
             </div>
           </div>
         </div>
@@ -101,23 +95,25 @@ const AdminDashboard = () => {
           <div className="dashboard-section">
             <h2>Recent Orders</h2>
             <div className="recent-orders">
-              {recent_orders.map(order => (
+              {recent_orders?.length > 0 ? recent_orders.map(order => (
                 <div key={order._id} className="recent-order-item">
                   <div className="order-info">
                     <strong>#{order._id.slice(-8)}</strong>
-                    <span>{order.customer_name}</span>
-                    <span>{order.customer_email}</span>
-                    <span>${order.total_amount.toFixed(2)}</span>
+                    <span>{order.customer_name || 'Unknown'}</span>
+                    <span>{order.customer_email || 'Unknown'}</span>
+                    <span>${order.total_amount?.toFixed(2) || '0.00'}</span>
                   </div>
                   <span className={`status ${order.status}`}>{order.status}</span>
                 </div>
-              ))}
+              )) : (
+                <p>No recent orders found</p>
+              )}
             </div>
             <Link to="/admin/orders" className="btn btn-primary">View All Orders</Link>
           </div>
 
           {/* Low Stock Alert */}
-          {low_stock_products.length > 0 && (
+          {low_stock_products?.length > 0 && (
             <div className="dashboard-section">
               <h2>⚠️ Low Stock Alert</h2>
               <div className="low-stock-items">

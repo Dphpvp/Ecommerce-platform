@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 import { useToastContext } from '../toast';
 import SecureForm from '../SecureForm';
 import { csrfManager } from '../../utils/csrf';
@@ -9,9 +10,9 @@ const ProductForm = ({
   categories = [],
   onSave,
   onCancel,
-  token,
   isEdit = false,
 }) => {
+  const { makeAuthenticatedRequest } = useAuth();
   const { showToast } = useToastContext();
   const [categoryType, setCategoryType] = useState("existing");
   const [customCategory, setCustomCategory] = useState("");
@@ -31,25 +32,31 @@ const ProductForm = ({
         category: categoryType === "existing" ? sanitizedData.category : customCategory
       };
 
-      const response = await csrfManager.makeSecureRequest(url, {
-        method,
-        headers: {
-          'X-CSRF-Token': csrfToken,
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify(productData),
-      });
-
-      if (response.ok) {
-        showToast(
-          isEdit ? "Product updated successfully" : "Product added successfully",
-          "success"
-        );
-        onSave();
+      if (isEdit) {
+        await makeAuthenticatedRequest(url, {
+          method,
+          body: JSON.stringify(productData),
+        });
       } else {
-        const error = await response.json();
-        throw new Error(error.detail || 'Failed to save product');
+        const response = await csrfManager.makeSecureRequest(url, {
+          method,
+          headers: {
+            'X-CSRF-Token': csrfToken,
+          },
+          body: JSON.stringify(productData),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.detail || 'Failed to save product');
+        }
       }
+
+      showToast(
+        isEdit ? "Product updated successfully" : "Product added successfully",
+        "success"
+      );
+      onSave();
     } catch (error) {
       throw error;
     }

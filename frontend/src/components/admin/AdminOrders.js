@@ -2,8 +2,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import "../../styles/adminorders.css";
 
-const API_BASE =
-  process.env.REACT_APP_API_BASE_URL;
+const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
 // Modal Component
 const Modal = ({ isOpen, onClose, children }) => {
@@ -41,7 +40,7 @@ const OrderManagementCard = ({ order, onStatusUpdate, getStatusColor }) => {
           <div className="order-basic-info">
             <h3>Order #{order._id.slice(-8)}</h3>
             <p>
-              Customer: {order.user_info.full_name} ({order.user_info.email})
+              Customer: {order.user_info?.full_name || 'Unknown'} ({order.user_info?.email || 'Unknown'})
             </p>
             <p>Total: ${order.total_amount.toFixed(2)}</p>
             <p>Date: {formatDate(order.created_at)}</p>
@@ -68,10 +67,10 @@ const OrderManagementCard = ({ order, onStatusUpdate, getStatusColor }) => {
 
         <section>
           <h3>👤 Customer Info</h3>
-          <p><strong>Name:</strong> {order.user_info.full_name}</p>
-          <p><strong>Email:</strong> {order.user_info.email}</p>
-          <p><strong>Username:</strong> {order.user_info.username}</p>
-          <p><strong>Phone:</strong> {order.user_info.phone || "Not provided"}</p>
+          <p><strong>Name:</strong> {order.user_info?.full_name || 'Unknown'}</p>
+          <p><strong>Email:</strong> {order.user_info?.email || 'Unknown'}</p>
+          <p><strong>Username:</strong> {order.user_info?.username || 'Unknown'}</p>
+          <p><strong>Phone:</strong> {order.user_info?.phone || "Not provided"}</p>
         </section>
 
         <section>
@@ -90,21 +89,21 @@ const OrderManagementCard = ({ order, onStatusUpdate, getStatusColor }) => {
 
         <section>
           <h3>📦 Items</h3>
-          {order.items.map((item, index) => (
+          {order.items?.map((item, index) => (
             <div key={index} className="order-item-detail">
               <img
-                src={item.product.image_url}
-                alt={item.product.name}
+                src={item.product?.image_url}
+                alt={item.product?.name}
                 className="item-image"
               />
               <div>
-                <p><strong>{item.product.name}</strong></p>
+                <p><strong>{item.product?.name}</strong></p>
                 <p>Quantity: {item.quantity}</p>
-                <p>Price: ${item.product.price.toFixed(2)} each</p>
-                <p>Subtotal: ${(item.product.price * item.quantity).toFixed(2)}</p>
+                <p>Price: ${item.product?.price?.toFixed(2)} each</p>
+                <p>Subtotal: ${(item.product?.price * item.quantity)?.toFixed(2)}</p>
               </div>
             </div>
-          ))}
+          )) || <p>No items found</p>}
         </section>
 
         <section>
@@ -157,7 +156,7 @@ const AdminOrders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
-  const { token } = useAuth();
+  const { makeAuthenticatedRequest } = useAuth();
 
   useEffect(() => {
     const fetchOrdersWithFilter = async () => {
@@ -169,46 +168,30 @@ const AdminOrders = () => {
 
         console.log('Fetching URL:', url, 'Filter:', filter);
 
-        const response = await fetch(url, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          console.log('Orders received:', data.orders.length);
-          setOrders(data.orders);
-        }
+        const data = await makeAuthenticatedRequest(url);
+        console.log('Orders received:', data.orders?.length || 0);
+        setOrders(data.orders || []);
       } catch (error) {
         console.error("Failed to fetch orders:", error);
+        setOrders([]);
       } finally {
         setLoading(false);
       }
     };
 
     fetchOrdersWithFilter();
-  }, [filter, token]);
+  }, [filter, makeAuthenticatedRequest]);
 
   const updateOrderStatus = async (orderId, newStatus) => {
     try {
-      const response = await fetch(
-        `${API_BASE}/admin/orders/${orderId}/status`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ status: newStatus }),
-        }
-      );
+      await makeAuthenticatedRequest(`${API_BASE}/admin/orders/${orderId}/status`, {
+        method: "PUT",
+        body: JSON.stringify({ status: newStatus })
+      });
 
-      if (response.ok) {
-        alert(`Order status updated to ${newStatus}`);
-        // Trigger re-fetch by updating a dependency
-        window.location.reload();
-      } else {
-        alert("Failed to update order status");
-      }
+      alert(`Order status updated to ${newStatus}`);
+      // Trigger re-fetch by updating filter
+      setFilter(filter + "");
     } catch (error) {
       console.error("Failed to update order:", error);
       alert("Failed to update order status");

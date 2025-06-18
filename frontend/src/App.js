@@ -40,6 +40,7 @@ const stripePromise = loadStripe(
 const App = () => {
   return (
     <Elements stripe={stripePromise}>
+      <ErrorBoundary>
       <Router>
         <AuthProvider>
           <CartProvider>
@@ -138,6 +139,7 @@ const App = () => {
           </CartProvider>
         </AuthProvider>
       </Router>
+    </ErrorBoundary>
     </Elements>
   );
 };

@@ -16,7 +16,6 @@ export const AuthProvider = ({ children }) => {
 
   const logout = useCallback(async () => {
     try {
-      // FIXED: Use session-based logout
       await fetch(`${API_BASE}/auth/logout`, {
         method: 'GET',
         credentials: 'include'
@@ -74,15 +73,20 @@ export const AuthProvider = ({ children }) => {
     };
   }, [user, handleActivity, resetTimeout]);
 
-  // FIXED: Enhanced fetch function with proper error handling
+  // FIXED: Enhanced fetch function with better error handling and session persistence
   const fetchUser = useCallback(async () => {
     try {
+      setLoading(true); // Ensure loading state is set
+      
       const response = await fetch(`${API_BASE}/auth/me`, {
-        credentials: 'include', // CRITICAL for session cookies
+        method: 'GET',
+        credentials: 'include',
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
-        }
+        },
+        // Add cache control to prevent stale responses
+        cache: 'no-cache'
       });
       
       if (response.ok) {
@@ -90,24 +94,27 @@ export const AuthProvider = ({ children }) => {
         setUser(userData);
         return userData;
       } else if (response.status === 401) {
-        // Not authenticated - this is normal
+        // Session expired or not authenticated - this is normal
         setUser(null);
         return null;
       } else {
         console.error('Failed to fetch user:', response.status, response.statusText);
-        return null;
+        // Don't logout on other errors, keep current state
+        return user;
       }
     } catch (error) {
       console.error('Failed to fetch user:', error);
-      return null;
+      // On network errors, don't logout - keep current state
+      return user;
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, []); // FIXED: Remove user dependency to prevent infinite loops
 
+  // FIXED: Only fetch user on initial mount
   useEffect(() => {
     fetchUser();
-  }, [fetchUser]);
+  }, []); // Empty dependency array for initial load only
 
   // FIXED: Session-based login
   const login = useCallback(async (userData) => {
@@ -115,11 +122,16 @@ export const AuthProvider = ({ children }) => {
       setUser(userData);
     } else {
       // If no userData provided, fetch from session
-      await fetchUser();
+      const freshUser = await fetchUser();
+      if (!freshUser) {
+        console.error('Login failed: No user data available');
+        return false;
+      }
     }
     setRequires2FA(false);
     setTempToken(null);
     setLoading(false);
+    return true;
   }, [fetchUser]);
 
   // FIXED: 2FA completion handler
@@ -146,7 +158,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await fetch(`${API_BASE}/auth/register`, {
         method: 'POST',
-        credentials: 'include', // Include cookies for session
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(userData)
       });
@@ -168,7 +180,7 @@ export const AuthProvider = ({ children }) => {
   // FIXED: Enhanced authentication helpers
   const makeAuthenticatedRequest = useCallback(async (url, options = {}) => {
     const defaultOptions = {
-      credentials: 'include', // Always include cookies
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
         ...options.headers,
@@ -180,7 +192,7 @@ export const AuthProvider = ({ children }) => {
       const response = await fetch(url, defaultOptions);
       
       if (response.status === 401) {
-        // Session expired or invalid
+        // Session expired or invalid - logout user
         setUser(null);
         throw new Error('Authentication required');
       }
@@ -197,31 +209,44 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // FIXED: Check authentication status
+  // FIXED: Check authentication status without side effects
   const checkAuthStatus = useCallback(async () => {
     try {
-      const userData = await fetchUser();
-      return !!userData;
+      const response = await fetch(`${API_BASE}/auth/me`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: { 'Accept': 'application/json' }
+      });
+      return response.ok;
     } catch (error) {
       console.error('Auth status check failed:', error);
       return false;
     }
-  }, [fetchUser]);
+  }, []);
 
   // Helper to determine if user is authenticated
   const isAuthenticated = !!user;
 
-  // Debug function for troubleshooting
-  const debugAuth = useCallback(() => {
-    console.log('Auth Debug Info:', {
-      user: user ? { id: user.id, email: user.email } : null,
-      loading,
-      requires2FA,
-      tempToken: !!tempToken,
-      isAuthenticated,
-      cookies: document.cookie
-    });
-  }, [user, loading, requires2FA, tempToken, isAuthenticated]);
+  // FIXED: Refresh user data without triggering logout
+  const refetchUser = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_BASE}/auth/me`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: { 'Accept': 'application/json' }
+      });
+      
+      if (response.ok) {
+        const userData = await response.json();
+        setUser(userData);
+        return userData;
+      }
+      return null;
+    } catch (error) {
+      console.error('Failed to refresh user:', error);
+      return null;
+    }
+  }, []);
 
   return (
     <AuthContext.Provider value={{ 
@@ -236,11 +261,10 @@ export const AuthProvider = ({ children }) => {
       tempToken,
       handle2FARequired,
       complete2FA,
-      refetchUser: fetchUser,
+      refetchUser,
       makeAuthenticatedRequest,
       checkAuthStatus,
-      isAuthenticated,
-      debugAuth // For debugging
+      isAuthenticated
     }}>
       {children}
     </AuthContext.Provider>
