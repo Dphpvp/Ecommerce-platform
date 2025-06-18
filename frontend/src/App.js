@@ -7,7 +7,6 @@ import './App.css';
 
 import { AuthProvider } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
-import { ErrorBoundary } from './components/ErrorBoundary';
 import { ToastProvider } from './components/toast';
 
 import Header from './components/header';
@@ -33,6 +32,8 @@ import AdminUsers from './components/admin/AdminUsers';
 import AdminProducts from './components/admin/AdminProducts';
 import AdminRoute from './components/admin/AdminRoute';
 import AdminCategories from './components/admin/AdminCategories';
+
+import ErrorBoundary from '/components/ErrorBoundary';
 
 const stripePromise = loadStripe(
   process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY
