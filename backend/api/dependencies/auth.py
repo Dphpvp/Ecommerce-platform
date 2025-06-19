@@ -53,3 +53,10 @@ def require_csrf_token(request: Request) -> bool:
             raise HTTPException(status_code=403, detail="Invalid CSRF token")
     
     return True
+
+async def get_current_user_optional(request: Request) -> Optional[dict]:
+    """Get current user without requiring authentication."""
+    try:
+        return await get_current_user_from_session(request)
+    except HTTPException:
+        return None
