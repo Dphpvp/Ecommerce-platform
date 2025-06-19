@@ -281,10 +281,7 @@ const Profile = () => {
 
   const handleChangeAvatar = async () => {
     try {
-      const data = await makeAuthenticatedRequest(`${API_BASE}/auth/upload-avatar`, {
-        method: 'POST'
-      });
-
+      const data = await makeAuthenticatedRequest(`${API_BASE}/auth/upload-avatar`);
       setAvailableAvatars(data.avatars);
       setIsChangingAvatar(true);
     } catch (error) {

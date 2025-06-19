@@ -1154,7 +1154,7 @@ async def generate_backup_codes(current_user: dict = Depends(get_current_user)):
     
 @router.post("/auth/google")
 async def google_login(google_login: GoogleLogin, response: Response):
-    """Fixed Google OAuth login with session cookies"""
+    """Fixed Google OAuth login with proper profile data storage"""
     try:
         idinfo = id_token.verify_oauth2_token(
             google_login.token, google_requests.Request(), GOOGLE_CLIENT_ID
@@ -1164,14 +1164,35 @@ async def google_login(google_login: GoogleLogin, response: Response):
             raise ValueError('Wrong issuer.')
 
         email = idinfo['email']
-        name = idinfo['name']
+        name = idinfo.get('name', '')
         google_id = idinfo['sub']
         picture = idinfo.get('picture', '')
+        
+        # Extract additional Google profile data
+        given_name = idinfo.get('given_name', '')
+        family_name = idinfo.get('family_name', '')
+        full_name = name or f"{given_name} {family_name}".strip()
 
         user = await db.users.find_one({"email": email})
 
         if user:
-            # Check if 2FA is enabled
+            # Update existing user with latest Google data
+            update_data = {
+                "profile_image_url": picture,
+                "full_name": full_name or user.get("full_name", ""),
+                "email_verified": True,  # Google users are always verified
+                "last_login": datetime.now(timezone.utc)
+            }
+            
+            await db.users.update_one(
+                {"_id": user["_id"]},
+                {"$set": update_data}
+            )
+            
+            # Refresh user data
+            user = await db.users.find_one({"_id": user["_id"]})
+            
+            # Check if 2FA is enabled (rest of 2FA logic...)
             if user.get("two_factor_enabled"):
                 temp_token = create_jwt_token(str(user["_id"]), expires_in=timedelta(minutes=10))
                 
@@ -1201,18 +1222,9 @@ async def google_login(google_login: GoogleLogin, response: Response):
                     "email_hint": f"***{user['email'][-10:]}" if user.get("two_factor_method") == "email" else None
                 }
             
-            # Update profile image if Google has one
-            if picture and not user.get("profile_image_url"):
-                await db.users.update_one(
-                    {"_id": user["_id"]},
-                    {"$set": {"profile_image_url": picture}}
-                )
-                user["profile_image_url"] = picture
-            
             # Regular login response
             token = create_jwt_token(str(user["_id"]))
             
-            # FIXED: Set session cookie
             response.set_cookie(
                 key="session_token",
                 value=token,
@@ -1231,17 +1243,18 @@ async def google_login(google_login: GoogleLogin, response: Response):
                     "id": str(user["_id"]),
                     "email": user["email"],
                     "username": user["username"],
-                    "full_name": user.get("full_name", ""),
-                    "address": user.get("address"),
-                    "phone": user.get("phone"),
-                    "profile_image_url": user.get("profile_image_url"),
+                    "full_name": user.get("full_name", full_name),
+                    "address": user.get("address", ""),
+                    "phone": user.get("phone", ""),
+                    "profile_image_url": user.get("profile_image_url", picture),
                     "is_admin": user.get("is_admin", False),
-                    "email_verified": user.get("email_verified", True),
-                    "two_factor_enabled": user.get("two_factor_enabled", False)
+                    "email_verified": True,
+                    "two_factor_enabled": user.get("two_factor_enabled", False),
+                    "google_id": user.get("google_id")
                 }
             }
         else:
-            # Create new user
+            # Create new Google user with complete profile
             username = email.split('@')[0]
             counter = 1
             original_username = username
@@ -1250,6 +1263,7 @@ async def google_login(google_login: GoogleLogin, response: Response):
                 username = f"{original_username}{counter}"
                 counter += 1
 
+            # Generate unique phone placeholder
             import secrets
             phone = f"+1-555-{secrets.randbelow(9000) + 1000:04d}"
             while await db.users.find_one({"phone": phone}):
@@ -1258,24 +1272,24 @@ async def google_login(google_login: GoogleLogin, response: Response):
             user_data = {
                 "username": username,
                 "email": email,
-                "password": "",
-                "full_name": name,
+                "password": "",  # No password for Google users
+                "full_name": full_name,
                 "phone": phone,
                 "address": "",
                 "google_id": google_id,
                 "profile_image_url": picture,
                 "is_admin": False,
-                "email_verified": True,
+                "email_verified": True,  # Google users are pre-verified
                 "two_factor_enabled": False,
                 "two_factor_secret": None,
                 "backup_codes": [],
-                "created_at": datetime.now(timezone.utc)
+                "created_at": datetime.now(timezone.utc),
+                "last_login": datetime.now(timezone.utc)
             }
 
             result = await db.users.insert_one(user_data)
             token = create_jwt_token(str(result.inserted_id))
 
-            # FIXED: Set session cookie for new user
             response.set_cookie(
                 key="session_token",
                 value=token,
@@ -1294,13 +1308,14 @@ async def google_login(google_login: GoogleLogin, response: Response):
                     "id": str(result.inserted_id),
                     "email": email,
                     "username": username,
-                    "full_name": name,
+                    "full_name": full_name,
                     "address": "",
                     "phone": phone,
                     "profile_image_url": picture,
                     "is_admin": False,
                     "email_verified": True,
-                    "two_factor_enabled": False
+                    "two_factor_enabled": False,
+                    "google_id": google_id
                 }
             }
 
@@ -1462,29 +1477,37 @@ async def change_password(password_data: PasswordChange, current_user: dict = De
     
     return {"message": "Password changed successfully"}
 
-@router.post("/auth/upload-avatar")
-async def upload_avatar(current_user: dict = Depends(get_current_user)):
-    """Handle avatar upload - simplified version using external URLs"""
-    # For now, return some sample avatar URLs
-    # In production, you'd implement actual file upload to cloud storage
-    sample_avatars = [
-        f"https://api.dicebear.com/7.x/avataaars/svg?seed={current_user['username']}1",
-        f"https://api.dicebear.com/7.x/avataaars/svg?seed={current_user['username']}2", 
-        f"https://api.dicebear.com/7.x/avataaars/svg?seed={current_user['username']}3",
-        f"https://api.dicebear.com/7.x/avataaars/svg?seed={current_user['username']}4",
-        f"https://api.dicebear.com/7.x/avataaars/svg?seed={current_user['username']}5",
-        f"https://api.dicebear.com/7.x/adventurer/svg?seed={current_user['username']}1",
-        f"https://api.dicebear.com/7.x/adventurer/svg?seed={current_user['username']}2",
-        f"https://api.dicebear.com/7.x/adventurer/svg?seed={current_user['username']}3",
-        f"https://api.dicebear.com/7.x/personas/svg?seed={current_user['username']}1",
-        f"https://api.dicebear.com/7.x/personas/svg?seed={current_user['username']}2"
-    ]
+@router.get("/auth/upload-avatar")
+async def upload_avatar(request: Request):
+    """Handle avatar upload - FIXED for session auth"""
+    try:
+        # Use session-based auth instead of token
+        user = await get_current_user_from_session(request)
+        
+        # Generate sample avatar URLs
+        sample_avatars = [
+            f"https://api.dicebear.com/7.x/avataaars/svg?seed={user['username']}1",
+            f"https://api.dicebear.com/7.x/avataaars/svg?seed={user['username']}2", 
+            f"https://api.dicebear.com/7.x/avataaars/svg?seed={user['username']}3",
+            f"https://api.dicebear.com/7.x/avataaars/svg?seed={user['username']}4",
+            f"https://api.dicebear.com/7.x/avataaars/svg?seed={user['username']}5",
+            f"https://api.dicebear.com/7.x/adventurer/svg?seed={user['username']}1",
+            f"https://api.dicebear.com/7.x/adventurer/svg?seed={user['username']}2",
+            f"https://api.dicebear.com/7.x/adventurer/svg?seed={user['username']}3",
+            f"https://api.dicebear.com/7.x/personas/svg?seed={user['username']}1",
+            f"https://api.dicebear.com/7.x/personas/svg?seed={user['username']}2"
+        ]
+        
+        return {
+            "message": "Avatar options available",
+            "avatars": sample_avatars
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Avatar endpoint error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to load avatars")
     
-    return {
-        "message": "Avatar options available",
-        "avatars": sample_avatars
-    }
-
 # Product routes
 @router.post("/products")
 async def create_product(
