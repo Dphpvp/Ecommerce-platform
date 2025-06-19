@@ -47,6 +47,7 @@ const Profile = () => {
 
   useEffect(() => {
     if (user) {
+      console.log('User data:', user); // Debug log
       setFormData({
         full_name: user.full_name || '',
         email: user.email || '',
@@ -319,13 +320,25 @@ const Profile = () => {
     return `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.username || 'default'}`;
   };
 
-  const canChangePassword = user && !user.google_id;
+  // FIXED: Check for Google users properly
+  const canChangePassword = user && !user.google_id && user.password !== "";
+  const isGoogleUser = user && user.google_id;
+
+  // Debug logging
+  console.log('User object:', user);
+  console.log('Is Google user:', isGoogleUser);
+  console.log('Can change password:', canChangePassword);
 
   return (
     <div className="profile">
       <div className="container">
         <div className="profile-header">
           <h1>My Profile</h1>
+          {isGoogleUser && (
+            <p style={{ color: '#28a745', fontWeight: 'bold' }}>
+              ✅ Signed in with Google
+            </p>
+          )}
         </div>
         
         <div className="profile-avatar-section">
@@ -398,7 +411,13 @@ const Profile = () => {
                     value={formData.email}
                     onChange={handleInputChange}
                     placeholder="Enter your email"
+                    disabled={isGoogleUser} // Disable for Google users
                   />
+                  {isGoogleUser && (
+                    <small style={{ color: '#666' }}>
+                      Email cannot be changed for Google accounts
+                    </small>
+                  )}
                 </div>
                 
                 <div className="form-group">
@@ -446,7 +465,7 @@ const Profile = () => {
                 <div className="info-group">
                   <label>Email:</label>
                   <div className="email-info">
-                    <span>{user?.email}</span>
+                    <span>{user?.email || 'No email found'}</span>
                     {user?.email_verified ? (
                       <span className="verification-badge verified">✅ Verified</span>
                     ) : (
@@ -473,10 +492,33 @@ const Profile = () => {
                     )}
                   </div>
                 </div>
+
+                <div className="info-group">
+                  <label>Full Name:</label>
+                  <span>{user?.full_name || 'Not provided'}</span>
+                </div>
+
+                <div className="info-group">
+                  <label>Phone:</label>
+                  <span>{user?.phone || 'Not provided'}</span>
+                </div>
+
+                <div className="info-group">
+                  <label>Address:</label>
+                  <span>{user?.address || 'Not provided'}</span>
+                </div>
+
                 {user?.is_admin && (
                   <div className="info-group">
                     <label>Role:</label>
                     <span style={{ color: '#dc3545', fontWeight: 'bold' }}>Administrator</span>
+                  </div>
+                )}
+
+                {isGoogleUser && (
+                  <div className="info-group">
+                    <label>Account Type:</label>
+                    <span style={{ color: '#28a745', fontWeight: 'bold' }}>Google Account</span>
                   </div>
                 )}
                 
@@ -494,6 +536,11 @@ const Profile = () => {
                     >
                       Change Password
                     </button>
+                  )}
+                  {isGoogleUser && (
+                    <p style={{ fontSize: '0.9rem', color: '#666', marginTop: '1rem' }}>
+                      Password changes are managed through your Google account
+                    </p>
                   )}
                 </div>
               </>

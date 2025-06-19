@@ -28,9 +28,9 @@
   height: 120px;
   width: 200px;
   object-fit: contain;
-  margin-left: -40px; /* Adjust as needed */
+  margin-left: -40px;
   background: transparent;
-  mix-blend-mode: multiply; /* or screen/overlay depending on image */
+  mix-blend-mode: multiply;
 }
 
 .nav {
@@ -40,7 +40,8 @@
 }
 
 /* Navigation Links with Button Styles */
-.nav a {
+.nav a,
+.nav .logout-btn {
   padding: 8px 16px;
   border: 2px solid #e9ecef;
   border-radius: 6px;
@@ -56,14 +57,24 @@
   text-transform: uppercase;
   letter-spacing: 0.3px;
   display: inline-block;
+  font-family: inherit;
 }
 
-.nav a:hover {
+.nav a:hover,
+.nav .logout-btn:hover {
   border-color: #007bff;
   background: #e7f3ff;
   color: #007bff;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
+}
+
+/* Logout button specific hover style */
+.nav .logout-btn:hover {
+  border-color: #dc3545;
+  background: #f5c6cb;
+  color: #721c24;
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
 }
 
 /* Specific hover colors for different nav items */
@@ -110,6 +121,42 @@
   box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
 }
 
+/* Admin navigation hover colors */
+.nav a[href="/admin/dashboard"]:hover {
+  background: #dc3545;
+  color: white;
+  border-color: #dc3545;
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+.nav a[href="/admin/categories-list"]:hover {
+  background: #6f42c1;
+  color: white;
+  border-color: #6f42c1;
+  box-shadow: 0 4px 12px rgba(111, 66, 193, 0.3);
+}
+
+.nav a[href="/admin/orders"]:hover {
+  background: #fd7e14;
+  color: white;
+  border-color: #fd7e14;
+  box-shadow: 0 4px 12px rgba(253, 126, 20, 0.3);
+}
+
+.nav a[href="/admin/users"]:hover {
+  background: #20c997;
+  color: white;
+  border-color: #20c997;
+  box-shadow: 0 4px 12px rgba(32, 201, 151, 0.3);
+}
+
+.nav a[href="/admin/products"]:hover {
+  background: #6610f2;
+  color: white;
+  border-color: #6610f2;
+  box-shadow: 0 4px 12px rgba(102, 16, 242, 0.3);
+}
+
 /* Cart Link - Special Styling */
 .cart-link {
   background: linear-gradient(135deg, var(--color-blue), #0056b3) !important;
@@ -135,96 +182,7 @@
   box-shadow: 0 6px 16px rgba(0, 123, 255, 0.4) !important;
 }
 
-/* Admin Dropdown Styles */
-.admin-dropdown {
-  position: relative;
-  display: inline-block;
-}
-
-.dropdown-toggle {
-  padding: 8px 16px;
-  border: 2px solid #e9ecef;
-  border-radius: 6px;
-  background: #f8f9fa;
-  color: var(--color-blue);
-  font-weight: 600;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: all 0.3s ease;
-  font-size: 0.9rem;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  min-width: 120px;
-  justify-content: center;
-}
-
-.dropdown-toggle:hover {
-  border-color: #007bff;
-  background: #e7f3ff;
-  color: var(--color-blue);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.2);
-}
-
-.dropdown-arrow {
-  font-size: 0.8rem;
-  transition: transform 0.3s ease;
-  margin-left: 0.25rem;
-}
-
-.dropdown-arrow.open {
-  transform: rotate(180deg);
-}
-
-.dropdown-menu {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  background: var(--color-white);
-  border: 1px solid #e9ecef;
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
-  min-width: 200px;
-  z-index: 1000;
-  overflow: hidden;
-  margin-top: 0.5rem;
-  animation: dropdownFadeIn 0.2s ease-out;
-}
-
-@keyframes dropdownFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.dropdown-item {
-  display: block;
-  padding: 0.75rem 1rem;
-  color: #333 !important;
-  text-decoration: none;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  border-bottom: 1px solid #f8f9fa;
-}
-
-.dropdown-item:last-child {
-  border-bottom: none;
-}
-
-.dropdown-item:hover {
-  background: var(--color-blue);
-  color: var(--color-white) !important;
-  transform: translateX(5px);
-}
-
-/* Admin badge in header */
+/* Admin badge */
 .admin-badge {
   background: var(--color-red);
   color: var(--color-white);
@@ -234,64 +192,9 @@
   font-weight: bold;
 }
 
-/* User logout button with username - Button Style */
-.user-logout-btn {
-  padding: 8px 16px;
-  border: 2px solid #e9ecef;
-  border-radius: 6px;
-  background: #f8f9fa;
-  color: #333;
-  font-weight: 600;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  min-width: 80px;
-  text-align: center;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-  position: relative;
-  overflow: hidden;
-}
-
-.user-logout-btn:hover {
-  border-color: #dc3545;
-  background: #f5c6cb;
-  color: #721c24;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
-}
-
-.user-logout-btn::after {
-  content: "Logout";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: var(--color-red);
-  color: var(--color-white);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
-}
-
-.user-logout-btn:hover::after {
-  opacity: 1;
-}
-
-.user-logout-btn:hover {
-  color: transparent;
-}
-
 /* Button Active States */
 .nav a.active,
-.dropdown-toggle.active {
+.nav .logout-btn.active {
   background: var(--color-blue);
   color: white;
   border-color: var(--color-blue);
@@ -313,22 +216,11 @@
   }
 
   .nav a,
-  .cart-link,
-  .dropdown-toggle,
-  .user-logout-btn {
+  .nav .logout-btn,
+  .cart-link {
     padding: 6px 12px;
     font-size: 0.8rem;
     min-width: 70px;
-  }
-
-  .dropdown-menu {
-    right: auto;
-    left: 0;
-    min-width: 180px;
-  }
-
-  .admin-dropdown {
-    order: 2; /* Put dropdown after main nav items on mobile */
   }
 }
 
@@ -342,9 +234,8 @@
   }
   
   .nav a,
-  .cart-link,
-  .dropdown-toggle,
-  .user-logout-btn {
+  .nav .logout-btn,
+  .cart-link {
     font-size: 0.75rem;
     padding: 5px 10px;
     min-width: 60px;
@@ -356,15 +247,6 @@
     padding: 0.2rem 0.5rem;
   }
 
-  .dropdown-item {
-    padding: 0.6rem 0.8rem;
-    font-size: 0.9rem;
-  }
-
-  .dropdown-menu {
-    min-width: 160px;
-  }
-
   /* Stack navigation vertically on very small screens */
   .nav {
     flex-direction: column;
@@ -372,9 +254,8 @@
   }
 
   .nav a,
-  .cart-link,
-  .dropdown-toggle,
-  .user-logout-btn {
+  .nav .logout-btn,
+  .cart-link {
     width: 100%;
     margin-bottom: 0.25rem;
   }
