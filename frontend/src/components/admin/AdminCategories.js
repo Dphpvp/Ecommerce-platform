@@ -7,6 +7,8 @@ const API_BASE = process.env.REACT_APP_API_BASE_URL;
 const AdminCategories = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [debugInfo, setDebugInfo] = useState(null);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [parentCategory, setParentCategory] = useState('');
   const [creating, setCreating] = useState(false);
@@ -16,22 +18,36 @@ const AdminCategories = () => {
   const [editingProduct, setEditingProduct] = useState(null);
   const [editFormData, setEditFormData] = useState({});
   const [expandedCategories, setExpandedCategories] = useState(new Set());
-  const { token } = useAuth();
+  const { makeAuthenticatedRequest } = useAuth();
   const productsRef = useRef(null);
 
   useEffect(() => {
     fetchCategories();
+    fetchDebugInfo();
   }, []);
+
+  const fetchDebugInfo = async () => {
+    try {
+      const data = await makeAuthenticatedRequest(`${API_BASE}/admin/debug`);
+      setDebugInfo(data);
+      console.log('Debug info:', data);
+    } catch (error) {
+      console.error('Failed to fetch debug info:', error);
+    }
+  };
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch(`${API_BASE}/admin/categories`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const data = await response.json();
+      setLoading(true);
+      setError(null);
+      
+      const data = await makeAuthenticatedRequest(`${API_BASE}/admin/categories`);
+      console.log('Categories response:', data);
       setCategories(data.categories || []);
     } catch (error) {
       console.error('Failed to fetch categories:', error);
+      setError(error.message);
+      setCategories([]);
     } finally {
       setLoading(false);
     }
@@ -43,29 +59,22 @@ const AdminCategories = () => {
     
     setCreating(true);
     try {
-      const response = await fetch(`${API_BASE}/admin/categories`, {
+      const result = await makeAuthenticatedRequest(`${API_BASE}/admin/categories`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
         body: JSON.stringify({ 
           name: newCategoryName.trim(),
           parent: parentCategory 
         })
       });
       
-      if (response.ok) {
-        setNewCategoryName('');
-        setParentCategory('');
-        fetchCategories();
-      } else {
-        const error = await response.json();
-        alert(error.detail || 'Failed to create category');
-      }
+      console.log('Category created:', result);
+      setNewCategoryName('');
+      setParentCategory('');
+      fetchCategories();
+      fetchDebugInfo();
     } catch (error) {
       console.error('Failed to create category:', error);
-      alert('Failed to create category');
+      alert(error.message || 'Failed to create category');
     } finally {
       setCreating(false);
     }
@@ -83,42 +92,27 @@ const AdminCategories = () => {
       : `Delete category "${categoryName}"?`;
     
     if (hasProducts) {
-      message += '\n\nWhat should happen to the products in this category?';
+      message += '\n\nProducts will be moved to "Uncategorized" category.';
     }
     
     if (!window.confirm(message)) return;
     
-    let deleteProducts = false;
-    if (hasProducts) {
-      deleteProducts = window.confirm(
-        'Click OK to DELETE products permanently, or Cancel to move them to "Uncategorized"'
-      );
-    }
-    
     try {
       const encodedName = encodeURIComponent(categoryName);
-      const url = `${API_BASE}/admin/categories/${encodedName}${deleteProducts ? '?delete_products=true' : ''}`;
-      
-      const response = await fetch(url, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
+      const result = await makeAuthenticatedRequest(`${API_BASE}/admin/categories/${encodedName}`, {
+        method: 'DELETE'
       });
       
-      if (response.ok) {
-        const result = await response.json();
-        alert(result.message);
-        fetchCategories();
-        if (selectedCategory === categoryName) {
-          setSelectedCategory(null);
-          setCategoryProducts([]);
-        }
-      } else {
-        const errorData = await response.json();
-        alert(errorData.detail || 'Failed to delete category');
+      alert(result.message);
+      fetchCategories();
+      fetchDebugInfo();
+      if (selectedCategory === categoryName) {
+        setSelectedCategory(null);
+        setCategoryProducts([]);
       }
     } catch (error) {
       console.error('Failed to delete category:', error);
-      alert('Failed to delete category: ' + error.message);
+      alert(error.message || 'Failed to delete category');
     }
   };
 
@@ -228,10 +222,7 @@ const AdminCategories = () => {
     
     setLoadingProducts(true);
     try {
-      const response = await fetch(`${API_BASE}/products?category=${encodeURIComponent(categoryName)}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const products = await response.json();
+      const products = await makeAuthenticatedRequest(`${API_BASE}/products?category=${encodeURIComponent(categoryName)}`);
       setCategoryProducts(products);
       setSelectedCategory(categoryName);
       
@@ -267,23 +258,15 @@ const AdminCategories = () => {
 
   const saveProduct = async (productId) => {
     try {
-      const response = await fetch(`${API_BASE}/admin/products/${productId}`, {
+      await makeAuthenticatedRequest(`${API_BASE}/admin/products/${productId}`, {
         method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
         body: JSON.stringify(editFormData)
       });
 
-      if (response.ok) {
-        viewCategoryProducts(selectedCategory);
-        fetchCategories();
-        setEditingProduct(null);
-        setEditFormData({});
-      } else {
-        alert('Failed to update product');
-      }
+      viewCategoryProducts(selectedCategory);
+      fetchCategories();
+      setEditingProduct(null);
+      setEditFormData({});
     } catch (error) {
       console.error('Failed to update product:', error);
       alert('Failed to update product');
@@ -294,17 +277,13 @@ const AdminCategories = () => {
     if (!window.confirm(`Delete product "${productName}"?`)) return;
 
     try {
-      const response = await fetch(`${API_BASE}/admin/products/${productId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
+      await makeAuthenticatedRequest(`${API_BASE}/admin/products/${productId}`, {
+        method: 'DELETE'
       });
 
-      if (response.ok) {
-        viewCategoryProducts(selectedCategory);
-        fetchCategories();
-      } else {
-        alert('Failed to delete product');
-      }
+      viewCategoryProducts(selectedCategory);
+      fetchCategories();
+      fetchDebugInfo();
     } catch (error) {
       console.error('Failed to delete product:', error);
       alert('Failed to delete product');
@@ -329,6 +308,35 @@ const AdminCategories = () => {
     <div className="admin-categories">
       <div className="container">
         <h1>Categories Management</h1>
+        
+        {/* Debug Information */}
+        {debugInfo && (
+          <div className="debug-info" style={{ 
+            backgroundColor: '#f8f9fa', 
+            padding: '1rem', 
+            marginBottom: '1rem', 
+            borderRadius: '5px',
+            fontSize: '0.9rem' 
+          }}>
+            <strong>Debug Info:</strong> 
+            Total Products: {debugInfo.total_products || 0} | 
+            Categories Found: {categories.length}
+            {debugInfo.error && <div style={{ color: 'red' }}>Error: {debugInfo.error}</div>}
+          </div>
+        )}
+
+        {/* Error Display */}
+        {error && (
+          <div className="error-message" style={{ 
+            backgroundColor: '#f8d7da', 
+            color: '#721c24', 
+            padding: '1rem', 
+            marginBottom: '1rem', 
+            borderRadius: '5px' 
+          }}>
+            Error: {error}
+          </div>
+        )}
         
         <form onSubmit={createCategory} className="category-form">
           <div className="form-row">
@@ -362,7 +370,18 @@ const AdminCategories = () => {
         </form>
 
         {categories.length === 0 ? (
-          <p>No categories found. Create your first category above.</p>
+          <div style={{ textAlign: 'center', padding: '2rem', backgroundColor: '#f8f9fa', borderRadius: '5px' }}>
+            <h3>No categories found</h3>
+            <p>Categories are created from existing products. You can:</p>
+            <ol style={{ textAlign: 'left', display: 'inline-block' }}>
+              <li>Create your first category above</li>
+              <li>Add products in the Products section</li>
+              <li>Assign categories to products</li>
+            </ol>
+            <p>
+              <strong>Tip:</strong> Create a category like "Electronics" or "Clothing" to get started.
+            </p>
+          </div>
         ) : (
           <div className="categories-tree">
             {renderCategoryTree(getHierarchicalCategories())}
