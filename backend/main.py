@@ -1,35 +1,11 @@
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-import stripe
-import os
+from fastapi import APIRouter
+from api.routes import auth, products, cart, orders, contact, profile
 
-# Import your existing routers
-from api import router as api_router
-from routes.admin_routes import router as admin_router
+router = APIRouter(prefix="/api")
 
-# Configuration
-STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
-
-# Initialize FastAPI
-app = FastAPI(title="E-commerce API")
-
-
-# CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Temporary - change back after testing
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Stripe configuration
-stripe.api_key = STRIPE_SECRET_KEY
-
-# Include routers
-app.include_router(api_router, prefix="/api")
-app.include_router(admin_router)
-
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+router.include_router(auth.router, prefix="/auth", tags=["auth"])
+router.include_router(products.router, prefix="/products", tags=["products"])
+router.include_router(cart.router, prefix="/cart", tags=["cart"])
+router.include_router(orders.router, prefix="/orders", tags=["orders"])
+router.include_router(contact.router, prefix="/contact", tags=["contact"])
+router.include_router(profile.router, prefix="/profile", tags=["profile"])
