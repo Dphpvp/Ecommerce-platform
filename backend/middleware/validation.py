@@ -13,6 +13,94 @@ from email_validator import validate_email, EmailNotValidError
 ALLOWED_TAGS = ['b', 'i', 'u', 'em', 'strong', 'p', 'br']
 ALLOWED_ATTRIBUTES = {}
 
+class SecureUser(BaseModel):
+    username: str = Field(..., min_length=3, max_length=50)
+    email: str = Field(..., max_length=254)
+    password: str = Field(..., min_length=PASSWORD_MIN_LENGTH, max_length=128)
+    full_name: str = Field(..., min_length=2, max_length=100)
+    address: str = Field(default="", max_length=500)
+    phone: str = Field(..., min_length=10, max_length=20)
+    
+    @validator('username')
+    def validate_username(cls, v):
+        return SecurityValidator.validate_username(v)
+    
+    @validator('email')
+    def validate_email(cls, v):
+        return SecurityValidator.validate_email_format(v)
+    
+    @validator('password')
+    def validate_password(cls, v):
+        result = SecurityValidator.validate_password_strength(v)
+        if not result['valid']:
+            raise ValueError('; '.join(result['errors']))
+        if result['strength_score'] < 60:
+            raise ValueError("Password is not strong enough")
+        return v
+    
+    @validator('full_name')
+    def validate_full_name(cls, v):
+        return SecurityValidator.sanitize_string_strict(v, 100, "Full name")
+    
+    @validator('address')
+    def validate_address(cls, v):
+        return SecurityValidator.sanitize_string_strict(v, 500, "Address")
+    
+    @validator('phone')
+    def validate_phone(cls, v):
+        if not v or not v.strip():
+            raise ValueError("Phone number is required")
+        return SecurityValidator.validate_phone(v)
+    
+class SecureCartItem(BaseModel):
+    product_id: str = Field(..., min_length=24, max_length=24)
+    quantity: int = Field(..., gt=0, le=100)
+    
+    @validator('product_id')
+    def validate_product_id(cls, v):
+        return SecurityValidator.validate_object_id(v, "Product ID")
+    
+    @validator('quantity')
+    def validate_quantity(cls, v):
+        if v < 1:
+            raise ValueError("Quantity must be at least 1")
+        if v > 100:
+            raise ValueError("Quantity cannot exceed 100")
+        return v
+
+class SecureOrderUpdate(BaseModel):
+    order_id: str = Field(..., min_length=24, max_length=24)
+    
+    @validator('order_id')
+    def validate_order_id(cls, v):
+        return SecurityValidator.validate_object_id(v, "Order ID")
+    
+
+class PasswordChange(BaseModel):
+    old_password: str = Field(..., min_length=1, max_length=128)
+    new_password: str = Field(..., min_length=PASSWORD_MIN_LENGTH, max_length=128)
+    confirm_password: str = Field(..., min_length=PASSWORD_MIN_LENGTH, max_length=128)
+    recaptcha_response: str = Field(..., min_length=1)
+    
+    @validator('new_password')
+    def validate_new_password(cls, v, values):
+        # Check if same as old password
+        if 'old_password' in values and v == values['old_password']:
+            raise ValueError("New password must be different from current password")
+        
+        result = SecurityValidator.validate_password_strength(v)
+        if not result['valid']:
+            raise ValueError('; '.join(result['errors']))
+        if result['strength_score'] < 60:
+            raise ValueError("Password is not strong enough")
+        return v
+    
+    @validator('confirm_password')
+    def validate_confirm_password(cls, v, values):
+        if 'new_password' in values and v != values['new_password']:
+            raise ValueError("Passwords do not match")
+        return v
+
 class SecurityValidator:
     """Enhanced security validation and sanitization utilities"""
     
@@ -108,37 +196,136 @@ class SecurityValidator:
         return cleaned
     
     @staticmethod
-    def validate_password_strength(password: str) -> str:
-        """Enhanced password validation"""
-        if len(password) < 8:
-            raise HTTPException(status_code=400, detail="Password must be at least 8 characters")
+    def validate_password_strength(password: str) -> dict:
+        """Standardized password validation - 12+ chars with complexity"""
+        errors = []
+        
+        if len(password) < PASSWORD_MIN_LENGTH:
+            errors.append(f"Password must be at least {PASSWORD_MIN_LENGTH} characters")
         
         if len(password) > 128:
-            raise HTTPException(status_code=400, detail="Password too long")
+            errors.append("Password must be less than 128 characters")
+        
+        if not re.search(r'[A-Z]', password):
+            errors.append("Password must contain at least one uppercase letter")
+            
+        if not re.search(r'[a-z]', password):
+            errors.append("Password must contain at least one lowercase letter")
+            
+        if not re.search(r'\d', password):
+            errors.append("Password must contain at least one number")
+            
+        if not re.search(r'[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]', password):
+            errors.append("Password must contain at least one special character")
         
         # Check for common weak passwords
         weak_passwords = [
             'password', '123456', 'qwerty', 'admin', 'letmein', 'welcome',
-            'password123', 'admin123', '12345678', 'qwerty123'
+            'password123', 'admin123', '12345678', 'qwerty123', 'password1',
+            'password12', 'password1234', '123456789', '1234567890'
         ]
         if password.lower() in weak_passwords:
-            raise HTTPException(status_code=400, detail="Password is too weak")
+            errors.append("Password is too common and easily guessed")
         
-        return password
+        # Check for keyboard patterns
+        keyboard_patterns = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm', '1234567890']
+        for pattern in keyboard_patterns:
+            if pattern in password.lower():
+                errors.append("Password contains keyboard patterns")
+                break
+        
+        return {
+            'valid': len(errors) == 0,
+            'errors': errors,
+            'strength_score': SecurityValidator._calculate_password_strength(password)
+        }
     
     @staticmethod
-    def validate_password_complexity(password: str) -> bool:
-        """Check password complexity requirements"""
-        if len(password) < 8:
-            return False
+    def _calculate_password_strength(password: str) -> int:
+        """Calculate password strength score (0-100)"""
+        score = 0
         
-        # Check for at least one of each: uppercase, lowercase, digit, special char
-        has_upper = bool(re.search(r'[A-Z]', password))
-        has_lower = bool(re.search(r'[a-z]', password))
-        has_digit = bool(re.search(r'\d', password))
-        has_special = bool(re.search(r'[!@#$%^&*(),.?":{}|<>]', password))
+        # Length scoring
+        if len(password) >= 12: score += 25
+        elif len(password) >= 8: score += 15
+        elif len(password) >= 6: score += 5
         
-        return all([has_upper, has_lower, has_digit, has_special])
+        # Character variety
+        if re.search(r'[a-z]', password): score += 15
+        if re.search(r'[A-Z]', password): score += 15
+        if re.search(r'\d', password): score += 15
+        if re.search(r'[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]', password): score += 20
+        
+        # Bonus for length
+        if len(password) > 16: score += 10
+        
+        return min(score, 100)
+    
+    @staticmethod
+    def validate_object_id(obj_id: str, field_name: str = "ID") -> str:
+        """Validate MongoDB ObjectId format"""
+        if not obj_id:
+            raise HTTPException(status_code=400, detail=f"{field_name} is required")
+        
+        if not ObjectId.is_valid(obj_id):
+            raise HTTPException(status_code=400, detail=f"Invalid {field_name} format")
+        
+        return obj_id
+    
+    @staticmethod
+    def sanitize_string_strict(text: str, max_length: int = 1000, field_name: str = "input") -> str:
+        """Enhanced string sanitization with validation"""
+        if not text:
+            return ""
+        
+        # Remove null bytes and control characters
+        text = re.sub(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]', '', text)
+        
+        # Remove potential SQL injection patterns (defense in depth)
+        sql_patterns = [
+            r'(\b(SELECT|INSERT|UPDATE|DELETE|DROP|CREATE|ALTER|EXEC|UNION|SCRIPT)\b)',
+            r'(--|\/\*|\*\/|;)',
+            r'(\bOR\b.*=.*\b(OR|AND)\b)',
+            r'(\'\s*(OR|AND)\s*\'\w+\'\s*=\s*\'\w+)',
+            r'(<script[^>]*>.*?</script>)',
+            r'(javascript:)',
+            r'(on\w+\s*=)'
+        ]
+        
+        for pattern in sql_patterns:
+            if re.search(pattern, text, re.IGNORECASE):
+                raise HTTPException(
+                    status_code=400, 
+                    detail=f"Invalid characters detected in {field_name}"
+                )
+        
+        # Limit length and trim
+        if len(text) > max_length:
+            raise HTTPException(
+                status_code=400,
+                detail=f"{field_name} must be less than {max_length} characters"
+            )
+        
+        text = text.strip()
+        
+        # HTML escape for safety
+        return html.escape(text, quote=False)
+
+    
+    
+    # @staticmethod
+    # def validate_password_complexity(password: str) -> bool:
+    #     """Check password complexity requirements"""
+    #     if len(password) < 8:
+    #         return False
+        
+    #     # Check for at least one of each: uppercase, lowercase, digit, special char
+    #     has_upper = bool(re.search(r'[A-Z]', password))
+    #     has_lower = bool(re.search(r'[a-z]', password))
+    #     has_digit = bool(re.search(r'\d', password))
+    #     has_special = bool(re.search(r'[!@#$%^&*(),.?":{}|<>]', password))
+        
+    #     return all([has_upper, has_lower, has_digit, has_special])
     
     @staticmethod
     def validate_url(url: str) -> str:
