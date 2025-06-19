@@ -28,7 +28,7 @@ from api.dependencies.rate_limiting import rate_limit
 from api.core.exceptions import AuthenticationError, ValidationError
 from api.core.logging import get_logger
 from api.core.database import get_database
-from captcha import verify_recaptcha
+from captcha.verification import verify_recaptcha
 
 router = APIRouter()
 logger = get_logger(__name__)
