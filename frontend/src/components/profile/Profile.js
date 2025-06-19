@@ -386,6 +386,27 @@ const Profile = () => {
 
   const canChangePassword = user && !user.google_id;
 
+  const handleSaveProfile = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+
+  try {
+    const data = await makeAuthenticatedRequest(`${API_BASE}/auth/update-profile`, {
+      method: 'PUT',
+      body: JSON.stringify(formData)
+    });
+
+    login(data.user);
+    showToast('Profile updated successfully!', 'success');
+    setIsEditing(false);
+  } catch (error) {
+    console.error('Profile update error:', error);
+    showToast(error.message || 'Failed to update profile', 'error');
+  } finally {
+    setLoading(false);
+  }
+};
+
   return (
     <div className="profile">
       <div className="container">
