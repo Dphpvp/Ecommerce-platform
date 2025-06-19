@@ -8,28 +8,21 @@ const TwoFactorVerification = ({ tempToken, onSuccess, onCancel }) => {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
-  const { login } = useAuth();
+  const { login, makeAuthenticatedRequest } = useAuth();
   const { showToast } = useToastContext();
 
   const sendEmailCode = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE}/auth/send-2fa-email`, {
+      await makeAuthenticatedRequest(`${API_BASE}/auth/send-2fa-email`, {
         method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ temp_token: tempToken })
       });
 
-      if (response.ok) {
-        setEmailSent(true);
-        showToast('Verification code sent to your email', 'success');
-      } else {
-        const data = await response.json();
-        showToast(data.detail || 'Failed to send email', 'error');
-      }
+      setEmailSent(true);
+      showToast('Verification code sent to your email', 'success');
     } catch (error) {
-      showToast('Failed to send email', 'error');
+      showToast(error.message || 'Failed to send email', 'error');
     } finally {
       setLoading(false);
     }
@@ -40,33 +33,25 @@ const TwoFactorVerification = ({ tempToken, onSuccess, onCancel }) => {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE}/auth/verify-2fa`, {
+      const data = await makeAuthenticatedRequest(`${API_BASE}/auth/verify-2fa`, {
         method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ temp_token: tempToken, code })
       });
 
-      const data = await response.json();
-
-      if (response.ok) {
-        // Store token in localStorage for fallback
-        if (data.token) {
-          localStorage.setItem('auth_token', data.token);
-        }
-        
-        login(data.token, data.user);
-        
-        if (data.backup_code_used) {
-          showToast('Backup code used. Consider regenerating backup codes.', 'info');
-        }
-        
-        onSuccess();
-      } else {
-        showToast(data.detail || '2FA verification failed', 'error');
+      // Store token in localStorage for fallback
+      if (data.token) {
+        localStorage.setItem('auth_token', data.token);
       }
+      
+      login(data.token, data.user);
+      
+      if (data.backup_code_used) {
+        showToast('Backup code used. Consider regenerating backup codes.', 'info');
+      }
+      
+      onSuccess();
     } catch (error) {
-      showToast('2FA verification failed', 'error');
+      showToast(error.message || '2FA verification failed', 'error');
     } finally {
       setLoading(false);
     }
