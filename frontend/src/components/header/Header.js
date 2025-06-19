@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCart } from '../../contexts/CartContext';
@@ -7,7 +7,31 @@ import '../../styles/header.css';
 const Header = () => {
   const { user, logout } = useAuth();
   const { cartItems } = useCart();
+  const [adminDropdownOpen, setAdminDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
   const isAdmin = user && user.is_admin;
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setAdminDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const adminMenuItems = [
+    { path: '/admin/dashboard', label: '📊 Dashboard', icon: '📊' },
+    { path: '/admin/categories-list', label: '📂 Categories', icon: '📂' },
+    { path: '/admin/orders', label: '📦 Orders', icon: '📦' },
+    { path: '/admin/users', label: '👥 Users', icon: '👥' },
+    { path: '/admin/products', label: '🛍️ Products', icon: '🛍️' }
+  ];
 
   return (
     <header className="header">
@@ -22,54 +46,72 @@ const Header = () => {
         </Link>
 
         <nav className="nav">
+          {/* Navigation in requested order */}
+          <Link to="/">Home</Link>
+          <Link to="/products">Products</Link>
+          <Link to="/contact">Contact Us</Link>
+          <Link to="/about">About Us</Link>
+
           {user ? (
             <>
-              {isAdmin ? (
-                // Admin navigation only
-                <>
-                  <Link to="/admin/dashboard">Dashboard</Link>
-                  <Link to="/admin/categories-list">Categories</Link>
-                  <Link to="/admin/orders">Orders</Link>
-                  <Link to="/admin/users">Users</Link>
-                  <Link to="/admin/products">Products</Link>
-                  <Link to="/profile">Profile</Link>
-                  
+              {/* Admin dropdown */}
+              {isAdmin && (
+                <div className="admin-dropdown" ref={dropdownRef}>
                   <button
-                    onClick={logout}
-                    className="nav-link logout-btn"
+                    className="admin-dropdown-toggle"
+                    onClick={() => setAdminDropdownOpen(!adminDropdownOpen)}
+                    aria-expanded={adminDropdownOpen}
                   >
-                    Logout ({user.username})
+                    Admin ⚙️
+                    <span className={`dropdown-arrow ${adminDropdownOpen ? 'open' : ''}`}>
+                      ▼
+                    </span>
                   </button>
-                </>
-              ) : (
-                // Regular user navigation
+                  
+                  {adminDropdownOpen && (
+                    <div className="admin-dropdown-menu">
+                      {adminMenuItems.map((item) => (
+                        <Link
+                          key={item.path}
+                          to={item.path}
+                          className="admin-dropdown-item"
+                          onClick={() => setAdminDropdownOpen(false)}
+                        >
+                          <span className="dropdown-icon">{item.icon}</span>
+                          {item.label.replace(/^📊|📂|📦|👥|🛍️\s/, '')}
+                        </Link>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Cart for regular users */}
+              {!isAdmin && (
+                <Link to="/cart" className="cart-link">
+                  Cart ({cartItems.length})
+                </Link>
+              )}
+
+              {/* User profile/logout */}
+              {!isAdmin && (
                 <>
-                  <Link to="/">Home</Link>
-                  <Link to="/products">Products</Link>
-                  <Link to="/contact">Contact Us</Link>
-                  <Link to="/about">About Us</Link>
-                  <Link to="/cart" className="cart-link">
-                    Cart ({cartItems.length})
-                  </Link>
                   <Link to="/orders">My Orders</Link>
                   <Link to="/profile">Profile</Link>
-                  
-                  <button
-                    onClick={logout}
-                    className="nav-link logout-btn"
-                  >
-                    Logout ({user.username})
-                  </button>
                 </>
               )}
+
+              <button
+                onClick={logout}
+                className="user-logout-btn"
+                title="Click to logout"
+              >
+                {user.username}
+                {isAdmin && <span className="admin-badge">ADMIN</span>}
+              </button>
             </>
           ) : (
-            // Guest navigation
             <>
-              <Link to="/">Home</Link>
-              <Link to="/products">Products</Link>
-              <Link to="/contact">Contact Us</Link>
-              <Link to="/about">About Us</Link>
               <Link to="/register">Register</Link>
               <Link to="/login">Login</Link>
             </>

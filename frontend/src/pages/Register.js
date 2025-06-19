@@ -6,11 +6,35 @@ import { csrfManager } from '../utils/csrf';
 
 const Register = () => {
   const [loading, setLoading] = useState(false);
+  const [countryCode, setCountryCode] = useState('+40');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const { showToast } = useToastContext();
   const navigate = useNavigate();
 
+  const handlePhoneNumberChange = (e) => {
+    // Only allow digits, max 9 digits
+    const value = e.target.value.replace(/\D/g, '').substring(0, 9);
+    setPhoneNumber(value);
+  };
+
+  const getFullPhoneNumber = () => {
+    return phoneNumber ? `${countryCode}${phoneNumber}` : '';
+  };
+
+  const validatePhone = (phone) => {
+    // Must be country code followed by exactly 9 digits
+    return /^\+\d{2,4}\d{9}$/.test(phone);
+  };
+
   const handleSubmit = async (sanitizedData, csrfToken) => {
     setLoading(true);
+    
+    // Add the full phone number to form data
+    const formDataWithPhone = {
+      ...sanitizedData,
+      phone: getFullPhoneNumber()
+    };
+    
     try {
       const response = await csrfManager.makeSecureRequest(
         `${process.env.REACT_APP_API_BASE_URL}/auth/register`,
@@ -20,7 +44,7 @@ const Register = () => {
             'Content-Type': 'application/json',
             'X-CSRF-Token': csrfToken,
           },
-          body: JSON.stringify(sanitizedData),
+          body: JSON.stringify(formDataWithPhone),
         }
       );
 
@@ -63,14 +87,9 @@ const Register = () => {
       errors.password = 'Password must be at least 8 characters';
     }
 
-    // Phone validation - NOW REQUIRED
-    if (!formData.phone || formData.phone.trim() === '') {
-      errors.phone = 'Phone number is required';
-    } else {
-      const phoneRegex = /^[\+]?[1-9][\d\s\-\(\)]{7,20}$/;
-      if (!phoneRegex.test(formData.phone)) {
-        errors.phone = 'Please enter a valid phone number';
-      }
+    // Phone validation - check if we have 9 digits
+    if (!phoneNumber || phoneNumber.length !== 9) {
+      errors.phone = 'Phone number must be exactly 9 digits';
     }
 
     // Full name validation
@@ -127,15 +146,59 @@ const Register = () => {
               placeholder="Address (optional)"
               maxLength={500}
             />
-            <input
-              type="tel"
-              name="phone"
-              placeholder="Phone Number (required)"
-              maxLength={20}
-              pattern="^[\+]?[1-9][\d\s\-\(\)]{7,20}$"
-              title="Please enter a valid phone number"
-              required
-            />
+            
+            {/* Phone Number with Country Code */}
+            <div style={{ marginBottom: '1rem' }}>
+              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
+                Phone Number *
+              </label>
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <select
+                  value={countryCode}
+                  onChange={(e) => setCountryCode(e.target.value)}
+                  style={{
+                    padding: '0.75rem',
+                    border: '2px solid #e5e5e5',
+                    borderRadius: '5px',
+                    fontSize: '1rem',
+                    width: '120px',
+                    backgroundColor: 'white'
+                  }}
+                >
+                  <option value="+40">🇷🇴 +40</option>
+                  <option value="+1">🇺🇸 +1</option>
+                  <option value="+44">🇬🇧 +44</option>
+                  <option value="+49">🇩🇪 +49</option>
+                  <option value="+33">🇫🇷 +33</option>
+                  <option value="+39">🇮🇹 +39</option>
+                  <option value="+34">🇪🇸 +34</option>
+                </select>
+                <input
+                  type="tel"
+                  placeholder="723423225"
+                  value={phoneNumber}
+                  onChange={handlePhoneNumberChange}
+                  maxLength={9}
+                  style={{
+                    flex: 1,
+                    padding: '0.75rem',
+                    border: '2px solid #e5e5e5',
+                    borderRadius: '5px',
+                    fontSize: '1rem',
+                    fontFamily: 'monospace'
+                  }}
+                  required
+                />
+              </div>
+              <p style={{ fontSize: '0.85rem', color: '#666', margin: '0.25rem 0 0 0' }}>
+                📱 Enter 9 digits (without the leading 0). Example: 723423225
+              </p>
+              {phoneNumber && (
+                <p style={{ fontSize: '0.85rem', color: '#007bff', margin: '0.25rem 0 0 0' }}>
+                  Full number: <strong>{getFullPhoneNumber()}</strong>
+                </p>
+              )}
+            </div>
 
             <button type="submit" disabled={loading} className="btn btn-primary">
               {loading ? 'Registering...' : 'Register'}
