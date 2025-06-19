@@ -39,9 +39,10 @@
   gap: 1rem;
 }
 
-/* Navigation Links with Button Styles */
+/* Navigation Links with Button Styles - Updated to include user-logout-btn */
 .nav a,
-.nav .logout-btn {
+.nav .logout-btn,
+.nav .user-logout-btn {
   padding: 8px 16px;
   border: 2px solid #e9ecef;
   border-radius: 6px;
@@ -61,7 +62,8 @@
 }
 
 .nav a:hover,
-.nav .logout-btn:hover {
+.nav .logout-btn:hover,
+.nav .user-logout-btn:hover {
   border-color: #007bff;
   background: #e7f3ff;
   color: #007bff;
@@ -70,7 +72,8 @@
 }
 
 /* Logout button specific hover style */
-.nav .logout-btn:hover {
+.nav .logout-btn:hover,
+.nav .user-logout-btn:hover {
   border-color: #dc3545;
   background: #f5c6cb;
   color: #721c24;
@@ -190,11 +193,13 @@
   border-radius: 15px;
   font-size: 0.8rem;
   font-weight: bold;
+  margin-left: 0.5rem;
 }
 
 /* Button Active States */
 .nav a.active,
-.nav .logout-btn.active {
+.nav .logout-btn.active,
+.nav .user-logout-btn.active {
   background: var(--color-blue);
   color: white;
   border-color: var(--color-blue);
@@ -202,65 +207,7 @@
   box-shadow: 0 6px 20px rgba(0, 123, 255, 0.3);
 }
 
-/* Responsive Header */
-@media (max-width: 768px) {
-  .header .container {
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .nav {
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 0.75rem;
-  }
-
-  .nav a,
-  .nav .logout-btn,
-  .cart-link {
-    padding: 6px 12px;
-    font-size: 0.8rem;
-    min-width: 70px;
-  }
-}
-
-@media (max-width: 480px) {
-  .logo {
-    font-size: 1.5rem;
-  }
-  
-  .nav {
-    gap: 0.5rem;
-  }
-  
-  .nav a,
-  .nav .logout-btn,
-  .cart-link {
-    font-size: 0.75rem;
-    padding: 5px 10px;
-    min-width: 60px;
-    letter-spacing: 0.2px;
-  }
-  
-  .admin-badge {
-    font-size: 0.7rem;
-    padding: 0.2rem 0.5rem;
-  }
-
-  /* Stack navigation vertically on very small screens */
-  .nav {
-    flex-direction: column;
-    width: 100%;
-  }
-
-  .nav a,
-  .nav .logout-btn,
-  .cart-link {
-    width: 100%;
-    margin-bottom: 0.25rem;
-  }
-  /* Admin Dropdown Styles - Add to your header.css */
-
+/* Admin Dropdown Styles */
 .admin-dropdown {
   position: relative;
   display: inline-block;
@@ -350,8 +297,28 @@
   text-align: center;
 }
 
-/* Mobile responsive */
+/* Responsive Header */
 @media (max-width: 768px) {
+  .header .container {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .nav {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem;
+  }
+
+  .nav a,
+  .nav .logout-btn,
+  .nav .user-logout-btn,
+  .cart-link {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    min-width: 70px;
+  }
+
   .admin-dropdown-toggle {
     padding: 0.5rem 1rem;
     font-size: 0.9rem;
@@ -367,4 +334,42 @@
     font-size: 0.9rem;
   }
 }
+
+@media (max-width: 480px) {
+  .logo {
+    font-size: 1.5rem;
+  }
+  
+  .nav {
+    gap: 0.5rem;
+  }
+  
+  .nav a,
+  .nav .logout-btn,
+  .nav .user-logout-btn,
+  .cart-link {
+    font-size: 0.75rem;
+    padding: 5px 10px;
+    min-width: 60px;
+    letter-spacing: 0.2px;
+  }
+  
+  .admin-badge {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+  }
+
+  /* Stack navigation vertically on very small screens */
+  .nav {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .nav a,
+  .nav .logout-btn,
+  .nav .user-logout-btn,
+  .cart-link {
+    width: 100%;
+    margin-bottom: 0.25rem;
+  }
 }
