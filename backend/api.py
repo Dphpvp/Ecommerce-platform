@@ -1453,9 +1453,15 @@ async def change_password(password_data: PasswordChange, request: Request):
     if password_data.new_password != password_data.confirm_password:
         raise HTTPException(status_code=400, detail="New passwords do not match")
     
-    # Validate password length
-    if len(password_data.new_password) < 6:
-        raise HTTPException(status_code=400, detail="New password must be at least 6 characters long")
+    # Validate password requirements
+    if len(password_data.new_password) < 10:
+        raise HTTPException(status_code=400, detail="New password must be at least 10 characters long")
+    
+    if not any(c.isupper() for c in password_data.new_password):
+        raise HTTPException(status_code=400, detail="New password must contain at least one uppercase letter")
+    
+    if not any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password_data.new_password):
+        raise HTTPException(status_code=400, detail="New password must contain at least one special character")
     
     # Check if user has a password (Google users might not have one)
     if not current_user.get("password"):

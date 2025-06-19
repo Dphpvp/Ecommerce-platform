@@ -183,8 +183,12 @@ const Profile = () => {
     
     if (!passwordData.new_password) {
       errors.new_password = 'New password is required';
-    } else if (passwordData.new_password.length < 6) {
-      errors.new_password = 'Password must be at least 6 characters long';
+    } else if (passwordData.new_password.length < 10) {
+      errors.new_password = 'Password must be at least 10 characters long';
+    } else if (!/[A-Z]/.test(passwordData.new_password)) {
+      errors.new_password = 'Password must contain at least one uppercase letter';
+    } else if (!/[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]/.test(passwordData.new_password)) {
+      errors.new_password = 'Password must contain at least one special character';
     }
     
     if (!passwordData.confirm_password) {
@@ -201,28 +205,6 @@ const Profile = () => {
     setPasswordErrors(errors);
     return Object.keys(errors).length === 0;
   };
-
-  const handleSaveProfile = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-
-    try {
-      const data = await makeAuthenticatedRequest(`${API_BASE}/auth/update-profile`, {
-        method: 'PUT',
-        body: JSON.stringify(formData)
-      });
-
-      login(data.user);
-      showToast('Profile updated successfully!', 'success');
-      setIsEditing(false);
-    } catch (error) {
-      console.error('Profile update error:', error);
-      showToast(error.message || 'Failed to update profile', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   // FIXED: Change password function with proper reCAPTCHA handling
   const handleChangePassword = async (e) => {
     e.preventDefault();
@@ -615,12 +597,15 @@ const Profile = () => {
                     name="new_password"
                     value={passwordData.new_password}
                     onChange={handlePasswordChange}
-                    placeholder="Enter your new password (min 6 characters)"
+                    placeholder="Min 10 chars, 1 uppercase, 1 special character"
                     className={passwordErrors.new_password ? 'error' : ''}
                   />
                   {passwordErrors.new_password && (
                     <span className="error-text">{passwordErrors.new_password}</span>
                   )}
+                  <small style={{ color: '#666', fontSize: '0.8rem', display: 'block', marginTop: '4px' }}>
+                    Must contain: 10+ characters, uppercase letter, special character (!@#$%^&*...)
+                  </small>
                 </div>
                 
                 <div className="form-group">
