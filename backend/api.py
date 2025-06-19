@@ -1520,6 +1520,65 @@ async def upload_avatar(request: Request):
         print(f"❌ Avatar endpoint error: {e}")
         raise HTTPException(status_code=500, detail="Failed to load avatars")
     
+@router.put("/auth/update-profile")
+async def update_profile(profile_data: UserProfileUpdate, request: Request):
+    """Update user profile - FIXED with session authentication"""
+    try:
+        current_user = await get_current_user_from_session(request)
+        user_id = str(current_user["_id"])
+        
+        # Build update data, only including provided fields
+        update_data = {}
+        if profile_data.full_name is not None:
+            update_data["full_name"] = profile_data.full_name.strip()
+        if profile_data.email is not None:
+            update_data["email"] = profile_data.email.strip()
+        if profile_data.phone is not None:
+            update_data["phone"] = profile_data.phone.strip()
+        if profile_data.address is not None:
+            update_data["address"] = profile_data.address.strip()
+        if profile_data.profile_image_url is not None:
+            update_data["profile_image_url"] = profile_data.profile_image_url
+        
+        if not update_data:
+            raise HTTPException(status_code=400, detail="No fields to update")
+        
+        update_data["updated_at"] = datetime.now(timezone.utc)
+        
+        # Update user in database
+        result = await db.users.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": update_data}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Return updated user data
+        updated_user = await db.users.find_one({"_id": ObjectId(user_id)})
+        
+        return {
+            "message": "Profile updated successfully",
+            "user": {
+                "id": str(updated_user["_id"]),
+                "username": updated_user["username"],
+                "email": updated_user["email"],
+                "full_name": updated_user.get("full_name", ""),
+                "address": updated_user.get("address", ""),
+                "phone": updated_user.get("phone", ""),
+                "profile_image_url": updated_user.get("profile_image_url"),
+                "is_admin": updated_user.get("is_admin", False),
+                "email_verified": updated_user.get("email_verified", False),
+                "two_factor_enabled": updated_user.get("two_factor_enabled", False)
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"❌ Profile update error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to update profile")
+    
 # Product routes
 @router.post("/products")
 async def create_product(
