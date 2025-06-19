@@ -710,8 +710,11 @@ def create_user_response(token, user):
     }
 
 @router.post("/auth/setup-2fa")
-async def setup_2fa(setup_data: TwoFactorSetupChoice, current_user: dict = Depends(get_current_user)):
-    """Setup 2FA - choose between app or email - Enhanced version"""
+async def setup_2fa(
+    setup_data: TwoFactorSetupChoice, 
+    current_user: dict = Depends(get_current_user),
+    csrf_valid: bool = Depends(require_csrf_token)  # Add CSRF
+):
     try:
         if not current_user.get("email_verified"):
             raise HTTPException(status_code=400, detail="Email must be verified before enabling 2FA")
@@ -959,8 +962,11 @@ async def verify_2fa_setup(verification_data: TwoFactorSetup, current_user: dict
         raise HTTPException(status_code=500, detail="Failed to verify 2FA setup")
 
 @router.post("/auth/disable-2fa")
-async def disable_2fa(verification_data: TwoFactorDisable, current_user: dict = Depends(get_current_user)):
-    """Disable 2FA - Enhanced version"""
+async def disable_2fa(
+    verification_data: TwoFactorDisable, 
+    current_user: dict = Depends(get_current_user),
+    csrf_valid: bool = Depends(require_csrf_token)  # Add CSRF
+):
     try:
         # Verify password
         if not current_user.get("password"):
@@ -1434,10 +1440,10 @@ async def reset_password(request: PasswordResetConfirm):
     return {"message": "Password reset successfully"}
 
 @router.put("/auth/change-password")
-async def change_password(password_data: PasswordChange, request: Request):
-    """Change user password - FIXED with session authentication"""
+async def change_password(password_data: PasswordChange, 
+    request: Request,
+    csrf_valid: bool = Depends(require_csrf_token)):
     
-    # FIXED: Use session-based authentication instead of token-based
     try:
         current_user = await get_current_user_from_session(request)
     except HTTPException as e:
@@ -1521,7 +1527,11 @@ async def upload_avatar(request: Request):
         raise HTTPException(status_code=500, detail="Failed to load avatars")
     
 @router.put("/auth/update-profile")
-async def update_profile(profile_data: UserProfileUpdate, request: Request):
+async def update_profile(
+    profile_data: UserProfileUpdate, 
+    request: Request,
+    csrf_valid: bool = Depends(require_csrf_token)  
+):
     """Update user profile - FIXED with session authentication"""
     try:
         current_user = await get_current_user_from_session(request)
@@ -1684,8 +1694,12 @@ async def get_cart(request: Request):
 
 # Cart routes
 @router.post("/cart/add")
-async def add_to_cart(cart_item: CartItem, request: Request):
-    """Add to cart - FIXED session authentication"""
+async def add_to_cart(
+    cart_item: CartItem, 
+    request: Request,
+    csrf_valid: bool = Depends(require_csrf_token)
+):
+    
     try:
         user = await get_current_user_from_session(request)
         user_id = str(user["_id"])
@@ -1768,8 +1782,11 @@ async def search_products(
 
 
 @router.delete("/cart/{item_id}")
-async def remove_from_cart(item_id: str, request: Request):
-    """Remove from cart - FIXED session authentication"""
+async def remove_from_cart(
+    item_id: str, 
+    request: Request,
+    csrf_valid: bool = Depends(require_csrf_token)  # Add CSRF
+):
     try:
         user = await get_current_user_from_session(request)
         user_id = str(user["_id"])
@@ -1802,8 +1819,11 @@ async def create_payment_intent(payment: PaymentIntent):
 
 # 🆕 UPDATED ORDER ROUTES WITH EMAIL NOTIFICATIONS
 @router.post("/orders")
-async def create_order(order_data: dict, request: Request):
-    """Create order - FIXED with session authentication"""
+async def create_order(
+    order_data: dict, 
+    request: Request,
+    csrf_valid: bool = Depends(require_csrf_token)  # Add CSRF
+):
     try:
         user = await get_current_user_from_session(request)
         user_id = str(user["_id"])

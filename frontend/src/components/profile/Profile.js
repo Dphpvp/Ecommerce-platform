@@ -205,6 +205,29 @@ const Profile = () => {
     setPasswordErrors(errors);
     return Object.keys(errors).length === 0;
   };
+
+  const handleSaveProfile = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      // CSRF automatically handled by makeAuthenticatedRequest
+      const data = await makeAuthenticatedRequest(`${API_BASE}/auth/update-profile`, {
+        method: 'PUT',
+        body: JSON.stringify(formData)
+      });
+
+      login(data.user);
+      showToast('Profile updated successfully!', 'success');
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Profile update error:', error);
+      showToast(error.message || 'Failed to update profile', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // FIXED: Change password function with proper reCAPTCHA handling
   const handleChangePassword = async (e) => {
     e.preventDefault();
@@ -231,6 +254,7 @@ const Profile = () => {
     setPasswordLoading(true);
 
     try {
+      // CSRF automatically handled by makeAuthenticatedRequest
       await makeAuthenticatedRequest(`${API_BASE}/auth/change-password`, {
         method: 'PUT',
         body: JSON.stringify({
@@ -275,6 +299,7 @@ const Profile = () => {
 
     setSendingDisableCode(true);
     try {
+      // CSRF automatically handled by makeAuthenticatedRequest
       await makeAuthenticatedRequest(`${API_BASE}/auth/send-disable-2fa-code`, {
         method: 'POST',
         body: JSON.stringify({ password: disable2FAForm.password })
@@ -294,6 +319,7 @@ const Profile = () => {
     setDisabling2FA(true);
 
     try {
+      // CSRF automatically handled by makeAuthenticatedRequest
       await makeAuthenticatedRequest(`${API_BASE}/auth/disable-2fa`, {
         method: 'POST',
         body: JSON.stringify(disable2FAForm)
@@ -360,6 +386,7 @@ const Profile = () => {
   const handleSelectAvatar = async (avatarUrl) => {
     setLoading(true);
     try {
+      // CSRF automatically handled by makeAuthenticatedRequest
       const data = await makeAuthenticatedRequest(`${API_BASE}/auth/update-profile`, {
         method: 'PUT',
         body: JSON.stringify({ profile_image_url: avatarUrl })
@@ -385,27 +412,6 @@ const Profile = () => {
   };
 
   const canChangePassword = user && !user.google_id;
-
-  const handleSaveProfile = async (e) => {
-  e.preventDefault();
-  setLoading(true);
-
-  try {
-    const data = await makeAuthenticatedRequest(`${API_BASE}/auth/update-profile`, {
-      method: 'PUT',
-      body: JSON.stringify(formData)
-    });
-
-    login(data.user);
-    showToast('Profile updated successfully!', 'success');
-    setIsEditing(false);
-  } catch (error) {
-    console.error('Profile update error:', error);
-    showToast(error.message || 'Failed to update profile', 'error');
-  } finally {
-    setLoading(false);
-  }
-};
 
   return (
     <div className="profile">

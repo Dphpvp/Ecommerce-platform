@@ -10,10 +10,26 @@ export const AuthProvider = ({ children }) => {
   const [requires2FA, setRequires2FA] = useState(false);
   const [tempToken, setTempToken] = useState(null);
   const [initialized, setInitialized] = useState(false);
+  const [csrfToken, setCsrfToken] = useState(null);
   
   // Auto-logout state
   const timeoutRef = useRef(null);
   const TIMEOUT_DURATION = 60 * 60 * 1000; // 1 hour
+
+  // Get CSRF token
+  const getCSRFToken = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_BASE}/csrf-token`, {
+        credentials: 'include'
+      });
+      const data = await response.json();
+      setCsrfToken(data.csrf_token);
+      return data.csrf_token;
+    } catch (error) {
+      console.error('Failed to get CSRF token:', error);
+      return null;
+    }
+  }, []);
 
   const logout = useCallback(async () => {
     try {
@@ -27,6 +43,7 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
       setRequires2FA(false);
       setTempToken(null);
+      setCsrfToken(null);
       
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
@@ -73,6 +90,13 @@ export const AuthProvider = ({ children }) => {
     };
   }, [user, handleActivity, resetTimeout]);
 
+  // Initialize CSRF token when user is authenticated
+  useEffect(() => {
+    if (user && !csrfToken) {
+      getCSRFToken();
+    }
+  }, [user, csrfToken, getCSRFToken]);
+
   // FIXED: Better session fetching with proper state management
   const fetchUser = useCallback(async () => {
     try {
@@ -98,6 +122,7 @@ export const AuthProvider = ({ children }) => {
       } else if (response.status === 401) {
         console.log('❌ No valid session (401)');
         setUser(null);
+        setCsrfToken(null);
         return null;
       } else {
         console.error('⚠️ Unexpected auth response:', response.status);
@@ -184,7 +209,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // FIXED: Improved authenticated request with session recovery
+  // Enhanced authenticated request with CSRF protection
   const makeAuthenticatedRequest = useCallback(async (url, options = {}) => {
     const defaultOptions = {
       credentials: 'include',
@@ -194,6 +219,14 @@ export const AuthProvider = ({ children }) => {
       },
       ...options,
     };
+
+    // Add CSRF token for state-changing operations
+    if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(options.method?.toUpperCase())) {
+      const token = csrfToken || await getCSRFToken();
+      if (token) {
+        defaultOptions.headers['X-CSRF-Token'] = token;
+      }
+    }
 
     try {
       console.log(`🌐 Making request to ${url}`);
@@ -213,6 +246,14 @@ export const AuthProvider = ({ children }) => {
           const userData = await sessionCheck.json();
           setUser(userData);
           
+          // Refresh CSRF token if needed for state-changing operations
+          if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(options.method?.toUpperCase())) {
+            const freshToken = await getCSRFToken();
+            if (freshToken) {
+              defaultOptions.headers['X-CSRF-Token'] = freshToken;
+            }
+          }
+          
           // Retry original request
           const retryResponse = await fetch(url, defaultOptions);
           
@@ -225,6 +266,7 @@ export const AuthProvider = ({ children }) => {
         } else {
           console.log('❌ Session invalid, logging out');
           setUser(null);
+          setCsrfToken(null);
           throw new Error('Authentication required');
         }
       }
@@ -239,7 +281,7 @@ export const AuthProvider = ({ children }) => {
       console.error('🚨 Authenticated request failed:', error);
       throw error;
     }
-  }, []);
+  }, [csrfToken, getCSRFToken]);
 
   const checkAuthStatus = useCallback(async () => {
     try {
@@ -273,6 +315,7 @@ export const AuthProvider = ({ children }) => {
       } else {
         console.log('❌ Refetch failed, clearing user');
         setUser(null);
+        setCsrfToken(null);
         return null;
       }
     } catch (error) {
@@ -287,9 +330,10 @@ export const AuthProvider = ({ children }) => {
       user: user?.username || 'none', 
       loading, 
       initialized, 
-      isAuthenticated 
+      isAuthenticated,
+      hasCSRF: !!csrfToken
     });
-  }, [user, loading, initialized, isAuthenticated]);
+  }, [user, loading, initialized, isAuthenticated, csrfToken]);
 
   return (
     <AuthContext.Provider value={{ 
@@ -308,7 +352,9 @@ export const AuthProvider = ({ children }) => {
       makeAuthenticatedRequest,
       checkAuthStatus,
       isAuthenticated,
-      initialized // Add this for components to check if auth is ready
+      initialized,
+      getCSRFToken,
+      csrfToken
     }}>
       {children}
     </AuthContext.Provider>
