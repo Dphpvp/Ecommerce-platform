@@ -536,6 +536,16 @@ const Profile = () => {
             ) : (
               <>
                 <div className="info-group">
+                  <label>Full Name:</label>
+                  <span>{user?.full_name || 'Not provided'}</span>
+                </div>
+
+                <div className="info-group">
+                  <label>Username:</label>
+                  <span>{user?.username}</span>
+                </div>
+
+                <div className="info-group">
                   <label>Email:</label>
                   <div className="email-info">
                     <span>{user?.email}</span>
@@ -565,12 +575,41 @@ const Profile = () => {
                     )}
                   </div>
                 </div>
+
+                <div className="info-group">
+                  <label>Phone:</label>
+                  <span>{user?.phone || 'Not provided'}</span>
+                </div>
+
+                <div className="info-group">
+                  <label>Address:</label>
+                  <span>{user?.address || 'Not provided'}</span>
+                </div>
+
+                <div className="info-group">
+                  <label>Account Type:</label>
+                  <span>{user?.google_id ? 'Google Account' : 'Standard Account'}</span>
+                </div>
+
                 {user?.is_admin && (
                   <div className="info-group">
                     <label>Role:</label>
                     <span style={{ color: '#dc3545', fontWeight: 'bold' }}>Administrator</span>
                   </div>
                 )}
+
+                <div className="info-group">
+                  <label>Two-Factor Authentication:</label>
+                  <span>
+                    {user?.two_factor_enabled ? (
+                      <span style={{ color: '#28a745', fontWeight: 'bold' }}>
+                        ✅ Enabled ({user?.two_factor_method === 'email' ? 'Email' : 'App'})
+                      </span>
+                    ) : (
+                      <span style={{ color: '#dc3545' }}>❌ Disabled</span>
+                    )}
+                  </span>
+                </div>
                 
                 <div className="profile-actions">
                   <button 
