@@ -73,11 +73,9 @@ export const AuthProvider = ({ children }) => {
     };
   }, [user, handleActivity, resetTimeout]);
 
-  // FIXED: Enhanced fetch function with better error handling and session persistence
+  // FIXED: Enhanced fetch function with better error handling
   const fetchUser = useCallback(async () => {
     try {
-      setLoading(true); // Ensure loading state is set
-      
       const response = await fetch(`${API_BASE}/auth/me`, {
         method: 'GET',
         credentials: 'include',
@@ -85,7 +83,6 @@ export const AuthProvider = ({ children }) => {
           'Accept': 'application/json',
           'Content-Type': 'application/json',
         },
-        // Add cache control to prevent stale responses
         cache: 'no-cache'
       });
       
@@ -99,29 +96,24 @@ export const AuthProvider = ({ children }) => {
         return null;
       } else {
         console.error('Failed to fetch user:', response.status, response.statusText);
-        // Don't logout on other errors, keep current state
         return user;
       }
     } catch (error) {
       console.error('Failed to fetch user:', error);
-      // On network errors, don't logout - keep current state
       return user;
     } finally {
       setLoading(false);
     }
-  }, []); // FIXED: Remove user dependency to prevent infinite loops
+  }, []);
 
-  // FIXED: Only fetch user on initial mount
   useEffect(() => {
     fetchUser();
-  }, []); // Empty dependency array for initial load only
+  }, []);
 
-  // FIXED: Session-based login
   const login = useCallback(async (userData) => {
     if (userData) {
       setUser(userData);
     } else {
-      // If no userData provided, fetch from session
       const freshUser = await fetchUser();
       if (!freshUser) {
         console.error('Login failed: No user data available');
@@ -134,11 +126,9 @@ export const AuthProvider = ({ children }) => {
     return true;
   }, [fetchUser]);
 
-  // FIXED: 2FA completion handler
   const complete2FA = useCallback(async () => {
     setRequires2FA(false);
     setTempToken(null);
-    // Fetch user data from established session
     const userData = await fetchUser();
     if (userData) {
       setUser(userData);
@@ -152,7 +142,6 @@ export const AuthProvider = ({ children }) => {
     setTempToken(tempToken);
   };
 
-  // FIXED: Session-based registration
   const register = async (userData) => {
     setLoading(true);
     try {
@@ -177,7 +166,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // FIXED: Enhanced authentication helpers
+  // FIXED: Enhanced authentication with better error handling
   const makeAuthenticatedRequest = useCallback(async (url, options = {}) => {
     const defaultOptions = {
       credentials: 'include',
@@ -191,10 +180,34 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await fetch(url, defaultOptions);
       
+      // FIXED: Don't immediately logout on 401, try to refresh session first
       if (response.status === 401) {
-        // Session expired or invalid - logout user
-        setUser(null);
-        throw new Error('Authentication required');
+        console.log('Got 401, attempting to refresh session...');
+        
+        // Try to refresh user session
+        const userData = await fetchUser();
+        if (!userData) {
+          // Only logout if we truly can't authenticate
+          setUser(null);
+          throw new Error('Authentication required');
+        }
+        
+        // If refresh successful, retry the original request
+        console.log('Session refreshed, retrying request...');
+        const retryResponse = await fetch(url, defaultOptions);
+        
+        if (retryResponse.status === 401) {
+          // If still 401 after refresh, then logout
+          setUser(null);
+          throw new Error('Authentication required');
+        }
+        
+        if (!retryResponse.ok) {
+          const errorData = await retryResponse.json().catch(() => ({}));
+          throw new Error(errorData.detail || `HTTP error! status: ${retryResponse.status}`);
+        }
+        
+        return await retryResponse.json();
       }
       
       if (!response.ok) {
@@ -207,9 +220,8 @@ export const AuthProvider = ({ children }) => {
       console.error('Authenticated request failed:', error);
       throw error;
     }
-  }, []);
+  }, [fetchUser]);
 
-  // FIXED: Check authentication status without side effects
   const checkAuthStatus = useCallback(async () => {
     try {
       const response = await fetch(`${API_BASE}/auth/me`, {
@@ -224,10 +236,8 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // Helper to determine if user is authenticated
   const isAuthenticated = !!user;
 
-  // FIXED: Refresh user data without triggering logout
   const refetchUser = useCallback(async () => {
     try {
       const response = await fetch(`${API_BASE}/auth/me`, {
