@@ -712,10 +712,13 @@ def create_user_response(token, user):
 @router.post("/auth/setup-2fa")
 async def setup_2fa(
     setup_data: TwoFactorSetupChoice, 
-    current_user: dict = Depends(get_current_user),
-    csrf_valid: bool = Depends(require_csrf_token)  # Add CSRF
+    request: Request,
+    csrf_valid: bool = Depends(require_csrf_token)
 ):
+    """Setup 2FA - choose between app or email - Enhanced version"""
     try:
+        current_user = await get_current_user_from_session(request)
+        
         if not current_user.get("email_verified"):
             raise HTTPException(status_code=400, detail="Email must be verified before enabling 2FA")
         
@@ -827,10 +830,17 @@ async def setup_2fa(
         print(f"❌ 2FA setup error: {e}")
         raise HTTPException(status_code=500, detail="Failed to setup 2FA")
 
+
 @router.post("/auth/verify-2fa-setup")
-async def verify_2fa_setup(verification_data: TwoFactorSetup, current_user: dict = Depends(get_current_user)):
+async def verify_2fa_setup(
+    verification_data: TwoFactorSetup, 
+    request: Request,
+    csrf_valid: bool = Depends(require_csrf_token)
+):
     """Verify and enable 2FA for both app and email - Enhanced version"""
     try:
+        current_user = await get_current_user_from_session(request)
+        
         # Get fresh user data
         user = await db.users.find_one({"_id": current_user["_id"]})
         if not user:
@@ -961,13 +971,17 @@ async def verify_2fa_setup(verification_data: TwoFactorSetup, current_user: dict
         print(f"❌ 2FA setup verification error: {e}")
         raise HTTPException(status_code=500, detail="Failed to verify 2FA setup")
 
+
 @router.post("/auth/disable-2fa")
 async def disable_2fa(
     verification_data: TwoFactorDisable, 
-    current_user: dict = Depends(get_current_user),
-    csrf_valid: bool = Depends(require_csrf_token)  # Add CSRF
+    request: Request,
+    csrf_valid: bool = Depends(require_csrf_token)
 ):
+    """Disable 2FA - Enhanced version"""
     try:
+        current_user = await get_current_user_from_session(request)
+        
         # Verify password
         if not current_user.get("password"):
             raise HTTPException(status_code=400, detail="Cannot disable 2FA for OAuth accounts")
@@ -1049,9 +1063,15 @@ async def disable_2fa(
         raise HTTPException(status_code=500, detail="Failed to disable 2FA")
     
 @router.post("/auth/send-disable-2fa-code")
-async def send_disable_2fa_code(request_data: dict, current_user: dict = Depends(get_current_user)):
+async def send_disable_2fa_code(
+    request_data: dict, 
+    request: Request,
+    csrf_valid: bool = Depends(require_csrf_token)
+):
     """Send 2FA code for disabling 2FA - Enhanced version"""
     try:
+        current_user = await get_current_user_from_session(request)
+        
         password = request_data.get("password")
         
         if not password:
@@ -1112,11 +1132,13 @@ async def send_disable_2fa_code(request_data: dict, current_user: dict = Depends
         print(f"❌ Send disable 2FA code error: {e}")
         raise HTTPException(status_code=500, detail="Failed to process request")
 
+
 # Additional utility routes
 @router.get("/auth/2fa-status")
-async def get_2fa_status(current_user: dict = Depends(get_current_user)):
+async def get_2fa_status(request: Request):
     """Get current 2FA status"""
     try:
+        current_user = await get_current_user_from_session(request)
         user = await db.users.find_one({"_id": current_user["_id"]})
         
         return {
@@ -1132,9 +1154,11 @@ async def get_2fa_status(current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=500, detail="Failed to get 2FA status")
 
 @router.post("/auth/generate-backup-codes")
-async def generate_backup_codes(current_user: dict = Depends(get_current_user)):
+async def generate_backup_codes(request: Request):
     """Generate new backup codes"""
     try:
+        current_user = await get_current_user_from_session(request)
+        
         if not current_user.get("two_factor_enabled"):
             raise HTTPException(status_code=400, detail="2FA must be enabled to generate backup codes")
         
