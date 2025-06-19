@@ -9,6 +9,7 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [requires2FA, setRequires2FA] = useState(false);
   const [tempToken, setTempToken] = useState(null);
+  const [initialized, setInitialized] = useState(false);
   
   // Auto-logout state
   const timeoutRef = useRef(null);
@@ -26,7 +27,6 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
       setRequires2FA(false);
       setTempToken(null);
-      setLoading(false);
       
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
@@ -73,9 +73,11 @@ export const AuthProvider = ({ children }) => {
     };
   }, [user, handleActivity, resetTimeout]);
 
-  // FIXED: Enhanced fetch function with better error handling
+  // FIXED: Better session fetching with proper state management
   const fetchUser = useCallback(async () => {
     try {
+      console.log('🔍 Fetching user session...');
+      
       const response = await fetch(`${API_BASE}/auth/me`, {
         method: 'GET',
         credentials: 'include',
@@ -86,43 +88,59 @@ export const AuthProvider = ({ children }) => {
         cache: 'no-cache'
       });
       
+      console.log('📡 Auth response status:', response.status);
+      
       if (response.ok) {
         const userData = await response.json();
+        console.log('✅ User session found:', userData.username);
         setUser(userData);
         return userData;
       } else if (response.status === 401) {
-        // Session expired or not authenticated - this is normal
+        console.log('❌ No valid session (401)');
         setUser(null);
         return null;
       } else {
-        console.error('Failed to fetch user:', response.status, response.statusText);
+        console.error('⚠️ Unexpected auth response:', response.status);
+        // Don't change user state on unexpected errors
         return user;
       }
     } catch (error) {
-      console.error('Failed to fetch user:', error);
+      console.error('💥 Auth fetch error:', error);
+      // Don't change user state on network errors
       return user;
     } finally {
-      setLoading(false);
+      if (!initialized) {
+        setLoading(false);
+        setInitialized(true);
+      }
     }
-  }, []);
+  }, [user, initialized]);
 
+  // FIXED: Only fetch user once on initialization
   useEffect(() => {
-    fetchUser();
-  }, []);
+    if (!initialized) {
+      fetchUser();
+    }
+  }, [fetchUser, initialized]);
 
   const login = useCallback(async (userData) => {
+    console.log('🔐 Login called with:', userData ? 'user data' : 'no data');
+    
     if (userData) {
       setUser(userData);
+      setLoading(false);
     } else {
+      // Fetch from session
       const freshUser = await fetchUser();
       if (!freshUser) {
-        console.error('Login failed: No user data available');
+        console.error('❌ Login failed: No user data available');
+        setLoading(false);
         return false;
       }
     }
+    
     setRequires2FA(false);
     setTempToken(null);
-    setLoading(false);
     return true;
   }, [fetchUser]);
 
@@ -166,7 +184,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // FIXED: Enhanced authentication with better error handling
+  // FIXED: Improved authenticated request with session recovery
   const makeAuthenticatedRequest = useCallback(async (url, options = {}) => {
     const defaultOptions = {
       credentials: 'include',
@@ -178,36 +196,37 @@ export const AuthProvider = ({ children }) => {
     };
 
     try {
+      console.log(`🌐 Making request to ${url}`);
       const response = await fetch(url, defaultOptions);
       
-      // FIXED: Don't immediately logout on 401, try to refresh session first
       if (response.status === 401) {
-        console.log('Got 401, attempting to refresh session...');
+        console.log('🔄 Got 401, checking session...');
         
-        // Try to refresh user session
-        const userData = await fetchUser();
-        if (!userData) {
-          // Only logout if we truly can't authenticate
+        // Check if we still have a valid session
+        const sessionCheck = await fetch(`${API_BASE}/auth/me`, {
+          credentials: 'include',
+          headers: { 'Accept': 'application/json' }
+        });
+        
+        if (sessionCheck.ok) {
+          console.log('✅ Session still valid, retrying request');
+          const userData = await sessionCheck.json();
+          setUser(userData);
+          
+          // Retry original request
+          const retryResponse = await fetch(url, defaultOptions);
+          
+          if (!retryResponse.ok) {
+            const errorData = await retryResponse.json().catch(() => ({}));
+            throw new Error(errorData.detail || `HTTP error! status: ${retryResponse.status}`);
+          }
+          
+          return await retryResponse.json();
+        } else {
+          console.log('❌ Session invalid, logging out');
           setUser(null);
           throw new Error('Authentication required');
         }
-        
-        // If refresh successful, retry the original request
-        console.log('Session refreshed, retrying request...');
-        const retryResponse = await fetch(url, defaultOptions);
-        
-        if (retryResponse.status === 401) {
-          // If still 401 after refresh, then logout
-          setUser(null);
-          throw new Error('Authentication required');
-        }
-        
-        if (!retryResponse.ok) {
-          const errorData = await retryResponse.json().catch(() => ({}));
-          throw new Error(errorData.detail || `HTTP error! status: ${retryResponse.status}`);
-        }
-        
-        return await retryResponse.json();
       }
       
       if (!response.ok) {
@@ -217,10 +236,10 @@ export const AuthProvider = ({ children }) => {
       
       return await response.json();
     } catch (error) {
-      console.error('Authenticated request failed:', error);
+      console.error('🚨 Authenticated request failed:', error);
       throw error;
     }
-  }, [fetchUser]);
+  }, []);
 
   const checkAuthStatus = useCallback(async () => {
     try {
@@ -239,6 +258,7 @@ export const AuthProvider = ({ children }) => {
   const isAuthenticated = !!user;
 
   const refetchUser = useCallback(async () => {
+    console.log('🔄 Refetching user...');
     try {
       const response = await fetch(`${API_BASE}/auth/me`, {
         method: 'GET',
@@ -250,19 +270,32 @@ export const AuthProvider = ({ children }) => {
         const userData = await response.json();
         setUser(userData);
         return userData;
+      } else {
+        console.log('❌ Refetch failed, clearing user');
+        setUser(null);
+        return null;
       }
-      return null;
     } catch (error) {
       console.error('Failed to refresh user:', error);
       return null;
     }
   }, []);
 
+  // Debug logging
+  useEffect(() => {
+    console.log('🔍 Auth State:', { 
+      user: user?.username || 'none', 
+      loading, 
+      initialized, 
+      isAuthenticated 
+    });
+  }, [user, loading, initialized, isAuthenticated]);
+
   return (
     <AuthContext.Provider value={{ 
       user, 
-      token: null, // Session-based, no token needed
-      getToken: () => null, // Session-based auth
+      token: null,
+      getToken: () => null,
       login, 
       register, 
       logout, 
@@ -274,7 +307,8 @@ export const AuthProvider = ({ children }) => {
       refetchUser,
       makeAuthenticatedRequest,
       checkAuthStatus,
-      isAuthenticated
+      isAuthenticated,
+      initialized // Add this for components to check if auth is ready
     }}>
       {children}
     </AuthContext.Provider>
