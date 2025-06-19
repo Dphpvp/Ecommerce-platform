@@ -83,3 +83,16 @@ class EmailService:
         </html>
         """
         return await self.send_email(self.admin_email, subject, body)
+    
+async def send_password_reset_email(self, user_email: str, user_name: str, reset_url: str) -> bool:
+    subject = f"🔐 Reset Your Password - {self.email_user}"
+    body = f"""
+    <html><body>
+        <h2>Password Reset Request</h2>
+        <p>Hello {user_name},</p>
+        <p>Click the link below to reset your password:</p>
+        <a href="{reset_url}">Reset Password</a>
+        <p>This link expires in 1 hour.</p>
+    </body></html>
+    """
+    return await self.send_email(user_email, subject, body)
