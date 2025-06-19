@@ -1434,8 +1434,14 @@ async def reset_password(request: PasswordResetConfirm):
     return {"message": "Password reset successfully"}
 
 @router.put("/auth/change-password")
-async def change_password(password_data: PasswordChange, current_user: dict = Depends(get_current_user)):
-    """Change user password"""
+async def change_password(password_data: PasswordChange, request: Request):
+    """Change user password - FIXED with session authentication"""
+    
+    # FIXED: Use session-based authentication instead of token-based
+    try:
+        current_user = await get_current_user_from_session(request)
+    except HTTPException as e:
+        raise e
     
     # Verify reCAPTCHA
     if not verify_recaptcha(password_data.recaptcha_response):
