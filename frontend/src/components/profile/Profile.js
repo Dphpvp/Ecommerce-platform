@@ -21,6 +21,8 @@ const Profile = () => {
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [step, setStep] = useState(1);
   const [sendingDisableCode, setSendingDisableCode] = useState(false);
+  const [recaptchaLoaded, setRecaptchaLoaded] = useState(false);
+  const [recaptchaWidgetId, setRecaptchaWidgetId] = useState(null);
   
   const recaptchaRef = useRef(null);
   
@@ -47,7 +49,6 @@ const Profile = () => {
 
   useEffect(() => {
     if (user) {
-      console.log('User data:', user); // Debug log
       setFormData({
         full_name: user.full_name || '',
         email: user.email || '',
@@ -58,18 +59,75 @@ const Profile = () => {
     }
   }, [user]);
 
+  // FIXED: Proper reCAPTCHA loading and initialization
   useEffect(() => {
-    // Load reCAPTCHA script
-    const script = document.createElement('script');
-    script.src = 'https://www.google.com/recaptcha/api.js';
-    script.async = true;
-    script.defer = true;
-    document.head.appendChild(script);
+    const loadRecaptcha = () => {
+      // Check if reCAPTCHA is already loaded
+      if (window.grecaptcha) {
+        setRecaptchaLoaded(true);
+        return;
+      }
 
-    return () => {
-      document.head.removeChild(script);
+      // Load reCAPTCHA script
+      const script = document.createElement('script');
+      script.src = 'https://www.google.com/recaptcha/api.js?onload=onRecaptchaLoad&render=explicit';
+      script.async = true;
+      script.defer = true;
+
+      // Define the callback function globally
+      window.onRecaptchaLoad = () => {
+        setRecaptchaLoaded(true);
+      };
+
+      document.head.appendChild(script);
+
+      return () => {
+        // Cleanup
+        if (document.head.contains(script)) {
+          document.head.removeChild(script);
+        }
+        delete window.onRecaptchaLoad;
+      };
     };
+
+    loadRecaptcha();
   }, []);
+
+  // FIXED: Render reCAPTCHA widget when password change form is shown
+  useEffect(() => {
+    if (recaptchaLoaded && isChangingPassword && recaptchaRef.current && !recaptchaWidgetId) {
+      try {
+        const widgetId = window.grecaptcha.render(recaptchaRef.current, {
+          sitekey: process.env.REACT_APP_RECAPTCHA_SITE_KEY,
+          callback: (response) => {
+            console.log('reCAPTCHA completed:', response);
+          },
+          'expired-callback': () => {
+            console.log('reCAPTCHA expired');
+            showToast('reCAPTCHA expired. Please complete it again.', 'warning');
+          }
+        });
+        setRecaptchaWidgetId(widgetId);
+      } catch (error) {
+        console.error('reCAPTCHA render error:', error);
+        showToast('Failed to load reCAPTCHA. Please refresh the page.', 'error');
+      }
+    }
+  }, [recaptchaLoaded, isChangingPassword, showToast]);
+
+  // FIXED: Cleanup reCAPTCHA widget when form is closed
+  useEffect(() => {
+    if (!isChangingPassword && recaptchaWidgetId !== null) {
+      try {
+        if (window.grecaptcha) {
+          window.grecaptcha.reset(recaptchaWidgetId);
+        }
+        setRecaptchaWidgetId(null);
+      } catch (error) {
+        console.error('reCAPTCHA reset error:', error);
+      }
+    }
+  }, [isChangingPassword, recaptchaWidgetId]);
 
   const sendVerificationEmail = async () => {
     setSendingVerification(true);
@@ -165,6 +223,7 @@ const Profile = () => {
     }
   };
 
+  // FIXED: Change password function with proper reCAPTCHA handling
   const handleChangePassword = async (e) => {
     e.preventDefault();
     
@@ -172,8 +231,16 @@ const Profile = () => {
       return;
     }
 
-    // Get reCAPTCHA response
-    const recaptchaResponse = window.grecaptcha.getResponse(recaptchaRef.current);
+    // FIXED: Get reCAPTCHA response properly
+    let recaptchaResponse = '';
+    try {
+      if (recaptchaWidgetId !== null) {
+        recaptchaResponse = window.grecaptcha.getResponse(recaptchaWidgetId);
+      }
+    } catch (error) {
+      console.error('reCAPTCHA error:', error);
+    }
+
     if (!recaptchaResponse) {
       showToast('Please complete the reCAPTCHA verification', 'error');
       return;
@@ -198,11 +265,19 @@ const Profile = () => {
         confirm_password: ''
       });
       setPasswordErrors({});
-      window.grecaptcha.reset(recaptchaRef.current);
+      
+      // Reset reCAPTCHA
+      if (recaptchaWidgetId !== null) {
+        window.grecaptcha.reset(recaptchaWidgetId);
+      }
     } catch (error) {
       console.error('Password change error:', error);
       showToast(error.message || 'Failed to change password', 'error');
-      window.grecaptcha.reset(recaptchaRef.current);
+      
+      // Reset reCAPTCHA on error
+      if (recaptchaWidgetId !== null) {
+        window.grecaptcha.reset(recaptchaWidgetId);
+      }
     } finally {
       setPasswordLoading(false);
     }
@@ -266,6 +341,7 @@ const Profile = () => {
     }
   };
 
+  // FIXED: Cancel password change with proper cleanup
   const handleCancelPasswordChange = () => {
     setIsChangingPassword(false);
     setPasswordData({
@@ -274,14 +350,23 @@ const Profile = () => {
       confirm_password: ''
     });
     setPasswordErrors({});
-    if (window.grecaptcha && recaptchaRef.current) {
-      window.grecaptcha.reset(recaptchaRef.current);
+    
+    // Reset reCAPTCHA
+    if (recaptchaWidgetId !== null) {
+      try {
+        window.grecaptcha.reset(recaptchaWidgetId);
+      } catch (error) {
+        console.error('reCAPTCHA reset error:', error);
+      }
     }
   };
 
   const handleChangeAvatar = async () => {
     try {
-      const data = await makeAuthenticatedRequest(`${API_BASE}/auth/upload-avatar`);
+      const data = await makeAuthenticatedRequest(`${API_BASE}/auth/upload-avatar`, {
+        method: 'POST'
+      });
+
       setAvailableAvatars(data.avatars);
       setIsChangingAvatar(true);
     } catch (error) {
@@ -317,25 +402,13 @@ const Profile = () => {
     return `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.username || 'default'}`;
   };
 
-  // FIXED: Check for Google users properly
-  const canChangePassword = user && !user.google_id && user.password !== "";
-  const isGoogleUser = user && user.google_id;
-
-  // Debug logging
-  console.log('User object:', user);
-  console.log('Is Google user:', isGoogleUser);
-  console.log('Can change password:', canChangePassword);
+  const canChangePassword = user && !user.google_id;
 
   return (
     <div className="profile">
       <div className="container">
         <div className="profile-header">
           <h1>My Profile</h1>
-          {isGoogleUser && (
-            <p style={{ color: '#28a745', fontWeight: 'bold' }}>
-              ✅ Signed in with Google
-            </p>
-          )}
         </div>
         
         <div className="profile-avatar-section">
@@ -408,13 +481,7 @@ const Profile = () => {
                     value={formData.email}
                     onChange={handleInputChange}
                     placeholder="Enter your email"
-                    disabled={isGoogleUser} // Disable for Google users
                   />
-                  {isGoogleUser && (
-                    <small style={{ color: '#666' }}>
-                      Email cannot be changed for Google accounts
-                    </small>
-                  )}
                 </div>
                 
                 <div className="form-group">
@@ -462,7 +529,7 @@ const Profile = () => {
                 <div className="info-group">
                   <label>Email:</label>
                   <div className="email-info">
-                    <span>{user?.email || 'No email found'}</span>
+                    <span>{user?.email}</span>
                     {user?.email_verified ? (
                       <span className="verification-badge verified">✅ Verified</span>
                     ) : (
@@ -489,33 +556,10 @@ const Profile = () => {
                     )}
                   </div>
                 </div>
-
-                <div className="info-group">
-                  <label>Full Name:</label>
-                  <span>{user?.full_name || 'Not provided'}</span>
-                </div>
-
-                <div className="info-group">
-                  <label>Phone:</label>
-                  <span>{user?.phone || 'Not provided'}</span>
-                </div>
-
-                <div className="info-group">
-                  <label>Address:</label>
-                  <span>{user?.address || 'Not provided'}</span>
-                </div>
-
                 {user?.is_admin && (
                   <div className="info-group">
                     <label>Role:</label>
                     <span style={{ color: '#dc3545', fontWeight: 'bold' }}>Administrator</span>
-                  </div>
-                )}
-
-                {isGoogleUser && (
-                  <div className="info-group">
-                    <label>Account Type:</label>
-                    <span style={{ color: '#28a745', fontWeight: 'bold' }}>Google Account</span>
                   </div>
                 )}
                 
@@ -534,19 +578,20 @@ const Profile = () => {
                       Change Password
                     </button>
                   )}
-                  {isGoogleUser && (
-                    <p style={{ fontSize: '0.9rem', color: '#666', marginTop: '1rem' }}>
-                      Password changes are managed through your Google account
-                    </p>
-                  )}
                 </div>
               </>
             )}
           </div>
 
+          {/* FIXED: Password change section with proper reCAPTCHA */}
           {isChangingPassword && canChangePassword && (
             <div className="password-change-section">
               <h3>Change Password</h3>
+              {!recaptchaLoaded && (
+                <div className="loading-recaptcha">
+                  <p>Loading security verification...</p>
+                </div>
+              )}
               <form onSubmit={handleChangePassword} className="password-change-form">
                 <div className="form-group">
                   <label>Current Password:</label>
@@ -593,19 +638,25 @@ const Profile = () => {
                   )}
                 </div>
 
+                {/* FIXED: reCAPTCHA container */}
                 <div className="form-group">
+                  <label>Security Verification:</label>
                   <div 
-                    className="g-recaptcha" 
-                    data-sitekey={process.env.REACT_APP_RECAPTCHA_SITE_KEY}
                     ref={recaptchaRef}
+                    style={{ margin: '10px 0' }}
                   ></div>
+                  {!recaptchaLoaded && (
+                    <p style={{ color: '#666', fontSize: '0.9rem' }}>
+                      Please wait for security verification to load...
+                    </p>
+                  )}
                 </div>
 
                 <div className="form-actions">
                   <button 
                     type="submit" 
                     className="btn btn-primary"
-                    disabled={passwordLoading}
+                    disabled={passwordLoading || !recaptchaLoaded}
                   >
                     {passwordLoading ? 'Changing...' : 'Change Password'}
                   </button>
