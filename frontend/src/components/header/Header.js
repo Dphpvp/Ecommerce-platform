@@ -22,51 +22,54 @@ const Header = () => {
         </Link>
 
         <nav className="nav">
-          {/* Navigation in requested order */}
-          <Link to="/">Home</Link>
-          <Link to="/products">Products</Link>
-          <Link to="/contact">Contact Us</Link>
-          <Link to="/about">About Us</Link>
-
           {user ? (
             <>
-              {/* Admin navigation */}
-              {isAdmin && (
+              {isAdmin ? (
+                // Admin navigation only
                 <>
-                  <Link to="/admin/dashboard" className="admin-link">Dashboard</Link>
-                  <Link to="/admin/categories-list" className="admin-link">Categories</Link>
-                  <Link to="/admin/orders" className="admin-link">Orders</Link>
-                  <Link to="/admin/users" className="admin-link">Users</Link>
-                  <Link to="/admin/products" className="admin-link">Products</Link>
+                  <Link to="/admin/dashboard">Dashboard</Link>
+                  <Link to="/admin/categories-list">Categories</Link>
+                  <Link to="/admin/orders">Orders</Link>
+                  <Link to="/admin/users">Users</Link>
+                  <Link to="/admin/products">Products</Link>
+                  <Link to="/profile">Profile</Link>
+                  
+                  <button
+                    onClick={logout}
+                    className="nav-link logout-btn"
+                  >
+                    Logout ({user.username})
+                  </button>
                 </>
-              )}
-
-              {/* Cart for regular users */}
-              {!isAdmin && (
-                <Link to="/cart" className="cart-link">
-                  Cart ({cartItems.length})
-                </Link>
-              )}
-
-              {/* User profile/logout */}
-              {!isAdmin && (
+              ) : (
+                // Regular user navigation
                 <>
+                  <Link to="/">Home</Link>
+                  <Link to="/products">Products</Link>
+                  <Link to="/contact">Contact Us</Link>
+                  <Link to="/about">About Us</Link>
+                  <Link to="/cart" className="cart-link">
+                    Cart ({cartItems.length})
+                  </Link>
                   <Link to="/orders">My Orders</Link>
                   <Link to="/profile">Profile</Link>
+                  
+                  <button
+                    onClick={logout}
+                    className="nav-link logout-btn"
+                  >
+                    Logout ({user.username})
+                  </button>
                 </>
               )}
-
-              <button
-                onClick={logout}
-                className="user-logout-btn"
-                title="Click to logout"
-              >
-                {user.username}
-                {isAdmin && <span className="admin-badge">ADMIN</span>}
-              </button>
             </>
           ) : (
+            // Guest navigation
             <>
+              <Link to="/">Home</Link>
+              <Link to="/products">Products</Link>
+              <Link to="/contact">Contact Us</Link>
+              <Link to="/about">About Us</Link>
               <Link to="/register">Register</Link>
               <Link to="/login">Login</Link>
             </>
