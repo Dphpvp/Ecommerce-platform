@@ -1,4 +1,5 @@
 from fastapi import APIRouter
+from api.main import router as api_router
 from api.routes import auth, products, cart, orders, contact, profile
 
 router = APIRouter(prefix="/api")

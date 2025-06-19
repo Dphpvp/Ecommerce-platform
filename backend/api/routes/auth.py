@@ -2,7 +2,16 @@ from fastapi import APIRouter, HTTPException, Depends, Request, Response
 from fastapi.security import OAuth2PasswordBearer
 from typing import Optional
 from datetime import timedelta
-
+from bson import ObjectId
+import secrets
+import bcrypt
+from datetime import datetime, timezone, timedelta
+from api.models.auth import PasswordResetRequest, PasswordChangeRequest
+from api.core.database import get_database
+from backend.api.services import email_service
+from backend.middleware.session import get_current_user_from_session
+from captcha import verify_recaptcha
+from api.services.email_service import EmailService
 from api.services.auth_service import AuthService
 from api.services.two_factor_service import TwoFactorService
 from api.models.auth import (
@@ -131,3 +140,230 @@ async def verify_2fa(
     except AuthenticationError as e:
         logger.warning(f"2FA verification failed: {e.detail}")
         raise HTTPException(status_code=401, detail=e.detail)
+    
+@router.get("/csrf-token")
+async def get_csrf_token(request: Request):
+    """Get CSRF token for forms"""
+    from api.middleware.csrf import csrf_protection
+    from jose import jwt
+    from api.core.config import get_settings
+    
+    settings = get_settings()
+    session_id = None
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        try:
+            token = auth_header.split(" ")[1]
+            payload = jwt.decode(token, settings.JWT_SECRET, algorithms=["HS256"])
+            session_id = payload.get("user_id")
+        except:
+            pass
+    
+    csrf_token = csrf_protection.generate_token(session_id)
+    return {"csrf_token": csrf_token}
+@router.post("/request-password-reset")
+@rate_limit(max_attempts=3, window_minutes=60, endpoint_name="password_reset")
+async def request_password_reset(request_data: PasswordResetRequest, http_request: Request):
+    """Request password reset with rate limiting"""
+    try:
+        # Verify reCAPTCHA
+        if not verify_recaptcha(request_data.recaptcha_response):
+            raise HTTPException(status_code=400, detail="reCAPTCHA verification failed")
+        
+        db = get_database()
+        user = await db.users.find_one({"email": request_data.email})
+        if not user:
+            # Don't reveal if email exists
+            return MessageResponse(message="If the email exists, a reset link has been sent")
+        
+        # Generate reset token
+        reset_token = secrets.token_urlsafe(32)
+        expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
+        
+        await db.password_resets.insert_one({
+            "user_id": user["_id"],
+            "token": reset_token,
+            "expires_at": expires_at,
+            "used": False,
+            "created_at": datetime.now(timezone.utc)
+        })
+        
+        # Send reset email
+        from api.core.config import get_settings
+        settings = get_settings()
+        reset_url = f"{settings.FRONTEND_URL}/reset-password?token={reset_token}"
+        
+        await email_service.send_password_reset_email(
+            user["email"], 
+            user.get("full_name", ""), 
+            reset_url
+        )
+        
+        return MessageResponse(message="If the email exists, a reset link has been sent")
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Password reset request error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to process password reset request")
+
+@router.post("/reset-password")
+async def reset_password(request: dict):
+    """Reset password using token"""
+    
+    db = get_database()
+    token = request.get("token")
+    new_password = request.get("new_password")
+    
+    if not token or not new_password:
+        raise HTTPException(status_code=400, detail="Token and new password required")
+    
+    # Find valid reset token
+    reset_record = await db.password_resets.find_one({
+        "token": token,
+        "used": False,
+        "expires_at": {"$gt": datetime.now(timezone.utc)}
+    })
+    
+    if not reset_record:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+    
+    # Validate new password
+    if len(new_password) < 6:
+        raise HTTPException(status_code=400, detail="Password must be at least 6 characters long")
+    
+    # Hash new password
+    new_hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    
+    # Update user password
+    result = await db.users.update_one(
+        {"_id": reset_record["user_id"]},
+        {
+            "$set": {
+                "password": new_hashed_password,
+                "updated_at": datetime.now(timezone.utc)
+            }
+        }
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    # Mark token as used
+    await db.password_resets.update_one(
+        {"_id": reset_record["_id"]},
+        {"$set": {"used": True, "used_at": datetime.now(timezone.utc)}}
+    )
+    
+    return MessageResponse(message="Password reset successfully")
+
+@router.put("/change-password")
+async def change_password(
+    password_data: PasswordChangeRequest, 
+    request: Request,
+    csrf_valid: bool = Depends(require_csrf_token)
+):
+    """Change password for authenticated users"""
+    
+    try:
+        current_user = await get_current_user_from_session(request)
+        db = get_database()
+    except HTTPException as e:
+        raise e
+    
+    # Verify reCAPTCHA
+    if not verify_recaptcha(password_data.recaptcha_response):
+        raise HTTPException(status_code=400, detail="reCAPTCHA verification failed")
+    
+    user_id = str(current_user["_id"])
+    
+    # Validate password confirmation
+    if password_data.new_password != password_data.confirm_password:
+        raise HTTPException(status_code=400, detail="New passwords do not match")
+    
+    # Validate password requirements
+    if len(password_data.new_password) < 10:
+        raise HTTPException(status_code=400, detail="New password must be at least 10 characters long")
+    
+    if not any(c.isupper() for c in password_data.new_password):
+        raise HTTPException(status_code=400, detail="New password must contain at least one uppercase letter")
+    
+    if not any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password_data.new_password):
+        raise HTTPException(status_code=400, detail="New password must contain at least one special character")
+    
+    # Check if user has a password (Google users might not have one)
+    if not current_user.get("password"):
+        raise HTTPException(status_code=400, detail="Cannot change password for Google authenticated accounts")
+    
+    # Verify old password
+    if not bcrypt.checkpw(password_data.old_password.encode('utf-8'), current_user["password"].encode('utf-8')):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+    
+    # Check if new password is different from old password
+    if bcrypt.checkpw(password_data.new_password.encode('utf-8'), current_user["password"].encode('utf-8')):
+        raise HTTPException(status_code=400, detail="New password must be different from current password")
+    
+    # Hash new password
+    new_hashed_password = bcrypt.hashpw(password_data.new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+    
+    # Update password in database
+    result = await db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$set": {"password": new_hashed_password, "updated_at": datetime.now(timezone.utc)}}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    return MessageResponse(message="Password changed successfully")
+
+# Add email service method to api/services/email_service.py
+async def send_password_reset_email(self, user_email: str, user_name: str, reset_url: str) -> bool:
+    """Send password reset email"""
+    
+    subject = f"🔐 Reset Your Password - {self.settings.FRONTEND_URL}"
+    
+    body = f"""
+    <html>
+    <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto;">
+        <div style="background: linear-gradient(135deg, #dc3545, #ffc107); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="margin: 0; font-size: 28px;">🔐 Reset Your Password</h1>
+            <p style="margin: 10px 0 0 0; font-size: 18px;">Security request for {user_name}</p>
+        </div>
+        
+        <div style="background: white; padding: 30px; border-radius: 0 0 10px 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <div style="background: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 8px; border-left: 4px solid #dc3545;">
+                <h3 style="margin-top: 0; color: #dc3545;">🔑 Password Reset Request</h3>
+                <p style="margin-bottom: 0;">We received a request to reset your password. Click the button below to create a new password:</p>
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="{reset_url}" 
+                   style="background-color: #dc3545; color: white; padding: 15px 30px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block; font-size: 16px;">
+                    🔐 Reset Password
+                </a>
+            </div>
+            
+            <div style="background: #fff3cd; padding: 20px; margin: 30px 0; border-radius: 8px; border: 1px solid #ffeaa7;">
+                <h4 style="color: #856404; margin-top: 0;">⚠️ Security Notice</h4>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                    <li>This reset link will expire in 1 hour</li>
+                    <li>If you didn't request this reset, please ignore this email</li>
+                    <li>For security, never share this link with others</li>
+                    <li>Your current password remains unchanged until you complete the reset</li>
+                </ul>
+            </div>
+            
+            <div style="text-align: center; margin-top: 40px; padding-top: 20px; border-top: 1px solid #eee;">
+                <p style="color: #666; font-size: 14px; margin: 0;">
+                    Need help? Contact our support team<br>
+                    📧 {self.email_user}<br>
+                    <em>This is an automated security email.</em>
+                </p>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    return await self.send_email(user_email, subject, body)

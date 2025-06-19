@@ -1,12 +1,11 @@
 from typing import List
-from datetime import datetime
+from datetime import datetime  # Added this import
 from bson import ObjectId
 
 from api.models.order import OrderRequest
 from api.core.database import get_database
 from api.core.exceptions import ValidationError
 from api.services.email_service import EmailService
-from backend.api.core.exceptions import NotFoundError
 
 class OrderService:
     def __init__(self):
@@ -106,6 +105,8 @@ class OrderService:
         return orders
     
     async def get_order(self, order_id: str, user_id: str) -> dict:
+        from api.core.exceptions import NotFoundError
+        
         order = await self.db.orders.find_one({"_id": ObjectId(order_id), "user_id": user_id})
         if not order:
             raise NotFoundError("Order not found")
