@@ -8,8 +8,9 @@ import bcrypt
 from datetime import datetime, timezone, timedelta
 from api.models.auth import PasswordResetRequest, PasswordChangeRequest
 from api.core.database import get_database
-from backend.api.services import email_service
-from backend.middleware.session import get_current_user_from_session
+from api.services.email_service import EmailService  # ✅ Correct
+from api.dependencies.auth import get_current_user_from_session, require_csrf_token
+from api.services import email_service
 from captcha import verify_recaptcha
 from api.services.email_service import EmailService
 from api.services.auth_service import AuthService
