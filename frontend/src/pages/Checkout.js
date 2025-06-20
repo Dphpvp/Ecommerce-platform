@@ -35,7 +35,7 @@ const Checkout = () => {
     setProcessing(true);
 
     try {
-      const intentResponse = await fetch(`${API_BASE}/payment/create-intent`, {
+      const intentResponse = await fetch(`${API_BASE}/orders/payment/create-intent`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount: Math.round(total * 100) })
