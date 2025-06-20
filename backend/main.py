@@ -60,27 +60,6 @@ async def root():
 async def health_check():
     return {"status": "healthy", "timestamp": datetime.now().isoformat()}
 
-@app.get("/api/csrf-token")
-async def get_csrf_token(request: Request):
-    """Get CSRF token for forms"""
-    from api.middleware.csrf import csrf_protection
-    from jose import jwt
-    from api.core.config import get_settings
-    
-    settings = get_settings()
-    session_id = None
-    auth_header = request.headers.get("Authorization")
-    if auth_header and auth_header.startswith("Bearer "):
-        try:
-            token = auth_header.split(" ")[1]
-            payload = jwt.decode(token, settings.JWT_SECRET, algorithms=["HS256"])
-            session_id = payload.get("user_id")
-        except:
-            pass
-    
-    csrf_token = csrf_protection.generate_token(session_id)
-    return {"csrf_token": csrf_token}
-
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
