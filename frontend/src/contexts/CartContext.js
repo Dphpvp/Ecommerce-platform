@@ -10,9 +10,8 @@ export const CartProvider = ({ children }) => {
   const [csrfToken, setCsrfToken] = useState(null);
   const { token } = useAuth();
 
-  // Fetch CSRF token
   const fetchCSRFToken = useCallback(async () => {
-    if (!token) return;
+    if (!token) return null;
     
     try {
       const response = await fetch(`${API_BASE}/auth/csrf-token`, {
@@ -21,10 +20,12 @@ export const CartProvider = ({ children }) => {
       if (response.ok) {
         const data = await response.json();
         setCsrfToken(data.csrf_token);
+        return data.csrf_token;
       }
     } catch (error) {
       console.error('Failed to fetch CSRF token:', error);
     }
+    return null;
   }, [token]);
 
   const fetchCart = useCallback(async () => {
@@ -44,7 +45,14 @@ export const CartProvider = ({ children }) => {
   }, [token]);
 
   const addToCart = async (productId, quantity = 1) => {
-    if (!token || !csrfToken) return false;
+    if (!token) return false;
+
+    // Ensure we have CSRF token
+    let currentCsrfToken = csrfToken;
+    if (!currentCsrfToken) {
+      currentCsrfToken = await fetchCSRFToken();
+      if (!currentCsrfToken) return false;
+    }
 
     try {
       const response = await fetch(`${API_BASE}/cart/add`, {
@@ -52,7 +60,7 @@ export const CartProvider = ({ children }) => {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
-          'X-CSRF-Token': csrfToken
+          'X-CSRF-Token': currentCsrfToken
         },
         body: JSON.stringify({ product_id: productId, quantity })
       });
@@ -68,14 +76,21 @@ export const CartProvider = ({ children }) => {
   };
 
   const removeFromCart = async (itemId) => {
-    if (!csrfToken) return;
+    if (!token) return;
+    
+    // Ensure we have CSRF token
+    let currentCsrfToken = csrfToken;
+    if (!currentCsrfToken) {
+      currentCsrfToken = await fetchCSRFToken();
+      if (!currentCsrfToken) return;
+    }
     
     try {
       const response = await fetch(`${API_BASE}/cart/${itemId}`, {
         method: 'DELETE',
         headers: { 
           Authorization: `Bearer ${token}`,
-          'X-CSRF-Token': csrfToken
+          'X-CSRF-Token': currentCsrfToken
         }
       });
 
@@ -93,8 +108,12 @@ export const CartProvider = ({ children }) => {
 
   useEffect(() => {
     if (token) {
-      fetchCSRFToken();
-      fetchCart();
+      fetchCSRFToken().then(() => {
+        fetchCart();
+      });
+    } else {
+      setCartItems([]);
+      setCsrfToken(null);
     }
   }, [token, fetchCSRFToken, fetchCart]);
 
