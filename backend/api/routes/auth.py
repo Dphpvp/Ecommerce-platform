@@ -26,6 +26,7 @@ from api.models.responses import (
     TwoFactorSetupResponse, 
     MessageResponse
 )
+from api.models.profile import UserProfileUpdate
 from api.dependencies.auth import get_current_user_from_session, get_current_user_optional, require_csrf_token
 from api.dependencies.rate_limiting import rate_limit
 from api.core.exceptions import AuthenticationError, ValidationError
@@ -301,7 +302,119 @@ async def change_password(
         logger.error(f"Change password error: {e}")
         raise HTTPException(status_code=500, detail="Failed to change password")
 
-# CSRF Token Route (Missing from structured API)
+# ===== PROFILE/AVATAR ENDPOINTS FOR BACKWARD COMPATIBILITY =====
+
+@router.get("/upload-avatar")
+async def upload_avatar(request: Request):
+    """Handle avatar upload - Profile endpoint compatibility"""
+    try:
+        user = await get_current_user_from_session(request)
+        
+        # Generate sample avatar URLs
+        sample_avatars = [
+            f"https://api.dicebear.com/7.x/avataaars/svg?seed={user['username']}1",
+            f"https://api.dicebear.com/7.x/avataaars/svg?seed={user['username']}2", 
+            f"https://api.dicebear.com/7.x/avataaars/svg?seed={user['username']}3",
+            f"https://api.dicebear.com/7.x/avataaars/svg?seed={user['username']}4",
+            f"https://api.dicebear.com/7.x/avataaars/svg?seed={user['username']}5",
+            f"https://api.dicebear.com/7.x/adventurer/svg?seed={user['username']}1",
+            f"https://api.dicebear.com/7.x/adventurer/svg?seed={user['username']}2",
+            f"https://api.dicebear.com/7.x/adventurer/svg?seed={user['username']}3",
+            f"https://api.dicebear.com/7.x/personas/svg?seed={user['username']}1",
+            f"https://api.dicebear.com/7.x/personas/svg?seed={user['username']}2"
+        ]
+        
+        return {
+            "message": "Avatar options available",
+            "avatars": sample_avatars
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Avatar endpoint error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to load avatars")
+
+@router.put("/update-profile")
+async def update_profile(
+    profile_data: UserProfileUpdate, 
+    request: Request,
+    csrf_valid: bool = Depends(require_csrf_token)  
+):
+    """Update user profile - Profile endpoint compatibility"""
+    try:
+        current_user = await get_current_user_from_session(request)
+        user_id = str(current_user["_id"])
+        db = get_database()
+        
+        # Build update data, only including provided fields
+        update_data = {}
+        if profile_data.full_name is not None:
+            update_data["full_name"] = profile_data.full_name.strip()
+        if profile_data.email is not None:
+            # Check if email is already taken by another user
+            existing_user = await db.users.find_one({
+                "email": profile_data.email.strip().lower(),
+                "_id": {"$ne": ObjectId(user_id)}
+            })
+            if existing_user:
+                raise HTTPException(status_code=400, detail="Email already in use")
+            update_data["email"] = profile_data.email.strip().lower()
+        if profile_data.phone is not None:
+            # Check if phone is already taken by another user
+            if profile_data.phone.strip():
+                existing_user = await db.users.find_one({
+                    "phone": profile_data.phone.strip(),
+                    "_id": {"$ne": ObjectId(user_id)}
+                })
+                if existing_user:
+                    raise HTTPException(status_code=400, detail="Phone number already in use")
+            update_data["phone"] = profile_data.phone.strip()
+        if profile_data.address is not None:
+            update_data["address"] = profile_data.address.strip()
+        if profile_data.profile_image_url is not None:
+            update_data["profile_image_url"] = profile_data.profile_image_url
+        
+        if not update_data:
+            raise HTTPException(status_code=400, detail="No fields to update")
+        
+        update_data["updated_at"] = datetime.now(timezone.utc)
+        
+        # Update user in database
+        result = await db.users.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": update_data}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Return updated user data
+        updated_user = await db.users.find_one({"_id": ObjectId(user_id)})
+        
+        return {
+            "message": "Profile updated successfully",
+            "user": {
+                "id": str(updated_user["_id"]),
+                "username": updated_user["username"],
+                "email": updated_user["email"],
+                "full_name": updated_user.get("full_name", ""),
+                "address": updated_user.get("address", ""),
+                "phone": updated_user.get("phone", ""),
+                "profile_image_url": updated_user.get("profile_image_url"),
+                "is_admin": updated_user.get("is_admin", False),
+                "email_verified": updated_user.get("email_verified", False),
+                "two_factor_enabled": updated_user.get("two_factor_enabled", False)
+            }
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Profile update error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to update profile")
+
+# ===== UTILITY ENDPOINTS =====
+
 @router.get("/csrf-token")
 async def get_csrf_token(request: Request):
     """Get CSRF token for forms"""
@@ -323,7 +436,7 @@ async def get_csrf_token(request: Request):
     csrf_token = csrf_protection.generate_token(session_id)
     return {"csrf_token": csrf_token}
 
-# Debug routes (Missing from structured API)
+# Debug routes
 @router.get("/debug-user/{email}")
 async def debug_user(email: str):
     """Debug route to check user status"""

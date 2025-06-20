@@ -4,8 +4,8 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from datetime import datetime
 import os
 
-# Import only the new structured API and admin routes
-from api.main import router as api_router
+# Import structured API routes
+from api.routes import auth, products, cart, orders, contact, profile, debug
 from backend.api.routes.admin_routes import router as admin_router
 
 # Configuration
@@ -21,9 +21,15 @@ app = FastAPI(
     redoc_url=None,
 )
 
-# Include routers
-app.include_router(api_router)  # New structured API
-app.include_router(admin_router)  # Admin routes
+# Include all API routes with proper prefixes
+app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
+app.include_router(products.router, prefix="/api/products", tags=["products"]) 
+app.include_router(cart.router, prefix="/api/cart", tags=["cart"])
+app.include_router(orders.router, prefix="/api/orders", tags=["orders"])
+app.include_router(contact.router, prefix="/api/contact", tags=["contact"])
+app.include_router(profile.router, prefix="/api/profile", tags=["profile"])
+app.include_router(debug.router, prefix="/api/debug", tags=["debug"])
+app.include_router(admin_router)  # Admin routes (already has /api/admin prefix)
 
 # Security middleware
 if ALLOWED_HOSTS:
