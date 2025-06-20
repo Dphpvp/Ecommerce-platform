@@ -8,15 +8,16 @@ const TwoFactorVerification = ({ tempToken, onSuccess, onCancel }) => {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [emailSent, setEmailSent] = useState(false);
-  const { login } = useAuth();
+  const { login, makeAuthenticatedRequest } = useAuth(); // ✅ Use session auth
   const { showToast } = useToastContext();
 
   const sendEmailCode = async () => {
     setLoading(true);
     try {
+      // ✅ Use makeAuthenticatedRequest with credentials
       const response = await fetch(`${API_BASE}/auth/send-2fa-email`, {
         method: 'POST',
-        credentials: 'include',
+        credentials: 'include', // ✅ Use session cookies
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ temp_token: tempToken })
       });
@@ -40,9 +41,10 @@ const TwoFactorVerification = ({ tempToken, onSuccess, onCancel }) => {
     setLoading(true);
 
     try {
+      // ✅ Use session-based request
       const response = await fetch(`${API_BASE}/auth/verify-2fa`, {
         method: 'POST',
-        credentials: 'include',
+        credentials: 'include', // ✅ Use session cookies
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ temp_token: tempToken, code })
       });
@@ -55,7 +57,7 @@ const TwoFactorVerification = ({ tempToken, onSuccess, onCancel }) => {
           localStorage.setItem('auth_token', data.token);
         }
         
-        login(data.token, data.user);
+        login(data.user);
         
         if (data.backup_code_used) {
           showToast('Backup code used. Consider regenerating backup codes.', 'info');

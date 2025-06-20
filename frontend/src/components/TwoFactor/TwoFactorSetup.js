@@ -5,14 +5,14 @@ import { useToastContext } from '../toast';
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
 const TwoFactorSetup = ({ onClose, onComplete }) => {
-  const [step, setStep] = useState(1); // 1: choose method, 2: setup, 3: verify, 4: complete
+  const [step, setStep] = useState(1);
   const [method, setMethod] = useState('');
   const [qrCode, setQrCode] = useState('');
   const [secret, setSecret] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
   const [backupCodes, setBackupCodes] = useState([]);
   const [loading, setLoading] = useState(false);
-  const { token } = useAuth();
+  const { makeAuthenticatedRequest } = useAuth(); // ✅ Use session auth
   const { showToast } = useToastContext();
 
   const chooseMethod = async (selectedMethod) => {
@@ -20,31 +20,21 @@ const TwoFactorSetup = ({ onClose, onComplete }) => {
     setMethod(selectedMethod);
     
     try {
-      const response = await fetch(`${API_BASE}/auth/setup-2fa`, {
+      // ✅ Use makeAuthenticatedRequest instead of fetch
+      const data = await makeAuthenticatedRequest(`${API_BASE}/auth/setup-2fa`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
         body: JSON.stringify({ method: selectedMethod })
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        
-        if (selectedMethod === 'app') {
-          setQrCode(data.qr_code);
-          setSecret(data.secret);
-        } else {
-          showToast('Verification code sent to your email', 'success');
-        }
-        setStep(3); // Skip to verification
+      
+      if (selectedMethod === 'app') {
+        setQrCode(data.qr_code);
+        setSecret(data.secret);
       } else {
-        const data = await response.json();
-        showToast(data.detail || 'Failed to setup 2FA', 'error');
+        showToast('Verification code sent to your email', 'success');
       }
+      setStep(3);
     } catch (error) {
-      showToast('Failed to setup 2FA', 'error');
+      showToast(error.message || 'Failed to setup 2FA', 'error');
     } finally {
       setLoading(false);
     }
@@ -53,26 +43,17 @@ const TwoFactorSetup = ({ onClose, onComplete }) => {
   const verifySetup = async () => {
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE}/auth/verify-2fa-setup`, {
+      // ✅ Use makeAuthenticatedRequest
+      const data = await makeAuthenticatedRequest(`${API_BASE}/auth/verify-2fa-setup`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
         body: JSON.stringify({ code: verificationCode })
       });
 
-      if (response.ok) {
-        const data = await response.json();
-        setBackupCodes(data.backup_codes);
-        setStep(4);
-        showToast('2FA enabled successfully!', 'success');
-      } else {
-        const data = await response.json();
-        showToast(data.detail || 'Invalid code', 'error');
-      }
+      setBackupCodes(data.backup_codes);
+      setStep(4);
+      showToast('2FA enabled successfully!', 'success');
     } catch (error) {
-      showToast('Verification failed', 'error');
+      showToast(error.message || 'Invalid code', 'error');
     } finally {
       setLoading(false);
     }
@@ -92,6 +73,7 @@ const TwoFactorSetup = ({ onClose, onComplete }) => {
     }
   };
 
+  // Rest of component remains the same...
   return (
     <div className="product-form-overlay">
       <div className="auth-form" style={{ maxWidth: '500px' }}>
