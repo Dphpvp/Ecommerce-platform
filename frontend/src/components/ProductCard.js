@@ -9,16 +9,20 @@ const ProductCard = ({ product }) => {
   const { showToast } = useToastContext();
 
   const handleAddToCart = async () => {
-    if (!user) {
-      showToast('Please login to add items to cart', 'error');
-      return;
-    }
-    
-    const success = await addToCart(product._id);
+  if (!user) {
+    showToast('Please login to add items to cart', 'error');
+    return;
+  }
+  
+  try {
+    const success = await addToCart(product._id, 1);
     if (success) {
       showToast('Added to cart!', 'success');
     } else {
       showToast('Failed to add to cart', 'error');
+    }
+  } catch (error) {
+    showToast('Failed to add to cart', 'error');
     }
   };
 

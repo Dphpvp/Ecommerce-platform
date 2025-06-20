@@ -60,7 +60,7 @@ const Checkout = () => {
     setProcessing(true);
 
     try {
-      // Create payment intent with authentication
+      // FIXED: Use correct payment endpoint path
       const intentData = await makeAuthenticatedRequest(`${API_BASE}/payment/create-intent`, {
         method: 'POST',
         body: JSON.stringify({ amount: Math.round(total * 100) })

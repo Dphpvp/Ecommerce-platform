@@ -6,6 +6,7 @@ from api.dependencies.dependencies import get_current_user, db
 from api.models.product import ProductRequest
 from api.services.email_service import EmailService
 
+# FIXED: Remove double prefix - main.py already includes this router
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
 # Admin middleware

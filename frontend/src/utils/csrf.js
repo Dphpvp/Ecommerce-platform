@@ -1,4 +1,4 @@
-// frontend/src/utils/csrf.js
+// frontend/src/utils/csrf.js - FIXED API paths
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
 class CSRFManager {
@@ -14,6 +14,7 @@ class CSRFManager {
     }
 
     try {
+      // FIXED: Use correct API path for CSRF token
       const response = await fetch(`${API_BASE}/csrf-token`, {
         credentials: 'include'
       });

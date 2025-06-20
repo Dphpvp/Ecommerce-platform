@@ -29,7 +29,45 @@ app.include_router(orders.router, prefix="/api/orders", tags=["orders"])
 app.include_router(contact.router, prefix="/api/contact", tags=["contact"])
 app.include_router(profile.router, prefix="/api/profile", tags=["profile"])
 app.include_router(debug.router, prefix="/api/debug", tags=["debug"])
-app.include_router(admin_router)  # Admin routes (already has /api/admin prefix)
+# FIXED: Admin routes without double prefix since they already include /api/admin
+app.include_router(admin_router, tags=["admin"])
+
+# FIXED: Add missing CSRF endpoint at root level for frontend compatibility
+@app.get("/api/csrf-token")
+async def get_csrf_token_root(request: Request):
+    """CSRF token endpoint for frontend compatibility"""
+    from api.middleware.csrf import csrf_protection
+    from jose import jwt
+    from api.core.config import get_settings
+    
+    settings = get_settings()
+    session_id = None
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        try:
+            token = auth_header.split(" ")[1]
+            payload = jwt.decode(token, settings.JWT_SECRET, algorithms=["HS256"])
+            session_id = payload.get("user_id")
+        except:
+            pass
+    
+    csrf_token = csrf_protection.generate_token(session_id)
+    return {"csrf_token": csrf_token}
+
+# FIXED: Add payment endpoints at root level for frontend compatibility
+@app.post("/api/payment/create-intent")
+async def create_payment_intent_root(payment_request: dict):
+    """Payment intent endpoint for frontend compatibility"""
+    from api.services.payment_service import PaymentService
+    from api.models.order import PaymentIntentRequest
+    
+    try:
+        payment_service = PaymentService()
+        # Convert dict to PaymentIntentRequest model
+        request_model = PaymentIntentRequest(**payment_request)
+        return await payment_service.create_payment_intent(request_model)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 # Security middleware
 if ALLOWED_HOSTS:
