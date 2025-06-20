@@ -302,15 +302,12 @@ async def change_password(
         logger.error(f"Change password error: {e}")
         raise HTTPException(status_code=500, detail="Failed to change password")
 
-# ===== PROFILE/AVATAR ENDPOINTS FOR BACKWARD COMPATIBILITY =====
-
+# Profile endpoints for backward compatibility
 @router.get("/upload-avatar")
 async def upload_avatar(request: Request):
-    """Handle avatar upload - Profile endpoint compatibility"""
     try:
         user = await get_current_user_from_session(request)
         
-        # Generate sample avatar URLs
         sample_avatars = [
             f"https://api.dicebear.com/7.x/avataaars/svg?seed={user['username']}1",
             f"https://api.dicebear.com/7.x/avataaars/svg?seed={user['username']}2", 
@@ -340,7 +337,6 @@ async def update_profile(
     request: Request,
     csrf_valid: bool = Depends(require_csrf_token)  
 ):
-    """Update user profile - Profile endpoint compatibility"""
     try:
         current_user = await get_current_user_from_session(request)
         user_id = str(current_user["_id"])
@@ -413,33 +409,9 @@ async def update_profile(
         logger.error(f"Profile update error: {e}")
         raise HTTPException(status_code=500, detail="Failed to update profile")
 
-# ===== UTILITY ENDPOINTS =====
-
-@router.get("/csrf-token")
-async def get_csrf_token(request: Request):
-    """Get CSRF token for forms"""
-    from api.middleware.csrf import csrf_protection
-    from jose import jwt
-    from api.core.config import get_settings
-    
-    settings = get_settings()
-    session_id = None
-    auth_header = request.headers.get("Authorization")
-    if auth_header and auth_header.startswith("Bearer "):
-        try:
-            token = auth_header.split(" ")[1]
-            payload = jwt.decode(token, settings.JWT_SECRET, algorithms=["HS256"])
-            session_id = payload.get("user_id")
-        except:
-            pass
-    
-    csrf_token = csrf_protection.generate_token(session_id)
-    return {"csrf_token": csrf_token}
-
 # Debug routes
 @router.get("/debug-user/{email}")
 async def debug_user(email: str):
-    """Debug route to check user status"""
     db = get_database()
     user = await db.users.find_one({"email": email})
     if not user:
@@ -455,7 +427,6 @@ async def debug_user(email: str):
     
 @router.get("/debug-token/{token}")
 async def debug_token(token: str):
-    """Debug route to check token"""
     try:
         db = get_database()
         user = await db.users.find_one({"verification_token": token})

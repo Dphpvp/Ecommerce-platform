@@ -34,7 +34,7 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 async def get_current_user_from_session(request: Request) -> dict:
     """Get current user from session cookie or Authorization header"""
     try:
-        # Try Authorization header first (for better compatibility)
+        # Try Authorization header first
         auth_header = request.headers.get("Authorization")
         if auth_header and auth_header.startswith("Bearer "):
             token = auth_header.split(" ")[1]
@@ -46,9 +46,9 @@ async def get_current_user_from_session(request: Request) -> dict:
                     if user:
                         return user
             except jwt.ExpiredSignatureError:
-                pass  # Try cookie next
+                pass
             except jwt.JWTError:
-                pass  # Try cookie next
+                pass
         
         # Try session cookie
         session_token = request.cookies.get("session_token")
@@ -73,7 +73,7 @@ async def get_current_user_from_session(request: Request) -> dict:
         print(f"Authentication error: {e}")
         raise HTTPException(status_code=401, detail="Authentication failed")
 
-async def get_admin_user(current_user: dict = Depends(get_current_user)):
+async def get_admin_user(current_user: dict = Depends(get_current_user_from_session)):
     """Check if user is admin"""
     if not current_user.get("is_admin", False):
         raise HTTPException(status_code=403, detail="Admin access required")
@@ -81,7 +81,7 @@ async def get_admin_user(current_user: dict = Depends(get_current_user)):
 
 # Additional compatibility functions
 def require_csrf_token(request: Request) -> bool:
-    """CSRF validation - basic implementation"""
+    """CSRF validation"""
     from api.middleware.csrf import csrf_protection
     
     if request.method in {"POST", "PUT", "DELETE", "PATCH"}:
