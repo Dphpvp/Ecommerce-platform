@@ -6,7 +6,7 @@ from bson import ObjectId
 from models.admin import OrderStatus, OrderStatusUpdate, AdminDashboardResponse
 from auth.dependencies import get_current_user, get_admin_user
 from database.connection import db
-from utils.email import send_email
+from backend.api.utils.email import send_email
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 

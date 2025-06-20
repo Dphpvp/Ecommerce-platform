@@ -6,7 +6,7 @@ import os
 
 # Import only the new structured API and admin routes
 from api.main import router as api_router
-from routes.admin_routes import router as admin_router
+from backend.api.routes.admin_routes import router as admin_router
 
 # Configuration
 FRONTEND_URL = os.getenv("FRONTEND_URL", "https://vergishop.vercel.app")
