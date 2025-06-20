@@ -184,7 +184,23 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // FIXED: Improved authenticated request with session recovery
+  // FIXED: Get CSRF token helper
+  const getCSRFToken = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_BASE}/csrf-token`, {
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const data = await response.json();
+        return data.csrf_token;
+      }
+    } catch (error) {
+      console.error('Failed to get CSRF token:', error);
+    }
+    return null;
+  }, []);
+
+  // FIXED: Improved authenticated request with CSRF token support
   const makeAuthenticatedRequest = useCallback(async (url, options = {}) => {
     const defaultOptions = {
       credentials: 'include',
@@ -194,6 +210,17 @@ export const AuthProvider = ({ children }) => {
       },
       ...options,
     };
+
+    // FIXED: Add CSRF token for state-changing operations
+    const method = (options.method || 'GET').toUpperCase();
+    if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
+      const csrfToken = await getCSRFToken();
+      if (csrfToken) {
+        defaultOptions.headers['X-CSRF-Token'] = csrfToken;
+      } else {
+        console.warn('⚠️ Could not get CSRF token for request');
+      }
+    }
 
     try {
       console.log(`🌐 Making request to ${url}`);
@@ -213,7 +240,14 @@ export const AuthProvider = ({ children }) => {
           const userData = await sessionCheck.json();
           setUser(userData);
           
-          // Retry original request
+          // Retry original request with fresh CSRF token
+          if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
+            const newCsrfToken = await getCSRFToken();
+            if (newCsrfToken) {
+              defaultOptions.headers['X-CSRF-Token'] = newCsrfToken;
+            }
+          }
+          
           const retryResponse = await fetch(url, defaultOptions);
           
           if (!retryResponse.ok) {
@@ -239,7 +273,7 @@ export const AuthProvider = ({ children }) => {
       console.error('🚨 Authenticated request failed:', error);
       throw error;
     }
-  }, []);
+  }, [getCSRFToken]);
 
   const checkAuthStatus = useCallback(async () => {
     try {
