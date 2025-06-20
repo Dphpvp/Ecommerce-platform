@@ -4,7 +4,7 @@ from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from datetime import datetime
 import os
 
-# Import the new API router
+# Import only the new structured API and admin routes
 from api.main import router as api_router
 from routes.admin_routes import router as admin_router
 
@@ -22,8 +22,8 @@ app = FastAPI(
 )
 
 # Include routers
-app.include_router(api_router)
-app.include_router(admin_router)
+app.include_router(api_router)  # New structured API
+app.include_router(admin_router)  # Admin routes
 
 # Security middleware
 if ALLOWED_HOSTS:

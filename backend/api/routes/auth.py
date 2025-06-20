@@ -16,7 +16,10 @@ from api.models.auth import (
     TwoFactorVerificationRequest,
     PasswordResetRequest,
     PasswordChangeRequest,
-    EmailVerificationRequest
+    EmailVerificationRequest,
+    ResendVerification,
+    TwoFactorSetup,
+    TwoFactorDisable
 )
 from api.models.responses import (
     AuthResponse, 
@@ -80,6 +83,12 @@ async def logout(response: Response) -> MessageResponse:
     logger.info("User logged out successfully")
     return MessageResponse(message="Logged out successfully")
 
+@router.get("/logout")
+async def logout_get(response: Response) -> MessageResponse:
+    auth_service.clear_session(response)
+    logger.info("User logged out successfully")
+    return MessageResponse(message="Logged out successfully")
+
 @router.post("/verify-email", response_model=MessageResponse)
 async def verify_email(request: EmailVerificationRequest) -> MessageResponse:
     try:
@@ -89,6 +98,15 @@ async def verify_email(request: EmailVerificationRequest) -> MessageResponse:
     except ValidationError as e:
         logger.warning(f"Email verification failed: {e.detail}")
         raise HTTPException(status_code=400, detail=e.detail)
+
+@router.post("/resend-verification")
+async def resend_verification(email_data: ResendVerification):
+    try:
+        result = await auth_service.resend_verification_email(email_data.email)
+        return result
+    except Exception as e:
+        logger.error(f"Error in resend_verification: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed to send verification email: {str(e)}")
 
 @router.post("/google", response_model=AuthResponse)
 async def google_login(
@@ -127,6 +145,22 @@ async def setup_2fa(
         logger.warning(f"2FA setup validation failed: {e.detail}")
         raise HTTPException(status_code=400, detail=e.detail)
 
+@router.post("/verify-2fa-setup")
+async def verify_2fa_setup(
+    verification_data: TwoFactorSetup, 
+    request: Request,
+    csrf_valid: bool = Depends(require_csrf_token)
+):
+    try:
+        current_user = await get_current_user_from_session(request)
+        result = await two_factor_service.verify_2fa_setup(verification_data.code, current_user)
+        return result
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=e.detail)
+    except Exception as e:
+        logger.error(f"2FA setup verification error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to verify 2FA setup")
+
 @router.post("/verify-2fa", response_model=AuthResponse)
 async def verify_2fa(
     request: TwoFactorVerificationRequest,
@@ -139,6 +173,78 @@ async def verify_2fa(
     except AuthenticationError as e:
         logger.warning(f"2FA verification failed: {e.detail}")
         raise HTTPException(status_code=401, detail=e.detail)
+
+@router.post("/send-2fa-email")
+async def send_2fa_email(request_data: dict):
+    try:
+        temp_token = request_data.get("temp_token")
+        if not temp_token:
+            raise HTTPException(status_code=400, detail="Temporary token is required")
+        
+        result = await two_factor_service.send_2fa_email_code(temp_token)
+        return result
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=e.detail)
+    except Exception as e:
+        logger.error(f"Send 2FA email error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/disable-2fa")
+async def disable_2fa(
+    verification_data: TwoFactorDisable, 
+    request: Request,
+    csrf_valid: bool = Depends(require_csrf_token)
+):
+    try:
+        current_user = await get_current_user_from_session(request)
+        result = await two_factor_service.disable_2fa(
+            verification_data.password, 
+            verification_data.code, 
+            current_user
+        )
+        return result
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=e.detail)
+    except Exception as e:
+        logger.error(f"Disable 2FA error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to disable 2FA")
+
+@router.post("/send-disable-2fa-code")
+async def send_disable_2fa_code(request_data: dict, request: Request):
+    try:
+        current_user = await get_current_user_from_session(request)
+        password = request_data.get("password")
+        
+        if not password:
+            raise HTTPException(status_code=400, detail="Password is required")
+        
+        result = await two_factor_service.send_disable_2fa_code(password, current_user)
+        return result
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=e.detail)
+    except Exception as e:
+        logger.error(f"Send disable 2FA code error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to process request")
+
+@router.get("/2fa-status")
+async def get_2fa_status(request: Request):
+    try:
+        current_user = await get_current_user_from_session(request)
+        return await two_factor_service.get_2fa_status(current_user)
+    except Exception as e:
+        logger.error(f"2FA status error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to get 2FA status")
+
+@router.post("/generate-backup-codes")
+async def generate_backup_codes(request: Request):
+    try:
+        current_user = await get_current_user_from_session(request)
+        return await two_factor_service.generate_backup_codes(current_user)
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=e.detail)
+    except Exception as e:
+        logger.error(f"Generate backup codes error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate backup codes")
     
 @router.get("/csrf-token")
 async def get_csrf_token(request: Request):
@@ -164,80 +270,30 @@ async def get_csrf_token(request: Request):
 @rate_limit(max_attempts=3, window_minutes=60, endpoint_name="password_reset")
 async def request_password_reset(request_data: PasswordResetRequest, http_request: Request):
     try:
-        if not verify_recaptcha(request_data.recaptcha_response):
-            raise HTTPException(status_code=400, detail="reCAPTCHA verification failed")
-        
-        db = get_database()
-        user = await db.users.find_one({"email": request_data.email})
-        if not user:
-            return MessageResponse(message="If the email exists, a reset link has been sent")
-        
-        reset_token = secrets.token_urlsafe(32)
-        expires_at = datetime.now(timezone.utc) + timedelta(hours=1)
-        
-        await db.password_resets.insert_one({
-            "user_id": user["_id"],
-            "token": reset_token,
-            "expires_at": expires_at,
-            "used": False,
-            "created_at": datetime.now(timezone.utc)
-        })
-        
-        from api.core.config import get_settings
-        settings = get_settings()
-        reset_url = f"{settings.FRONTEND_URL}/reset-password?token={reset_token}"
-        
-        await email_service.send_password_reset_email(
-            user["email"], 
-            user.get("full_name", ""), 
-            reset_url
-        )
-        
-        return MessageResponse(message="If the email exists, a reset link has been sent")
-        
-    except HTTPException:
-        raise
+        result = await auth_service.request_password_reset(request_data.email, request_data.recaptcha_response)
+        return result
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=e.detail)
     except Exception as e:
-        print(f"Password reset request error: {e}")
+        logger.error(f"Password reset request error: {e}")
         raise HTTPException(status_code=500, detail="Failed to process password reset request")
 
 @router.post("/reset-password")
 async def reset_password(request: dict):
-    db = get_database()
-    token = request.get("token")
-    new_password = request.get("new_password")
-    
-    if not token or not new_password:
-        raise HTTPException(status_code=400, detail="Token and new password required")
-    
-    reset_record = await db.password_resets.find_one({
-        "token": token,
-        "used": False,
-        "expires_at": {"$gt": datetime.now(timezone.utc)}
-    })
-    
-    if not reset_record:
-        raise HTTPException(status_code=400, detail="Invalid or expired reset token")
-    
-    if len(new_password) < 6:
-        raise HTTPException(status_code=400, detail="Password must be at least 6 characters long")
-    
-    new_hashed_password = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-    
-    result = await db.users.update_one(
-        {"_id": reset_record["user_id"]},
-        {"$set": {"password": new_hashed_password, "updated_at": datetime.now(timezone.utc)}}
-    )
-    
-    if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    await db.password_resets.update_one(
-        {"_id": reset_record["_id"]},
-        {"$set": {"used": True, "used_at": datetime.now(timezone.utc)}}
-    )
-    
-    return MessageResponse(message="Password reset successfully")
+    try:
+        token = request.get("token")
+        new_password = request.get("new_password")
+        
+        if not token or not new_password:
+            raise HTTPException(status_code=400, detail="Token and new password required")
+        
+        result = await auth_service.reset_password(token, new_password)
+        return result
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=e.detail)
+    except Exception as e:
+        logger.error(f"Password reset error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to reset password")
 
 @router.put("/change-password")
 async def change_password(
@@ -247,44 +303,56 @@ async def change_password(
 ):
     try:
         current_user = await get_current_user_from_session(request)
-        db = get_database()
+        user_id = str(current_user["_id"])
+        
+        result = await auth_service.change_password(
+            user_id,
+            password_data.old_password,
+            password_data.new_password, 
+            password_data.confirm_password,
+            password_data.recaptcha_response
+        )
+        return result
+    except ValidationError as e:
+        raise HTTPException(status_code=400, detail=e.detail)
     except HTTPException as e:
         raise e
+    except Exception as e:
+        logger.error(f"Change password error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to change password")
+
+# Debug routes
+@router.get("/debug-user/{email}")
+async def debug_user(email: str):
+    """Debug route to check user status"""
+    db = get_database()
+    user = await db.users.find_one({"email": email})
+    if not user:
+        return {"error": "User not found"}
     
-    if not verify_recaptcha(password_data.recaptcha_response):
-        raise HTTPException(status_code=400, detail="reCAPTCHA verification failed")
+    return {
+        "email": user["email"],
+        "email_verified": user.get("email_verified", False),
+        "is_admin": user.get("is_admin", False),
+        "has_verification_token": bool(user.get("verification_token")),
+        "created_at": user.get("created_at")
+    }
     
-    user_id = str(current_user["_id"])
-    
-    if password_data.new_password != password_data.confirm_password:
-        raise HTTPException(status_code=400, detail="New passwords do not match")
-    
-    if len(password_data.new_password) < 10:
-        raise HTTPException(status_code=400, detail="New password must be at least 10 characters long")
-    
-    if not any(c.isupper() for c in password_data.new_password):
-        raise HTTPException(status_code=400, detail="New password must contain at least one uppercase letter")
-    
-    if not any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password_data.new_password):
-        raise HTTPException(status_code=400, detail="New password must contain at least one special character")
-    
-    if not current_user.get("password"):
-        raise HTTPException(status_code=400, detail="Cannot change password for Google authenticated accounts")
-    
-    if not bcrypt.checkpw(password_data.old_password.encode('utf-8'), current_user["password"].encode('utf-8')):
-        raise HTTPException(status_code=400, detail="Current password is incorrect")
-    
-    if bcrypt.checkpw(password_data.new_password.encode('utf-8'), current_user["password"].encode('utf-8')):
-        raise HTTPException(status_code=400, detail="New password must be different from current password")
-    
-    new_hashed_password = bcrypt.hashpw(password_data.new_password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
-    
-    result = await db.users.update_one(
-        {"_id": ObjectId(user_id)},
-        {"$set": {"password": new_hashed_password, "updated_at": datetime.now(timezone.utc)}}
-    )
-    
-    if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    return MessageResponse(message="Password changed successfully")
+@router.get("/debug-token/{token}")
+async def debug_token(token: str):
+    """Debug route to check token"""
+    try:
+        db = get_database()
+        user = await db.users.find_one({"verification_token": token})
+        if user:
+            return {
+                "found": True,
+                "email": user["email"],
+                "email_verified": user.get("email_verified", False),
+                "token_created": user.get("verification_token_created"),
+                "expired": (datetime.now(timezone.utc) - user.get("verification_token_created", datetime.now(timezone.utc))).days > 1 if user.get("verification_token_created") else False
+            }
+        else:
+            return {"found": False, "token": token}
+    except Exception as e:
+        return {"error": str(e)}
