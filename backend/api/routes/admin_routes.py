@@ -2,20 +2,24 @@ from fastapi import APIRouter, HTTPException, Depends, Request
 from typing import List, Optional
 from bson import ObjectId
 from datetime import datetime, timezone
-from api.dependencies.dependencies import get_current_user, db
+# FIXED: Use correct dependency imports
+from api.dependencies.auth import get_current_user_from_session
+from api.core.database import get_database
 from api.models.product import ProductRequest
 from api.services.email_service import EmailService
 
 # FIXED: Remove double prefix - main.py already includes this router
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
-# Admin middleware
-async def get_admin_user(current_user: dict = Depends(get_current_user)):
+# FIXED: Correct admin middleware using proper auth dependency
+async def get_admin_user(current_user: dict = Depends(get_current_user_from_session)):
     if not current_user.get("is_admin"):
         raise HTTPException(status_code=403, detail="Admin access required")
     return current_user
 
 email_service = EmailService()
+# FIXED: Get database instance properly
+db = get_database()
 
 # Dashboard endpoint
 @router.get("/dashboard")
