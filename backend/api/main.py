@@ -3,6 +3,8 @@ from api.routes import auth, products, cart, orders, contact, profile, debug
 from api.routes import uploads
 from fastapi.staticfiles import StaticFiles
 
+from backend import api
+
 # Main API router
 router = APIRouter(prefix="/api")
 
@@ -16,6 +18,6 @@ router.include_router(profile.router, prefix="/profile", tags=["profile"])
 router.include_router(debug.router, prefix="/debug", tags=["debug"])
 router.include_router(uploads.router, prefix="/uploads", tags=["uploads"])
 
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+api.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # Legacy routes for backward compatibility - these are now handled by individual route modules
