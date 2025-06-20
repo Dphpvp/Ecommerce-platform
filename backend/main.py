@@ -5,8 +5,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from datetime import datetime
 import stripe
 import os
-
-# FIXED: Import structured API routes correctly
+from fastapi.staticfiles import StaticFiles
 from api.routes import auth, products, cart, orders, contact, profile, debug
 from api.routes.admin_routes import router as admin_router
 from api.main import router as api_router
@@ -38,6 +37,7 @@ app.include_router(profile.router, prefix="/api/profile", tags=["profile"])
 app.include_router(debug.router, prefix="/api/debug", tags=["debug"])
 # Admin routes already have /api/admin prefix in their router
 app.include_router(admin_router, tags=["admin"])
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 app.include_router(api_router, tags=["api"])
 
 
