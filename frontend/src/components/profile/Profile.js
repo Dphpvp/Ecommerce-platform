@@ -18,6 +18,7 @@ const Profile = () => {
   const [sendingVerification, setSendingVerification] = useState(false);
   const [availableAvatars, setAvailableAvatars] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [step, setStep] = useState(1);
   const [sendingDisableCode, setSendingDisableCode] = useState(false);
@@ -25,6 +26,7 @@ const Profile = () => {
   const [recaptchaWidgetId, setRecaptchaWidgetId] = useState(null);
   
   const recaptchaRef = useRef(null);
+  const fileInputRef = useRef(null);
   
   const [formData, setFormData] = useState({
     full_name: '',
@@ -59,22 +61,18 @@ const Profile = () => {
     }
   }, [user]);
 
-  // FIXED: Proper reCAPTCHA loading and initialization
   useEffect(() => {
     const loadRecaptcha = () => {
-      // Check if reCAPTCHA is already loaded
       if (window.grecaptcha) {
         setRecaptchaLoaded(true);
         return;
       }
 
-      // Load reCAPTCHA script
       const script = document.createElement('script');
       script.src = 'https://www.google.com/recaptcha/api.js?onload=onRecaptchaLoad&render=explicit';
       script.async = true;
       script.defer = true;
 
-      // Define the callback function globally
       window.onRecaptchaLoad = () => {
         setRecaptchaLoaded(true);
       };
@@ -82,7 +80,6 @@ const Profile = () => {
       document.head.appendChild(script);
 
       return () => {
-        // Cleanup
         if (document.head.contains(script)) {
           document.head.removeChild(script);
         }
@@ -93,7 +90,6 @@ const Profile = () => {
     loadRecaptcha();
   }, []);
 
-  // FIXED: Render reCAPTCHA widget when password change form is shown
   useEffect(() => {
     if (recaptchaLoaded && isChangingPassword && recaptchaRef.current && !recaptchaWidgetId) {
       try {
@@ -115,7 +111,6 @@ const Profile = () => {
     }
   }, [recaptchaLoaded, isChangingPassword, showToast]);
 
-  // FIXED: Cleanup reCAPTCHA widget when form is closed
   useEffect(() => {
     if (!isChangingPassword && recaptchaWidgetId !== null) {
       try {
@@ -205,7 +200,7 @@ const Profile = () => {
     setPasswordErrors(errors);
     return Object.keys(errors).length === 0;
   };
-  // FIXED: Change password function with proper reCAPTCHA handling
+
   const handleChangePassword = async (e) => {
     e.preventDefault();
     
@@ -213,7 +208,6 @@ const Profile = () => {
       return;
     }
 
-    // FIXED: Get reCAPTCHA response properly
     let recaptchaResponse = '';
     try {
       if (recaptchaWidgetId !== null) {
@@ -248,7 +242,6 @@ const Profile = () => {
       });
       setPasswordErrors({});
       
-      // Reset reCAPTCHA
       if (recaptchaWidgetId !== null) {
         window.grecaptcha.reset(recaptchaWidgetId);
       }
@@ -256,7 +249,6 @@ const Profile = () => {
       console.error('Password change error:', error);
       showToast(error.message || 'Failed to change password', 'error');
       
-      // Reset reCAPTCHA on error
       if (recaptchaWidgetId !== null) {
         window.grecaptcha.reset(recaptchaWidgetId);
       }
@@ -323,7 +315,6 @@ const Profile = () => {
     }
   };
 
-  // FIXED: Cancel password change with proper cleanup
   const handleCancelPasswordChange = () => {
     setIsChangingPassword(false);
     setPasswordData({
@@ -333,7 +324,6 @@ const Profile = () => {
     });
     setPasswordErrors({});
     
-    // Reset reCAPTCHA
     if (recaptchaWidgetId !== null) {
       try {
         window.grecaptcha.reset(recaptchaWidgetId);
@@ -343,18 +333,61 @@ const Profile = () => {
     }
   };
 
+  // NEW: Avatar upload functionality
   const handleChangeAvatar = async () => {
     try {
-      const data = await makeAuthenticatedRequest(`${API_BASE}/auth/upload-avatar`, {
-        method: 'GET'
-      });
-
+      const data = await makeAuthenticatedRequest(`${API_BASE}/uploads/avatar/samples`);
       setAvailableAvatars(data.avatars);
       setIsChangingAvatar(true);
     } catch (error) {
       console.error('Avatar loading error:', error);
       showToast('Failed to load avatar options', 'error');
     }
+  };
+
+  const handleFileUpload = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      showToast('Please select an image file', 'error');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      showToast('File too large. Max size is 5MB', 'error');
+      return;
+    }
+
+    setUploadingAvatar(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await makeAuthenticatedRequest(`${API_BASE}/uploads/avatar`, {
+        method: 'POST',
+        body: formData,
+        headers: {} // Don't set Content-Type for FormData
+      });
+
+      const updatedUser = { ...user, profile_image_url: response.avatar_url };
+      login(updatedUser);
+      
+      showToast('Avatar uploaded successfully!', 'success');
+      setIsChangingAvatar(false);
+    } catch (error) {
+      showToast(error.message || 'Upload failed', 'error');
+    } finally {
+      setUploadingAvatar(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const triggerFileUpload = () => {
+    fileInputRef.current?.click();
   };
 
   const handleSelectAvatar = async (avatarUrl) => {
@@ -387,25 +420,25 @@ const Profile = () => {
   const canChangePassword = user && !user.google_id;
 
   const handleSaveProfile = async (e) => {
-  e.preventDefault();
-  setLoading(true);
+    e.preventDefault();
+    setLoading(true);
 
-  try {
-    const data = await makeAuthenticatedRequest(`${API_BASE}/auth/update-profile`, {
-      method: 'PUT',
-      body: JSON.stringify(formData)
-    });
+    try {
+      const data = await makeAuthenticatedRequest(`${API_BASE}/auth/update-profile`, {
+        method: 'PUT',
+        body: JSON.stringify(formData)
+      });
 
-    login(data.user);
-    showToast('Profile updated successfully!', 'success');
-    setIsEditing(false);
-  } catch (error) {
-    console.error('Profile update error:', error);
-    showToast(error.message || 'Failed to update profile', 'error');
-  } finally {
-    setLoading(false);
-  }
-};
+      login(data.user);
+      showToast('Profile updated successfully!', 'success');
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Profile update error:', error);
+      showToast(error.message || 'Failed to update profile', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="profile">
@@ -434,10 +467,64 @@ const Profile = () => {
           </div>
         </div>
 
+        {/* UPDATED: Avatar modal with upload functionality */}
         {isChangingAvatar && (
           <div className="avatar-modal-overlay">
             <div className="avatar-modal">
               <h3>Choose Your Avatar</h3>
+              
+              {/* Upload Custom Avatar */}
+              <div className="upload-section" style={{ marginBottom: '2rem' }}>
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileUpload}
+                  accept="image/*"
+                  style={{ display: 'none' }}
+                />
+                <button
+                  onClick={triggerFileUpload}
+                  disabled={uploadingAvatar}
+                  className="btn btn-primary"
+                  style={{
+                    width: '100%',
+                    padding: '1rem',
+                    marginBottom: '1rem',
+                    backgroundColor: '#28a745',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem'
+                  }}
+                >
+                  {uploadingAvatar ? (
+                    <>⏳ Uploading...</>
+                  ) : (
+                    <>📁 Upload Custom Avatar</>
+                  )}
+                </button>
+                <p style={{ fontSize: '0.9rem', color: '#666', textAlign: 'center' }}>
+                  Max 5MB • JPG, PNG, GIF, WebP
+                </p>
+              </div>
+
+              {/* Divider */}
+              <div style={{ 
+                textAlign: 'center', 
+                margin: '1rem 0',
+                borderBottom: '1px solid #ddd',
+                paddingBottom: '1rem'
+              }}>
+                <span style={{ 
+                  backgroundColor: 'white', 
+                  padding: '0 1rem', 
+                  color: '#666' 
+                }}>
+                  or choose from samples
+                </span>
+              </div>
+              
+              {/* Sample Avatars */}
               <div className="avatar-grid">
                 {availableAvatars.map((avatar, index) => (
                   <img
@@ -450,10 +537,12 @@ const Profile = () => {
                   />
                 ))}
               </div>
+              
               <button 
                 onClick={() => setIsChangingAvatar(false)}
                 className="btn btn-outline"
-                disabled={loading}
+                disabled={loading || uploadingAvatar}
+                style={{ marginTop: '1rem' }}
               >
                 Cancel
               </button>
@@ -586,7 +675,6 @@ const Profile = () => {
             )}
           </div>
 
-          {/* FIXED: Password change section with proper reCAPTCHA */}
           {isChangingPassword && canChangePassword && (
             <div className="password-change-section">
               <h3>Change Password</h3>
@@ -644,7 +732,6 @@ const Profile = () => {
                   )}
                 </div>
 
-                {/* FIXED: reCAPTCHA container */}
                 <div className="form-group">
                   <label>Security Verification:</label>
                   <div 
