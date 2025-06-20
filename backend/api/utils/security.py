@@ -1,6 +1,6 @@
 import re
 import html
-from api.services.email_service import validate_email, EmailNotValidError
+from email_validator import validate_email, EmailNotValidError
 from fastapi import HTTPException
 
 class SecurityValidator:
