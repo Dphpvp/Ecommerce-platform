@@ -1,5 +1,19 @@
-@import url(var.css);
+@import url('./var.css');
 
+/* Modal Overlay */
+.product-form-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+  padding: 1rem;
+}
 
 .product-form-container {
   display: flex;
@@ -7,15 +21,61 @@
   align-items: flex-start;
   justify-content: center;
   flex-wrap: wrap;
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
 }
 
 .product-form {
   flex: 1 1 300px;
+  min-width: 300px;
+}
+
+.product-form h3 {
+  margin-bottom: 1.5rem;
+  color: #333;
+  text-align: center;
+}
+
+.product-form input,
+.product-form textarea,
+.product-form select {
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border: 2px solid var(--color-border);
+  border-radius: 5px;
+  font-size: 1rem;
+  box-sizing: border-box;
+}
+
+.product-form input:focus,
+.product-form textarea:focus,
+.product-form select:focus {
+  outline: none;
+  border-color: var(--color-blue);
+}
+
+.product-form label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.product-form textarea {
+  resize: vertical;
+  min-height: 100px;
 }
 
 .product-image-preview {
   flex: 1 1 300px;
   text-align: center;
+  min-width: 300px;
 }
 
 .product-image-preview img {
@@ -24,27 +84,102 @@
   border: 1px solid var(--color-border);
   padding: 8px;
   border-radius: 8px;
+  max-height: 400px;
+}
+
+.category-section {
+  margin-bottom: 1.5rem;
+}
+
+.category-section label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.category-section small {
+  color: #666;
+  font-size: 0.9rem;
+  display: block;
+  margin-top: 0.5rem;
+  font-style: italic;
 }
 
 .category-select {
-    width: 100%;
-    padding: 10px 40px 10px 12px; /* add right padding for the arrow */
-    font-size: 1rem;
-    border: 1px solid var(--color-border);
-    border-radius: 8px;
-    background-color: var(--color-white);
-    color: #333;
-    appearance: none; /* removes OS default styling */
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg fill='gray' viewBox='0 0 24 24' width='20' height='20'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 12px center;
-    background-size: 16px;
-    transition: border-color 0.3s ease;
+  width: 100%;
+  padding: 10px 40px 10px 12px;
+  font-size: 1rem;
+  border: 2px solid var(--color-border);
+  border-radius: 8px;
+  background-color: var(--color-white);
+  color: #333;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg fill='gray' viewBox='0 0 24 24' width='20' height='20'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+  transition: border-color 0.3s ease;
+  box-sizing: border-box;
+}
+
+.category-select:focus {
+  outline: none;
+  border-color: var(--color-blue);
+  box-shadow: var(--box-shadow-primary);
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+  justify-content: center;
+}
+
+.form-actions button {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  min-width: 120px;
+  transition: all 0.3s ease;
+}
+
+.btn-primary {
+  background: var(--color-blue);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--color-light-blue);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--color-blue);
+  border: 2px solid var(--color-blue);
+}
+
+.btn-outline:hover {
+  background: var(--color-blue);
+  color: white;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .product-form-container {
+    flex-direction: column;
+    padding: 1rem;
+    gap: 1rem;
   }
   
-  .category-select:focus {
-    outline: none;
-    border-color: var(--color-blue);
-    box-shadow: var(--box-shadow-primary);
+  .product-form,
+  .product-image-preview {
+    min-width: 100%;
   }
   
+  .form-actions {
+    flex-direction: column;
+  }
+}

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
 
-const API_BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api';
+const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
 const Home = () => {
   const [featuredProducts, setFeaturedProducts] = useState([]);
@@ -13,7 +13,7 @@ const Home = () => {
 
   const fetchFeaturedProducts = async () => {
     try {
-      const response = await fetch(`${API_BASE}/products?limit=50`);
+      const response = await fetch(`${API_BASE}/products?limit=20`);
       const data = await response.json();
       setFeaturedProducts(data);
     } catch (error) {

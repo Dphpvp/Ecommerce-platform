@@ -1,124 +1,148 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 
-const API_BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api';
+const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
 const CartContext = createContext();
 
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
-  const [csrfToken, setCsrfToken] = useState(null);
-  const { token } = useAuth();
-
-  const fetchCSRFToken = useCallback(async () => {
-    if (!token) return null;
-    
-    try {
-      const response = await fetch(`${API_BASE}/auth/csrf-token`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setCsrfToken(data.csrf_token);
-        return data.csrf_token;
-      }
-    } catch (error) {
-      console.error('Failed to fetch CSRF token:', error);
-    }
-    return null;
-  }, [token]);
+  const [loading, setLoading] = useState(false);
+  const { user, makeAuthenticatedRequest } = useAuth(); // FIXED: Use user and makeAuthenticatedRequest
 
   const fetchCart = useCallback(async () => {
-    if (!token) return;
+    if (!user) {
+      setCartItems([]);
+      return;
+    }
     
+    setLoading(true);
     try {
-      const response = await fetch(`${API_BASE}/cart`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (response.ok) {
-        const data = await response.json();
-        setCartItems(data);
-      }
+      // FIXED: Use makeAuthenticatedRequest instead of manual fetch
+      const data = await makeAuthenticatedRequest(`${API_BASE}/cart`);
+      setCartItems(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Failed to fetch cart:', error);
-    } 
-  }, [token]);
+      if (error.message === 'Authentication required') {
+        setCartItems([]);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [user, makeAuthenticatedRequest]);
 
   const addToCart = async (productId, quantity = 1) => {
-    if (!token) return false;
+    if (!user) {
+      console.warn('User not authenticated');
+      return false;
+    }
 
-    // Ensure we have CSRF token
-    let currentCsrfToken = csrfToken;
-    if (!currentCsrfToken) {
-      currentCsrfToken = await fetchCSRFToken();
-      if (!currentCsrfToken) return false;
+    if (!productId || quantity < 1) {
+      console.error('Invalid product ID or quantity');
+      return false;
     }
 
     try {
-      const response = await fetch(`${API_BASE}/cart/add`, {
+      // FIXED: Use makeAuthenticatedRequest
+      await makeAuthenticatedRequest(`${API_BASE}/cart/add`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-          'X-CSRF-Token': currentCsrfToken
-        },
-        body: JSON.stringify({ product_id: productId, quantity })
+        body: JSON.stringify({ 
+          product_id: productId, 
+          quantity: parseInt(quantity) 
+        })
       });
 
-      if (response.ok) {
-        fetchCart();
-        return true;
-      }
+      await fetchCart(); // Refresh cart after adding
+      return true;
     } catch (error) {
       console.error('Failed to add to cart:', error);
+      return false;
     }
-    return false;
   };
 
   const removeFromCart = async (itemId) => {
-    if (!token) return;
-    
-    // Ensure we have CSRF token
-    let currentCsrfToken = csrfToken;
-    if (!currentCsrfToken) {
-      currentCsrfToken = await fetchCSRFToken();
-      if (!currentCsrfToken) return;
+    if (!user || !itemId) {
+      console.warn('User not authenticated or invalid item ID');
+      return false;
     }
-    
+
     try {
-      const response = await fetch(`${API_BASE}/cart/${itemId}`, {
-        method: 'DELETE',
-        headers: { 
-          Authorization: `Bearer ${token}`,
-          'X-CSRF-Token': currentCsrfToken
-        }
+      // FIXED: Use makeAuthenticatedRequest
+      await makeAuthenticatedRequest(`${API_BASE}/cart/${itemId}`, {
+        method: 'DELETE'
       });
 
-      if (response.ok) {
-        fetchCart();
-      }
+      await fetchCart(); // Refresh cart after removing
+      return true;
     } catch (error) {
       console.error('Failed to remove from cart:', error);
+      return false;
     }
   };
 
-  const clearCart = () => {
-    setCartItems([]);
-  };
+  const updateCartItemQuantity = async (itemId, newQuantity) => {
+    if (!user || !itemId || newQuantity < 1) {
+      return false;
+    }
 
-  useEffect(() => {
-    if (token) {
-      fetchCSRFToken().then(() => {
-        fetchCart();
+    try {
+      // FIXED: Use makeAuthenticatedRequest
+      await makeAuthenticatedRequest(`${API_BASE}/cart/${itemId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ quantity: parseInt(newQuantity) })
       });
-    } else {
-      setCartItems([]);
-      setCsrfToken(null);
+
+      await fetchCart();
+      return true;
+    } catch (error) {
+      console.error('Failed to update cart item:', error);
+      return false;
     }
-  }, [token, fetchCSRFToken, fetchCart]);
+  };
+
+  const clearCart = useCallback(() => {
+    setCartItems([]);
+  }, []);
+
+  const getCartTotal = useCallback(() => {
+    return cartItems.reduce((total, item) => {
+      const price = item.product?.price || 0;
+      const quantity = item.quantity || 0;
+      return total + (price * quantity);
+    }, 0);
+  }, [cartItems]);
+
+  const getCartItemsCount = useCallback(() => {
+    return cartItems.reduce((total, item) => total + (item.quantity || 0), 0);
+  }, [cartItems]);
+
+  // Fetch cart when user changes
+  useEffect(() => {
+    fetchCart();
+  }, [fetchCart]);
+
+  // Clear cart when user logs out
+  useEffect(() => {
+    if (!user) {
+      setCartItems([]);
+    }
+  }, [user]);
+
+  const contextValue = {
+    cartItems,
+    loading,
+    addToCart,
+    removeFromCart,
+    updateCartItemQuantity,
+    clearCart,
+    fetchCart,
+    getCartTotal,
+    getCartItemsCount,
+    isAuthenticated: !!user
+  };
 
   return (
-    <CartContext.Provider value={{ cartItems, addToCart, removeFromCart, clearCart, fetchCart }}>
+    <CartContext.Provider value={contextValue}>
       {children}
     </CartContext.Provider>
   );

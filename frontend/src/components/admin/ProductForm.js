@@ -1,91 +1,64 @@
 import React, { useState } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 import { useToastContext } from '../toast';
+import SecureForm from '../SecureForm';
+import { csrfManager } from '../../utils/csrf';
 import '../../styles/ProductForm.css';
-
-const API_BASE =
-  process.env.REACT_APP_API_BASE_URL || "http://localhost:8000/api";
 
 const ProductForm = ({
   product,
   categories = [],
   onSave,
   onCancel,
-  token,
   isEdit = false,
 }) => {
+  const { makeAuthenticatedRequest } = useAuth();
   const { showToast } = useToastContext();
   const [categoryType, setCategoryType] = useState("existing");
   const [customCategory, setCustomCategory] = useState("");
-  const [formData, setFormData] = useState({
-    name: product?.name || "",
-    description: product?.description || "",
-    price: product?.price || "",
-    category: product?.category || "",
-    image_url: product?.image_url || "",
-    stock: product?.stock || "",
-  });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
+  const handleSubmit = async (sanitizedData, csrfToken) => {
     try {
       const url = isEdit
-        ? `${API_BASE}/admin/products/${product._id}`
-        : `${API_BASE}/products`;
+        ? `${process.env.REACT_APP_API_BASE_URL}/admin/products/${product._id}`
+        : `${process.env.REACT_APP_API_BASE_URL}/products`;
 
       const method = isEdit ? "PUT" : "POST";
 
-      const response = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          ...formData,
-          price: parseFloat(formData.price),
-          stock: parseInt(formData.stock),
-        }),
-      });
+      const productData = {
+        ...sanitizedData,
+        price: parseFloat(sanitizedData.price),
+        stock: parseInt(sanitizedData.stock),
+        category: categoryType === "existing" ? sanitizedData.category : customCategory
+      };
 
-      if (response.ok) {
-        showToast(
-          isEdit
-            ? "Product updated successfully"
-            : "Product added successfully",
-          "success"
-        );
-        onSave();
+      if (isEdit) {
+        await makeAuthenticatedRequest(url, {
+          method,
+          body: JSON.stringify(productData),
+        });
       } else {
-        showToast("Failed to save product", "error");
+        const response = await csrfManager.makeSecureRequest(url, {
+          method,
+          headers: {
+            'X-CSRF-Token': csrfToken,
+          },
+          body: JSON.stringify(productData),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.detail || 'Failed to save product');
+        }
       }
+
+      showToast(
+        isEdit ? "Product updated successfully" : "Product added successfully",
+        "success"
+      );
+      onSave();
     } catch (error) {
-      console.error("Failed to save product:", error);
-      showToast("Failed to save product", "error");
-    }
-  };
-
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
-  };
-
-  const handleCategoryTypeChange = (e) => {
-    setCategoryType(e.target.value);
-    if (e.target.value === "existing") {
-      setCustomCategory("");
-      setFormData({ ...formData, category: "" });
-    }
-  };
-
-  const handleCategoryChange = (e) => {
-    if (categoryType === "existing") {
-      setFormData({ ...formData, category: e.target.value });
-    } else {
-      setCustomCategory(e.target.value);
-      setFormData({ ...formData, category: e.target.value });
+      throw error;
     }
   };
 
@@ -94,49 +67,55 @@ const ProductForm = ({
       <div className="product-form-container">
         <div className="product-form">
           <h3>{isEdit ? "Edit Product" : "Add New Product"}</h3>
-          <form onSubmit={handleSubmit}>
+          <SecureForm onSubmit={handleSubmit} validate={true}>
             <label htmlFor="name">Product Name:</label>
             <input
               type="text"
               name="name"
               placeholder="Product Name"
-              value={formData.name}
-              onChange={handleChange}
+              defaultValue={product?.name || ""}
+              minLength="1"
+              maxLength="200"
               required
             />
+            
             <label htmlFor="description">Description:</label>
             <textarea
               name="description"
-              placeholder="Product Description"
-              value={formData.description}
-              onChange={handleChange}
+              placeholder="Product Description (min 10 characters)"
+              defaultValue={product?.description || ""}
+              minLength="10"
+              maxLength="2000"
               required
             />
+            
             <label htmlFor="price">Price:</label>
             <input
               type="number"
               step="0.01"
+              min="0.01"
+              max="999999.99"
               name="price"
               placeholder="Price"
-              value={formData.price}
-              onChange={handleChange}
+              defaultValue={product?.price || ""}
               required
             />
 
             <div className="category-section">
+              <label>Category Selection:</label>
               <select
                 value={categoryType}
-                onChange={handleCategoryTypeChange}
+                onChange={(e) => setCategoryType(e.target.value)}
                 className="category-select"
               >
                 <option value="existing">Select Existing Category</option>
-                <option value="new">Add New Category</option>
+                <option value="new">Create New Category</option>
               </select>
 
               {categoryType === "existing" ? (
                 <select
-                  value={formData.category}
-                  onChange={handleCategoryChange}
+                  name="category"
+                  defaultValue={product?.category || ""}
                   required
                   className="category-select"
                 >
@@ -150,31 +129,36 @@ const ProductForm = ({
               ) : (
                 <input
                   type="text"
-                  placeholder="Enter new category"
+                  placeholder="Enter new category (use / for subcategories)"
                   value={customCategory}
-                  onChange={handleCategoryChange}
+                  onChange={(e) => setCustomCategory(e.target.value)}
+                  maxLength="100"
                   required
                 />
               )}
             </div>
+            
             <label htmlFor="image_url">Image URL:</label>
             <input
               type="url"
               name="image_url"
               placeholder="Image URL"
-              value={formData.image_url}
-              onChange={handleChange}
+              defaultValue={product?.image_url || ""}
+              maxLength="500"
               required
             />
+            
             <label htmlFor="stock">Stock Quantity:</label>
             <input
               type="number"
+              min="0"
+              max="999999"
               name="stock"
               placeholder="Stock Quantity"
-              value={formData.stock}
-              onChange={handleChange}
+              defaultValue={product?.stock || ""}
               required
             />
+            
             <div className="form-actions">
               <button type="submit" className="btn btn-primary">
                 {isEdit ? "Update Product" : "Add Product"}
@@ -187,14 +171,7 @@ const ProductForm = ({
                 Cancel
               </button>
             </div>
-          </form>
-        </div>
-        <div className="product-image-preview">
-          {formData.image_url ? (
-            <img src={formData.image_url} alt="Product Preview" />
-          ) : (
-            <p>No image preview</p>
-          )}
+          </SecureForm>
         </div>
       </div>
     </div>

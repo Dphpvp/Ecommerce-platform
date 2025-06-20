@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useToastContext } from '../toast';
 import ProductForm from './ProductForm';
 
-const API_BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api';
+const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
 const AdminProducts = () => {
   const [products, setProducts] = useState([]);
@@ -11,7 +11,7 @@ const AdminProducts = () => {
   const [loading, setLoading] = useState(true);
   const [editingProduct, setEditingProduct] = useState(null);
   const [showAddForm, setShowAddForm] = useState(false);
-  const { token } = useAuth();
+  const { makeAuthenticatedRequest } = useAuth();
   const { showToast } = useToastContext();
 
   useEffect(() => {
@@ -21,14 +21,8 @@ const AdminProducts = () => {
 
   const fetchProducts = async () => {
     try {
-      const response = await fetch(`${API_BASE}/admin/products`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        setProducts(data.products);
-      }
+      const data = await makeAuthenticatedRequest(`${API_BASE}/admin/products`);
+      setProducts(data.products || []);
     } catch (error) {
       console.error('Failed to fetch products:', error);
     } finally {
@@ -38,10 +32,9 @@ const AdminProducts = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await fetch(`${API_BASE}/products`);
-      const data = await response.json();
-      const uniqueCategories = [...new Set(data.map(p => p.category))];
-      setCategories(uniqueCategories);
+      const data = await makeAuthenticatedRequest(`${API_BASE}/admin/categories`);
+      const categoryNames = data.categories?.map(cat => cat.name).sort() || [];
+      setCategories(categoryNames);
     } catch (error) {
       console.error('Failed to fetch categories:', error);
     }
@@ -51,22 +44,32 @@ const AdminProducts = () => {
     if (!window.confirm('Are you sure you want to delete this product?')) return;
 
     try {
-      const response = await fetch(`${API_BASE}/admin/products/${productId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
+      await makeAuthenticatedRequest(`${API_BASE}/admin/products/${productId}`, {
+        method: 'DELETE'
       });
 
-      if (response.ok) {
-        showToast('Product deleted successfully', 'success');
-        fetchProducts();
-        fetchCategories();
-      } else {
-        showToast('Failed to delete product', 'error');
-      }
+      showToast('Product deleted successfully', 'success');
+      fetchProducts();
+      fetchCategories();
     } catch (error) {
       console.error('Failed to delete product:', error);
       showToast('Failed to delete product', 'error');
     }
+  };
+
+  const handleAddProduct = () => {
+    setEditingProduct(null);
+    setShowAddForm(true);
+  };
+
+  const handleEditProduct = (product) => {
+    setShowAddForm(false);
+    setEditingProduct(product);
+  };
+
+  const closeModals = () => {
+    setShowAddForm(false);
+    setEditingProduct(null);
   };
 
   if (loading) return <div className="container"><p>Loading products...</p></div>;
@@ -77,37 +80,37 @@ const AdminProducts = () => {
         <div className="products-header">
           <h1>Product Management</h1>
           <button
-            onClick={() => setShowAddForm(true)}
+            onClick={handleAddProduct}
             className="btn btn-primary"
           >
             Add New Product
           </button>
         </div>
 
+        {/* Add Product Modal */}
         {showAddForm && (
           <ProductForm
             categories={categories}
             onSave={() => {
-              setShowAddForm(false);
+              closeModals();
               fetchProducts();
               fetchCategories();
             }}
-            onCancel={() => setShowAddForm(false)}
-            token={token}
+            onCancel={closeModals}
           />
         )}
 
+        {/* Edit Product Modal */}
         {editingProduct && (
           <ProductForm
             product={editingProduct}
             categories={categories}
             onSave={() => {
-              setEditingProduct(null);
+              closeModals();
               fetchProducts();
               fetchCategories();
             }}
-            onCancel={() => setEditingProduct(null)}
-            token={token}
+            onCancel={closeModals}
             isEdit={true}
           />
         )}
@@ -132,9 +135,7 @@ const AdminProducts = () => {
               </div>
               <div className="product-actions">
                 <button
-                  onClick={() => {
-                    setEditingProduct(product);
-                  }}
+                  onClick={() => handleEditProduct(product)}
                   className="btn btn-outline"
                 >
                   Edit

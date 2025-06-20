@@ -1,6 +1,5 @@
 /* Imports */
-@import url(var.css); /* variable styles */
-
+@import url('./var.css'); /* variable styles */
 
 /* Admin Panel Styles */
 
@@ -14,13 +13,13 @@
   margin-bottom: 2rem;
   padding: 2rem;
   border-radius: var(--border);
-  box-shadow:  var(--box-shadow-primary);
+  box-shadow: var(--box-shadow-primary);
 }
 
 .dashboard-section h2 {
   margin-bottom: 1.5rem;
   color: #333;
-  border-bottom: 2px solid var(var(--color-blue));
+  border-bottom: 2px solid var(--color-blue);
   padding-bottom: 0.5rem;
 }
 
@@ -37,12 +36,30 @@
   border-radius: 10px;
   box-shadow: var(--box-shadow-primary);
   text-align: center;
-  border-left: 4px solid var(var(--color-blue));
+  border-left: 4px solid var(--color-blue);
   transition: transform 0.3s;
 }
 
 .stat-card:hover {
   transform: translateY(-5px);
+}
+
+/* Clickable styles for dashboard links */
+.stat-card.clickable,
+.recent-order-item.clickable,
+.low-stock-item.clickable {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: block;
+}
+
+.stat-card.clickable:hover,
+.recent-order-item.clickable:hover,
+.low-stock-item.clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
 
 .stat-card.total { border-left-color: var(--color-gray); }
@@ -89,7 +106,7 @@
   margin-bottom: 0.5rem;
   background: var(--color-background);
   border-radius: 5px;
-  border-left: 4px solid var(var(--color-blue));
+  border-left: 4px solid var(--color-blue);
 }
 
 .order-info {
@@ -113,7 +130,7 @@
 
 .status.pending { background: var(--color-yellow); color: var(--color-orange); }
 .status.accepted { background: var(--color-light-blue); }
-.status.processing { background: var(var(--color-blue)); }
+.status.processing { background: var(--color-blue); }
 .status.shipped { background: var(--color-green); }
 .status.delivered { background: var(--color-gray); }
 .status.cancelled { background: var(--color-red); }
@@ -141,218 +158,6 @@
 .category {
   font-size: 0.9rem;
   color: var(--color-gray);
-}
-
-/* Admin Orders Styles */
-.admin-orders {
-  padding: 2rem 0;
-}
-
-.orders-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-}
-
-.status-filter {
-  padding: 0.5rem 1rem;
-  border: 2px solid var(--color-gray);
-  border-radius: 5px;
-  font-size: 1rem;
-  background: var(--color-white);
-}
-
-.orders-list {
-  display: flex;
-  gap: 1.5rem;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 2rem;
-  width: 100%;
- 
-}
-
-.order-management-card {
-  background: var(--color-white);
-  border-radius: 10px;
-  box-shadow: var(--box-shadow-primary);
-  overflow: hidden;
-  max-width: 350px;
-}
-
-.order-header {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.5rem;
-  cursor: pointer;
-  background: var(--color-background);
-  border-bottom: 1px solid var(--color-white);
-}
-
-.order-header:hover {
-  background: var(--color-white);
-}
-
-.order-basic-info h3 {
-  color: var(var(--color-blue));
-  margin-bottom: 0.5rem;
-}
-
-.order-basic-info p {
-  margin-bottom: 0.25rem;
-  color: var(--color-gray);
-}
-
-.order-status-section {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.current-status {
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  color: var(--color-white);
-  font-weight: bold;
-  font-size: 0.9rem;
-}
-
-.details-toggle {
-  background: var(--color-blue);
-  color: var(--color-white);
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-.order-details-expanded {
-  padding: 2rem;
-  background: var(--color-white);
-}
-
-.customer-details,
-.shipping-details,
-.order-items,
-.status-management {
-  margin-bottom: 2rem;
-  padding-bottom: 1.5rem;
-  border-bottom: 1px solid var(--color-white);
-}
-
-.customer-details h4,
-.shipping-details h4,
-.order-items h4,
-.status-management h4 {
-  color: var(--color-gray);
-  margin-bottom: 1rem;
-  font-size: 1.2rem;
-}
-
-.items-list {
-  display: grid;
-  gap: 1rem;
-}
-
-.order-item-detail {
-  display: flex;
-  align-items: center;
-  padding: 1rem;
-  background: var(--color-background);
-  border-radius: 5px;
-}
-
-.order-item-detail img {
-  width: 80px;
-  height: 80px;
-  object-fit: cover;
-  border-radius: 5px;
-  margin-right: 1rem;
-}
-
-.item-info p {
-  margin-bottom: 0.25rem;
-  color: var(--color-gray);
-}
-
-.status-controls {
-  display: flex;
-  gap: 1rem;
-  align-items: center;
-}
-
-.status-select {
-  padding: 0.5rem;
-  border: 2px solid var(--color-white);
-  border-radius: 5px;
-  font-size: 1rem;
-}
-
-/* Admin Users Styles */
-.admin-users {
-  padding: 2rem 0;
-}
-
-.users-list {
-  display: grid;
-  gap: 1.5rem;
-}
-
-.user-card {
-  background: var(--color-white);
-  padding: 2rem;
-  border-radius: 10px;
-  box-shadow: var(--box-shadow-primary);
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
-.user-info h3 {
-  color: var(--color-gray);
-  margin-bottom: 1rem;
-}
-
-.user-info p {
-  margin-bottom: 0.5rem;
-  color: var(--color-gray);
-}
-
-.user-actions {
-  display: flex;
-  align-items: center;
-}
-
-.role-section {
-  text-align: center;
-}
-
-.role-badge {
-  display: inline-block;
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  font-weight: bold;
-  margin-bottom: 1rem;
-  font-size: 0.9rem;
-}
-
-.role-badge.admin {
-  background: var(--color-red);
-  color: var(--color-white);
-}
-
-.role-badge.user {
-  background: var(--color-green);
-  color: var(--color-white);
-}
-
-.role-controls button {
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
 }
 
 /* Admin Products Styles */
@@ -479,7 +284,7 @@
 .product-form input:focus,
 .product-form textarea:focus {
   outline: none;
-  border-color: var(var(--color-blue));
+  border-color: var(--color-blue);
 }
 
 .form-actions {
@@ -506,8 +311,6 @@
 }
 
 /* No Data States */
-.no-orders,
-.no-users,
 .no-products {
   text-align: center;
   padding: 3rem;
@@ -516,8 +319,6 @@
   box-shadow: var(--box-shadow-secondary);
 }
 
-.no-orders p,
-.no-users p,
 .no-products p {
   font-size: 1.2rem;
   color: var(--color-gray);
@@ -544,22 +345,6 @@
     gap: 1rem;
   }
   
-  .order-header {
-    flex-direction: column;
-    text-align: center;
-    gap: 1rem;
-  }
-  
-  .order-status-section {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  
-  .user-card {
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
   .products-grid {
     grid-template-columns: 1fr;
   }
@@ -570,35 +355,24 @@
     align-items: stretch;
   }
   
-  .orders-header {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: stretch;
-  }
-  
-  .status-controls {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  
   .form-actions {
     flex-direction: column;
   }
   
-  .order-item-detail {
+  .recent-order-item {
     flex-direction: column;
+    gap: 0.5rem;
     text-align: center;
   }
   
-  .order-item-detail img {
-    margin: 0 0 1rem 0;
+  .order-info {
+    flex-direction: column;
+    gap: 0.25rem;
   }
 }
 
 @media (max-width: 480px) {
   .admin-dashboard,
-  .admin-orders,
-  .admin-users,
   .admin-products {
     padding: 1rem 0;
   }
@@ -616,91 +390,13 @@
     font-size: 1.8rem;
   }
   
-  .order-management-card {
-    margin-bottom: 1rem;
-  }
-  
-  .order-details-expanded {
-    padding: 1rem;
-  }
-  
-  .user-card {
-    padding: 1rem;
-  }
-  
   .product-form {
     padding: 1rem;
     margin: 1rem;
     width: calc(100% - 2rem);
   }
-  
-  .recent-order-item {
-    flex-direction: column;
-    gap: 0.5rem;
-    text-align: center;
-  }
-  
-  .order-info {
-    flex-direction: column;
-    gap: 0.25rem;
-  }
 }
 
 .relative {
-  position: relative;
-}
-.status-filter {
-  appearance: none;      
-  -webkit-appearance: none;
-  -moz-appearance: none;
-
-  background-color: var(--color-white);
-  border: 1.5px solid var(--color-blue);  
-  border-radius: 6px;
-  padding: 8px 40px 8px 12px; 
-  font-size: 1rem;
-  font-weight: 500;
-  color: var(--color-text);
-  cursor: pointer;
-
-  background-image: url("data:image/svg+xml;charset=US-ASCII,%3csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23007bff'%3e%3cpath d='M4 6l4 4 4-4z'/%3e%3c/svg%3e"); 
-  background-repeat: no-repeat;
-  background-position: right 12px center;
-  background-size: 12px;
-  transition: border-color 0.3s ease;
-}
-
-.status-filter:hover {
-  border-color: var(--color-blue);
-}
-
-.status-filter:focus {
-  outline: none;
-  border-color: var(--color-light-blue);
-  box-shadow: var(--box-shadow-secondary);
-}
-
-/* Order Modal Styles */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;    
-  height: 100vh;     
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center; 
-  align-items: center;     
-  z-index: 1000;           
-}
-.modal-content {
-  background: var(--color-white);
-  padding: 20px;
-  border-radius: 8px;
-  max-width: 600px;
-  width: 90%;
-  max-height: 90vh;
-  overflow-y: auto;
-  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
   position: relative;
 }

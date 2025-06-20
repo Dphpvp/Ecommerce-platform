@@ -1,20 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useToastContext } from '../components/toast';
 
-const API_BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api';
+const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
 const Checkout = () => {
   const stripe = useStripe();
   const elements = useElements();
   const { cartItems, clearCart } = useCart();
-  const { token } = useAuth();
+  const { user, makeAuthenticatedRequest, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { showToast } = useToastContext();
   const [processing, setProcessing] = useState(false);
+  const [error, setError] = useState(null);
   const [shippingAddress, setShippingAddress] = useState({
     street: '',
     city: '',
@@ -23,67 +24,134 @@ const Checkout = () => {
     country: ''
   });
 
+  // Redirect if not authenticated
+  useEffect(() => {
+    if (!authLoading && !user) {
+      showToast('Please log in to complete your order', 'error');
+      navigate('/login?redirect=/checkout');
+    }
+  }, [user, authLoading, navigate, showToast]);
+
   const total = cartItems.reduce((sum, item) => 
     sum + (item.product.price * item.quantity), 0
   );
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setError(null);
     
-    if (!stripe || !elements) return;
+    if (!stripe || !elements) {
+      setError('Payment system not ready. Please try again.');
+      return;
+    }
+
+    if (!user) {
+      setError('Please log in to complete your order');
+      navigate('/login?redirect=/checkout');
+      return;
+    }
+
+    if (cartItems.length === 0) {
+      setError('Your cart is empty');
+      navigate('/cart');
+      return;
+    }
     
     setProcessing(true);
 
     try {
-      const intentResponse = await fetch(`${API_BASE}/orders/payment/create-intent`, {
+      // Create payment intent with authentication
+      const intentData = await makeAuthenticatedRequest(`${API_BASE}/payment/create-intent`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ amount: Math.round(total * 100) })
       });
 
-      const { client_secret } = await intentResponse.json();
+      const { client_secret } = intentData;
 
-      const { error, paymentIntent } = await stripe.confirmCardPayment(client_secret, {
+      if (!client_secret) {
+        throw new Error('Failed to create payment intent');
+      }
+
+      // Confirm payment with Stripe
+      const { error: paymentError, paymentIntent } = await stripe.confirmCardPayment(client_secret, {
         payment_method: {
           card: elements.getElement(CardElement),
         }
       });
 
-      if (error) {
-        showToast('Payment failed: ' + error.message, 'error');
-      } else if (paymentIntent.status === 'succeeded') {
-        const orderResponse = await fetch(`${API_BASE}/orders`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            shipping_address: shippingAddress,
-            payment_method: 'card'
-          })
-        });
+      if (paymentError) {
+        throw new Error(paymentError.message);
+      }
 
-        if (orderResponse.ok) {
+      if (paymentIntent.status === 'succeeded') {
+        // Create order with proper authentication
+        try {
+          const orderData = await makeAuthenticatedRequest(`${API_BASE}/orders`, {
+            method: 'POST',
+            body: JSON.stringify({
+              shipping_address: shippingAddress,
+              payment_method: 'card',
+              payment_intent_id: paymentIntent.id
+            })
+          });
+
+          // Success - clear cart and redirect
           clearCart();
           showToast('Order placed successfully!', 'success');
-          navigate('/orders');
-        } else {
-          showToast('Failed to create order', 'error');
+          navigate(`/orders`);
+          
+        } catch (orderError) {
+          console.error('Order creation failed:', orderError);
+          setError(`Order creation failed: ${orderError.message}`);
+          
+          // Payment succeeded but order failed - show specific error
+          showToast('Payment processed but order creation failed. Please contact support.', 'error');
         }
+      } else {
+        throw new Error('Payment was not completed successfully');
       }
+      
     } catch (error) {
       console.error('Checkout error:', error);
-      showToast('Checkout failed', 'error');
+      setError(error.message || 'Checkout failed. Please try again.');
+      showToast(error.message || 'Checkout failed', 'error');
+    } finally {
+      setProcessing(false);
     }
-
-    setProcessing(false);
   };
+
+  // Show loading state while checking authentication
+  if (authLoading) {
+    return (
+      <div className="checkout">
+        <div className="container">
+          <h1>Loading...</h1>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect if not authenticated
+  if (!user) {
+    return (
+      <div className="checkout">
+        <div className="container">
+          <h1>Redirecting to login...</h1>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="checkout">
       <div className="container">
         <h1>Checkout</h1>
+        
+        {error && (
+          <div className="error-message" style={{ marginBottom: '1rem' }}>
+            {error}
+          </div>
+        )}
         
         <div className="checkout-content">
           <div className="order-summary">
@@ -160,7 +228,7 @@ const Checkout = () => {
 
             <button 
               type="submit" 
-              disabled={!stripe || processing}
+              disabled={!stripe || processing || cartItems.length === 0}
               className="btn btn-primary"
             >
               {processing ? 'Processing...' : `Pay $${total.toFixed(2)}`}

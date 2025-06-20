@@ -1,3 +1,4 @@
+// frontend/src/App.js - Updated with Footer
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { loadStripe } from '@stripe/stripe-js';
@@ -9,8 +10,10 @@ import { CartProvider } from './contexts/CartContext';
 import { ToastProvider } from './components/toast';
 
 import Header from './components/header';
+import Footer from './components/Footer';
 import PrivateRoute from './components/PrivateRoute';
 import Profile from './components/profile';
+import ErrorBoundary from './components/ErrorBoundary';
 
 import Home from './pages/Home';
 import Products from './pages/Products';
@@ -18,7 +21,11 @@ import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import Login from './pages/Login';
 import Register from './pages/Register';
+import ResetPassword from './pages/ResetPassword';
 import Orders from './pages/Orders';
+import EmailVerification from './pages/EmailVerification';
+import About from './pages/About';
+import Contact from './pages/Contact';
 
 import AdminDashboard from './components/admin/AdminDashboard';
 import AdminOrders from './components/admin/AdminOrders';
@@ -27,27 +34,32 @@ import AdminProducts from './components/admin/AdminProducts';
 import AdminRoute from './components/admin/AdminRoute';
 import AdminCategories from './components/admin/AdminCategories';
 
-<Route path="/admin/categories-list" element={<AdminRoute><AdminCategories /></AdminRoute>} />
+
 
 const stripePromise = loadStripe(
-  "pk_test_51RWK32RdyxKMeI2qFdwU5mx0G8jZjt1PcOYpeCILJSwVgLsh3u23xE89kRCs0uezmScF8zCQqG8culYGXpxpScNq006cWwuoGS"
+  process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY
 );
 
 const App = () => {
   return (
     <Elements stripe={stripePromise}>
+      <ErrorBoundary>
       <Router>
         <AuthProvider>
           <CartProvider>
             <ToastProvider>
-              <div className="app">
+              <div className="app" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
                 <Header />
-                <main className="main">
+                <main className="main" style={{ flex: '1' }}>
                   <Routes>
                     <Route path="/" element={<Home />} />
                     <Route path="/products" element={<Products />} />
+                    <Route path="/about" element={<About />} />
+                    <Route path="/contact" element={<Contact />} />
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
+                    <Route path="/reset-password" element={<ResetPassword />} />
+                    <Route path="/verify-email" element={<EmailVerification />} />
 
                     <Route
                       path="/cart"
@@ -124,11 +136,13 @@ const App = () => {
                     />
                   </Routes>
                 </main>
+                <Footer />
               </div>
             </ToastProvider>
           </CartProvider>
         </AuthProvider>
       </Router>
+    </ErrorBoundary>
     </Elements>
   );
 };
