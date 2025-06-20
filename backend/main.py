@@ -37,7 +37,6 @@ app.include_router(profile.router, prefix="/api/profile", tags=["profile"])
 app.include_router(debug.router, prefix="/api/debug", tags=["debug"])
 # Admin routes already have /api/admin prefix in their router
 app.include_router(admin_router, tags=["admin"])
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 app.include_router(api_router, tags=["api"])
 
 

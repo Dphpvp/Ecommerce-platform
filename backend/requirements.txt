@@ -21,3 +21,4 @@ Pillow==10.1.0
 redis==5.0.1  # For better rate limiting/sessions
 aiofiles==23.2.1
 pillow==10.1.0
+cloudinary==1.36.0
