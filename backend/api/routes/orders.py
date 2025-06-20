@@ -36,7 +36,7 @@ async def get_order(order_id: str, request: Request):
     except Exception as e:
         raise HTTPException(status_code=404, detail="Order not found")
 
-# Payment routes (moved from api.py)
+# Payment routes - moved to /api/orders for proper routing
 @router.post("/payment/create-intent")
 async def create_payment_intent(payment_request: PaymentIntentRequest):
     try:
