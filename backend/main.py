@@ -9,6 +9,9 @@ import os
 # FIXED: Import structured API routes correctly
 from api.routes import auth, products, cart, orders, contact, profile, debug
 from api.routes.admin_routes import router as admin_router
+from api.main import router as api_router
+
+
 
 # Configuration
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
@@ -35,6 +38,8 @@ app.include_router(profile.router, prefix="/api/profile", tags=["profile"])
 app.include_router(debug.router, prefix="/api/debug", tags=["debug"])
 # Admin routes already have /api/admin prefix in their router
 app.include_router(admin_router, tags=["admin"])
+app.include_router(api_router, tags=["api"])
+
 
 # Security middleware
 if ALLOWED_HOSTS:
