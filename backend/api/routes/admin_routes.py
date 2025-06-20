@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Depends, Request
 from typing import List, Optional
 from bson import ObjectId
 from datetime import datetime, timezone
-from dependencies import get_current_user, db
+from api.dependencies.dependencies import get_current_user, db
 from api.models.product import ProductRequest
 from api.services.email_service import EmailService
 
