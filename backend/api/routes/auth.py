@@ -409,6 +409,28 @@ async def update_profile(
         logger.error(f"Profile update error: {e}")
         raise HTTPException(status_code=500, detail="Failed to update profile")
 
+# CSRF Token endpoint
+@router.get("/csrf-token")
+async def get_csrf_token(request: Request):
+    """Get CSRF token for forms"""
+    from api.middleware.csrf import csrf_protection
+    from jose import jwt
+    from api.core.config import get_settings
+    
+    settings = get_settings()
+    session_id = None
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        try:
+            token = auth_header.split(" ")[1]
+            payload = jwt.decode(token, settings.JWT_SECRET, algorithms=["HS256"])
+            session_id = payload.get("user_id")
+        except:
+            pass
+    
+    csrf_token = csrf_protection.generate_token(session_id)
+    return {"csrf_token": csrf_token}
+
 # Debug routes
 @router.get("/debug-user/{email}")
 async def debug_user(email: str):
