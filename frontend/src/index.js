@@ -8,7 +8,7 @@ import './styles/parallax-enhancements.css'; // Add parallax enhancements
 import './App.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import './styles/admin.css';
+import './styles/admin/admin.css';
 import './styles/enhanced-products.css';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
