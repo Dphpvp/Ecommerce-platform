@@ -10,7 +10,7 @@ import { CartProvider } from './contexts/CartContext';
 import { ToastProvider } from './components/toast';
 import { ParallaxContainer } from './components/Parallax';
 
-import Header from './components/header';
+import LuxuryNavigation from './components/LuxuryNavigation';
 import Footer from './components/Footer';
 import PrivateRoute from './components/PrivateRoute';
 import Profile from './components/profile';
@@ -49,7 +49,7 @@ const App = () => {
               <ToastProvider>
                 <ParallaxContainer>
                   <div className="app" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-                    <Header />
+                    <LuxuryNavigation />
                     <main className="main" style={{ flex: '1' }}>
                       <Routes>
                         <Route path="/" element={<Home />} />
