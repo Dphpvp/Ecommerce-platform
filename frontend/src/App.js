@@ -10,7 +10,7 @@ import { CartProvider } from './contexts/CartContext';
 import { ToastProvider } from './components/toast';
 import { ParallaxContainer } from './components/Parallax';
 
-import LuxuryNavigation from './components/LuxuryNavigation';
+import LuxuryNavigation from './components/LuxuryNavigation/LuxuryNavigation';
 import Footer from './components/Footer';
 import PrivateRoute from './components/PrivateRoute';
 import Profile from './components/profile';
