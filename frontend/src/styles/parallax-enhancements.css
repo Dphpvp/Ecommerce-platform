@@ -1,5 +1,5 @@
 /* frontend/src/styles/parallax-enhancements.css - Enhanced Parallax Styles */
-
+@import url('./var.css');
 /* Global Parallax Optimizations */
 html {
   scroll-behavior: smooth;
