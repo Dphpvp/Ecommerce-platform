@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCart } from '../../contexts/CartContext';
-import '../../styles/components/LuxuryNavigation.css'; 
+import '../../styles/components/LuxuryNavigation.css';
 
 const LuxuryNavigation = () => {
   const [activeIndex, setActiveIndex] = useState(0);
@@ -11,7 +11,24 @@ const LuxuryNavigation = () => {
   const { cartItems } = useCart();
   const location = useLocation();
 
-  // Navigation items based on user status
+  // Load Ionicons
+  useEffect(() => {
+    const script = document.createElement('script');
+    script.type = 'module';
+    script.src = 'https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.esm.js';
+    document.head.appendChild(script);
+
+    const nomoduleScript = document.createElement('script');
+    nomoduleScript.noModule = true;
+    nomoduleScript.src = 'https://unpkg.com/ionicons@7.1.0/dist/ionicons/ionicons.js';
+    document.head.appendChild(nomoduleScript);
+
+    return () => {
+      document.head.removeChild(script);
+      document.head.removeChild(nomoduleScript);
+    };
+  }, []);
+
   const getNavigationItems = () => {
     const baseItems = [
       { path: '/', icon: 'home-outline', text: 'Home' },
@@ -39,7 +56,6 @@ const LuxuryNavigation = () => {
 
   const navigationItems = getNavigationItems();
 
-  // Update active index based on current route
   useEffect(() => {
     const currentIndex = navigationItems.findIndex(item => 
       item.path === location.pathname || 
@@ -50,7 +66,7 @@ const LuxuryNavigation = () => {
     }
   }, [location.pathname, navigationItems]);
 
-  const handleNavClick = (index, path) => {
+  const handleNavClick = (index) => {
     setActiveIndex(index);
   };
 
@@ -59,16 +75,7 @@ const LuxuryNavigation = () => {
       {/* Logo Section */}
       <div className="luxury-nav-logo">
         <Link to="/">
-          <img
-            src="/images/logo.png"
-            alt="Bespoke Tailoring"
-            className="nav-logo-image"
-            onError={(e) => {
-              e.target.style.display = 'none';
-              e.target.nextSibling.style.display = 'flex';
-            }}
-          />
-          <div className="nav-logo-text" style={{ display: 'none' }}>
+          <div className="nav-logo-text">
             <span className="logo-letter">B</span>
             <span className="logo-letter">T</span>
           </div>
@@ -82,7 +89,7 @@ const LuxuryNavigation = () => {
             <li key={item.path} className={`list ${activeIndex === index ? 'active' : ''}`}>
               <Link 
                 to={item.path}
-                onClick={() => handleNavClick(index, item.path)}
+                onClick={() => handleNavClick(index)}
               >
                 <span className="icon">
                   <ion-icon name={item.icon}></ion-icon>

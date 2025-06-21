@@ -15,43 +15,40 @@
   padding: 0 2rem;
 }
 
-/* Logo Section */
+/* Logo Section - No Background */
 .luxury-nav-logo {
-  background: rgba(255, 255, 255, 0.95);
-  backdrop-filter: blur(15px);
-  border-radius: 50%;
-  width: 70px;
-  height: 70px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: var(--shadow-luxury);
-  border: 3px solid var(--tailoring-gold);
   transition: all 0.3s ease;
+}
+
+.luxury-nav-logo a {
+  text-decoration: none;
 }
 
 .luxury-nav-logo:hover {
   transform: scale(1.1);
-  box-shadow: var(--shadow-deep);
-}
-
-.nav-logo-image {
-  width: 40px;
-  height: 40px;
-  object-fit: contain;
-  border-radius: 50%;
 }
 
 .nav-logo-text {
   display: flex;
-  gap: 2px;
+  gap: 4px;
+  align-items: center;
 }
 
 .logo-letter {
   font-family: var(--font-serif);
-  font-size: 1.2rem;
+  font-size: 2rem;
   font-weight: 700;
-  color: var(--tailoring-navy);
+  color: var(--tailoring-gold);
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+}
+
+.logo-letter:hover {
+  color: white;
+  text-shadow: 0 0 10px var(--tailoring-gold);
 }
 
 /* Main Navigation */
@@ -108,6 +105,13 @@
   line-height: 75px;
   transition: 0.5s;
   color: rgba(255, 255, 255, 0.5);
+}
+
+/* Ensure ionicons display */
+.luxury-navigation ul li a .icon ion-icon {
+  font-size: 1.5em;
+  color: inherit;
+  transition: inherit;
 }
 
 .luxury-navigation ul li:hover a .icon {
@@ -400,14 +404,8 @@
     gap: 1rem;
   }
   
-  .luxury-nav-logo {
-    width: 60px;
-    height: 60px;
-  }
-  
-  .nav-logo-image {
-    width: 30px;
-    height: 30px;
+  .logo-letter {
+    font-size: 1.5rem;
   }
   
   .luxury-navigation {
@@ -500,17 +498,11 @@
   }
   
   .luxury-navigation ul li.active a .text {
-    display: none; /* Hide text on very small screens */
+    display: none;
   }
   
-  .luxury-nav-logo {
-    width: 50px;
-    height: 50px;
-  }
-  
-  .nav-logo-image {
-    width: 25px;
-    height: 25px;
+  .logo-letter {
+    font-size: 1.2rem;
   }
   
   .user-avatar,
