@@ -1,4 +1,4 @@
-/* frontend/src/App.css - Enhanced with Tailoring Theme */
+/* frontend/src/App.css - Fixed with Cream Theme */
 @import url('./styles/var.css');
 @import url('./styles/tailoring-theme.css');
 
@@ -9,12 +9,21 @@
   box-sizing: border-box;
 }
 
+/* Force cream background theme */
 body {
-  font-family: var(--font-sans), 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: var(--font-sans), 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important;
   line-height: 1.6;
-  color: var(--tailoring-charcoal);
-  background-color: var(--tailoring-cream);
+  color: var(--tailoring-charcoal) !important;
+  background-color: var(--tailoring-cream) !important;
+  background-image: 
+    radial-gradient(circle at 25% 25%, rgba(212, 175, 55, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 75% 75%, rgba(247, 231, 206, 0.1) 0%, transparent 50%);
+  background-attachment: fixed;
   overflow-x: hidden;
+}
+
+html {
+  background-color: var(--tailoring-cream) !important;
 }
 
 .container {
@@ -179,15 +188,34 @@ body {
   transform: none;
 }
 
-/* Main content */
+/* Main content with cream background */
 .main {
   min-height: calc(100vh - 80px);
-  background: var(--tailoring-cream);
+  background-color: var(--tailoring-cream) !important;
+  background-image: 
+    repeating-linear-gradient(45deg, 
+      rgba(212, 175, 55, 0.02) 0px, 
+      rgba(212, 175, 55, 0.02) 1px, 
+      transparent 1px, 
+      transparent 20px),
+    repeating-linear-gradient(-45deg, 
+      rgba(247, 231, 206, 0.03) 0px, 
+      rgba(247, 231, 206, 0.03) 1px, 
+      transparent 1px, 
+      transparent 20px);
 }
 
-/* Hero sections */
+/* Hero sections with fabric texture background */
 .hero {
   background: var(--gradient-luxury);
+  background-image: 
+    radial-gradient(circle at 20% 20%, rgba(212, 175, 55, 0.1) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(247, 231, 206, 0.15) 0%, transparent 50%),
+    repeating-conic-gradient(from 0deg at 50% 50%, 
+      rgba(212, 175, 55, 0.05) 0deg, 
+      transparent 60deg, 
+      rgba(212, 175, 55, 0.05) 120deg);
+  background-size: 300px 300px, 400px 400px, 60px 60px;
   color: var(--tailoring-cream);
   padding: 6rem 0;
   text-align: center;
@@ -203,8 +231,18 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="luxury" patternUnits="userSpaceOnUse" width="20" height="20"><circle cx="10" cy="10" r="1" fill="%23D4AF37" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23luxury)"/></svg>');
-  opacity: 0.3;
+  background-image: 
+    repeating-linear-gradient(30deg,
+      rgba(212, 175, 55, 0.05) 0px,
+      rgba(212, 175, 55, 0.05) 2px,
+      transparent 2px,
+      transparent 40px),
+    repeating-linear-gradient(-30deg,
+      rgba(247, 231, 206, 0.03) 0px,
+      rgba(247, 231, 206, 0.03) 1px,
+      transparent 1px,
+      transparent 30px);
+  opacity: 0.6;
 }
 
 .hero .container {
@@ -226,9 +264,21 @@ body {
   opacity: 0.9;
 }
 
+/* Featured products with fabric background */
 .featured-products {
   padding: 4rem 0;
-  background: var(--gradient-fabric);
+  background-color: var(--tailoring-champagne) !important;
+  background-image: 
+    repeating-linear-gradient(60deg,
+      rgba(212, 175, 55, 0.08) 0px,
+      rgba(212, 175, 55, 0.08) 1px,
+      transparent 1px,
+      transparent 25px),
+    repeating-linear-gradient(-60deg,
+      rgba(247, 231, 206, 0.06) 0px,
+      rgba(247, 231, 206, 0.06) 1px,
+      transparent 1px,
+      transparent 35px);
 }
 
 .featured-products h2 {
@@ -317,7 +367,7 @@ body {
   opacity: 0.8;
 }
 
-/* Products page */
+/* Products page with luxury pattern background */
 .products-header {
   display: flex;
   justify-content: space-between;
@@ -514,13 +564,23 @@ body {
   background: white;
 }
 
-/* Auth pages */
+/* Auth pages with fabric texture */
 .auth-page {
   display: flex;
   justify-content: center;
   align-items: center;
   min-height: 80vh;
-  background: var(--gradient-fabric);
+  background-color: var(--tailoring-champagne) !important;
+  background-image: 
+    repeating-conic-gradient(from 0deg at 30% 30%, 
+      rgba(212, 175, 55, 0.03) 0deg, 
+      transparent 90deg, 
+      rgba(212, 175, 55, 0.03) 180deg),
+    repeating-conic-gradient(from 0deg at 70% 70%, 
+      rgba(247, 231, 206, 0.05) 0deg, 
+      transparent 120deg, 
+      rgba(247, 231, 206, 0.05) 240deg);
+  background-size: 80px 80px, 120px 120px;
 }
 
 .auth-form {
