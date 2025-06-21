@@ -4,7 +4,8 @@ import ReactDOM from 'react-dom/client';
 import './index.css';
 import './styles/var.css';
 import './styles/tailoring-theme.css';
-import './styles/parallax-enhancements.css'; // Add parallax enhancements
+import './styles/parallax-enhancements.css';
+import './styles/luxury-background.css'; 
 import './App.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
