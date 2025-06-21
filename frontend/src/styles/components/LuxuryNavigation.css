@@ -1,8 +1,8 @@
-/* LuxuryNavigation.css - Modern Magic Navigation */
+/* LuxuryNavigation.css - Fixed Magic Navigation */
 @import url('../../styles/var.css');
 @import url('../../styles/tailoring-theme.css');
 
-/* Container Wrapper */
+/* Container Wrapper - Centered like original */
 .luxury-navigation-wrapper {
   position: fixed;
   bottom: 20px;
@@ -54,7 +54,7 @@
   color: var(--tailoring-navy);
 }
 
-/* Main Navigation */
+/* Main Navigation - Fixed like original */
 .luxury-navigation {
   position: relative;
   width: 400px;
@@ -128,14 +128,15 @@
   text-shadow: 0 0 10px var(--tailoring-gold);
 }
 
+/* Fixed text positioning - shows under active icon */
 .luxury-navigation ul li a .text {
   position: absolute;
-  bottom: -20px;
+  bottom: 0;
   left: 50%;
-  transform: translateX(-50%);
+  transform: translateX(-50%) translateY(0px);
   opacity: 0;
   font-weight: 600;
-  font-size: 0.6em;
+  font-size: 0.5em;
   color: var(--tailoring-navy);
   transition: 0.5s;
   letter-spacing: 0.05em;
@@ -148,7 +149,7 @@
 }
 
 .luxury-navigation ul li.active a .text {
-  bottom: -25px;
+  transform: translateX(-50%) translateY(13px);
   opacity: 1;
 }
 
@@ -177,7 +178,7 @@
   100% { transform: scale(1); }
 }
 
-/* Magic Indicator */
+/* Magic Indicator - Fixed positioning logic */
 .indicator {
   position: absolute;
   width: 70px;
@@ -187,6 +188,8 @@
   align-items: center;
   transition: 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
   pointer-events: none;
+  /* Default position for first item */
+  transform: translateX(-140px);
 }
 
 .indicator::before {
@@ -222,25 +225,25 @@
   50% { transform: rotate(55deg) scale(1.1); }
 }
 
-/* Indicator positioning for each nav item */
+/* Fixed indicator positioning - follows active item */
 .luxury-navigation ul li:nth-child(1).active ~ .indicator {
-  transform: translateX(calc(-140px));
+  transform: translateX(-140px);
 }
 
 .luxury-navigation ul li:nth-child(2).active ~ .indicator {
-  transform: translateX(calc(-70px));
+  transform: translateX(-70px);
 }
 
 .luxury-navigation ul li:nth-child(3).active ~ .indicator {
-  transform: translateX(calc(0px));
+  transform: translateX(0px);
 }
 
 .luxury-navigation ul li:nth-child(4).active ~ .indicator {
-  transform: translateX(calc(70px));
+  transform: translateX(70px);
 }
 
 .luxury-navigation ul li:nth-child(5).active ~ .indicator {
-  transform: translateX(calc(140px));
+  transform: translateX(140px);
 }
 
 /* User Actions Section */
@@ -400,6 +403,27 @@
   .luxury-navigation ul {
     width: 280px;
   }
+  
+  /* Adjust indicator for smaller navigation */
+  .luxury-navigation ul li:nth-child(1).active ~ .indicator {
+    transform: translateX(-112px);
+  }
+  
+  .luxury-navigation ul li:nth-child(2).active ~ .indicator {
+    transform: translateX(-56px);
+  }
+  
+  .luxury-navigation ul li:nth-child(3).active ~ .indicator {
+    transform: translateX(0px);
+  }
+  
+  .luxury-navigation ul li:nth-child(4).active ~ .indicator {
+    transform: translateX(56px);
+  }
+  
+  .luxury-navigation ul li:nth-child(5).active ~ .indicator {
+    transform: translateX(112px);
+  }
 }
 
 @media (max-width: 768px) {
@@ -430,6 +454,7 @@
   .indicator {
     width: 60px;
     height: 60px;
+    transform: translateX(-96px);
   }
   
   .luxury-navigation ul li a .icon {
@@ -443,28 +468,28 @@
   
   .luxury-navigation ul li.active a .text {
     font-size: 0.4em;
-    transform: translateY(10px);
+    transform: translateX(-50%) translateY(10px);
   }
   
-  /* Adjust indicator positions for mobile */
+  /* Mobile indicator positioning */
   .luxury-navigation ul li:nth-child(1).active ~ .indicator {
-    transform: translateX(calc(-120px));
+    transform: translateX(-96px);
   }
   
   .luxury-navigation ul li:nth-child(2).active ~ .indicator {
-    transform: translateX(calc(-60px));
+    transform: translateX(-48px);
   }
   
   .luxury-navigation ul li:nth-child(3).active ~ .indicator {
-    transform: translateX(calc(0px));
+    transform: translateX(0px);
   }
   
   .luxury-navigation ul li:nth-child(4).active ~ .indicator {
-    transform: translateX(calc(60px));
+    transform: translateX(48px);
   }
   
   .luxury-navigation ul li:nth-child(5).active ~ .indicator {
-    transform: translateX(calc(120px));
+    transform: translateX(96px);
   }
 }
 
@@ -491,6 +516,7 @@
   .indicator {
     width: 50px;
     height: 50px;
+    transform: translateX(-80px);
   }
   
   .luxury-navigation ul li a .icon {
@@ -518,41 +544,25 @@
     font-size: 1rem;
   }
   
-  /* Adjust indicator positions for small mobile */
+  /* Small mobile indicator positioning */
   .luxury-navigation ul li:nth-child(1).active ~ .indicator {
-    transform: translateX(calc(-100px));
+    transform: translateX(-80px);
   }
   
   .luxury-navigation ul li:nth-child(2).active ~ .indicator {
-    transform: translateX(calc(-50px));
+    transform: translateX(-40px);
   }
   
   .luxury-navigation ul li:nth-child(3).active ~ .indicator {
-    transform: translateX(calc(0px));
+    transform: translateX(0px);
   }
   
   .luxury-navigation ul li:nth-child(4).active ~ .indicator {
-    transform: translateX(calc(50px));
+    transform: translateX(40px);
   }
   
   .luxury-navigation ul li:nth-child(5).active ~ .indicator {
-    transform: translateX(calc(100px));
-  }
-}
-
-/* High contrast mode */
-@media (prefers-contrast: high) {
-  .luxury-navigation {
-    background: rgba(0, 0, 0, 0.95);
-    border-color: white;
-  }
-  
-  .luxury-navigation ul li a .icon {
-    color: white;
-  }
-  
-  .luxury-navigation ul li.active a .icon {
-    color: yellow;
+    transform: translateX(80px);
   }
 }
 
