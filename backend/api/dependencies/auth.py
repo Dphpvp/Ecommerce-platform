@@ -5,6 +5,7 @@ from typing import Optional
 from api.core.config import get_settings
 from api.core.database import get_database
 
+
 settings = get_settings()
 
 async def get_current_user_from_session(request: Request) -> dict:
