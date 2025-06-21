@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import '../../styles/toast.css';
+import '../../styles/components/toast.css';
 
 export const useToast = () => {
   const [toasts, setToasts] = useState([]);
