@@ -75,9 +75,18 @@ const LuxuryNavigation = () => {
       {/* Logo Section */}
       <div className="luxury-nav-logo">
         <Link to="/">
-          <div className="nav-logo-text">
-            <span className="logo-letter">B</span>
-            <span className="logo-letter">T</span>
+          <img
+            src="/images/logo.png"
+            alt="Bespoke Tailoring"
+            className="nav-logo-image"
+            onError={(e) => {
+              e.target.style.display = 'none';
+              e.target.nextSibling.style.display = 'flex';
+            }}
+          />
+          <div className="nav-logo-text" style={{ display: 'none' }}>
+            <span className="logo-letter">V</span>
+            <span className="logo-letter">S</span>
           </div>
         </Link>
       </div>

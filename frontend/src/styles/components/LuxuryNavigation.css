@@ -15,40 +15,43 @@
   padding: 0 2rem;
 }
 
-/* Logo Section - No Background */
+/* Logo Section */
 .luxury-nav-logo {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(15px);
+  border-radius: 50%;
+  width: 70px;
+  height: 70px;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: var(--shadow-luxury);
+  border: 3px solid var(--tailoring-gold);
   transition: all 0.3s ease;
-}
-
-.luxury-nav-logo a {
-  text-decoration: none;
 }
 
 .luxury-nav-logo:hover {
   transform: scale(1.1);
+  box-shadow: var(--shadow-deep);
+}
+
+.nav-logo-image {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  border-radius: 50%;
 }
 
 .nav-logo-text {
   display: flex;
-  gap: 4px;
-  align-items: center;
+  gap: 2px;
 }
 
 .logo-letter {
   font-family: var(--font-serif);
-  font-size: 2rem;
+  font-size: 1.2rem;
   font-weight: 700;
-  color: var(--tailoring-gold);
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-  transition: all 0.3s ease;
-}
-
-.logo-letter:hover {
-  color: white;
-  text-shadow: 0 0 10px var(--tailoring-gold);
+  color: var(--tailoring-navy);
 }
 
 /* Main Navigation */
@@ -127,23 +130,25 @@
 
 .luxury-navigation ul li a .text {
   position: absolute;
-  bottom: -5px;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
   opacity: 0;
   font-weight: 600;
-  font-size: 0.5em;
+  font-size: 0.6em;
   color: var(--tailoring-navy);
   transition: 0.5s;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  transform: translateY(0px);
   background: var(--tailoring-gold);
   padding: 2px 6px;
   border-radius: 8px;
   white-space: nowrap;
+  pointer-events: none;
 }
 
 .luxury-navigation ul li.active a .text {
-  transform: translateY(13px);
+  bottom: -25px;
   opacity: 1;
 }
 
