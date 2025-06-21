@@ -1,6 +1,6 @@
 /* frontend/src/styles/enhanced-products.css */
-@import url('./var.css');
-@import url('./tailoring-theme.css');
+@import url('../var.css');
+@import url('../tailoring-theme.css');
 
 /* Products Page Enhancements */
 .products-hero-section {

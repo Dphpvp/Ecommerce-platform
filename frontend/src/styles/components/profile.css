@@ -1,5 +1,5 @@
 /* Updated frontend/src/styles/profile.css */
-@import url('./var.css');
+@import url('../var.css');
 
 .profile {
   padding: 2rem 0;

@@ -8,7 +8,7 @@ import './App.css';
 import { AuthProvider } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
 import { ToastProvider } from './components/toast';
-import { ParallaxContainer } from './components/Parallax';
+import { ParallaxContainer } from './components/utils/parallax';
 
 import Header from './components/header';
 import Footer from './components/Footer';

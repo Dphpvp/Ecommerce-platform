@@ -1,4 +1,4 @@
-@import url('./var.css');
+@import url('../var.css');
 
 .footer {
   background: linear-gradient(135deg, #2c3e50, #34495e);

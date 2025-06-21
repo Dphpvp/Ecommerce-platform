@@ -1,4 +1,6 @@
 /* Parallax Section Styles */
+@import url('../../styles/var.css');
+@import url('../../styles/tailoring-theme.css');
 
 .parallax-section {
   position: relative;
