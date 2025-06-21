@@ -1,0 +1,468 @@
+/* frontend/src/components/Parallax/ParallaxSection.css */
+.parallax-section {
+  position: relative;
+  overflow: hidden;
+  min-height: 50vh;
+}
+
+.parallax-background {
+  position: absolute;
+  top: -10%;
+  left: 0;
+  right: 0;
+  bottom: -10%;
+  background-attachment: fixed;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  will-change: transform;
+  z-index: 1;
+}
+
+.parallax-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  z-index: 2;
+}
+
+.parallax-content {
+  position: relative;
+  z-index: 3;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.parallax-element {
+  will-change: transform;
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .parallax-background {
+    background-attachment: scroll !important;
+    transform: none !important;
+    top: 0;
+    bottom: 0;
+  }
+  
+  .parallax-element {
+    transform: none !important;
+  }
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .parallax-background,
+  .parallax-element {
+    transform: none !important;
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* frontend/src/styles/tailoring-theme.css */
+@import url('./var.css');
+
+/* Tailoring Theme Variables */
+:root {
+  /* Tailoring Color Palette */
+  --tailoring-navy: #1B2951;
+  --tailoring-gold: #D4AF37;
+  --tailoring-cream: #F5F5DC;
+  --tailoring-charcoal: #36454F;
+  --tailoring-champagne: #F7E7CE;
+  --tailoring-lavender: #A78BFA;
+  --tailoring-brown: #8B4513;
+  --tailoring-silver: #C0C0C0;
+
+  /* Parallax Settings */
+  --parallax-perspective: 1px;
+  --parallax-speed-slow: -0.2;
+  --parallax-speed-medium: -0.5;
+  --parallax-speed-fast: -0.8;
+
+  /* Typography */
+  --font-serif: 'Playfair Display', 'Georgia', serif;
+  --font-sans: 'Inter', 'Helvetica Neue', sans-serif;
+  --font-mono: 'Source Code Pro', monospace;
+
+  /* Shadows and Effects */
+  --shadow-luxury: 0 8px 32px rgba(27, 41, 81, 0.15);
+  --shadow-gold: 0 4px 20px rgba(212, 175, 55, 0.25);
+  --shadow-deep: 0 12px 40px rgba(0, 0, 0, 0.2);
+
+  /* Gradients */
+  --gradient-luxury: linear-gradient(135deg, var(--tailoring-navy) 0%, var(--tailoring-charcoal) 100%);
+  --gradient-gold: linear-gradient(135deg, var(--tailoring-gold) 0%, #FFD700 100%);
+  --gradient-fabric: linear-gradient(45deg, var(--tailoring-cream) 0%, var(--tailoring-champagne) 100%);
+}
+
+/* Body and Base Styles */
+body {
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  color: var(--tailoring-charcoal);
+  background-color: var(--tailoring-cream);
+  overflow-x: hidden;
+}
+
+/* Typography */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--tailoring-navy);
+}
+
+h1 {
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  margin-bottom: 1.5rem;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+  font-size: clamp(2rem, 4vw, 3rem);
+  margin-bottom: 1.25rem;
+}
+
+h3 {
+  font-size: clamp(1.5rem, 3vw, 2.25rem);
+  margin-bottom: 1rem;
+}
+
+/* Tailoring-Specific Elements */
+.hero-section {
+  height: 100vh;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: var(--tailoring-cream);
+}
+
+.hero-title {
+  font-size: clamp(3rem, 6vw, 5rem);
+  font-weight: 700;
+  margin-bottom: 1rem;
+  text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
+  letter-spacing: 2px;
+}
+
+.hero-subtitle {
+  font-size: clamp(1.2rem, 2.5vw, 1.8rem);
+  font-family: var(--font-sans);
+  margin-bottom: 2rem;
+  opacity: 0.9;
+  font-weight: 300;
+}
+
+/* Buttons */
+.btn-luxury {
+  background: var(--gradient-gold);
+  color: var(--tailoring-navy);
+  border: 2px solid var(--tailoring-gold);
+  padding: 1rem 2.5rem;
+  font-family: var(--font-serif);
+  font-weight: 600;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  border-radius: 0;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: var(--shadow-gold);
+}
+
+.btn-luxury::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: var(--gradient-luxury);
+  transition: left 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  z-index: 1;
+}
+
+.btn-luxury span {
+  position: relative;
+  z-index: 2;
+}
+
+.btn-luxury:hover::before {
+  left: 0;
+}
+
+.btn-luxury:hover {
+  color: var(--tailoring-gold);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-deep);
+}
+
+.btn-outline-luxury {
+  background: transparent;
+  color: var(--tailoring-gold);
+  border: 2px solid var(--tailoring-gold);
+  padding: 1rem 2rem;
+  font-family: var(--font-serif);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-outline-luxury:hover {
+  background: var(--tailoring-gold);
+  color: var(--tailoring-navy);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-gold);
+}
+
+/* Cards and Sections */
+.luxury-card {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 12px;
+  padding: 2.5rem;
+  box-shadow: var(--shadow-luxury);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.luxury-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: var(--gradient-gold);
+}
+
+.luxury-card:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-deep);
+}
+
+/* Services Section */
+.services-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 2rem;
+  padding: 4rem 0;
+}
+
+.service-card {
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(15px);
+  padding: 3rem 2rem;
+  border-radius: 16px;
+  text-align: center;
+  box-shadow: var(--shadow-luxury);
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  border: 1px solid rgba(212, 175, 55, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+.service-card::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(212, 175, 55, 0.05) 0%, transparent 70%);
+  transform: scale(0);
+  transition: transform 0.6s ease;
+}
+
+.service-card:hover::before {
+  transform: scale(1);
+}
+
+.service-card:hover {
+  transform: translateY(-12px) scale(1.02);
+  box-shadow: var(--shadow-deep);
+}
+
+.service-icon {
+  font-size: 3rem;
+  color: var(--tailoring-gold);
+  margin-bottom: 1.5rem;
+  display: block;
+}
+
+/* Process Steps */
+.process-section {
+  padding: 6rem 0;
+  background: var(--gradient-fabric);
+}
+
+.process-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 3rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.process-step {
+  position: relative;
+  text-align: center;
+  padding: 2rem;
+}
+
+.step-number {
+  width: 80px;
+  height: 80px;
+  background: var(--gradient-gold);
+  color: var(--tailoring-navy);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 700;
+  margin: 0 auto 1.5rem;
+  box-shadow: var(--shadow-gold);
+}
+
+/* Fabric Texture Backgrounds */
+.fabric-wool {
+  background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="wool" patternUnits="userSpaceOnUse" width="10" height="10"><circle cx="5" cy="5" r="1" fill="%23f5f5dc" opacity="0.3"/></pattern></defs><rect width="100" height="100" fill="%23e8e8e8"/><rect width="100" height="100" fill="url(%23wool)"/></svg>');
+}
+
+.fabric-silk {
+  background: linear-gradient(45deg, #f8f8ff 25%, #f0f8ff 25%, #f0f8ff 50%, #f8f8ff 50%, #f8f8ff 75%, #f0f8ff 75%, #f0f8ff);
+  background-size: 20px 20px;
+}
+
+.fabric-linen {
+  background-image: 
+    radial-gradient(circle at 1px 1px, rgba(245,245,220,0.15) 1px, transparent 0),
+    radial-gradient(circle at 2px 2px, rgba(245,245,220,0.1) 1px, transparent 0);
+  background-size: 10px 10px, 15px 15px;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.8s ease-out forwards;
+}
+
+.fade-in-left {
+  animation: fadeInLeft 0.8s ease-out forwards;
+}
+
+.fade-in-right {
+  animation: fadeInRight 0.8s ease-out forwards;
+}
+
+/* Intersection Observer Animation Classes */
+.animate-on-scroll {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+.animate-on-scroll.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .hero-title {
+    font-size: 2.5rem;
+  }
+  
+  .hero-subtitle {
+    font-size: 1.2rem;
+  }
+  
+  .btn-luxury,
+  .btn-outline-luxury {
+    padding: 0.8rem 1.5rem;
+    font-size: 0.9rem;
+  }
+  
+  .service-card {
+    padding: 2rem 1.5rem;
+  }
+  
+  .process-steps {
+    grid-template-columns: 1fr;
+    gap: 2rem;
+  }
+  
+  .step-number {
+    width: 60px;
+    height: 60px;
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .hero-section {
+    padding: 0 1rem;
+  }
+  
+  .luxury-card {
+    padding: 2rem 1.5rem;
+  }
+  
+  .services-grid {
+    grid-template-columns: 1fr;
+    gap: 1.5rem;
+    padding: 2rem 0;
+  }
+}
