@@ -1,6 +1,6 @@
 /* frontend/src/styles/about.css */
-@import url('./var.css');
-@import url('./tailoring-theme.css');
+@import url('../styles/var.css');
+@import url('../styles/tailoring-theme.css');
 
 /* About Page Styles */
 .about-page {
