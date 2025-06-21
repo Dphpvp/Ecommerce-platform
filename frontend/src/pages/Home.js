@@ -1,4 +1,4 @@
-// frontend/src/pages/Home.js
+// frontend/src/pages/Home.js - Enhanced with Parallax Theme
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
@@ -81,7 +81,7 @@ const Home = () => {
       >
         <div className="container">
           <AnimatedSection delay={100}>
-            <h2 className="section-title text-center mb-5">Our Craftsmanship Services</h2>
+            <h2 className="section-title">Our Craftsmanship Services</h2>
           </AnimatedSection>
           
           <div className="services-grid">
@@ -134,7 +134,7 @@ const Home = () => {
       <section className="process-section">
         <div className="container">
           <AnimatedSection>
-            <h2 className="section-title text-center mb-5">Our Tailoring Process</h2>
+            <h2 className="section-title">Our Tailoring Process</h2>
           </AnimatedSection>
           
           <div className="process-steps">
@@ -142,37 +142,44 @@ const Home = () => {
               {
                 number: "01",
                 title: "Consultation",
-                description: "Personal style consultation to understand your preferences, lifestyle, and desired outcome."
+                description: "Personal style consultation to understand your preferences, lifestyle, and desired outcome.",
+                icon: "💬"
               },
               {
                 number: "02", 
                 title: "Measurements",
-                description: "Precise measurements taken by our master tailors using time-tested techniques."
+                description: "Precise measurements taken by our master tailors using time-tested techniques.",
+                icon: "📐"
               },
               {
                 number: "03",
                 title: "Fabric Selection", 
-                description: "Choose from our curated collection of premium fabrics from renowned mills worldwide."
+                description: "Choose from our curated collection of premium fabrics from renowned mills worldwide.",
+                icon: "🧵"
               },
               {
                 number: "04",
                 title: "Pattern Creation",
-                description: "Individual pattern drafted specifically for your unique body shape and posture."
+                description: "Individual pattern drafted specifically for your unique body shape and posture.",
+                icon: "📋"
               },
               {
                 number: "05",
                 title: "Craftsmanship",
-                description: "Skilled artisans hand-craft your garment with meticulous attention to every detail."
+                description: "Skilled artisans hand-craft your garment with meticulous attention to every detail.",
+                icon: "✂️"
               },
               {
                 number: "06",
                 title: "Final Fitting",
-                description: "Final adjustments and delivery of your perfectly fitted bespoke garment."
+                description: "Final adjustments and delivery of your perfectly fitted bespoke garment.",
+                icon: "👔"
               }
             ].map((step, index) => (
               <AnimatedSection key={index} delay={index * 100}>
                 <div className="process-step">
                   <div className="step-number">{step.number}</div>
+                  <div className="step-icon">{step.icon}</div>
                   <h3>{step.title}</h3>
                   <p>{step.description}</p>
                 </div>
@@ -193,14 +200,19 @@ const Home = () => {
       >
         <div className="container">
           <AnimatedSection>
-            <h2 className="section-title text-center mb-5">Featured Collection</h2>
+            <h2 className="section-title">Featured Collection</h2>
+            <p className="section-subtitle">
+              Discover our handpicked selection of premium garments and accessories
+            </p>
           </AnimatedSection>
           
           <div className="product-grid">
             {featuredProducts.map((product, index) => (
               <AnimatedSection key={product._id} delay={index * 100}>
                 <div className="featured-product-wrapper">
-                  <ProductCard product={product} />
+                  <ParallaxElement speed={-0.1 + index * 0.05}>
+                    <ProductCard product={product} />
+                  </ParallaxElement>
                 </div>
               </AnimatedSection>
             ))}
@@ -217,10 +229,13 @@ const Home = () => {
       </ParallaxSection>
 
       {/* Testimonials Section */}
-      <section className="testimonials-section py-5">
+      <section className="testimonials-section">
         <div className="container">
           <AnimatedSection>
-            <h2 className="section-title text-center mb-5">What Our Clients Say</h2>
+            <h2 className="section-title">What Our Clients Say</h2>
+            <p className="section-subtitle">
+              Trusted by discerning individuals who appreciate exceptional craftsmanship
+            </p>
           </AnimatedSection>
           
           <div className="testimonials-grid">
@@ -228,21 +243,29 @@ const Home = () => {
               {
                 text: "The attention to detail and craftsmanship is extraordinary. My suit fits like it was made for me – because it was!",
                 author: "James Mitchell",
-                title: "CEO, Tech Innovations"
+                title: "CEO, Tech Innovations",
+                rating: 5
               },
               {
                 text: "From the first consultation to the final fitting, the experience was exceptional. The quality speaks for itself.",
                 author: "Sarah Williams", 
-                title: "Marketing Director"
+                title: "Marketing Director",
+                rating: 5
               },
               {
                 text: "I've never owned clothing that fits this perfectly. The team's expertise and passion for their craft is evident in every stitch.",
                 author: "David Chen",
-                title: "Investment Banker"
+                title: "Investment Banker",
+                rating: 5
               }
             ].map((testimonial, index) => (
               <AnimatedSection key={index} delay={index * 200}>
                 <div className="testimonial-card luxury-card">
+                  <div className="testimonial-rating">
+                    {[...Array(testimonial.rating)].map((_, i) => (
+                      <span key={i} className="star">⭐</span>
+                    ))}
+                  </div>
                   <p className="testimonial-text">"{testimonial.text}"</p>
                   <div className="testimonial-author">
                     <strong>{testimonial.author}</strong>
@@ -254,6 +277,45 @@ const Home = () => {
           </div>
         </div>
       </section>
+
+      {/* Heritage Section */}
+      <ParallaxSection
+        backgroundImage="/images/heritage-workshop.jpg"
+        speed={-0.3}
+        className="heritage-section"
+        overlay={true}
+        overlayOpacity={0.6}
+        height="70vh"
+      >
+        <div className="container">
+          <div className="heritage-content">
+            <AnimatedSection delay={200}>
+              <h2 className="hero-title text-white">Three Generations of Excellence</h2>
+              <p className="hero-subtitle text-white">
+                Since 1985, our family has been dedicated to preserving the art of traditional tailoring 
+                while embracing modern innovations to serve today's discerning clientele.
+              </p>
+              <div className="heritage-stats">
+                <div className="stat-item">
+                  <div className="stat-number">1000+</div>
+                  <div className="stat-label">Satisfied Clients</div>
+                </div>
+                <div className="stat-item">
+                  <div className="stat-number">38</div>
+                  <div className="stat-label">Years of Excellence</div>
+                </div>
+                <div className="stat-item">
+                  <div className="stat-number">5000+</div>
+                  <div className="stat-label">Garments Crafted</div>
+                </div>
+              </div>
+              <Link to="/about" className="btn-outline-luxury">
+                Our Story
+              </Link>
+            </AnimatedSection>
+          </div>
+        </div>
+      </ParallaxSection>
 
       {/* Call to Action Section */}
       <ParallaxSection
@@ -270,9 +332,14 @@ const Home = () => {
             <p className="hero-subtitle text-white mb-4">
               Schedule your personal consultation and begin your journey to the perfect fit.
             </p>
-            <Link to="/contact" className="btn-luxury">
-              <span>Start Your Journey</span>
-            </Link>
+            <div className="cta-buttons">
+              <Link to="/contact" className="btn-luxury">
+                <span>Start Your Journey</span>
+              </Link>
+              <Link to="/products" className="btn-outline-luxury">
+                Browse Collection
+              </Link>
+            </div>
           </AnimatedSection>
         </div>
       </ParallaxSection>
