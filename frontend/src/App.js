@@ -1,4 +1,4 @@
-// frontend/src/App.js - Updated with Footer
+// frontend/src/App.js - Updated with Parallax Container
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { loadStripe } from '@stripe/stripe-js';
@@ -8,6 +8,7 @@ import './App.css';
 import { AuthProvider } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
 import { ToastProvider } from './components/toast';
+import { ParallaxContainer } from './components/Parallax';
 
 import Header from './components/header';
 import Footer from './components/Footer';
@@ -34,8 +35,6 @@ import AdminProducts from './components/admin/AdminProducts';
 import AdminRoute from './components/admin/AdminRoute';
 import AdminCategories from './components/admin/AdminCategories';
 
-
-
 const stripePromise = loadStripe(
   process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY
 );
@@ -44,105 +43,107 @@ const App = () => {
   return (
     <Elements stripe={stripePromise}>
       <ErrorBoundary>
-      <Router>
-        <AuthProvider>
-          <CartProvider>
-            <ToastProvider>
-              <div className="app" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-                <Header />
-                <main className="main" style={{ flex: '1' }}>
-                  <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/products" element={<Products />} />
-                    <Route path="/about" element={<About />} />
-                    <Route path="/contact" element={<Contact />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/register" element={<Register />} />
-                    <Route path="/reset-password" element={<ResetPassword />} />
-                    <Route path="/verify-email" element={<EmailVerification />} />
+        <Router>
+          <AuthProvider>
+            <CartProvider>
+              <ToastProvider>
+                <ParallaxContainer>
+                  <div className="app" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+                    <Header />
+                    <main className="main" style={{ flex: '1' }}>
+                      <Routes>
+                        <Route path="/" element={<Home />} />
+                        <Route path="/products" element={<Products />} />
+                        <Route path="/about" element={<About />} />
+                        <Route path="/contact" element={<Contact />} />
+                        <Route path="/login" element={<Login />} />
+                        <Route path="/register" element={<Register />} />
+                        <Route path="/reset-password" element={<ResetPassword />} />
+                        <Route path="/verify-email" element={<EmailVerification />} />
 
-                    <Route
-                      path="/cart"
-                      element={
-                        <PrivateRoute>
-                          <Cart />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="/checkout"
-                      element={
-                        <PrivateRoute>
-                          <Checkout />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="/orders"
-                      element={
-                        <PrivateRoute>
-                          <Orders />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="/profile"
-                      element={
-                        <PrivateRoute>
-                          <Profile />
-                        </PrivateRoute>
-                      }
-                    />
+                        <Route
+                          path="/cart"
+                          element={
+                            <PrivateRoute>
+                              <Cart />
+                            </PrivateRoute>
+                          }
+                        />
+                        <Route
+                          path="/checkout"
+                          element={
+                            <PrivateRoute>
+                              <Checkout />
+                            </PrivateRoute>
+                          }
+                        />
+                        <Route
+                          path="/orders"
+                          element={
+                            <PrivateRoute>
+                              <Orders />
+                            </PrivateRoute>
+                          }
+                        />
+                        <Route
+                          path="/profile"
+                          element={
+                            <PrivateRoute>
+                              <Profile />
+                            </PrivateRoute>
+                          }
+                        />
 
-                    <Route
-                      path="/admin/dashboard"
-                      element={
-                        <AdminRoute>
-                          <AdminDashboard />
-                        </AdminRoute>
-                      }
-                    />
-                    <Route
-                      path="/admin/orders"
-                      element={
-                        <AdminRoute>
-                          <AdminOrders />
-                        </AdminRoute>
-                      }
-                    />
-                    <Route
-                      path="/admin/users"
-                      element={
-                        <AdminRoute>
-                          <AdminUsers />
-                        </AdminRoute>
-                      }
-                    />
-                    <Route
-                      path="/admin/products"
-                      element={
-                        <AdminRoute>
-                          <AdminProducts />
-                        </AdminRoute>
-                      }
-                    />
-                    <Route
-                      path="/admin/categories-list"
-                      element={
-                        <AdminRoute>
-                          <AdminCategories />
-                        </AdminRoute>
-                      }
-                    />
-                  </Routes>
-                </main>
-                <Footer />
-              </div>
-            </ToastProvider>
-          </CartProvider>
-        </AuthProvider>
-      </Router>
-    </ErrorBoundary>
+                        <Route
+                          path="/admin/dashboard"
+                          element={
+                            <AdminRoute>
+                              <AdminDashboard />
+                            </AdminRoute>
+                          }
+                        />
+                        <Route
+                          path="/admin/orders"
+                          element={
+                            <AdminRoute>
+                              <AdminOrders />
+                            </AdminRoute>
+                          }
+                        />
+                        <Route
+                          path="/admin/users"
+                          element={
+                            <AdminRoute>
+                              <AdminUsers />
+                            </AdminRoute>
+                          }
+                        />
+                        <Route
+                          path="/admin/products"
+                          element={
+                            <AdminRoute>
+                              <AdminProducts />
+                            </AdminRoute>
+                          }
+                        />
+                        <Route
+                          path="/admin/categories-list"
+                          element={
+                            <AdminRoute>
+                              <AdminCategories />
+                            </AdminRoute>
+                          }
+                        />
+                      </Routes>
+                    </main>
+                    <Footer />
+                  </div>
+                </ParallaxContainer>
+              </ToastProvider>
+            </CartProvider>
+          </AuthProvider>
+        </Router>
+      </ErrorBoundary>
     </Elements>
   );
 };

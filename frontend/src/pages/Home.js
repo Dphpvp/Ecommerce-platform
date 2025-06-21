@@ -1,22 +1,28 @@
-// frontend/src/pages/Home.js - Enhanced with Parallax Theme
+// frontend/src/pages/Home.js - Enhanced with New Parallax Features
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
-import { ParallaxSection, ParallaxElement } from '../components/Parallax';
-import { useIntersectionObserver } from '../hooks/useParallax';
+import { 
+  ParallaxSection, 
+  ParallaxElement, 
+  ParallaxImage, 
+  ParallaxText,
+  useParallaxContext 
+} from '../components/Parallax';
+import { useScrollAnimation } from '../hooks/useParallax';
+import { preloadImages } from '../utils/parallax';
+import { parallaxConfig } from '../config/parallax';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
 // Animation component for scroll-triggered animations
-const AnimatedSection = ({ children, className = '', delay = 0 }) => {
-  const { elementRef, isIntersecting } = useIntersectionObserver({
-    threshold: 0.2,
-  });
+const AnimatedSection = ({ children, className = '', delay = 0, animationType = 'fadeIn' }) => {
+  const { elementRef, isVisible } = useScrollAnimation(0.2);
 
   return (
     <div
       ref={elementRef}
-      className={`animate-on-scroll ${isIntersecting ? 'is-visible' : ''} ${className}`}
+      className={`animate-on-scroll ${animationType} ${isVisible ? 'is-visible' : ''} ${className}`}
       style={{ animationDelay: `${delay}ms` }}
     >
       {children}
@@ -26,9 +32,12 @@ const AnimatedSection = ({ children, className = '', delay = 0 }) => {
 
 const Home = () => {
   const [featuredProducts, setFeaturedProducts] = useState([]);
+  const [imagesLoaded, setImagesLoaded] = useState(false);
+  const { isEnabled, performance } = useParallaxContext();
 
   useEffect(() => {
     fetchFeaturedProducts();
+    preloadCriticalImages();
   }, []);
 
   const fetchFeaturedProducts = async () => {
@@ -41,39 +50,77 @@ const Home = () => {
     }
   };
 
+  const preloadCriticalImages = async () => {
+    const criticalImages = [
+      { src: '/images/hero-fabric-texture.jpg', priority: true },
+      { src: '/images/workshop-background.jpg', priority: false },
+      { src: '/images/fabric-collection-bg.jpg', priority: false }
+    ];
+
+    try {
+      await preloadImages(criticalImages, ({ loaded, total, percentage }) => {
+        console.log(`Loading images: ${percentage}%`);
+      });
+      setImagesLoaded(true);
+    } catch (error) {
+      console.error('Failed to preload images:', error);
+      setImagesLoaded(true); // Still show content even if preload fails
+    }
+  };
+
   return (
     <div className="home">
-      {/* Hero Section with Parallax */}
+      {/* Hero Section with Enhanced Parallax */}
       <ParallaxSection
         backgroundImage="/images/hero-fabric-texture.jpg"
-        speed={-0.5}
+        speed={parallaxConfig.speeds.background}
         className="hero-section"
         overlay={true}
         overlayOpacity={0.4}
         height="100vh"
+        priority={true}
+        loading={!imagesLoaded}
       >
         <div className="container">
-          <AnimatedSection className="hero-content" delay={200}>
-            <h1 className="hero-title">Bespoke Tailoring Excellence</h1>
-            <p className="hero-subtitle">
+          <AnimatedSection className="hero-content" delay={200} animationType="slideUp">
+            <ParallaxText
+              animationType="fadeIn"
+              splitBy="words"
+              stagger={100}
+              delay={400}
+              className="hero-title"
+            >
+              Bespoke Tailoring Excellence
+            </ParallaxText>
+            
+            <ParallaxText
+              animationType="slideUp"
+              delay={800}
+              className="hero-subtitle"
+            >
               Crafting perfect fits with precision, tradition, and artistry since 1985
-            </p>
+            </ParallaxText>
+            
             <div className="hero-buttons">
-              <Link to="/products" className="btn-luxury">
-                <span>Explore Collection</span>
-              </Link>
-              <Link to="/contact" className="btn-outline-luxury">
-                Book Consultation
-              </Link>
+              <AnimatedSection delay={1200} animationType="slideUp">
+                <Link to="/products" className="btn-luxury">
+                  <span>Explore Collection</span>
+                </Link>
+              </AnimatedSection>
+              <AnimatedSection delay={1400} animationType="slideUp">
+                <Link to="/contact" className="btn-outline-luxury">
+                  Book Consultation
+                </Link>
+              </AnimatedSection>
             </div>
           </AnimatedSection>
         </div>
       </ParallaxSection>
 
-      {/* Services Section */}
+      {/* Services Section with Parallax Elements */}
       <ParallaxSection
         backgroundImage="/images/workshop-background.jpg"
-        speed={-0.3}
+        speed={parallaxConfig.speeds.medium}
         className="services-section fabric-linen"
         overlay={true}
         overlayOpacity={0.1}
@@ -81,60 +128,65 @@ const Home = () => {
       >
         <div className="container">
           <AnimatedSection delay={100}>
-            <h2 className="section-title">Our Craftsmanship Services</h2>
+            <ParallaxText
+              animationType="fadeIn"
+              className="section-title"
+            >
+              Our Craftsmanship Services
+            </ParallaxText>
           </AnimatedSection>
           
           <div className="services-grid">
-            <AnimatedSection delay={200}>
-              <div className="service-card luxury-card">
-                <span className="service-icon">✂️</span>
-                <h3>Bespoke Tailoring</h3>
-                <p>
-                  Custom suits crafted to your exact measurements and preferences. 
-                  Every detail designed to reflect your personal style and ensure the perfect fit.
-                </p>
-                <Link to="/products" className="btn-outline-luxury">
-                  Design Your Suit
-                </Link>
-              </div>
-            </AnimatedSection>
-
-            <AnimatedSection delay={400}>
-              <div className="service-card luxury-card">
-                <span className="service-icon">📏</span>
-                <h3>Precision Measurements</h3>
-                <p>
-                  Professional fitting sessions using traditional techniques combined with 
-                  modern 3D body scanning technology for unprecedented accuracy.
-                </p>
-                <Link to="/contact" className="btn-outline-luxury">
-                  Schedule Fitting
-                </Link>
-              </div>
-            </AnimatedSection>
-
-            <AnimatedSection delay={600}>
-              <div className="service-card luxury-card">
-                <span className="service-icon">🧵</span>
-                <h3>Expert Alterations</h3>
-                <p>
-                  Professional alterations and repairs to ensure your garments maintain 
-                  their perfect fit and elegant appearance throughout their lifetime.
-                </p>
-                <Link to="/contact" className="btn-outline-luxury">
-                  Get Quote
-                </Link>
-              </div>
-            </AnimatedSection>
+            {[
+              {
+                icon: "✂️",
+                title: "Bespoke Tailoring",
+                description: "Custom suits crafted to your exact measurements and preferences. Every detail designed to reflect your personal style and ensure the perfect fit.",
+                link: "/products",
+                linkText: "Design Your Suit"
+              },
+              {
+                icon: "📏",
+                title: "Precision Measurements",
+                description: "Professional fitting sessions using traditional techniques combined with modern 3D body scanning technology for unprecedented accuracy.",
+                link: "/contact",
+                linkText: "Schedule Fitting"
+              },
+              {
+                icon: "🧵",
+                title: "Expert Alterations",
+                description: "Professional alterations and repairs to ensure your garments maintain their perfect fit and elegant appearance throughout their lifetime.",
+                link: "/contact",
+                linkText: "Get Quote"
+              }
+            ].map((service, index) => (
+              <AnimatedSection key={index} delay={200 + index * 200} animationType="slideUp">
+                <div className="service-card luxury-card">
+                  <ParallaxElement speed={-0.1 + index * 0.05}>
+                    <span className="service-icon">{service.icon}</span>
+                    <h3>{service.title}</h3>
+                    <p>{service.description}</p>
+                    <Link to={service.link} className="btn-outline-luxury">
+                      {service.linkText}
+                    </Link>
+                  </ParallaxElement>
+                </div>
+              </AnimatedSection>
+            ))}
           </div>
         </div>
       </ParallaxSection>
 
-      {/* Process Section */}
+      {/* Process Section with Staggered Animations */}
       <section className="process-section">
         <div className="container">
           <AnimatedSection>
-            <h2 className="section-title">Our Tailoring Process</h2>
+            <ParallaxText
+              animationType="fadeIn"
+              className="section-title"
+            >
+              Our Tailoring Process
+            </ParallaxText>
           </AnimatedSection>
           
           <div className="process-steps">
@@ -176,12 +228,19 @@ const Home = () => {
                 icon: "👔"
               }
             ].map((step, index) => (
-              <AnimatedSection key={index} delay={index * 100}>
+              <AnimatedSection 
+                key={index} 
+                delay={index * 150} 
+                animationType="slideUp"
+                className={`stagger-${index + 1}`}
+              >
                 <div className="process-step">
-                  <div className="step-number">{step.number}</div>
-                  <div className="step-icon">{step.icon}</div>
-                  <h3>{step.title}</h3>
-                  <p>{step.description}</p>
+                  <ParallaxElement speed={-0.05 * (index + 1)}>
+                    <div className="step-number">{step.number}</div>
+                    <div className="step-icon">{step.icon}</div>
+                    <h3>{step.title}</h3>
+                    <p>{step.description}</p>
+                  </ParallaxElement>
                 </div>
               </AnimatedSection>
             ))}
@@ -189,10 +248,10 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Featured Products with Parallax */}
+      {/* Featured Products with Enhanced Images */}
       <ParallaxSection
         backgroundImage="/images/fabric-collection-bg.jpg"
-        speed={-0.2}
+        speed={parallaxConfig.speeds.slow}
         className="featured-products-section fabric-silk"
         overlay={true}
         overlayOpacity={0.15}
@@ -200,17 +259,31 @@ const Home = () => {
       >
         <div className="container">
           <AnimatedSection>
-            <h2 className="section-title">Featured Collection</h2>
-            <p className="section-subtitle">
+            <ParallaxText
+              animationType="fadeIn"
+              className="section-title"
+            >
+              Featured Collection
+            </ParallaxText>
+            <ParallaxText
+              animationType="slideUp"
+              delay={200}
+              className="section-subtitle"
+            >
               Discover our handpicked selection of premium garments and accessories
-            </p>
+            </ParallaxText>
           </AnimatedSection>
           
           <div className="product-grid">
             {featuredProducts.map((product, index) => (
-              <AnimatedSection key={product._id} delay={index * 100}>
+              <AnimatedSection 
+                key={product._id} 
+                delay={index * 100}
+                animationType="slideUp"
+                className={`stagger-${(index % 6) + 1}`}
+              >
                 <div className="featured-product-wrapper">
-                  <ParallaxElement speed={-0.1 + index * 0.05}>
+                  <ParallaxElement speed={-0.05 + index * 0.02}>
                     <ProductCard product={product} />
                   </ParallaxElement>
                 </div>
@@ -218,7 +291,7 @@ const Home = () => {
             ))}
           </div>
           
-          <AnimatedSection delay={800}>
+          <AnimatedSection delay={800} animationType="slideUp">
             <div className="text-center mt-5">
               <Link to="/products" className="btn-luxury">
                 <span>View Full Collection</span>
@@ -228,121 +301,22 @@ const Home = () => {
         </div>
       </ParallaxSection>
 
-      {/* Testimonials Section */}
-      <section className="testimonials-section">
-        <div className="container">
-          <AnimatedSection>
-            <h2 className="section-title">What Our Clients Say</h2>
-            <p className="section-subtitle">
-              Trusted by discerning individuals who appreciate exceptional craftsmanship
-            </p>
-          </AnimatedSection>
-          
-          <div className="testimonials-grid">
-            {[
-              {
-                text: "The attention to detail and craftsmanship is extraordinary. My suit fits like it was made for me – because it was!",
-                author: "James Mitchell",
-                title: "CEO, Tech Innovations",
-                rating: 5
-              },
-              {
-                text: "From the first consultation to the final fitting, the experience was exceptional. The quality speaks for itself.",
-                author: "Sarah Williams", 
-                title: "Marketing Director",
-                rating: 5
-              },
-              {
-                text: "I've never owned clothing that fits this perfectly. The team's expertise and passion for their craft is evident in every stitch.",
-                author: "David Chen",
-                title: "Investment Banker",
-                rating: 5
-              }
-            ].map((testimonial, index) => (
-              <AnimatedSection key={index} delay={index * 200}>
-                <div className="testimonial-card luxury-card">
-                  <div className="testimonial-rating">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <span key={i} className="star">⭐</span>
-                    ))}
-                  </div>
-                  <p className="testimonial-text">"{testimonial.text}"</p>
-                  <div className="testimonial-author">
-                    <strong>{testimonial.author}</strong>
-                    <span>{testimonial.title}</span>
-                  </div>
-                </div>
-              </AnimatedSection>
-            ))}
-          </div>
+      {/* Performance Information (Debug) */}
+      {process.env.NODE_ENV === 'development' && (
+        <div style={{
+          position: 'fixed',
+          top: '10px',
+          right: '10px',
+          background: 'rgba(0,0,0,0.8)',
+          color: 'white',
+          padding: '10px',
+          borderRadius: '5px',
+          fontSize: '12px',
+          zIndex: 9999
+        }}>
+          Parallax: {isEnabled ? 'ON' : 'OFF'} | Performance: {performance}
         </div>
-      </section>
-
-      {/* Heritage Section */}
-      <ParallaxSection
-        backgroundImage="/images/heritage-workshop.jpg"
-        speed={-0.3}
-        className="heritage-section"
-        overlay={true}
-        overlayOpacity={0.6}
-        height="70vh"
-      >
-        <div className="container">
-          <div className="heritage-content">
-            <AnimatedSection delay={200}>
-              <h2 className="hero-title text-white">Three Generations of Excellence</h2>
-              <p className="hero-subtitle text-white">
-                Since 1985, our family has been dedicated to preserving the art of traditional tailoring 
-                while embracing modern innovations to serve today's discerning clientele.
-              </p>
-              <div className="heritage-stats">
-                <div className="stat-item">
-                  <div className="stat-number">1000+</div>
-                  <div className="stat-label">Satisfied Clients</div>
-                </div>
-                <div className="stat-item">
-                  <div className="stat-number">38</div>
-                  <div className="stat-label">Years of Excellence</div>
-                </div>
-                <div className="stat-item">
-                  <div className="stat-number">5000+</div>
-                  <div className="stat-label">Garments Crafted</div>
-                </div>
-              </div>
-              <Link to="/about" className="btn-outline-luxury">
-                Our Story
-              </Link>
-            </AnimatedSection>
-          </div>
-        </div>
-      </ParallaxSection>
-
-      {/* Call to Action Section */}
-      <ParallaxSection
-        backgroundImage="/images/atelier-background.jpg"
-        speed={-0.4}
-        className="cta-section"
-        overlay={true}
-        overlayOpacity={0.6}
-        height="60vh"
-      >
-        <div className="container text-center">
-          <AnimatedSection delay={200}>
-            <h2 className="hero-title text-white mb-4">Ready to Experience Bespoke Excellence?</h2>
-            <p className="hero-subtitle text-white mb-4">
-              Schedule your personal consultation and begin your journey to the perfect fit.
-            </p>
-            <div className="cta-buttons">
-              <Link to="/contact" className="btn-luxury">
-                <span>Start Your Journey</span>
-              </Link>
-              <Link to="/products" className="btn-outline-luxury">
-                Browse Collection
-              </Link>
-            </div>
-          </AnimatedSection>
-        </div>
-      </ParallaxSection>
+      )}
     </div>
   );
 };
