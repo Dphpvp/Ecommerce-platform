@@ -2,7 +2,8 @@ import React from 'react';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useToastContext } from './toast';
-import '../styles/components/ProductCard.css';
+import '../styles/components/LuxuryProducts.css';
+import '../styles/ProductForm.css';
 
 // Random fabric/tailoring images from Unsplash
 const fabricImages = [
