@@ -1,26 +1,21 @@
+import React from 'react';
+import '../styles/components/Modal.css';
+
 const Modal = ({ isOpen, onClose, children }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="luxury-modal-overlay" onClick={onClose}>
       <div
-        className="modal-content"
-        onClick={(e) => e.stopPropagation()} // prevent closing when clicking inside
+        className="luxury-modal-content"
+        onClick={(e) => e.stopPropagation()}
       >
         <button
           onClick={onClose}
-          style={{
-            position: "absolute",
-            top: 10,
-            right: 10,
-            background: "transparent",
-            border: "none",
-            fontSize: "1.5rem",
-            cursor: "pointer",
-          }}
+          className="luxury-modal-close"
           aria-label="Close modal"
         >
-          &times;
+          ✕
         </button>
         {children}
       </div>
