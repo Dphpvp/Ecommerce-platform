@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useToastContext } from './toast';
-import Modal from '../components/Modal';
+import Modal from './components/Modal';
 
 // Random fabric/tailoring images from Unsplash
 const fabricImages = [
