@@ -6,7 +6,7 @@ import { useToastContext } from '../components/toast';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
-const Login = () => {
+const Login = ({ isSliderMode = false }) => {
   const [formData, setFormData] = useState({
     identifier: '',
     password: ''
@@ -23,7 +23,6 @@ const Login = () => {
   const navigate = useNavigate();
   const recaptchaRef = useRef(null);
 
-  // FIXED: Load reCAPTCHA for login
   useEffect(() => {
     const loadRecaptcha = () => {
       if (window.grecaptcha) {
@@ -53,7 +52,6 @@ const Login = () => {
     loadRecaptcha();
   }, []);
 
-  // Render reCAPTCHA widget
   useEffect(() => {
     if (recaptchaLoaded && recaptchaRef.current && !recaptchaWidgetId && !show2FA) {
       try {
@@ -76,7 +74,6 @@ const Login = () => {
   }, [recaptchaLoaded, show2FA, showToast]);
 
   useEffect(() => {
-    // Load Google Identity Services
     const script = document.createElement('script');
     script.src = 'https://accounts.google.com/gsi/client';
     script.async = true;
@@ -92,7 +89,7 @@ const Login = () => {
         
         window.google.accounts.id.renderButton(
           document.getElementById('google-signin-button'),
-          { theme: 'outline', size: 'large', width: 350 }
+          { theme: 'outline', size: 'large', width: isSliderMode ? 300 : 350 }
         );
       }
     };
@@ -100,7 +97,7 @@ const Login = () => {
     return () => {
       document.head.removeChild(script);
     };
-  }, []);
+  }, [isSliderMode]);
 
   const handleGoogleLogin = async (response) => {
     try {
@@ -140,12 +137,10 @@ const Login = () => {
     });
   };
 
-  // FIXED: Login with reCAPTCHA
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    // Get reCAPTCHA response
     let recaptchaResponse = '';
     try {
       if (recaptchaWidgetId !== null) {
@@ -198,7 +193,6 @@ const Login = () => {
           showToast('Please verify your email address', 'error');
         }
         
-        // Reset reCAPTCHA on error
         if (recaptchaWidgetId !== null) {
           window.grecaptcha.reset(recaptchaWidgetId);
         }
@@ -207,7 +201,6 @@ const Login = () => {
       console.error('Login error:', error);
       setError('Network error. Please try again.');
       
-      // Reset reCAPTCHA on error
       if (recaptchaWidgetId !== null) {
         window.grecaptcha.reset(recaptchaWidgetId);
       }
@@ -229,7 +222,6 @@ const Login = () => {
     setTwoFactorMethod('');
   };
 
-  // Show 2FA verification if required
   if (show2FA) {
     return (
       <TwoFactorVerification 
@@ -241,6 +233,93 @@ const Login = () => {
     );
   }
 
+  // Slider mode layout
+  if (isSliderMode) {
+    return (
+      <div className="auth-form">
+        <h1>Login</h1>
+        
+        {error && <div className="error-message">{error}</div>}
+        
+        {!recaptchaLoaded && (
+          <div className="loading-recaptcha">
+            <p>Loading security verification...</p>
+          </div>
+        )}
+        
+        <form onSubmit={handleSubmit}>
+          <div className="form-group with-icon">
+            <input
+              type="text"
+              name="identifier"
+              placeholder="Email, Username, or Phone"
+              value={formData.identifier}
+              onChange={handleChange}
+              required
+            />
+            <i className="bx bxs-user"></i>
+          </div>
+          
+          <div className="form-group with-icon">
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+            />
+            <i className="bx bxs-lock-alt"></i>
+          </div>
+          
+          <div className="forgot-link">
+            <Link to="/reset-password">Forgot Password?</Link>
+          </div>
+          
+          <div className="form-group">
+            <div 
+              ref={recaptchaRef}
+              style={{ 
+                margin: '10px 0',
+                display: 'flex',
+                justifyContent: 'center',
+                transform: 'scale(0.9)',
+                transformOrigin: 'center'
+              }}
+            ></div>
+            {!recaptchaLoaded && (
+              <p style={{ color: '#666', fontSize: '0.9rem', textAlign: 'center' }}>
+                Please wait for security verification to load...
+              </p>
+            )}
+          </div>
+          
+          <button 
+            type="submit" 
+            disabled={loading || !recaptchaLoaded} 
+            className="btn"
+          >
+            {loading ? 'Logging in...' : 'Login'}
+          </button>
+        </form>
+
+        <p>or login with social platforms</p>
+        
+        <div className="social-icons">
+          <a href="#"><i className="bx bxl-google"></i></a>
+          <a href="#"><i className="bx bxl-facebook"></i></a>
+          <a href="#"><i className="bx bxl-github"></i></a>
+          <a href="#"><i className="bx bxl-linkedin"></i></a>
+        </div>
+
+        <div className="google-login">
+          <div id="google-signin-button"></div>
+        </div>
+      </div>
+    );
+  }
+
+  // Regular standalone page layout
   return (
     <div className="auth-page">
       <div className="container">
@@ -250,8 +329,8 @@ const Login = () => {
           {error && <div className="error-message">{error}</div>}
           
           {!recaptchaLoaded && (
-            <div className="loading-recaptcha" style={{ margin: '10px 0' }}>
-              <p style={{ color: '#666', fontSize: '0.9rem' }}>Loading security verification...</p>
+            <div className="loading-recaptcha">
+              <p>Loading security verification...</p>
             </div>
           )}
           
@@ -273,7 +352,6 @@ const Login = () => {
               required
             />
             
-            {/* reCAPTCHA */}
             <div className="form-group">
               <div 
                 ref={recaptchaRef}

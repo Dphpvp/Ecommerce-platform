@@ -4,8 +4,8 @@
 
 /* Container Wrapper - Centered like original */
 .luxury-navigation-wrapper {
-  position: fixed;
-  bottom: 20px;
+  position: top;
+  width: 100%;  
   left: 50%;
   transform: translateX(-50%);
   display: flex;

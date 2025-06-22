@@ -1,4 +1,4 @@
-// frontend/src/App.js - Updated with Parallax Container
+// frontend/src/App.js - Corrected with AuthSlider
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { loadStripe } from '@stripe/stripe-js';
@@ -20,8 +20,7 @@ import Home from './pages/Home';
 import Products from './pages/Products';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
-import Login from './pages/Login';
-import Register from './pages/Register';
+import AuthSlider from './components/AuthSlider';
 import ResetPassword from './pages/ResetPassword';
 import Orders from './pages/Orders';
 import EmailVerification from './pages/EmailVerification';
@@ -50,17 +49,23 @@ const App = () => {
                 <ParallaxContainer>
                   <div className="app" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
                     <LuxuryNavigation />
+                    
                     <main className="main" style={{ flex: '1' }}>
                       <Routes>
                         <Route path="/" element={<Home />} />
                         <Route path="/products" element={<Products />} />
                         <Route path="/about" element={<About />} />
                         <Route path="/contact" element={<Contact />} />
-                        <Route path="/login" element={<Login />} />
-                        <Route path="/register" element={<Register />} />
+                        
+                        {/* Auth routes using AuthSlider */}
+                        <Route path="/login" element={<AuthSlider />} />
+                        <Route path="/register" element={<AuthSlider />} />
+                        
+                        {/* Standalone auth pages */}
                         <Route path="/reset-password" element={<ResetPassword />} />
                         <Route path="/verify-email" element={<EmailVerification />} />
 
+                        {/* Protected routes */}
                         <Route
                           path="/cart"
                           element={
@@ -94,6 +99,7 @@ const App = () => {
                           }
                         />
 
+                        {/* Admin routes */}
                         <Route
                           path="/admin/dashboard"
                           element={
@@ -136,6 +142,7 @@ const App = () => {
                         />
                       </Routes>
                     </main>
+                    
                     <Footer />
                   </div>
                 </ParallaxContainer>

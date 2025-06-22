@@ -4,7 +4,7 @@ import { useToastContext } from '../components/toast';
 import SecureForm from '../components/SecureForm';
 import { csrfManager } from '../utils/csrf';
 
-const Register = () => {
+const Register = ({ isSliderMode = false }) => {
   const [loading, setLoading] = useState(false);
   const [countryCode, setCountryCode] = useState('+40');
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -12,7 +12,6 @@ const Register = () => {
   const navigate = useNavigate();
 
   const handlePhoneNumberChange = (e) => {
-    // Only allow digits, max 9 digits
     const value = e.target.value.replace(/\D/g, '').substring(0, 9);
     setPhoneNumber(value);
   };
@@ -22,14 +21,12 @@ const Register = () => {
   };
 
   const validatePhone = (phone) => {
-    // Must be country code followed by exactly 9 digits
     return /^\+\d{2,4}\d{9}$/.test(phone);
   };
 
   const handleSubmit = async (sanitizedData, csrfToken) => {
     setLoading(true);
     
-    // Add the full phone number to form data
     const formDataWithPhone = {
       ...sanitizedData,
       phone: getFullPhoneNumber()
@@ -67,32 +64,26 @@ const Register = () => {
     }
   };
 
-  // Client-side validation function
   const validateForm = (formData) => {
     const errors = {};
 
-    // Username validation
     if (!formData.username || formData.username.length < 3) {
       errors.username = 'Username must be at least 3 characters';
     }
 
-    // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!formData.email || !emailRegex.test(formData.email)) {
       errors.email = 'Please enter a valid email address';
     }
 
-    // Password validation
     if (!formData.password || formData.password.length < 8) {
       errors.password = 'Password must be at least 8 characters';
     }
 
-    // Phone validation - check if we have 9 digits
     if (!phoneNumber || phoneNumber.length !== 9) {
       errors.phone = 'Phone number must be exactly 9 digits';
     }
 
-    // Full name validation
     if (!formData.full_name || formData.full_name.trim().length < 2) {
       errors.full_name = 'Full name must be at least 2 characters';
     }
@@ -100,6 +91,121 @@ const Register = () => {
     return errors;
   };
 
+  // Slider mode layout
+  if (isSliderMode) {
+    return (
+      <div className="auth-form">
+        <h1>Registration</h1>
+        <SecureForm onSubmit={handleSubmit} validate={validateForm}>
+          <div className="form-group with-icon">
+            <input
+              type="text"
+              name="username"
+              placeholder="Username"
+              minLength={3}
+              maxLength={50}
+              pattern="^[a-zA-Z][a-zA-Z0-9_-]*$"
+              title="Username must start with a letter and contain only letters, numbers, underscore, and hyphen"
+              required
+            />
+            <i className="bx bxs-user"></i>
+          </div>
+          
+          <div className="form-group with-icon">
+            <input
+              type="email"
+              name="email"
+              placeholder="Email"
+              maxLength={254}
+              required
+            />
+            <i className="bx bxs-envelope"></i>
+          </div>
+          
+          <div className="form-group with-icon">
+            <input
+              type="password"
+              name="password"
+              placeholder="Password"
+              minLength={8}
+              maxLength={128}
+              title="Password must be at least 8 characters with uppercase, lowercase, number, and special character"
+              required
+            />
+            <i className="bx bxs-lock-alt"></i>
+          </div>
+
+          <div className="form-group">
+            <input
+              type="text"
+              name="full_name"
+              placeholder="Full Name"
+              minLength={2}
+              maxLength={100}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <input
+              type="text"
+              name="address"
+              placeholder="Address (optional)"
+              maxLength={500}
+            />
+          </div>
+          
+          <div className="form-group">
+            <div className="phone-input-group">
+              <select
+                value={countryCode}
+                onChange={(e) => setCountryCode(e.target.value)}
+              >
+                <option value="+40">🇷🇴 +40</option>
+                <option value="+1">🇺🇸 +1</option>
+                <option value="+44">🇬🇧 +44</option>
+                <option value="+49">🇩🇪 +49</option>
+                <option value="+33">🇫🇷 +33</option>
+                <option value="+39">🇮🇹 +39</option>
+                <option value="+34">🇪🇸 +34</option>
+              </select>
+              <input
+                type="tel"
+                placeholder="723423225"
+                value={phoneNumber}
+                onChange={handlePhoneNumberChange}
+                maxLength={9}
+                required
+              />
+            </div>
+            <div className="phone-info">
+              📱 Enter 9 digits (without the leading 0). Example: 723423225
+            </div>
+            {phoneNumber && (
+              <div className="phone-preview">
+                Full number: <strong>{getFullPhoneNumber()}</strong>
+              </div>
+            )}
+          </div>
+
+          <button type="submit" disabled={loading} className="btn">
+            {loading ? 'Registering...' : 'Register'}
+          </button>
+        </SecureForm>
+        
+        <p>or register with social platforms</p>
+        
+        <div className="social-icons">
+          <a href="#"><i className="bx bxl-google"></i></a>
+          <a href="#"><i className="bx bxl-facebook"></i></a>
+          <a href="#"><i className="bx bxl-github"></i></a>
+          <a href="#"><i className="bx bxl-linkedin"></i></a>
+        </div>
+      </div>
+    );
+  }
+
+  // Regular standalone page layout
   return (
     <div className="auth-page">
       <div className="container">
@@ -147,7 +253,6 @@ const Register = () => {
               maxLength={500}
             />
             
-            {/* Phone Number with Country Code */}
             <div style={{ marginBottom: '1rem' }}>
               <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
                 Phone Number *
