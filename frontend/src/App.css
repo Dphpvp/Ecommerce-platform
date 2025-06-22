@@ -1,9 +1,9 @@
 /* frontend/src/App.css - Fixed with Cream Theme */
 @import url('./styles/var.css');
 @import url('./styles/tailoring-theme.css');
-@import url('./components/LuxuryProducts.css');
-@import url('./components/Modal.css');
-@import url('./components/BackToTop.css');
+@import url('./styles/components/LuxuryProducts.css');
+@import url('./styles/components/Modal.css');
+@import url('./styles/components/BackToTop.css');
 @import url('./styles/luxury-background.css');
 
 /* Add padding for LuxuryNavigation */
