@@ -15,12 +15,10 @@ const AnimatedProductCard = ({ product, delay = 0 }) => {
   return (
     <div
       ref={elementRef}
-      className={`product-card-wrapper animate-on-scroll ${isIntersecting ? 'is-visible' : ''}`}
+      className={`luxury-product-wrapper animate-on-scroll ${isIntersecting ? 'is-visible' : ''}`}
       style={{ animationDelay: `${delay}ms` }}
     >
-      <div className="enhanced-product-card">
-        <ProductCard product={product} />
-      </div>
+      <ProductCard product={product} />
     </div>
   );
 };
@@ -59,65 +57,75 @@ const Products = () => {
   // Filter products based on search term
   const filteredProducts = products.filter(product =>
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
     product.category.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
-    <div className="products">
+    <div className="luxury-products-page">
       {/* Products Hero Section */}
       <ParallaxSection
-        backgroundImage="/images/fabric-samples-hero.jpg"
+        backgroundImage="https://images.unsplash.com/photo-1578662996443-48f949d9e1cc?w=1920&h=1080&fit=crop&auto=format"
         speed={-0.3}
-        className="products-hero-section"
+        className="luxury-products-hero"
         overlay={true}
-        overlayOpacity={0.5}
-        height="50vh"
+        overlayOpacity={0.6}
+        height="60vh"
       >
-        <div className="container text-center">
-          <div className="hero-content">
-            <h1 className="hero-title text-white">Our Premium Collection</h1>
-            <p className="hero-subtitle text-white">
-              Discover exceptional fabrics and craftsmanship in our curated selection
+        <div className="container">
+          <div className="luxury-hero-content">
+            <h1 className="luxury-hero-title">
+              <span className="title-main">Our Premium Collection</span>
+              <span className="title-accent">Bespoke Fabrics & Materials</span>
+            </h1>
+            <p className="luxury-hero-subtitle">
+              Discover exceptional fabrics and craftsmanship in our curated selection of the world's finest materials
             </p>
+            <div className="hero-decorative-line"></div>
           </div>
         </div>
       </ParallaxSection>
 
       {/* Filters Section */}
-      <section className="filters-section py-4 bg-white shadow-sm">
+      <section className="luxury-filters-section">
         <div className="container">
-          <div className="products-header">
-            <div className="search-filter-container">
+          <div className="luxury-products-header">
+            <div className="filters-container">
               {/* Search Input */}
-              <div className="search-box">
+              <div className="luxury-search-box">
                 <input
                   type="text"
-                  placeholder="Search products..."
+                  placeholder="Search our collection..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="search-input"
+                  className="luxury-search-input"
                 />
-                <span className="search-icon">🔍</span>
+                <span className="luxury-search-icon">🔍</span>
               </div>
               
               {/* Category Filter */}
-              <select 
-                value={selectedCategory} 
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="category-filter luxury-select"
-              >
-                <option value="">All Categories</option>
-                {categories.map(category => (
-                  <option key={category} value={category}>{category}</option>
-                ))}
-              </select>
+              <div className="luxury-category-container">
+                <select 
+                  value={selectedCategory} 
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                  className="luxury-category-select"
+                >
+                  <option value="">All Categories</option>
+                  {categories.map(category => (
+                    <option key={category} value={category}>{category}</option>
+                  ))}
+                </select>
+              </div>
             </div>
             
-            <div className="products-count">
-              <span className="count-text">
-                {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'} found
+            <div className="products-summary">
+              <span className="results-count">
+                {filteredProducts.length} {filteredProducts.length === 1 ? 'piece' : 'pieces'} found
               </span>
+              <div className="view-toggle">
+                <button className="view-btn active">⊞</button>
+                <button className="view-btn">☰</button>
+              </div>
             </div>
           </div>
         </div>
@@ -125,26 +133,32 @@ const Products = () => {
 
       {/* Products Grid Section */}
       <ParallaxSection
-        backgroundImage="/images/workshop-tools-bg.jpg"
+        backgroundImage="https://images.unsplash.com/photo-1566146340949-72de7aa8ed26?w=1920&h=1080&fit=crop&auto=format"
         speed={-0.1}
-        className="products-grid-section fabric-wool"
+        className="luxury-products-main fabric-silk"
         overlay={true}
-        overlayOpacity={0.05}
+        overlayOpacity={0.03}
         height="auto"
       >
-        <div className="container py-5">
+        <div className="container">
           {loading ? (
-            <div className="loading-section text-center py-5">
-              <div className="loading-spinner"></div>
+            <div className="luxury-loading-section">
+              <div className="luxury-loading-spinner">
+                <div className="spinner-ring"></div>
+                <div className="spinner-ring"></div>
+                <div className="spinner-ring"></div>
+              </div>
+              <h3>Curating Our Finest Selection</h3>
               <p>Loading our exquisite collection...</p>
             </div>
           ) : filteredProducts.length === 0 ? (
-            <div className="no-products-section text-center py-5">
-              <h3>No Products Found</h3>
+            <div className="luxury-no-products-section">
+              <div className="no-products-icon">🧵</div>
+              <h3>No Fabrics Found</h3>
               <p>
                 {searchTerm || selectedCategory 
-                  ? 'Try adjusting your search criteria or browse all products.' 
-                  : 'Our collection is being updated. Please check back soon.'}
+                  ? 'We couldn\'t find any fabrics matching your criteria. Try adjusting your search or browse our full collection.' 
+                  : 'Our master craftsmen are updating the collection. Please return soon.'}
               </p>
               {(searchTerm || selectedCategory) && (
                 <button 
@@ -152,9 +166,9 @@ const Products = () => {
                     setSearchTerm('');
                     setSelectedCategory('');
                   }}
-                  className="btn-outline-luxury"
+                  className="btn-luxury-clear"
                 >
-                  Clear Filters
+                  <span>Clear All Filters</span>
                 </button>
               )}
             </div>
@@ -162,18 +176,30 @@ const Products = () => {
             <>
               {/* Featured Categories */}
               {!selectedCategory && !searchTerm && (
-                <div className="featured-categories mb-5">
-                  <h2 className="section-title text-center mb-4">Shop by Category</h2>
-                  <div className="category-cards">
+                <div className="luxury-featured-categories">
+                  <div className="section-header">
+                    <h2 className="luxury-section-title">Browse by Category</h2>
+                    <div className="title-underline"></div>
+                  </div>
+                  
+                  <div className="luxury-category-grid">
                     {categories.slice(0, 4).map((category, index) => (
                       <ParallaxElement key={category} speed={-0.1 + index * 0.05}>
                         <div 
-                          className="category-card luxury-card cursor-pointer"
+                          className="luxury-category-card"
                           onClick={() => setSelectedCategory(category)}
                         >
-                          <h4>{category}</h4>
-                          <p>Explore our {category.toLowerCase()} collection</p>
-                          <span className="category-arrow">→</span>
+                          <div className="category-content">
+                            <h4 className="category-name">{category}</h4>
+                            <p className="category-description">
+                              Explore our {category.toLowerCase()} collection
+                            </p>
+                            <span className="category-count">
+                              {products.filter(p => p.category === category).length} pieces
+                            </span>
+                          </div>
+                          <div className="category-arrow">→</div>
+                          <div className="category-hover-effect"></div>
                         </div>
                       </ParallaxElement>
                     ))}
@@ -182,14 +208,23 @@ const Products = () => {
               )}
 
               {/* Products Grid */}
-              <div className="enhanced-product-grid">
-                {filteredProducts.map((product, index) => (
-                  <AnimatedProductCard 
-                    key={product._id} 
-                    product={product}
-                    delay={index * 50}
-                  />
-                ))}
+              <div className="luxury-products-grid-section">
+                <div className="section-header">
+                  <h2 className="luxury-section-title">
+                    {selectedCategory ? `${selectedCategory} Collection` : 'Our Collection'}
+                  </h2>
+                  <div className="title-underline"></div>
+                </div>
+                
+                <div className="luxury-products-grid">
+                  {filteredProducts.map((product, index) => (
+                    <AnimatedProductCard 
+                      key={product._id} 
+                      product={product}
+                      delay={index * 100}
+                    />
+                  ))}
+                </div>
               </div>
             </>
           )}
@@ -198,21 +233,37 @@ const Products = () => {
 
       {/* Call to Action Section */}
       <ParallaxSection
-        backgroundImage="/images/consultation-room.jpg"
+        backgroundImage="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1920&h=1080&fit=crop&auto=format"
         speed={-0.4}
-        className="products-cta-section"
+        className="luxury-products-cta"
         overlay={true}
-        overlayOpacity={0.6}
-        height="40vh"
+        overlayOpacity={0.7}
+        height="50vh"
       >
-        <div className="container text-center">
-          <div className="cta-content">
-            <h2 className="text-white mb-3">Need Help Choosing?</h2>
-            <p className="text-white mb-4">
-              Our expert consultants are here to help you find the perfect fit and style.
+        <div className="container">
+          <div className="luxury-cta-content">
+            <div className="cta-icon">✂️</div>
+            <h2 className="cta-title">Bespoke Consultation</h2>
+            <p className="cta-subtitle">
+              Our master tailors are here to guide you through our collection and help create something truly extraordinary.
             </p>
-            <a href="/contact" className="btn-luxury">
-              <span>Schedule Consultation</span>
+            <div className="cta-features">
+              <div className="cta-feature">
+                <span className="feature-icon">👔</span>
+                <span>Personal Styling</span>
+              </div>
+              <div className="cta-feature">
+                <span className="feature-icon">📏</span>
+                <span>Custom Measurements</span>
+              </div>
+              <div className="cta-feature">
+                <span className="feature-icon">🎨</span>
+                <span>Fabric Selection</span>
+              </div>
+            </div>
+            <a href="/contact" className="btn-luxury-cta">
+              <span className="btn-text">Schedule Your Consultation</span>
+              <span className="btn-arrow">→</span>
             </a>
           </div>
         </div>

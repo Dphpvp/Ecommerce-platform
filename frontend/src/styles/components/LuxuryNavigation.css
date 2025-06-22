@@ -1,11 +1,11 @@
-/* LuxuryNavigation.css - Fixed Magic Navigation */
+/* LuxuryNavigation.css - Fixed Positioning */
 @import url('../../styles/var.css');
 @import url('../../styles/tailoring-theme.css');
 
-/* Container Wrapper - Centered like original */
+/* Container Wrapper - FIXED: Proper positioning */
 .luxury-navigation-wrapper {
-  position: top;
-  width: 100%;  
+  position: fixed; /* FIXED: was "position: top;" which is invalid */
+  top: 20px; /* FIXED: Added proper top positioning */
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -13,6 +13,7 @@
   gap: 2rem;
   z-index: 1000;
   padding: 0 2rem;
+  width: auto; /* FIXED: Allow natural width */
 }
 
 /* Logo Section */
@@ -54,7 +55,7 @@
   color: var(--tailoring-navy);
 }
 
-/* Main Navigation - Fixed like original */
+/* Main Navigation - Fixed positioning */
 .luxury-navigation {
   position: relative;
   width: 400px;
@@ -75,6 +76,9 @@
   width: 350px;
   justify-content: space-between;
   align-items: center;
+  margin: 0; /* FIXED: Reset margin */
+  padding: 0; /* FIXED: Reset padding */
+  list-style: none; /* FIXED: Ensure no list styles */
 }
 
 .luxury-navigation ul li {
@@ -389,11 +393,12 @@
   color: var(--tailoring-navy);
 }
 
-/* Responsive Design */
+/* FIXED: Responsive Design */
 @media (max-width: 1024px) {
   .luxury-navigation-wrapper {
     gap: 1rem;
     padding: 0 1rem;
+    top: 15px; /* FIXED: Adjust top position */
   }
   
   .luxury-navigation {
@@ -428,13 +433,23 @@
 
 @media (max-width: 768px) {
   .luxury-navigation-wrapper {
-    bottom: 10px;
-    flex-direction: column;
+    position: fixed; /* FIXED: Keep fixed positioning */
+    bottom: 20px; /* FIXED: Move to bottom on mobile */
+    top: auto; /* FIXED: Remove top positioning on mobile */
+    left: 50%;
+    transform: translateX(-50%);
+    flex-direction: row; /* FIXED: Keep horizontal layout */
     gap: 1rem;
+    padding: 0 1rem;
+  }
+  
+  .luxury-nav-logo {
+    width: 60px;
+    height: 60px;
   }
   
   .logo-letter {
-    font-size: 1.5rem;
+    font-size: 1rem;
   }
   
   .luxury-navigation {
@@ -495,8 +510,13 @@
 
 @media (max-width: 480px) {
   .luxury-navigation-wrapper {
-    bottom: 5px;
+    bottom: 10px; /* FIXED: Closer to bottom on small screens */
     padding: 0 0.5rem;
+  }
+  
+  .luxury-nav-logo {
+    width: 50px;
+    height: 50px;
   }
   
   .luxury-navigation {
@@ -533,7 +553,7 @@
   }
   
   .logo-letter {
-    font-size: 1.2rem;
+    font-size: 1rem;
   }
   
   .user-avatar,
@@ -563,6 +583,18 @@
   
   .luxury-navigation ul li:nth-child(5).active ~ .indicator {
     transform: translateX(80px);
+  }
+}
+
+/* FIXED: Add spacing for main content to avoid navbar overlap */
+body {
+  padding-top: 120px; /* FIXED: Add space for fixed navbar */
+}
+
+@media (max-width: 768px) {
+  body {
+    padding-top: 20px; /* FIXED: Remove top padding on mobile since nav goes to bottom */
+    padding-bottom: 100px; /* FIXED: Add bottom padding for bottom nav */
   }
 }
 
