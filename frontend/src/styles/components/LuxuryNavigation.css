@@ -1,44 +1,50 @@
-/* LuxuryNavigation.css - Fixed Positioning */
+/* LuxuryNavigation.css - Fixed to Match Magic Navigation Exactly */
+@import url("https://fonts.googleapis.com/css?family=Poppins:100,200,300,400,500,600,700,800,900");
 @import url('../../styles/var.css');
 @import url('../../styles/tailoring-theme.css');
 
-/* Container Wrapper - FIXED: Proper positioning */
+/* Add body padding for top navigation */
+body {
+  padding-top: 120px !important;
+  padding-bottom: 0 !important;
+}
+
+/* Container Wrapper - Fixed at top */
 .luxury-navigation-wrapper {
-  position: fixed; /* FIXED: was "position: top;" which is invalid */
-  top: 20px; /* FIXED: Added proper top positioning */
+  position: fixed;
+  top: 20px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   align-items: center;
-  gap: 2rem;
+  justify-content: center;
+  gap: 1rem;
   z-index: 1000;
-  padding: 0 2rem;
-  width: auto; /* FIXED: Allow natural width */
+  padding: 0;
 }
 
-/* Logo Section */
+/* Logo Section - Simplified */
 .luxury-nav-logo {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(51, 51, 51, 0.95);
   backdrop-filter: blur(15px);
   border-radius: 50%;
-  width: 70px;
-  height: 70px;
+  width: 60px;
+  height: 60px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: var(--shadow-luxury);
-  border: 3px solid var(--tailoring-gold);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border: 2px solid var(--tailoring-gold);
   transition: all 0.3s ease;
 }
 
 .luxury-nav-logo:hover {
   transform: scale(1.1);
-  box-shadow: var(--shadow-deep);
 }
 
 .nav-logo-image {
-  width: 40px;
-  height: 40px;
+  width: 30px;
+  height: 30px;
   object-fit: contain;
   border-radius: 50%;
 }
@@ -49,13 +55,13 @@
 }
 
 .logo-letter {
-  font-family: var(--font-serif);
+  font-family: "Poppins", sans-serif;
   font-size: 1.2rem;
   font-weight: 700;
-  color: var(--tailoring-navy);
+  color: var(--tailoring-gold);
 }
 
-/* Main Navigation - Fixed positioning */
+/* Main Navigation - EXACT MATCH */
 .luxury-navigation {
   position: relative;
   width: 400px;
@@ -63,22 +69,17 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  background: rgba(51, 51, 51, 0.95);
-  backdrop-filter: blur(15px);
-  border-radius: 35px;
-  box-shadow: var(--shadow-deep);
-  border: 2px solid rgba(212, 175, 55, 0.3);
+  background: #333;
+  border-radius: 10px;
 }
 
 .luxury-navigation ul {
   position: relative;
   display: flex;
   width: 350px;
-  justify-content: space-between;
-  align-items: center;
-  margin: 0; /* FIXED: Reset margin */
-  padding: 0; /* FIXED: Reset padding */
-  list-style: none; /* FIXED: Ensure no list styles */
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .luxury-navigation ul li {
@@ -87,9 +88,6 @@
   width: 70px;
   height: 70px;
   z-index: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
 .luxury-navigation ul li a {
@@ -102,7 +100,6 @@
   text-align: center;
   font-weight: 500;
   text-decoration: none;
-  transition: all 0.5s ease;
 }
 
 .luxury-navigation ul li a .icon {
@@ -123,37 +120,28 @@
 
 .luxury-navigation ul li:hover a .icon {
   color: rgba(255, 255, 255, 1);
-  transform: translateY(-2px);
 }
 
 .luxury-navigation ul li.active a .icon {
   transform: translateY(-8px);
   color: var(--tailoring-gold);
-  text-shadow: 0 0 10px var(--tailoring-gold);
 }
 
-/* Fixed text positioning - shows under active icon */
+/* Text labels - EXACT MATCH */
 .luxury-navigation ul li a .text {
   position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%) translateY(0px);
   opacity: 0;
   font-weight: 600;
   font-size: 0.5em;
-  color: var(--tailoring-navy);
+  color: #222327;
   transition: 0.5s;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  background: var(--tailoring-gold);
-  padding: 2px 6px;
-  border-radius: 8px;
-  white-space: nowrap;
-  pointer-events: none;
+  transform: translateY(0px);
 }
 
 .luxury-navigation ul li.active a .text {
-  transform: translateX(-50%) translateY(13px);
+  transform: translateY(13px);
   opacity: 1;
 }
 
@@ -163,16 +151,15 @@
   top: 10px;
   right: 10px;
   background: var(--tailoring-gold);
-  color: var(--tailoring-navy);
+  color: #333;
   border-radius: 50%;
-  width: 20px;
-  height: 20px;
+  width: 18px;
+  height: 18px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 700;
-  border: 2px solid white;
   animation: pulse 2s infinite;
 }
 
@@ -182,7 +169,7 @@
   100% { transform: scale(1); }
 }
 
-/* Magic Indicator - Fixed positioning logic */
+/* Magic Indicator - EXACT MATCH */
 .indicator {
   position: absolute;
   width: 70px;
@@ -190,10 +177,7 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  transition: 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  pointer-events: none;
-  /* Default position for first item */
-  transform: translateX(-140px);
+  transition: 0.5s;
 }
 
 .indicator::before {
@@ -204,7 +188,6 @@
   height: 14px;
   background: var(--tailoring-gold);
   border-radius: 10px;
-  box-shadow: 0 0 15px var(--tailoring-gold);
 }
 
 .indicator::after {
@@ -214,50 +197,54 @@
   width: 7.5px;
   height: 7.5px;
   border-radius: 50%;
-  background: rgba(51, 51, 51, 0.95);
+  background: #333;
   box-shadow: 
     0 0 0 2px var(--tailoring-gold), 
     50px 50px var(--tailoring-gold), 
     40px 0 var(--tailoring-gold),
     0 40px var(--tailoring-gold);
   transform: rotate(45deg);
-  animation: sparkle 2s ease-in-out infinite;
+  animation: animate 2s ease-in-out infinite;
 }
 
-@keyframes sparkle {
-  0%, 100% { transform: rotate(35deg) scale(1); }
-  50% { transform: rotate(55deg) scale(1.1); }
+@keyframes animate {
+  0%, 100% {
+    transform: rotate(35deg);
+  }
+  50% {
+    transform: rotate(55deg);
+  }
 }
 
-/* Fixed indicator positioning - follows active item */
+/* Indicator positioning - EXACT MATCH */
 .luxury-navigation ul li:nth-child(1).active ~ .indicator {
-  transform: translateX(-140px);
+  transform: translateX(calc(70px * 0));
 }
 
 .luxury-navigation ul li:nth-child(2).active ~ .indicator {
-  transform: translateX(-70px);
+  transform: translateX(calc(70px * 1));
 }
 
 .luxury-navigation ul li:nth-child(3).active ~ .indicator {
-  transform: translateX(0px);
+  transform: translateX(calc(70px * 2));
 }
 
 .luxury-navigation ul li:nth-child(4).active ~ .indicator {
-  transform: translateX(70px);
+  transform: translateX(calc(70px * 3));
 }
 
 .luxury-navigation ul li:nth-child(5).active ~ .indicator {
-  transform: translateX(140px);
+  transform: translateX(calc(70px * 4));
 }
 
-/* User Actions Section */
+/* User Actions Section - Simplified */
 .luxury-nav-user {
-  background: rgba(255, 255, 255, 0.95);
+  background: rgba(51, 51, 51, 0.95);
   backdrop-filter: blur(15px);
-  border-radius: 35px;
-  padding: 10px;
-  box-shadow: var(--shadow-luxury);
-  border: 2px solid rgba(212, 175, 55, 0.3);
+  border-radius: 30px;
+  padding: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  border: 2px solid var(--tailoring-gold);
 }
 
 .user-menu {
@@ -265,8 +252,8 @@
 }
 
 .user-avatar {
-  width: 50px;
-  height: 50px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   cursor: pointer;
   transition: all 0.3s ease;
@@ -276,7 +263,6 @@
 
 .user-avatar:hover {
   transform: scale(1.1);
-  box-shadow: 0 0 15px rgba(212, 175, 55, 0.5);
 }
 
 .user-avatar img {
@@ -287,31 +273,31 @@
 }
 
 .avatar-fallback {
-  width: 50px;
-  height: 50px;
-  background: var(--gradient-gold);
+  width: 44px;
+  height: 44px;
+  background: var(--tailoring-gold);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 700;
-  color: var(--tailoring-navy);
-  font-size: 1.2rem;
+  color: #333;
+  font-size: 1rem;
 }
 
 .user-dropdown {
   position: absolute;
-  top: calc(100% + 10px);
+  bottom: calc(100% + 15px);
   right: 0;
-  background: rgba(255, 255, 255, 0.98);
+  background: rgba(51, 51, 51, 0.98);
   backdrop-filter: blur(20px);
   border-radius: 12px;
-  min-width: 180px;
-  box-shadow: var(--shadow-deep);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  min-width: 160px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+  border: 1px solid var(--tailoring-gold);
   opacity: 0;
   visibility: hidden;
-  transform: translateY(-10px);
+  transform: translateY(10px);
   transition: all 0.3s ease;
 }
 
@@ -326,11 +312,12 @@
   align-items: center;
   gap: 0.75rem;
   padding: 0.75rem 1rem;
-  color: var(--tailoring-charcoal);
+  color: rgba(255, 255, 255, 0.8);
   text-decoration: none;
   transition: all 0.3s ease;
-  border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   font-weight: 500;
+  font-size: 0.9rem;
 }
 
 .dropdown-item:last-child {
@@ -338,9 +325,8 @@
 }
 
 .dropdown-item:hover {
-  background: rgba(212, 175, 55, 0.1);
-  color: var(--tailoring-navy);
-  transform: translateX(5px);
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--tailoring-gold);
 }
 
 .logout-btn {
@@ -356,49 +342,37 @@
 /* Auth Buttons */
 .luxury-nav-auth {
   display: flex;
-  gap: 10px;
+  gap: 8px;
 }
 
 .auth-btn {
-  width: 50px;
-  height: 50px;
-  background: rgba(255, 255, 255, 0.95);
+  width: 44px;
+  height: 44px;
+  background: rgba(51, 51, 51, 0.95);
   backdrop-filter: blur(15px);
   border: 2px solid var(--tailoring-gold);
   border-radius: 50%;
-  color: var(--tailoring-navy);
+  color: var(--tailoring-gold);
   cursor: pointer;
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   text-decoration: none;
 }
 
 .auth-btn:hover {
   background: var(--tailoring-gold);
-  color: var(--tailoring-navy);
+  color: #333;
   transform: scale(1.1);
-  box-shadow: var(--shadow-gold);
 }
 
-.auth-btn.login-btn {
-  background: var(--gradient-luxury);
-  color: var(--tailoring-gold);
-}
-
-.auth-btn.register-btn {
-  background: var(--gradient-gold);
-  color: var(--tailoring-navy);
-}
-
-/* FIXED: Responsive Design */
-@media (max-width: 1024px) {
+/* Responsive Design */
+@media (max-width: 768px) {
   .luxury-navigation-wrapper {
-    gap: 1rem;
-    padding: 0 1rem;
-    top: 15px; /* FIXED: Adjust top position */
+    bottom: 15px;
+    gap: 0.5rem;
   }
   
   .luxury-navigation {
@@ -409,192 +383,57 @@
     width: 280px;
   }
   
-  /* Adjust indicator for smaller navigation */
-  .luxury-navigation ul li:nth-child(1).active ~ .indicator {
-    transform: translateX(-112px);
-  }
-  
-  .luxury-navigation ul li:nth-child(2).active ~ .indicator {
-    transform: translateX(-56px);
-  }
-  
-  .luxury-navigation ul li:nth-child(3).active ~ .indicator {
-    transform: translateX(0px);
-  }
-  
-  .luxury-navigation ul li:nth-child(4).active ~ .indicator {
-    transform: translateX(56px);
-  }
-  
-  .luxury-navigation ul li:nth-child(5).active ~ .indicator {
-    transform: translateX(112px);
-  }
-}
-
-@media (max-width: 768px) {
-  .luxury-navigation-wrapper {
-    position: fixed; /* FIXED: Keep fixed positioning */
-    bottom: 20px; /* FIXED: Move to bottom on mobile */
-    top: auto; /* FIXED: Remove top positioning on mobile */
-    left: 50%;
-    transform: translateX(-50%);
-    flex-direction: row; /* FIXED: Keep horizontal layout */
-    gap: 1rem;
-    padding: 0 1rem;
-  }
-  
-  .luxury-nav-logo {
-    width: 60px;
-    height: 60px;
-  }
-  
-  .logo-letter {
-    font-size: 1rem;
-  }
-  
-  .luxury-navigation {
-    width: 280px;
-    height: 60px;
-  }
-  
-  .luxury-navigation ul {
-    width: 240px;
-  }
-  
-  .luxury-navigation ul li {
-    width: 60px;
-    height: 60px;
-  }
-  
-  .indicator {
-    width: 60px;
-    height: 60px;
-    transform: translateX(-96px);
-  }
-  
-  .luxury-navigation ul li a .icon {
-    font-size: 1.3em;
-    line-height: 60px;
-  }
-  
-  .luxury-navigation ul li.active a .icon {
-    transform: translateY(-6px);
-  }
-  
-  .luxury-navigation ul li.active a .text {
-    font-size: 0.4em;
-    transform: translateX(-50%) translateY(10px);
-  }
-  
-  /* Mobile indicator positioning */
-  .luxury-navigation ul li:nth-child(1).active ~ .indicator {
-    transform: translateX(-96px);
-  }
-  
-  .luxury-navigation ul li:nth-child(2).active ~ .indicator {
-    transform: translateX(-48px);
-  }
-  
-  .luxury-navigation ul li:nth-child(3).active ~ .indicator {
-    transform: translateX(0px);
-  }
-  
-  .luxury-navigation ul li:nth-child(4).active ~ .indicator {
-    transform: translateX(48px);
-  }
-  
-  .luxury-navigation ul li:nth-child(5).active ~ .indicator {
-    transform: translateX(96px);
-  }
-}
-
-@media (max-width: 480px) {
-  .luxury-navigation-wrapper {
-    bottom: 10px; /* FIXED: Closer to bottom on small screens */
-    padding: 0 0.5rem;
-  }
-  
   .luxury-nav-logo {
     width: 50px;
     height: 50px;
-  }
-  
-  .luxury-navigation {
-    width: 240px;
-    height: 50px;
-  }
-  
-  .luxury-navigation ul {
-    width: 200px;
-  }
-  
-  .luxury-navigation ul li {
-    width: 50px;
-    height: 50px;
-  }
-  
-  .indicator {
-    width: 50px;
-    height: 50px;
-    transform: translateX(-80px);
-  }
-  
-  .luxury-navigation ul li a .icon {
-    font-size: 1.1em;
-    line-height: 50px;
-  }
-  
-  .luxury-navigation ul li.active a .icon {
-    transform: translateY(-5px);
-  }
-  
-  .luxury-navigation ul li.active a .text {
-    display: none;
-  }
-  
-  .logo-letter {
-    font-size: 1rem;
   }
   
   .user-avatar,
   .avatar-fallback,
   .auth-btn {
-    width: 40px;
-    height: 40px;
+    width: 38px;
+    height: 38px;
     font-size: 1rem;
   }
+}
+
+@media (max-width: 480px) {
+  .luxury-navigation {
+    width: 280px;
+  }
   
-  /* Small mobile indicator positioning */
+  .luxury-navigation ul {
+    width: 240px;
+  }
+  
+  .luxury-navigation ul li {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .indicator {
+    width: 60px;
+    height: 60px;
+  }
+  
   .luxury-navigation ul li:nth-child(1).active ~ .indicator {
-    transform: translateX(-80px);
+    transform: translateX(calc(60px * 0));
   }
   
   .luxury-navigation ul li:nth-child(2).active ~ .indicator {
-    transform: translateX(-40px);
+    transform: translateX(calc(60px * 1));
   }
   
   .luxury-navigation ul li:nth-child(3).active ~ .indicator {
-    transform: translateX(0px);
+    transform: translateX(calc(60px * 2));
   }
   
   .luxury-navigation ul li:nth-child(4).active ~ .indicator {
-    transform: translateX(40px);
+    transform: translateX(calc(60px * 3));
   }
   
   .luxury-navigation ul li:nth-child(5).active ~ .indicator {
-    transform: translateX(80px);
-  }
-}
-
-/* FIXED: Add spacing for main content to avoid navbar overlap */
-body {
-  padding-top: 120px; /* FIXED: Add space for fixed navbar */
-}
-
-@media (max-width: 768px) {
-  body {
-    padding-top: 20px; /* FIXED: Remove top padding on mobile since nav goes to bottom */
-    padding-bottom: 100px; /* FIXED: Add bottom padding for bottom nav */
+    transform: translateX(calc(60px * 4));
   }
 }
 
