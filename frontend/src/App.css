@@ -4,7 +4,7 @@
 @import url('./components/LuxuryProducts.css');
 @import url('./components/Modal.css');
 @import url('./components/BackToTop.css');
-@import url('./luxury-background.css');
+@import url('./styles/luxury-background.css');
 
 /* Add padding for LuxuryNavigation */
 body.has-luxury-nav {
