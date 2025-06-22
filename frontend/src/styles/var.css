@@ -162,6 +162,17 @@ body {
   padding: 0 var(--padding-base);
 }
 
+.loading-skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 /* Button styles */
 .btn {
   padding: var(--padding-small) var(--padding-base);
@@ -219,4 +230,17 @@ input:focus, textarea:focus, select:focus {
   border-color: var(--color-blue);
   outline: none;
   box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+/* Mobile performance optimizations */
+@media (max-width: 768px) {
+  * {
+    transition-duration: 0.2s !important;
+  }
+  
+  .parallax-element,
+  .animate-on-scroll {
+    animation: none !important;
+    transform: none !important;
+  }
 }

@@ -381,6 +381,20 @@ h3 {
   background: var(--gradient-gold);
 }
 
+.form-error {
+  border-color: #dc3545 !important;
+  box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.1) !important;
+}
+
+.error-message {
+  color: #dc3545;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .hero-title {

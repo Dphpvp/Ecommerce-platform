@@ -1,6 +1,36 @@
 /* frontend/src/App.css - Fixed with Cream Theme */
 @import url('./styles/var.css');
 @import url('./styles/tailoring-theme.css');
+@import url('./components/LuxuryProducts.css');
+@import url('./components/Modal.css');
+@import url('./components/BackToTop.css');
+@import url('./luxury-background.css');
+
+/* Add padding for LuxuryNavigation */
+body.has-luxury-nav {
+  padding-top: 120px !important;
+  padding-bottom: 0 !important;
+}
+
+/* Focus management */
+*:focus-visible {
+  outline: 2px solid var(--tailoring-gold);
+  outline-offset: 2px;
+}
+
+/* Screen reader only */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 
 /* Reset and base styles */
 * {
@@ -903,6 +933,18 @@ html {
   
   .admin-panel-access {
     padding: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  body.has-luxury-nav {
+    padding-top: 140px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  body.has-luxury-nav {
+    padding-top: 120px !important;
   }
 }
 
