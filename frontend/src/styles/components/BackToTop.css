@@ -1,0 +1,114 @@
+/* BackToTop.css - Luxury Scroll to Top Button */
+@import url('../var.css');
+@import url('../tailoring-theme.css');
+
+.back-to-top {
+  position: fixed;
+  bottom: 100px;
+  right: 30px;
+  width: 55px;
+  height: 55px;
+  background: var(--gradient-luxury);
+  border: 2px solid var(--tailoring-gold);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  z-index: 1500;
+  box-shadow: var(--shadow-luxury);
+  backdrop-filter: blur(10px);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(20px) scale(0.8);
+}
+
+.back-to-top.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0) scale(1);
+}
+
+.back-to-top:hover {
+  background: var(--tailoring-gold);
+  transform: translateY(-3px) scale(1.1);
+  box-shadow: var(--shadow-deep);
+}
+
+.back-to-top:active {
+  transform: translateY(-1px) scale(1.05);
+}
+
+.back-to-top-icon {
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: var(--tailoring-gold);
+  transition: color 0.3s ease;
+  line-height: 1;
+}
+
+.back-to-top:hover .back-to-top-icon {
+  color: var(--tailoring-navy);
+}
+
+/* Pulse animation when first appears */
+.back-to-top.visible {
+  animation: backToTopAppear 0.6s ease-out;
+}
+
+@keyframes backToTopAppear {
+  0% {
+    opacity: 0;
+    transform: translateY(20px) scale(0.5);
+  }
+  50% {
+    transform: translateY(-5px) scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Responsive positioning */
+@media (max-width: 768px) {
+  .back-to-top {
+    bottom: 140px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+  }
+  
+  .back-to-top-icon {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .back-to-top {
+    bottom: 120px;
+    right: 15px;
+    width: 45px;
+    height: 45px;
+  }
+  
+  .back-to-top-icon {
+    font-size: 1.1rem;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .back-to-top {
+    transition: opacity 0.3s ease;
+  }
+  
+  .back-to-top:hover {
+    transform: none;
+  }
+  
+  .back-to-top.visible {
+    animation: none;
+  }
+}

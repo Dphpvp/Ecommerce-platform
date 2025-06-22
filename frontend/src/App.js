@@ -15,6 +15,7 @@ import Footer from './components/Footer';
 import PrivateRoute from './components/PrivateRoute';
 import Profile from './components/profile';
 import ErrorBoundary from './components/ErrorBoundary';
+import BackToTop from './components/BackToTop';
 
 import Home from './pages/Home';
 import Products from './pages/Products';
@@ -46,9 +47,11 @@ const App = () => {
           <AuthProvider>
             <CartProvider>
               <ToastProvider>
+                <LuxuryNavigation />
+                <BackToTop />
                 <ParallaxContainer>
                   <div className="app" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-                    <LuxuryNavigation />
+                    
                     
                     <main className="main" style={{ flex: '1' }}>
                       <Routes>

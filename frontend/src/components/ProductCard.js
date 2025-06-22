@@ -4,9 +4,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { useToastContext } from './toast';
 import Modal from './modal/modal';
 import '../styles/components/LuxuryProducts.css';
-import '../styles/ProductForm.css';
-
-
 // Random fabric/tailoring images from Unsplash
 const fabricImages = [
   '1594736797933-d0401ba2fe65', // Fabric rolls

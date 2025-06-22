@@ -384,15 +384,12 @@
   border-radius: 2px;
 }
 
-/* Filters Section */
+/* Filters Section - Not sticky */
 .luxury-filters-section {
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(15px);
   border-bottom: 1px solid rgba(212, 175, 55, 0.2);
   padding: 2rem 0;
-  position: sticky;
-  top: 120px;
-  z-index: 100;
 }
 
 .luxury-products-header {
