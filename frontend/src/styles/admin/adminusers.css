@@ -1,5 +1,5 @@
 /* Updated adminusers.css - Unified Design System */
-@import url('./styles/design-system.css');
+@import url('../design-system.css');
 
 .admin-users {
   padding: var(--space-8) 0;
