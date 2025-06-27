@@ -1,6 +1,5 @@
-/* Modal.css - Luxury Modal Styling */
-@import url('../var.css');
-@import url('../tailoring-theme.css');
+/* Updated Modal.css - Unified Design System */
+@import url('./design-system.css');
 
 /* Modal Overlay */
 .luxury-modal-overlay {
@@ -9,17 +8,14 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: 
-    radial-gradient(circle at 25% 25%, rgba(212, 175, 55, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 75% 75%, rgba(247, 231, 206, 0.15) 0%, transparent 50%),
-    rgba(0, 0, 0, 0.85);
+  background: rgba(0, 0, 0, 0.75);
   backdrop-filter: blur(12px);
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 2000;
-  padding: 2rem;
-  animation: modalFadeIn 0.3s ease-out;
+  z-index: var(--z-modal);
+  padding: var(--space-8);
+  animation: modalFadeIn var(--transition-smooth) ease-out;
 }
 
 @keyframes modalFadeIn {
@@ -36,25 +32,16 @@
 /* Modal Content */
 .luxury-modal-content {
   position: relative;
-  background: 
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.95)),
-    repeating-linear-gradient(
-      45deg,
-      rgba(212, 175, 55, 0.02) 0px,
-      rgba(212, 175, 55, 0.02) 2px,
-      transparent 2px,
-      transparent 20px
-    ),
-    var(--tailoring-cream);
+  background: var(--color-surface-elevated);
   backdrop-filter: blur(20px);
-  border-radius: 25px;
+  border-radius: var(--radius-xl);
   max-width: 90vw;
   max-height: 90vh;
   width: 100%;
   overflow-y: auto;
-  box-shadow: var(--shadow-deep);
-  border: 2px solid rgba(212, 175, 55, 0.2);
-  animation: modalSlideUp 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--color-border);
+  animation: modalSlideUp var(--transition-luxury) cubic-bezier(0.23, 1, 0.32, 1);
 }
 
 @keyframes modalSlideUp {
@@ -83,49 +70,49 @@
 .luxury-modal-content::before {
   top: 0;
   left: 0;
-  border-radius: 25px 0 60px 0;
+  border-radius: var(--radius-xl) 0 60px 0;
 }
 
 .luxury-modal-content::after {
   bottom: 0;
   right: 0;
-  border-radius: 0 60px 0 25px;
+  border-radius: 0 60px 0 var(--radius-xl);
 }
 
 /* Close Button */
 .luxury-modal-close {
   position: absolute;
-  top: 1rem;
-  right: 1rem;
+  top: var(--space-4);
+  right: var(--space-4);
   background: rgba(220, 53, 69, 0.1);
   backdrop-filter: blur(10px);
-  border: 2px solid rgba(220, 53, 69, 0.3);
-  border-radius: 50%;
+  border: var(--btn-border-width) solid rgba(220, 53, 69, 0.3);
+  border-radius: var(--radius-full);
   width: 45px;
   height: 45px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
-  color: #dc3545;
+  font-size: var(--text-lg);
+  color: var(--color-error);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--transition-smooth);
   z-index: 10;
-  font-weight: bold;
+  font-weight: var(--font-bold);
 }
 
 .luxury-modal-close:hover {
   background: rgba(220, 53, 69, 0.2);
-  border-color: #dc3545;
+  border-color: var(--color-error);
   transform: scale(1.1);
-  box-shadow: 0 4px 15px rgba(220, 53, 69, 0.3);
+  box-shadow: var(--shadow-sm);
 }
 
 /* Product Modal Content */
 .product-modal-content {
   display: flex;
-  gap: 3rem;
-  padding: 3rem;
+  gap: var(--space-12);
+  padding: var(--space-12);
   position: relative;
   z-index: 2;
 }
@@ -138,67 +125,67 @@
 .product-modal-image img {
   width: 100%;
   height: auto;
-  border-radius: 15px;
+  border-radius: var(--radius-lg);
   box-shadow: var(--shadow-luxury);
-  border: 3px solid var(--tailoring-gold);
+  border: 3px solid var(--color-accent-gold);
 }
 
 .product-modal-details {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: var(--space-8);
 }
 
 /* Modal Header */
 .modal-header {
-  border-bottom: 2px solid rgba(212, 175, 55, 0.2);
-  padding-bottom: 1.5rem;
+  border-bottom: 2px solid var(--color-border);
+  padding-bottom: var(--space-6);
 }
 
 .modal-product-name {
   font-family: var(--font-serif);
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: var(--tailoring-navy);
-  margin-bottom: 0.5rem;
-  line-height: 1.2;
+  font-size: var(--text-4xl);
+  font-weight: var(--font-bold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-2);
+  line-height: var(--leading-tight);
 }
 
 .modal-category {
   display: inline-block;
   background: var(--gradient-gold);
-  color: var(--tailoring-navy);
-  padding: 0.5rem 1.5rem;
-  border-radius: 25px;
-  font-size: 0.9rem;
-  font-weight: 600;
+  color: var(--primary-navy);
+  padding: var(--space-2) var(--space-6);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
   text-transform: uppercase;
   letter-spacing: 1px;
 }
 
 /* Description */
 .modal-description {
-  color: var(--tailoring-charcoal);
-  font-size: 1.1rem;
-  line-height: 1.7;
+  color: var(--color-text-secondary);
+  font-size: var(--text-lg);
+  line-height: var(--leading-relaxed);
   opacity: 0.9;
 }
 
 /* Specifications */
 .modal-specifications {
   background: rgba(212, 175, 55, 0.05);
-  border-radius: 15px;
-  padding: 2rem;
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: var(--radius-lg);
+  padding: var(--space-8);
+  border: 1px solid var(--color-border);
 }
 
 .spec-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 0;
-  border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--color-border-light);
 }
 
 .spec-item:last-child {
@@ -206,40 +193,44 @@
 }
 
 .spec-label {
-  font-weight: 600;
-  color: var(--tailoring-navy);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
   font-family: var(--font-serif);
 }
 
 .spec-value {
-  font-weight: 500;
-  color: var(--tailoring-charcoal);
+  font-weight: var(--font-medium);
+  color: var(--color-text-secondary);
 }
 
-.text-green { color: #28a745; }
-.text-yellow { color: #ffc107; }
-.text-red { color: #dc3545; }
+.text-green { color: var(--color-success); }
+.text-yellow { color: var(--color-warning); }
+.text-red { color: var(--color-error); }
 
 /* Modal Actions */
 .modal-actions {
   display: flex;
-  gap: 1rem;
+  gap: var(--space-4);
   margin-top: auto;
 }
 
+/* Use unified button system */
 .btn-modal-add-cart,
 .btn-modal-contact {
   flex: 1;
-  padding: 1rem 2rem;
-  border: none;
-  border-radius: 15px;
-  font-size: 1rem;
-  font-weight: 600;
+  padding: var(--btn-padding-y) var(--btn-padding-x);
+  border: var(--btn-border-width) solid transparent;
+  border-radius: var(--radius-lg);
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
   font-family: var(--font-sans);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--transition-smooth);
   position: relative;
   overflow: hidden;
+  min-height: var(--btn-height);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .btn-modal-add-cart::before,
@@ -260,35 +251,35 @@
 }
 
 .btn-modal-add-cart {
-  background: var(--gradient-luxury);
-  color: var(--tailoring-gold);
-  border: 2px solid var(--tailoring-gold);
+  background: var(--gradient-primary);
+  color: var(--color-accent-gold);
+  border-color: var(--color-accent-gold);
 }
 
 .btn-modal-add-cart:hover:not(.disabled) {
-  background: var(--tailoring-gold);
-  color: var(--tailoring-navy);
+  background: var(--color-accent-gold);
+  color: var(--primary-navy);
   transform: translateY(-2px);
   box-shadow: var(--shadow-gold);
 }
 
 .btn-modal-add-cart.disabled {
-  background: #ccc;
-  color: #666;
-  border-color: #ccc;
+  background: var(--color-text-muted);
+  color: var(--color-text-inverse);
+  border-color: var(--color-text-muted);
   cursor: not-allowed;
   transform: none;
 }
 
 .btn-modal-contact {
   background: transparent;
-  color: var(--tailoring-navy);
-  border: 2px solid var(--tailoring-navy);
+  color: var(--color-text-primary);
+  border-color: var(--color-text-primary);
 }
 
 .btn-modal-contact:hover {
-  background: var(--tailoring-navy);
-  color: white;
+  background: var(--color-text-primary);
+  color: var(--color-text-inverse);
   transform: translateY(-2px);
   box-shadow: var(--shadow-deep);
 }
@@ -297,8 +288,8 @@
 @media (max-width: 1024px) {
   .product-modal-content {
     flex-direction: column;
-    gap: 2rem;
-    padding: 2rem;
+    gap: var(--space-8);
+    padding: var(--space-8);
   }
   
   .product-modal-image {
@@ -306,18 +297,18 @@
   }
   
   .modal-product-name {
-    font-size: 2rem;
+    font-size: var(--text-3xl);
   }
 }
 
 @media (max-width: 768px) {
   .luxury-modal-overlay {
-    padding: 1rem;
+    padding: var(--space-4);
   }
   
   .product-modal-content {
-    padding: 1.5rem;
-    gap: 1.5rem;
+    padding: var(--space-6);
+    gap: var(--space-6);
   }
   
   .modal-actions {
@@ -325,28 +316,28 @@
   }
   
   .modal-specifications {
-    padding: 1.5rem;
+    padding: var(--space-6);
   }
   
   .luxury-modal-close {
     width: 40px;
     height: 40px;
-    font-size: 1rem;
+    font-size: var(--text-base);
   }
 }
 
 @media (max-width: 480px) {
   .product-modal-content {
-    padding: 1rem;
+    padding: var(--space-4);
   }
   
   .modal-product-name {
-    font-size: 1.8rem;
+    font-size: var(--text-2xl);
   }
   
   .btn-modal-add-cart,
   .btn-modal-contact {
-    padding: 0.875rem 1.5rem;
-    font-size: 0.9rem;
+    padding: var(--space-3) var(--space-6);
+    font-size: var(--text-sm);
   }
 }

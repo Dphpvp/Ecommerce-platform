@@ -1,6 +1,5 @@
-/* BackToTop.css - Luxury Scroll to Top Button */
-@import url('../var.css');
-@import url('../tailoring-theme.css');
+/* Updated BackToTop.css - Unified Design System */
+@import url('./design-system.css');
 
 .back-to-top {
   position: fixed;
@@ -8,15 +7,15 @@
   right: 50vh;
   width: 55px;
   height: 55px;
-  background: var(--gradient-luxury);
-  border: 2px solid var(--tailoring-gold);
-  border-radius: 50%;
+  background: var(--gradient-primary);
+  border: var(--btn-border-width) solid var(--color-accent-gold);
+  border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-  z-index: 1500;
+  transition: all var(--transition-luxury);
+  z-index: var(--z-fixed);
   box-shadow: var(--shadow-luxury);
   backdrop-filter: blur(10px);
   opacity: 0;
@@ -31,7 +30,8 @@
 }
 
 .back-to-top:hover {
-  background: var(--tailoring-gold);
+  background: var(--color-accent-gold);
+  color: var(--primary-navy);
   transform: translateY(-3px) scale(1.1);
   box-shadow: var(--shadow-deep);
 }
@@ -41,18 +41,18 @@
 }
 
 .back-to-top-icon {
-  font-size: 1.4rem;
-  font-weight: 900;
-  color: var(--tailoring-gold);
-  transition: color 0.3s ease;
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  color: var(--color-accent-gold);
+  transition: color var(--transition-smooth);
   line-height: 1;
 }
 
 .back-to-top:hover .back-to-top-icon {
-  color: var(--tailoring-navy);
+  color: var(--primary-navy);
 }
 
-/* Pulse animation when first appears */
+/* Animation when first appears */
 .back-to-top.visible {
   animation: backToTopAppear 0.6s ease-out;
 }
@@ -75,33 +75,33 @@
 @media (max-width: 768px) {
   .back-to-top {
     bottom: 140px;
-    right: 20px;
+    right: var(--space-8);
     width: 50px;
     height: 50px;
   }
   
   .back-to-top-icon {
-    font-size: 1.2rem;
+    font-size: var(--text-lg);
   }
 }
 
 @media (max-width: 480px) {
   .back-to-top {
     bottom: 120px;
-    right: 15px;
+    right: var(--space-6);
     width: 45px;
     height: 45px;
   }
   
   .back-to-top-icon {
-    font-size: 1.1rem;
+    font-size: var(--text-base);
   }
 }
 
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   .back-to-top {
-    transition: opacity 0.3s ease;
+    transition: opacity var(--transition-smooth);
   }
   
   .back-to-top:hover {

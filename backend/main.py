@@ -12,6 +12,7 @@ from api.main import router as api_router
 
 
 
+
 # Configuration
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
 FRONTEND_URL = os.getenv("FRONTEND_URL", "https://vergishop.vercel.app")

@@ -1,34 +1,22 @@
-/* Luxury Products Styling - Compact Cards Only */
-@import url('../var.css');
-@import url('../tailoring-theme.css');
+/* Updated LuxuryProducts.css - Unified Design System */
+@import url('./design-system.css');
 
-/* Products Grid - Updated for 6 per row */
 .luxury-products-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 1rem;
-  margin-top: 3rem;
+  gap: var(--space-4);
+  margin-top: var(--space-12);
 }
 
-/* ===== COMPACT PRODUCT CARD (6 per row) ===== */
 .luxury-product-card-compact {
   position: relative;
-  background: 
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.95)),
-    repeating-linear-gradient(
-      45deg,
-      rgba(212, 175, 55, 0.02) 0px,
-      rgba(212, 175, 55, 0.02) 1px,
-      transparent 1px,
-      transparent 10px
-    ),
-    var(--tailoring-cream);
+  background: var(--color-surface-elevated);
   backdrop-filter: blur(15px);
-  border-radius: 12px;
+  border-radius: var(--radius-base);
   overflow: hidden;
   box-shadow: var(--shadow-luxury);
-  border: 2px solid rgba(212, 175, 55, 0.15);
-  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  border: 1px solid var(--color-border);
+  transition: all var(--transition-luxury);
   cursor: pointer;
   height: 220px;
   display: flex;
@@ -38,7 +26,7 @@
 .luxury-product-card-compact:hover {
   transform: translateY(-8px) scale(1.03);
   box-shadow: var(--shadow-deep);
-  border-color: var(--tailoring-gold);
+  border-color: var(--color-accent-gold);
 }
 
 .luxury-product-card-compact::before {
@@ -50,26 +38,25 @@
   height: 3px;
   background: var(--gradient-gold);
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity var(--transition-smooth);
 }
 
 .luxury-product-card-compact:hover::before {
   opacity: 1;
 }
 
-/* Compact Image Container */
 .product-image-container-compact {
   position: relative;
   height: 120px;
   overflow: hidden;
-  background: var(--tailoring-champagne);
+  background: var(--primary-champagne);
 }
 
 .product-image-container-compact img {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.5s ease;
+  transition: transform var(--transition-slow);
 }
 
 .luxury-product-card-compact:hover .product-image-container-compact img {
@@ -87,7 +74,7 @@
   align-items: center;
   justify-content: center;
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity var(--transition-smooth);
 }
 
 .luxury-product-card-compact:hover .product-overlay-compact {
@@ -95,16 +82,15 @@
 }
 
 .view-details {
-  color: white;
-  font-weight: 600;
-  font-size: 0.9rem;
+  color: var(--color-text-inverse);
+  font-weight: var(--font-semibold);
+  font-size: var(--text-sm);
   text-transform: uppercase;
   letter-spacing: 1px;
 }
 
-/* Compact Product Info */
 .luxury-product-info-compact {
-  padding: 1rem;
+  padding: var(--space-4);
   display: flex;
   flex-direction: column;
   flex-grow: 1;
@@ -113,26 +99,25 @@
 
 .product-name-compact {
   font-family: var(--font-serif);
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: var(--tailoring-navy);
-  margin-bottom: 0.25rem;
-  line-height: 1.2;
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-1);
+  line-height: var(--leading-tight);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .product-category-compact {
-  color: var(--tailoring-charcoal);
-  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
   text-transform: uppercase;
   letter-spacing: 0.5px;
   opacity: 0.8;
-  margin-bottom: 0.75rem;
+  margin-bottom: var(--space-3);
 }
 
-/* Compact Price and Stock */
 .price-stock-compact {
   display: flex;
   justify-content: space-between;
@@ -143,41 +128,40 @@
 .price-section-compact {
   display: flex;
   align-items: baseline;
-  gap: 0.2rem;
+  gap: var(--space-1);
 }
 
 .currency {
-  font-size: 1rem;
-  color: var(--tailoring-gold);
-  font-weight: 600;
+  font-size: var(--text-base);
+  color: var(--color-accent-gold);
+  font-weight: var(--font-semibold);
 }
 
 .price-amount-compact {
   font-family: var(--font-serif);
-  font-size: 1.3rem;
-  font-weight: 700;
-  color: var(--tailoring-gold);
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  color: var(--color-accent-gold);
 }
 
-/* Compact Stock Dots */
 .stock-dot-compact {
   width: 12px;
   height: 12px;
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   flex-shrink: 0;
 }
 
 .stock-dot-compact.in-stock {
-  background: #28a745;
+  background: var(--color-success);
   box-shadow: 0 0 0 3px rgba(40, 167, 69, 0.2);
 }
 
 .stock-dot-compact.low-stock {
-  background: #ffc107;
+  background: var(--color-warning);
   box-shadow: 0 0 0 3px rgba(255, 193, 7, 0.2);
 }
 
 .stock-dot-compact.out-of-stock {
-  background: #dc3545;
+  background: var(--color-error);
   box-shadow: 0 0 0 3px rgba(220, 53, 69, 0.2);
 }
