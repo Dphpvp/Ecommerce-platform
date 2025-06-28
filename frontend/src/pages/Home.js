@@ -1,7 +1,7 @@
 // frontend/src/pages/Home.js - Enhanced with New Parallax Features
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import ProductCard from '../pages/ProductCard';
+import ProductCard from '../components/ProductCard';
 import { 
   ParallaxSection, 
   ParallaxElement, 
