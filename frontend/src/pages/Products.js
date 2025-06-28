@@ -7,7 +7,6 @@ import '../styles/components/LuxuryProducts.css';
 import '../styles/ProductForm.css';
 import '../styles/components/enhanced-products.css';
 
-
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
 // Animation component for product cards
@@ -28,7 +27,7 @@ const AnimatedProductCard = ({ product, delay = 0 }) => {
 };
 
 const Products = () => {
-  const [products, setProducts] = useState([]);
+  const [allProducts, setAllProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('');
   const [loading, setLoading] = useState(true);
@@ -43,7 +42,7 @@ const Products = () => {
       
       const response = await fetch(url);
       const data = await response.json();
-      setProducts(data);
+      setAllProducts(data);
 
       const uniqueCategories = [...new Set(data.map(p => p.category))];
       setCategories(uniqueCategories);
@@ -58,12 +57,14 @@ const Products = () => {
     fetchProducts();
   }, [fetchProducts]);
 
-  // Filter products based on search term
-  const filteredProducts = products.filter(product =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.category.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // Filter and limit products to 20
+  const filteredProducts = allProducts
+    .filter(product =>
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.category.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .slice(0, 20); // Limit to 20 products
 
   return (
     <div className="luxury-products-page">
@@ -74,18 +75,33 @@ const Products = () => {
         className="luxury-products-hero"
         overlay={true}
         overlayOpacity={0.6}
-        height="60vh"
+        height="70vh"
       >
         <div className="container">
           <div className="luxury-hero-content">
             <h1 className="luxury-hero-title">
-              <span className="title-main">Our Premium Collection</span>
-              <span className="title-accent">Bespoke Fabrics & Materials</span>
+              <span className="title-main">Curated Excellence</span>
+              <span className="title-accent">Master Crafted Materials</span>
             </h1>
             <p className="luxury-hero-subtitle">
-              Discover exceptional fabrics and craftsmanship in our curated selection of the world's finest materials
+              Each piece in our collection represents generations of textile mastery, sourced from the world's most prestigious mills and artisans
             </p>
-            <div className="hero-decorative-line"></div>
+            <div className="hero-stats">
+              <div className="stat-item">
+                <span className="stat-number">{allProducts.length}</span>
+                <span className="stat-label">Premium Fabrics</span>
+              </div>
+              <div className="stat-divider">|</div>
+              <div className="stat-item">
+                <span className="stat-number">{categories.length}</span>
+                <span className="stat-label">Collections</span>
+              </div>
+              <div className="stat-divider">|</div>
+              <div className="stat-item">
+                <span className="stat-number">50+</span>
+                <span className="stat-label">Years Heritage</span>
+              </div>
+            </div>
           </div>
         </div>
       </ParallaxSection>
@@ -95,26 +111,24 @@ const Products = () => {
         <div className="container">
           <div className="luxury-products-header">
             <div className="filters-container">
-              {/* Search Input */}
               <div className="luxury-search-box">
                 <input
                   type="text"
-                  placeholder="Search our collection..."
+                  placeholder="Search our exclusive collection..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="luxury-search-input"
                 />
-                <span className="luxury-search-icon">🔍</span>
+                <span className="luxury-search-icon">⚜</span>
               </div>
               
-              {/* Category Filter */}
               <div className="luxury-category-container">
                 <select 
                   value={selectedCategory} 
                   onChange={(e) => setSelectedCategory(e.target.value)}
                   className="luxury-category-select"
                 >
-                  <option value="">All Categories</option>
+                  <option value="">All Collections</option>
                   {categories.map(category => (
                     <option key={category} value={category}>{category}</option>
                   ))}
@@ -124,12 +138,11 @@ const Products = () => {
             
             <div className="products-summary">
               <span className="results-count">
-                {filteredProducts.length} {filteredProducts.length === 1 ? 'piece' : 'pieces'} found
+                Displaying {filteredProducts.length} of {allProducts.length} pieces
+                {filteredProducts.length === 20 && allProducts.length > 20 && (
+                  <span className="limit-note"> (showing first 20)</span>
+                )}
               </span>
-              <div className="view-toggle">
-                <button className="view-btn active">⊞</button>
-                <button className="view-btn">☰</button>
-              </div>
             </div>
           </div>
         </div>
@@ -141,7 +154,7 @@ const Products = () => {
         speed={-0.1}
         className="luxury-products-main fabric-silk"
         overlay={true}
-        overlayOpacity={0.03}
+        overlayOpacity={0.02}
         height="auto"
       >
         <div className="container">
@@ -152,17 +165,17 @@ const Products = () => {
                 <div className="spinner-ring"></div>
                 <div className="spinner-ring"></div>
               </div>
-              <h3>Curating Our Finest Selection</h3>
-              <p>Loading our exquisite collection...</p>
+              <h3>Curating Excellence</h3>
+              <p>Assembling our finest selection...</p>
             </div>
           ) : filteredProducts.length === 0 ? (
             <div className="luxury-no-products-section">
               <div className="no-products-icon">🧵</div>
-              <h3>No Fabrics Found</h3>
+              <h3>Collection Unavailable</h3>
               <p>
                 {searchTerm || selectedCategory 
-                  ? 'We couldn\'t find any fabrics matching your criteria. Try adjusting your search or browse our full collection.' 
-                  : 'Our master craftsmen are updating the collection. Please return soon.'}
+                  ? 'No pieces match your refined criteria. Consider broadening your search to discover our full heritage collection.' 
+                  : 'Our master artisans are curating new pieces. Please return shortly.'}
               </p>
               {(searchTerm || selectedCategory) && (
                 <button 
@@ -172,7 +185,7 @@ const Products = () => {
                   }}
                   className="btn-luxury-clear"
                 >
-                  <span>Clear All Filters</span>
+                  <span>View Full Collection</span>
                 </button>
               )}
             </div>
@@ -182,7 +195,8 @@ const Products = () => {
               {!selectedCategory && !searchTerm && (
                 <div className="luxury-featured-categories">
                   <div className="section-header">
-                    <h2 className="luxury-section-title">Browse by Category</h2>
+                    <h2 className="luxury-section-title">Heritage Collections</h2>
+                    <p className="section-subtitle">Explore our curated categories, each representing decades of textile excellence</p>
                     <div className="title-underline"></div>
                   </div>
                   
@@ -194,12 +208,13 @@ const Products = () => {
                           onClick={() => setSelectedCategory(category)}
                         >
                           <div className="category-content">
+                            <div className="category-icon">🧵</div>
                             <h4 className="category-name">{category}</h4>
                             <p className="category-description">
-                              Explore our {category.toLowerCase()} collection
+                              Discover our {category.toLowerCase()} heritage
                             </p>
                             <span className="category-count">
-                              {products.filter(p => p.category === category).length} pieces
+                              {allProducts.filter(p => p.category === category).length} pieces
                             </span>
                           </div>
                           <div className="category-arrow">→</div>
@@ -215,58 +230,85 @@ const Products = () => {
               <div className="luxury-products-grid-section">
                 <div className="section-header">
                   <h2 className="luxury-section-title">
-                    {selectedCategory ? `${selectedCategory} Collection` : 'Our Collection'}
+                    {selectedCategory ? `${selectedCategory} Heritage` : 'Master Collection'}
                   </h2>
+                  <p className="section-subtitle">
+                    {selectedCategory 
+                      ? `Exceptional ${selectedCategory.toLowerCase()} pieces from renowned mills worldwide`
+                      : 'Our most distinguished fabrics, carefully selected for the discerning connoisseur'}
+                  </p>
                   <div className="title-underline"></div>
                 </div>
                 
-                <div className="luxury-products-grid">
+                <div className="luxury-products-grid-premium">
                   {filteredProducts.map((product, index) => (
                     <AnimatedProductCard 
                       key={product._id} 
                       product={product}
-                      delay={index * 100}
+                      delay={index * 150}
                     />
                   ))}
                 </div>
+
+                {filteredProducts.length === 20 && allProducts.length > 20 && (
+                  <div className="collection-note">
+                    <div className="note-content">
+                      <h4>Exclusive Curation</h4>
+                      <p>We're showcasing our top 20 pieces. For our complete collection, please visit our atelier or contact our master tailors.</p>
+                      <a href="/contact" className="btn-luxury-contact">
+                        <span>Schedule Private Viewing</span>
+                      </a>
+                    </div>
+                  </div>
+                )}
               </div>
             </>
           )}
         </div>
       </ParallaxSection>
 
-      {/* Call to Action Section */}
+      {/* Exclusive Services Section */}
       <ParallaxSection
         backgroundImage="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1920&h=1080&fit=crop&auto=format"
         speed={-0.4}
         className="luxury-products-cta"
         overlay={true}
-        overlayOpacity={0.7}
-        height="50vh"
+        overlayOpacity={0.8}
+        height="60vh"
       >
         <div className="container">
           <div className="luxury-cta-content">
-            <div className="cta-icon">✂️</div>
-            <h2 className="cta-title">Bespoke Consultation</h2>
+            <div className="cta-badge">Bespoke Services</div>
+            <h2 className="cta-title">Master Tailor Consultation</h2>
             <p className="cta-subtitle">
-              Our master tailors are here to guide you through our collection and help create something truly extraordinary.
+              Experience the pinnacle of sartorial excellence with our master tailors. From fabric selection to final fitting, 
+              we create garments that transcend fashion and become heirlooms.
             </p>
-            <div className="cta-features">
-              <div className="cta-feature">
-                <span className="feature-icon">👔</span>
-                <span>Personal Styling</span>
+            <div className="cta-services">
+              <div className="service-item">
+                <span className="service-icon">👔</span>
+                <div className="service-content">
+                  <h4>Bespoke Tailoring</h4>
+                  <p>Completely custom garments</p>
+                </div>
               </div>
-              <div className="cta-feature">
-                <span className="feature-icon">📏</span>
-                <span>Custom Measurements</span>
+              <div className="service-item">
+                <span className="service-icon">📏</span>
+                <div className="service-content">
+                  <h4>Master Fitting</h4>
+                  <p>Precision measurements & fittings</p>
+                </div>
               </div>
-              <div className="cta-feature">
-                <span className="feature-icon">🎨</span>
-                <span>Fabric Selection</span>
+              <div className="service-item">
+                <span className="service-icon">🎨</span>
+                <div className="service-content">
+                  <h4>Style Consultation</h4>
+                  <p>Personal wardrobe curation</p>
+                </div>
               </div>
             </div>
             <a href="/contact" className="btn-luxury-cta">
-              <span className="btn-text">Schedule Your Consultation</span>
+              <span className="btn-text">Begin Your Journey</span>
               <span className="btn-arrow">→</span>
             </a>
           </div>
