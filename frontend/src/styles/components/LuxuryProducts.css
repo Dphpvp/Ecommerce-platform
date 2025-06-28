@@ -1,16 +1,18 @@
 /* Enhanced Luxury Products CSS - Complete File */
 
-/* Products Grid - 5 columns premium layout - FORCE OVERRIDE */
+/* Products Grid - 6 columns premium layout - FORCE OVERRIDE */
 .luxury-products-grid,
 .luxury-products-grid-premium,
+.luxury-products-grid-section .luxury-products-grid,
 div[class*="luxury-products-grid"],
 div[class*="products-grid"] {
   display: grid !important;
-  grid-template-columns: repeat(5, 1fr) !important;
-  gap: 2rem !important;
+  grid-template-columns: repeat(6, 1fr) !important;
+  gap: 1.5rem !important;
   margin-top: 3rem !important;
   padding: 2rem 0 !important;
-  grid-gap: 2rem !important;
+  grid-gap: 1.5rem !important;
+  width: 100% !important;
 }
 
 /* Product Card Enhanced */
@@ -28,6 +30,7 @@ div[class*="products-grid"] {
   display: flex;
   flex-direction: column;
   transform: translateZ(0);
+  width: 100%;
 }
 
 .luxury-product-card-compact::before {
@@ -240,9 +243,21 @@ div[class*="category-grid"],
 }
 
 /* Responsive Grid - FORCE OVERRIDE */
+@media (max-width: 1800px) {
+  .luxury-products-grid,
+  .luxury-products-grid-premium,
+  .luxury-products-grid-section .luxury-products-grid,
+  div[class*="luxury-products-grid"],
+  div[class*="products-grid"] {
+    grid-template-columns: repeat(6, 1fr) !important;
+    gap: 1.5rem !important;
+  }
+}
+
 @media (max-width: 1600px) {
   .luxury-products-grid,
   .luxury-products-grid-premium,
+  .luxury-products-grid-section .luxury-products-grid,
   div[class*="luxury-products-grid"],
   div[class*="products-grid"] {
     grid-template-columns: repeat(5, 1fr) !important;
@@ -253,6 +268,7 @@ div[class*="category-grid"],
 @media (max-width: 1400px) {
   .luxury-products-grid,
   .luxury-products-grid-premium,
+  .luxury-products-grid-section .luxury-products-grid,
   div[class*="luxury-products-grid"],
   div[class*="products-grid"] {
     grid-template-columns: repeat(4, 1fr) !important;
@@ -263,6 +279,7 @@ div[class*="category-grid"],
 @media (max-width: 1024px) {
   .luxury-products-grid,
   .luxury-products-grid-premium,
+  .luxury-products-grid-section .luxury-products-grid,
   div[class*="luxury-products-grid"],
   div[class*="products-grid"] {
     grid-template-columns: repeat(3, 1fr) !important;
@@ -281,6 +298,7 @@ div[class*="category-grid"],
 @media (max-width: 768px) {
   .luxury-products-grid,
   .luxury-products-grid-premium,
+  .luxury-products-grid-section .luxury-products-grid,
   div[class*="luxury-products-grid"],
   div[class*="products-grid"] {
     grid-template-columns: repeat(2, 1fr) !important;
@@ -312,6 +330,7 @@ div[class*="category-grid"],
 @media (max-width: 480px) {
   .luxury-products-grid,
   .luxury-products-grid-premium,
+  .luxury-products-grid-section .luxury-products-grid,
   div[class*="luxury-products-grid"],
   div[class*="products-grid"] {
     grid-template-columns: 1fr !important;

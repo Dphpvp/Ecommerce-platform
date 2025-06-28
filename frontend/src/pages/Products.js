@@ -4,6 +4,8 @@ import ProductCard from '../components/ProductCard';
 import { ParallaxSection, ParallaxElement } from '../components/Parallax';
 import { useIntersectionObserver } from '../hooks/useParallax';
 import '../styles/components/LuxuryProducts.css';
+import '../styles/ProductForm.css'; // Importing ProductForm styles for consistent design
+
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
@@ -55,14 +57,14 @@ const Products = () => {
     fetchProducts();
   }, [fetchProducts]);
 
-  // Filter and limit products to 20
+  // Filter and limit products to 30
   const filteredProducts = allProducts
     .filter(product =>
       product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       product.category.toLowerCase().includes(searchTerm.toLowerCase())
     )
-    .slice(0, 20); // Limit to 20 products
+    .slice(0, 30); // Increased to 30 products
 
   return (
     <div className="luxury-products-page">
@@ -137,8 +139,8 @@ const Products = () => {
             <div className="products-summary">
               <span className="results-count">
                 Displaying {filteredProducts.length} of {allProducts.length} pieces
-                {filteredProducts.length === 20 && allProducts.length > 20 && (
-                  <span className="limit-note"> (showing first 20)</span>
+                {filteredProducts.length === 30 && allProducts.length > 30 && (
+                  <span className="limit-note"> (showing first 30)</span>
                 )}
               </span>
             </div>
@@ -189,43 +191,8 @@ const Products = () => {
             </div>
           ) : (
             <>
-              {/* Featured Categories - Hidden for now */}
-              {false && !selectedCategory && !searchTerm && (
-                <div className="luxury-featured-categories">
-                  <div className="section-header">
-                    <h2 className="luxury-section-title">Heritage Collections</h2>
-                    <p className="section-subtitle">Explore our curated categories, each representing decades of textile excellence</p>
-                    <div className="title-underline"></div>
-                  </div>
-                  
-                  <div className="luxury-category-grid">
-                    {categories.slice(0, 4).map((category, index) => (
-                      <ParallaxElement key={category} speed={-0.1 + index * 0.05}>
-                        <div 
-                          className="luxury-category-card"
-                          onClick={() => setSelectedCategory(category)}
-                        >
-                          <div className="category-content">
-                            <div className="category-icon">🧵</div>
-                            <h4 className="category-name">{category}</h4>
-                            <p className="category-description">
-                              Discover our {category.toLowerCase()} heritage
-                            </p>
-                            <span className="category-count">
-                              {allProducts.filter(p => p.category === category).length} pieces
-                            </span>
-                          </div>
-                          <div className="category-arrow">→</div>
-                          <div className="category-hover-effect"></div>
-                        </div>
-                      </ParallaxElement>
-                    ))}
-                  </div>
-                </div>
-              )}
-
               {/* Products Grid */}
-              <div className="luxury-products-grid">
+              <div className="luxury-products-grid-section">
                 <div className="section-header">
                   <h2 className="luxury-section-title">
                     {selectedCategory ? `${selectedCategory} Heritage` : 'Master Collection'}
@@ -243,16 +210,16 @@ const Products = () => {
                     <AnimatedProductCard 
                       key={product._id} 
                       product={product}
-                      delay={index * 150}
+                      delay={index * 100}
                     />
                   ))}
                 </div>
 
-                {filteredProducts.length === 20 && allProducts.length > 20 && (
+                {filteredProducts.length === 30 && allProducts.length > 30 && (
                   <div className="collection-note">
                     <div className="note-content">
                       <h4>Exclusive Curation</h4>
-                      <p>We're showcasing our top 20 pieces. For our complete collection, please visit our atelier or contact our master tailors.</p>
+                      <p>We're showcasing our top 30 pieces. For our complete collection, please visit our atelier or contact our master tailors.</p>
                       <a href="/contact" className="btn-luxury-contact">
                         <span>Schedule Private Viewing</span>
                       </a>
