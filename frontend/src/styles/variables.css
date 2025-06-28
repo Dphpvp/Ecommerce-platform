@@ -1,0 +1,175 @@
+/* frontend/src/styles/variables.css - Single Source of Truth */
+
+:root {
+  /* === PRIMARY COLORS === */
+  --primary-navy: #1B2951;
+  --primary-gold: #D4AF37;
+  --primary-cream: #F5F5DC;
+  --primary-charcoal: #36454F;
+  --primary-champagne: #F7E7CE;
+  
+  /* === SEMANTIC COLORS === */
+  --color-background: #F5F5DC;
+  --color-surface: #FFFFFF;
+  --color-surface-elevated: rgba(255, 255, 255, 0.95);
+  --color-text-primary: #1B2951;
+  --color-text-secondary: #36454F;
+  --color-text-muted: rgba(54, 69, 79, 0.7);
+  --color-text-inverse: #F5F5DC;
+  
+  /* === ACCENT COLORS === */
+  --color-accent-gold: #D4AF37;
+  --color-accent-gold-light: #FFD700;
+  --color-accent-gold-dark: #B8941F;
+  
+  /* === STATUS COLORS === */
+  --color-success: #28a745;
+  --color-success-light: #d4edda;
+  --color-warning: #ffc107;
+  --color-warning-light: #fff3cd;
+  --color-error: #dc3545;
+  --color-error-light: #f8d7da;
+  --color-info: #17a2b8;
+  --color-info-light: #d1ecf1;
+  
+  /* === ORDER STATUS === */
+  --status-pending: #ffc107;
+  --status-accepted: #17a2b8;
+  --status-processing: #007bff;
+  --status-shipped: #6f42c1;
+  --status-delivered: #28a745;
+  --status-cancelled: #dc3545;
+  
+  /* === BORDERS === */
+  --color-border: rgba(212, 175, 55, 0.2);
+  --color-border-light: rgba(212, 175, 55, 0.1);
+  --color-border-strong: rgba(212, 175, 55, 0.4);
+  --color-border-input: #F7E7CE;
+  --color-border-focus: #D4AF37;
+  
+  /* === TYPOGRAPHY === */
+  --font-serif: 'Playfair Display', 'Georgia', serif;
+  --font-sans: 'Inter', 'Helvetica Neue', sans-serif;
+  --font-mono: 'Source Code Pro', monospace;
+  
+  /* === FONT SIZES === */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+  --text-4xl: 2.25rem;
+  --text-5xl: 3rem;
+  
+  /* === FONT WEIGHTS === */
+  --font-light: 300;
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+  
+  /* === LINE HEIGHTS === */
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+  
+  /* === SPACING === */
+  --space-0: 0;
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  --space-24: 6rem;
+  
+  /* === BORDER RADIUS === */
+  --radius-sm: 0.375rem;
+  --radius-base: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+  --radius-full: 9999px;
+  
+  /* === SHADOWS === */
+  --shadow-sm: 0 1px 2px rgba(27, 41, 81, 0.05);
+  --shadow-base: 0 1px 3px rgba(27, 41, 81, 0.1), 0 1px 2px rgba(27, 41, 81, 0.06);
+  --shadow-md: 0 4px 6px rgba(27, 41, 81, 0.07), 0 2px 4px rgba(27, 41, 81, 0.06);
+  --shadow-lg: 0 10px 15px rgba(27, 41, 81, 0.1), 0 4px 6px rgba(27, 41, 81, 0.05);
+  --shadow-xl: 0 20px 25px rgba(27, 41, 81, 0.1), 0 10px 10px rgba(27, 41, 81, 0.04);
+  --shadow-luxury: 0 8px 32px rgba(27, 41, 81, 0.15);
+  --shadow-gold: 0 4px 20px rgba(212, 175, 55, 0.25);
+  --shadow-deep: 0 12px 40px rgba(0, 0, 0, 0.2);
+  
+  /* === GRADIENTS === */
+  --gradient-primary: linear-gradient(135deg, #1B2951 0%, #36454F 100%);
+  --gradient-gold: linear-gradient(135deg, #D4AF37 0%, #FFD700 100%);
+  --gradient-surface: linear-gradient(135deg, #F5F5DC 0%, #F7E7CE 100%);
+  
+  /* === TRANSITIONS === */
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.2s ease;
+  --transition-smooth: 0.3s ease;
+  --transition-slow: 0.5s ease;
+  --transition-luxury: 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  
+  /* === Z-INDEX === */
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+  --z-toast: 1080;
+  
+  /* === LAYOUT === */
+  --container-sm: 640px;
+  --container-md: 768px;
+  --container-lg: 1024px;
+  --container-xl: 1280px;
+  --container-2xl: 1536px;
+  
+  /* === FORMS === */
+  --input-height: 2.75rem;
+  --input-padding-x: 1rem;
+  --input-padding-y: 0.75rem;
+  --input-border-width: 2px;
+  
+  /* === BUTTONS === */
+  --btn-padding-x: 1.5rem;
+  --btn-padding-y: 0.75rem;
+  --btn-height: 2.75rem;
+  --btn-border-width: 2px;
+  
+  /* === BREAKPOINTS === */
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+}
+
+/* === DARK THEME === */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background: #1a1a1a;
+    --color-surface: #2a2a2a;
+    --color-surface-elevated: rgba(42, 42, 42, 0.95);
+    --color-text-primary: #F5F5DC;
+    --color-text-secondary: #B8B8B8;
+    --color-text-muted: rgba(245, 245, 220, 0.7);
+    --color-text-inverse: #1B2951;
+    
+    --color-border: rgba(212, 175, 55, 0.3);
+    --color-border-light: rgba(212, 175, 55, 0.15);
+    --color-border-strong: rgba(212, 175, 55, 0.5);
+  }
+}
