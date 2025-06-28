@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import TwoFactorVerification from '../components/TwoFactor/TwoFactorVerification';
 import { useToastContext } from '../components/toast';
+import '../styles/components/Login.css';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
