@@ -225,7 +225,7 @@ const Products = () => {
               )}
 
               {/* Products Grid */}
-              <div className="luxury-products-grid-section">
+              <div className="luxury-products-grid">
                 <div className="section-header">
                   <h2 className="luxury-section-title">
                     {selectedCategory ? `${selectedCategory} Heritage` : 'Master Collection'}
