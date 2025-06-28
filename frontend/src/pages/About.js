@@ -2,7 +2,7 @@
 import React from 'react';
 import { ParallaxSection, ParallaxElement } from '../components/Parallax';
 import { useIntersectionObserver } from '../hooks/useParallax';
-import '../styles/components/about.css';
+import '../styles/pages/about.css';
 
 // Animation component for content sections
 const AnimatedSection = ({ children, className = '', delay = 0 }) => {
