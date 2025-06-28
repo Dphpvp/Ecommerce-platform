@@ -1,5 +1,4 @@
-/* Updated profile.css - Unified Design System */
-@import url('./design-system.css');
+
 
 .profile {
   padding: var(--space-8) 0;

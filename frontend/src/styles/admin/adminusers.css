@@ -1,6 +1,3 @@
-/* Updated adminusers.css - Unified Design System */
-@import url('../design-system.css');
-
 .admin-users {
   padding: var(--space-8) 0;
   background: var(--color-background);
