@@ -5,8 +5,7 @@ import { useToastContext } from './toast';
 import Modal from './modal/modal';
 import '../styles/components/LuxuryProducts.css';
 import '../styles/ProductForm.css'; 
-import '../styles/components/enhanced-products.css';
-// Random fabric/tailoring images from Unsplash
+
 const fabricImages = [
   '1594736797933-d0401ba2fe65', // Fabric rolls
   '1566146340949-72de7aa8ed26', // Tailoring workspace
