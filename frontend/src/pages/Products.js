@@ -238,7 +238,7 @@ const Products = () => {
                   <div className="title-underline"></div>
                 </div>
                 
-                <div className="luxury-products-grid-premium">
+                <div className="luxury-products-grid">
                   {filteredProducts.map((product, index) => (
                     <AnimatedProductCard 
                       key={product._id} 
