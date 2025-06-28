@@ -4,7 +4,7 @@ import ProductCard from '../components/ProductCard';
 import { ParallaxSection, ParallaxElement } from '../components/Parallax';
 import { useIntersectionObserver } from '../hooks/useParallax';
 import '../styles/components/LuxuryProducts.css';
-import '../styles/pages/ProductForm.css'; // Importing ProductForm styles for consistent design
+import '../styles/ProductForm.css'; // Importing ProductForm styles for consistent design
 
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
