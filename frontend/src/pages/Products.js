@@ -4,7 +4,7 @@ import ProductCard from '../components/ProductCard';
 import { ParallaxSection, ParallaxElement } from '../components/Parallax';
 import { useIntersectionObserver } from '../hooks/useParallax';
 import '../styles/components/LuxuryProducts.css';
-// import '../styles/ProductForm.css';
+import '../styles/ProductForm.css';
 import '../styles/components/enhanced-products.css';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
@@ -191,8 +191,8 @@ const Products = () => {
             </div>
           ) : (
             <>
-              {/* Featured Categories */}
-              {!selectedCategory && !searchTerm && (
+              {/* Featured Categories - Hidden for now */}
+              {false && !selectedCategory && !searchTerm && (
                 <div className="luxury-featured-categories">
                   <div className="section-header">
                     <h2 className="luxury-section-title">Heritage Collections</h2>
