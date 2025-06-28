@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useToastContext } from '../toast';
 import SecureForm from '../SecureForm';
 import { csrfManager } from '../../utils/csrf';
-import '../styles/pages/ProductForm.css';
+import '../../styles/pages/ProductForm.css';
 
 const ProductForm = ({
   product,
