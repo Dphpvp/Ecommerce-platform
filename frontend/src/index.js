@@ -10,7 +10,6 @@ import './App.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
 import './styles/admin/admin.css';
-import './styles/components/enhanced-products.css';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
