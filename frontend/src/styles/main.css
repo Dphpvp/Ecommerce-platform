@@ -8,7 +8,7 @@
 
 /* === PAGE SPECIFIC === */
 @import './pages/products.css';
-@import './pages/auth.css';
+@import './pages/AuthSlider.css';
 @import './pages/profile.css';
 @import './pages/cart.css';
 
