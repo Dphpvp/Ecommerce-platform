@@ -5,13 +5,9 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from datetime import datetime
 import stripe
 import os
-from fastapi.staticfiles import StaticFiles
-from api.routes import auth, products, cart, orders, contact, profile, debug
-from api.routes.admin_routes import router as admin_router
+
 from api.main import router as api_router
-
-
-
+from api.routes.admin_routes import router as admin_router
 
 # Configuration
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
@@ -28,24 +24,15 @@ app = FastAPI(
     redoc_url=None,
 )
 
-# FIXED: Include routers with proper prefixes
-app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
-app.include_router(products.router, prefix="/api/products", tags=["products"])
-app.include_router(cart.router, prefix="/api/cart", tags=["cart"])
-app.include_router(orders.router, prefix="/api/orders", tags=["orders"])
-app.include_router(contact.router, prefix="/api/contact", tags=["contact"])
-app.include_router(profile.router, prefix="/api/profile", tags=["profile"])
-app.include_router(debug.router, prefix="/api/debug", tags=["debug"])
-# Admin routes already have /api/admin prefix in their router
+# Include routers
+app.include_router(api_router)
 app.include_router(admin_router, tags=["admin"])
-app.include_router(api_router, tags=["api"])
-
 
 # Security middleware
 if ALLOWED_HOSTS:
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS)
 
-# FIXED CORS configuration - Explicit origins with credentials
+# CORS configuration
 origins = [
     "https://vergishop.vercel.app",
     "https://vs1.vercel.app"
@@ -77,7 +64,7 @@ app.add_middleware(
     max_age=600,
 )
 
-# FIXED COOP middleware for checkout authentication
+# COOP middleware for checkout authentication
 class COOPMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         response = await call_next(request)
@@ -94,7 +81,6 @@ app.add_middleware(COOPMiddleware)
 # Handle OPTIONS requests for CORS preflight
 @app.options("/{path:path}")
 async def handle_options(path: str, request: Request):
-    """Handle CORS preflight requests"""
     origin = request.headers.get("origin")
     
     from fastapi.responses import Response
@@ -143,41 +129,6 @@ async def security_headers_middleware(request: Request, call_next):
     
     return response
 
-# FIXED: Add compatibility endpoints for frontend
-@app.get("/api/csrf-token")
-async def get_csrf_token_root(request: Request):
-    """CSRF token endpoint for frontend compatibility"""
-    from api.middleware.csrf import csrf_protection
-    from jose import jwt
-    from api.core.config import get_settings
-    
-    settings = get_settings()
-    session_id = None
-    auth_header = request.headers.get("Authorization")
-    if auth_header and auth_header.startswith("Bearer "):
-        try:
-            token = auth_header.split(" ")[1]
-            payload = jwt.decode(token, settings.JWT_SECRET, algorithms=["HS256"])
-            session_id = payload.get("user_id")
-        except:
-            pass
-    
-    csrf_token = csrf_protection.generate_token(session_id)
-    return {"csrf_token": csrf_token}
-
-@app.post("/api/payment/create-intent")
-async def create_payment_intent_root(payment_request: dict):
-    """Payment intent endpoint for frontend compatibility"""
-    from api.services.payment_service import PaymentService
-    from api.models.order import PaymentIntentRequest
-    
-    try:
-        payment_service = PaymentService()
-        request_model = PaymentIntentRequest(**payment_request)
-        return await payment_service.create_payment_intent(request_model)
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
 # Stripe configuration
 if STRIPE_SECRET_KEY:
     stripe.api_key = STRIPE_SECRET_KEY
@@ -207,32 +158,6 @@ async def health_check():
         "timestamp": datetime.now().isoformat()
     }
 
-@app.get("/api/test")
-async def test_endpoint():
-    """Test endpoint to verify API is working"""
-    return {
-        "message": "API is working", 
-        "timestamp": datetime.now().isoformat(),
-        "environment": "production",
-        "cors": "credentials-enabled",
-        "origins": origins
-    }
-
-@app.get("/api/cors-test")
-async def cors_test(request: Request):
-    """Test CORS configuration with credentials"""
-    origin = request.headers.get("origin")
-    
-    return {
-        "cors": "working",
-        "message": "CORS is properly configured for credentials",
-        "request_origin": origin,
-        "allowed_origins": origins,
-        "credentials_supported": True,
-        "cookies": dict(request.cookies),
-        "timestamp": datetime.now().isoformat()
-    }
-
 # Global exception handlers
 @app.exception_handler(500)
 async def internal_server_error(request: Request, exc: Exception):
@@ -247,7 +172,6 @@ async def not_found_handler(request: Request, exc: HTTPException):
 # Startup event
 @app.on_event("startup")
 async def startup_event():
-    """Create indexes and print configuration status on startup"""
     print("🚀 E-commerce Backend Starting Up...")
     print("=" * 50)
     
@@ -275,29 +199,22 @@ async def startup_event():
     except Exception as e:
         print(f"⚠️ Index creation failed: {e}")
     
-    # Configuration status check
+    # Configuration status
     email_user = os.getenv("EMAIL_USER")
     email_password = os.getenv("EMAIL_PASSWORD")
     admin_email = os.getenv("ADMIN_EMAIL")
     
     if email_user and email_password:
         print(f"📧 Email Configuration: ✅ CONFIGURED")
-        print(f"📧 Email User: {email_user}")
         print(f"📧 Admin Email: {admin_email}")
     else:
         print(f"📧 Email Configuration: ❌ NOT CONFIGURED")
-        print("⚠️  Add EMAIL_USER and EMAIL_PASSWORD to environment variables")
     
-    frontend_url = os.getenv("FRONTEND_URL")
-    backend_url = os.getenv("BACKEND_URL")
-    
-    print(f"🌐 Frontend URL: {frontend_url}")
-    print(f"🖥️  Backend URL: {backend_url}")
+    print(f"🌐 Frontend URL: {FRONTEND_URL}")
     print(f"🔐 CORS Origins: {origins}")
     print(f"🍪 Credentials Enabled: True")
     
-    mongodb_url = os.getenv("MONGODB_URL")
-    if mongodb_url:
+    if os.getenv("MONGODB_URL"):
         print(f"💾 Database: ✅ CONFIGURED")
     else:
         print(f"💾 Database: ❌ NOT CONFIGURED")

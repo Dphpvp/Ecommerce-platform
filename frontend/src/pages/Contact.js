@@ -31,6 +31,14 @@ const Contact = () => {
     setIsSubmitting(true);
     
     try {
+      const requestData = {
+        name: sanitizedData.name.trim(),
+        email: sanitizedData.email.trim().toLowerCase(),
+        phone: sanitizedData.phone?.trim() || '',
+        message: sanitizedData.message.trim(),
+        send_confirmation: Boolean(sanitizedData.send_confirmation)
+      };
+
       const response = await csrfManager.makeSecureRequest(
         `${process.env.REACT_APP_API_BASE_URL}/api/contact`,
         {
@@ -39,33 +47,71 @@ const Contact = () => {
             'Content-Type': 'application/json',
             'X-CSRF-Token': csrfToken,
           },
-          body: JSON.stringify({
-            name: sanitizedData.name,
-            email: sanitizedData.email,
-            phone: sanitizedData.phone || '',
-            message: sanitizedData.message,
-            send_confirmation: sanitizedData.send_confirmation || false,
-            timestamp: new Date().toISOString(),
-            source: 'contact_form'
-          })
+          credentials: 'include',
+          body: JSON.stringify(requestData)
         }
       );
 
       const result = await response.json();
 
       if (response.ok) {
-        showToast('Message sent successfully! We will get back to you within 24 hours.', 'success');
-        // Reset form
-        document.querySelector('.contact-form').reset();
+        showToast(
+          requestData.send_confirmation 
+            ? 'Message sent successfully! Check your email for confirmation. We will get back to you within 24 hours.'
+            : 'Message sent successfully! We will get back to you within 24 hours.',
+          'success'
+        );
+        
+        // Reset form after successful submission
+        const form = document.querySelector('.contact-form');
+        if (form) {
+          form.reset();
+        }
       } else {
-        throw new Error(result.message || result.detail || 'Failed to send message. Please try again.');
+        // Handle specific error messages from backend
+        const errorMessage = result.detail || result.message || 'Failed to send message. Please try again.';
+        throw new Error(errorMessage);
       }
     } catch (error) {
-      console.error('Contact form error:', error);
-      showToast(error.message || 'Failed to send message. Please try again later.', 'error');
+      console.error('Contact form submission error:', error);
+      
+      // Handle different types of errors
+      let errorMessage = 'Failed to send message. Please try again later.';
+      
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        errorMessage = 'Network error. Please check your connection and try again.';
+      } else if (error.message.includes('CSRF')) {
+        errorMessage = 'Security token expired. Please refresh the page and try again.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      showToast(errorMessage, 'error');
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const validateForm = (formData) => {
+    const errors = {};
+    
+    if (!formData.name || formData.name.length < 2) {
+      errors.name = 'Name must be at least 2 characters long';
+    }
+    
+    if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.email = 'Please enter a valid email address';
+    }
+    
+    if (formData.phone && !/^[\+]?[\d\s\-\(\)]{7,20}$/.test(formData.phone)) {
+      errors.phone = 'Please enter a valid phone number';
+    }
+    
+    if (!formData.message || formData.message.length < 20) {
+      errors.message = 'Message must be at least 20 characters long';
+    }
+    
+    return errors;
   };
 
   return (
@@ -184,7 +230,12 @@ const Contact = () => {
                     within 24 hours to schedule your personal consultation.
                   </p>
 
-                  <SecureForm onSubmit={handleSubmit} className="contact-form" validate={true}>
+                  <SecureForm 
+                    onSubmit={handleSubmit} 
+                    className="contact-form" 
+                    validate={true}
+                    customValidation={validateForm}
+                  >
                     <div className="form-row">
                       <div className="form-group">
                         <label htmlFor="name">Full Name *</label>
@@ -196,6 +247,7 @@ const Contact = () => {
                           maxLength="100"
                           required
                           placeholder="Your full name"
+                          disabled={isSubmitting}
                         />
                       </div>
 
@@ -208,6 +260,7 @@ const Contact = () => {
                           maxLength="254"
                           required
                           placeholder="your.email@example.com"
+                          disabled={isSubmitting}
                         />
                       </div>
                     </div>
@@ -220,6 +273,7 @@ const Contact = () => {
                         name="phone"
                         maxLength="20"
                         placeholder="+44 (0) 20 7123 4567"
+                        disabled={isSubmitting}
                       />
                     </div>
 
@@ -233,6 +287,7 @@ const Contact = () => {
                         maxLength="2000"
                         required
                         placeholder="Tell us about your requirements, style preferences, or any specific needs for your consultation..."
+                        disabled={isSubmitting}
                       ></textarea>
                     </div>
 
@@ -242,6 +297,7 @@ const Contact = () => {
                           type="checkbox"
                           name="send_confirmation"
                           defaultChecked={true}
+                          disabled={isSubmitting}
                         />
                         <span className="checkmark"></span>
                         Send me a confirmation copy of this message
@@ -260,7 +316,16 @@ const Contact = () => {
                       className="btn-luxury contact-submit-btn"
                       disabled={isSubmitting}
                     >
-                      <span>{isSubmitting ? 'Sending Request...' : 'Request Consultation'}</span>
+                      <span>
+                        {isSubmitting ? (
+                          <>
+                            <span className="spinner"></span>
+                            Sending Request...
+                          </>
+                        ) : (
+                          'Request Consultation'
+                        )}
+                      </span>
                     </button>
                   </SecureForm>
                 </div>

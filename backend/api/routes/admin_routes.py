@@ -2,23 +2,22 @@ from fastapi import APIRouter, HTTPException, Depends, Request
 from typing import List, Optional
 from bson import ObjectId
 from datetime import datetime, timezone
-# FIXED: Use correct dependency imports
+
 from api.dependencies.auth import get_current_user_from_session
 from api.core.database import get_database
 from api.models.product import ProductRequest
 from api.services.email_service import EmailService
 
-# FIXED: Remove double prefix - main.py already includes this router
+# Fixed: Clean prefix without duplication
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
-# FIXED: Correct admin middleware using proper auth dependency
+# Admin middleware
 async def get_admin_user(current_user: dict = Depends(get_current_user_from_session)):
     if not current_user.get("is_admin"):
         raise HTTPException(status_code=403, detail="Admin access required")
     return current_user
 
 email_service = EmailService()
-# FIXED: Get database instance properly
 db = get_database()
 
 # Dashboard endpoint
@@ -120,7 +119,6 @@ async def get_all_orders(
     skip: int = 0,
     admin_user: dict = Depends(get_admin_user)
 ):
-    """Get all orders for admin review"""
     query = {}
     if status:
         query["status"] = status
@@ -161,7 +159,6 @@ async def get_all_orders(
         order["_id"] = str(order["_id"])
         orders.append(order)
     
-    # Get total count for pagination
     total_orders = await db.orders.count_documents(query)
     
     return {
@@ -172,12 +169,10 @@ async def get_all_orders(
 
 @router.get("/orders/{order_id}")
 async def get_order_details(order_id: str, admin_user: dict = Depends(get_admin_user)):
-    """Get detailed order information for admin"""
     order = await db.orders.find_one({"_id": ObjectId(order_id)})
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
     
-    # Get user info
     user = await db.users.find_one({"_id": ObjectId(order["user_id"])})
     
     order_data = {
@@ -200,26 +195,22 @@ async def get_order_details(order_id: str, admin_user: dict = Depends(get_admin_
     
     return order_data
 
-# Order status update
 @router.put("/orders/{order_id}/status")
 async def update_order_status(
     order_id: str, 
     status_data: dict, 
     admin_user: dict = Depends(get_admin_user)
 ):
-    """Update order status with email notification"""
     valid_statuses = ["pending", "accepted", "processing", "shipped", "delivered", "cancelled"]
     new_status = status_data.get("status")
     
     if new_status not in valid_statuses:
         raise HTTPException(status_code=400, detail="Invalid status")
     
-    # Check if order exists
     order = await db.orders.find_one({"_id": ObjectId(order_id)})
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
     
-    # Update order status
     result = await db.orders.update_one(
         {"_id": ObjectId(order_id)},
         {
@@ -233,10 +224,9 @@ async def update_order_status(
     if result.matched_count == 0:
         raise HTTPException(status_code=400, detail="Failed to update order status")
     
-    # Get user info for email notification
+    # Send email notification
     user = await db.users.find_one({"_id": ObjectId(order["user_id"])})
     
-    # Send status update email to customer
     if user:
         status_messages = {
             "accepted": "Your order has been accepted and is being prepared for shipment.",
@@ -325,7 +315,6 @@ async def delete_user(user_id: str, admin_user: dict = Depends(get_admin_user)):
 # Categories and analytics
 @router.get("/categories")
 async def get_categories(admin_user: dict = Depends(get_admin_user)):
-    """Get all product categories with counts"""
     pipeline = [
         {"$group": {
             "_id": "$category", 
@@ -348,11 +337,8 @@ async def get_categories(admin_user: dict = Depends(get_admin_user)):
         ]
     }
 
-# Analytics endpoints
 @router.get("/analytics/sales")
 async def get_sales_analytics(admin_user: dict = Depends(get_admin_user)):
-    """Get sales analytics data"""
-    # Daily sales for last 30 days
     from datetime import timedelta
     thirty_days_ago = datetime.now(timezone.utc) - timedelta(days=30)
     
@@ -368,7 +354,6 @@ async def get_sales_analytics(admin_user: dict = Depends(get_admin_user)):
     
     daily_sales = await db.orders.aggregate(daily_sales_pipeline).to_list(None)
     
-    # Top selling products
     top_products_pipeline = [
         {"$unwind": "$items"},
         {"$group": {
@@ -385,42 +370,4 @@ async def get_sales_analytics(admin_user: dict = Depends(get_admin_user)):
     return {
         "daily_sales": daily_sales,
         "top_products": top_products
-    }
-
-# Debug endpoints
-@router.get("/debug/products")
-async def debug_products(admin_user: dict = Depends(get_admin_user)):
-    cursor = db.products.find({}).limit(3)
-    products = []
-    async for product in cursor:
-        products.append({
-            "_id": str(product["_id"]),
-            "name": product.get("name"),
-            "category": product.get("category"),
-            "price": product.get("price"),
-            "stock": product.get("stock")
-        })
-    return {"products": products}
-
-@router.get("/debug")
-async def debug_info(admin_user: dict = Depends(get_admin_user)):
-    # Count total products
-    total_products = await db.products.count_documents({})
-    total_orders = await db.orders.count_documents({})
-    total_users = await db.users.count_documents({})
-    
-    # Get first few products
-    sample_products = []
-    async for product in db.products.find({}).limit(3):
-        sample_products.append({
-            "name": product.get("name"),
-            "category": product.get("category"),
-            "all_fields": list(product.keys())
-        })
-    
-    return {
-        "total_products": total_products,
-        "total_orders": total_orders,
-        "total_users": total_users,
-        "sample_products": sample_products
     }

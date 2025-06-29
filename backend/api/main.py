@@ -1,6 +1,5 @@
 from fastapi import APIRouter
 from api.routes import auth, products, cart, orders, contact, profile, debug, uploads
-from fastapi.staticfiles import StaticFiles
 
 # Main API router
 router = APIRouter(prefix="/api")
