@@ -11,10 +11,11 @@ import './styles/base.css';
 import './styles/tailoring-theme.css';
 import './styles/parallax-enhancements.css';
 import './styles/luxury-background.css'; 
+import '../../styles/pages/admin.css';
 import './App.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import 'styles/pages/admin.css';
+
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
