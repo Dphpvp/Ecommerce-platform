@@ -40,7 +40,11 @@ const Contact = () => {
             'X-CSRF-Token': csrfToken,
           },
           body: JSON.stringify({
-            ...sanitizedData,
+            name: sanitizedData.name,
+            email: sanitizedData.email,
+            phone: sanitizedData.phone || '',
+            message: sanitizedData.message,
+            send_confirmation: sanitizedData.send_confirmation || false,
             timestamp: new Date().toISOString(),
             source: 'contact_form'
           })
@@ -52,7 +56,7 @@ const Contact = () => {
       if (response.ok) {
         showToast('Message sent successfully! We will get back to you within 24 hours.', 'success');
         // Reset form
-        document.querySelector('form').reset();
+        document.querySelector('.contact-form').reset();
       } else {
         throw new Error(result.message || result.detail || 'Failed to send message. Please try again.');
       }
@@ -230,6 +234,18 @@ const Contact = () => {
                         required
                         placeholder="Tell us about your requirements, style preferences, or any specific needs for your consultation..."
                       ></textarea>
+                    </div>
+
+                    <div className="form-group">
+                      <label className="checkbox-label">
+                        <input
+                          type="checkbox"
+                          name="send_confirmation"
+                          defaultChecked={true}
+                        />
+                        <span className="checkmark"></span>
+                        Send me a confirmation copy of this message
+                      </label>
                     </div>
 
                     <div className="form-privacy">

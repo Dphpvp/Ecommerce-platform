@@ -271,6 +271,64 @@
   box-shadow: var(--shadow-gold);
 }
 
+.contact-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Checkbox styling */
+.checkbox-label {
+  display: flex !important;
+  align-items: center !important;
+  gap: var(--space-3) !important;
+  cursor: pointer;
+  font-size: var(--text-sm) !important;
+  color: var(--color-text-secondary) !important;
+  font-family: var(--font-sans) !important;
+  font-weight: var(--font-normal) !important;
+}
+
+.checkbox-label input[type="checkbox"] {
+  width: auto !important;
+  height: auto !important;
+  min-height: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.checkmark {
+  position: relative;
+  height: 20px;
+  width: 20px;
+  background-color: var(--color-surface);
+  border: 2px solid var(--color-border-input);
+  border-radius: 4px;
+  transition: all var(--transition-smooth);
+}
+
+.checkbox-label input:checked ~ .checkmark {
+  background-color: var(--color-accent-gold);
+  border-color: var(--color-accent-gold);
+}
+
+.checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+  left: 6px;
+  top: 2px;
+  width: 6px;
+  height: 12px;
+  border: solid var(--primary-navy);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.checkbox-label input:checked ~ .checkmark:after {
+  display: block;
+}
+
 /* Services Highlight Section */
 .services-highlight-section {
   background-attachment: fixed;
