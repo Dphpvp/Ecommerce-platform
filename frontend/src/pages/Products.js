@@ -3,7 +3,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import ProductCard from '../components/ProductCard';
 import { ParallaxSection, ParallaxElement } from '../components/Parallax';
 import { useIntersectionObserver } from '../hooks/useParallax';
-import '../styles/components/LuxuryProducts.css';
+import '../styles/pages/products.css';
 
 
 
