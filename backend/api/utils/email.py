@@ -10,6 +10,9 @@ email_service = EmailService()
 async def send_email(to_email: str, subject: str, body: str) -> bool:
     return await email_service.send_email(to_email, subject, body)
 
+async def send_contact_confirmation_email(name: str, email: str, phone: str, message: str) -> bool:
+    return await email_service.send_contact_confirmation_email(name, email, phone, message)
+
 async def send_verification_email(user_email: str, user_name: str, verification_url: str) -> bool:
     return await email_service.send_verification_email(user_email, user_name, verification_url)
 
@@ -35,5 +38,6 @@ __all__ = [
     'send_admin_order_notification',
     'send_password_reset_email',
     'send_contact_email',
+    'send_contact_confirmation_email',
     'send_2fa_email_code'
 ]
