@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from api.routes import auth, products, cart, orders, contact, profile, debug, uploads
+from api.routes import admin_routes
 
 # Main API router
 router = APIRouter(prefix="/api")
@@ -13,3 +14,4 @@ router.include_router(contact.router, prefix="/contact", tags=["contact"])
 router.include_router(profile.router, prefix="/profile", tags=["profile"])
 router.include_router(debug.router, prefix="/debug", tags=["debug"])
 router.include_router(uploads.router, prefix="/uploads", tags=["uploads"])
+router.include_router(admin_routes.router, prefix="/admin", tags=["admin"])

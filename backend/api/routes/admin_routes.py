@@ -8,8 +8,8 @@ from api.core.database import get_database
 from api.models.product import ProductRequest
 from api.services.email_service import EmailService
 
-# Fixed: Clean prefix without duplication
-router = APIRouter(prefix="/api/admin", tags=["admin"])
+# Remove the /api prefix since it's added in api/main.py
+router = APIRouter(tags=["admin"])
 
 # Admin middleware
 async def get_admin_user(current_user: dict = Depends(get_current_user_from_session)):

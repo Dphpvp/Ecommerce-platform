@@ -7,7 +7,7 @@ import stripe
 import os
 
 from api.main import router as api_router
-from api.routes.admin_routes import router as admin_router
+# Remove admin_router import to avoid conflicts
 
 # Configuration
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
@@ -24,9 +24,8 @@ app = FastAPI(
     redoc_url=None,
 )
 
-# Include routers
+# Include only the main API router (admin routes are already included in api_router)
 app.include_router(api_router)
-app.include_router(admin_router, tags=["admin"])
 
 # Security middleware
 if ALLOWED_HOSTS:

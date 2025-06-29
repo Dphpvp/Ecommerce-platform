@@ -70,8 +70,15 @@ const LuxuryNavigation = () => {
     setActiveIndex(index);
   };
 
+  const handleLogout = async () => {
+    await logout();
+  };
+
+  // Dynamic wrapper class based on auth state
+  const wrapperClass = `luxury-navigation-wrapper ${user ? 'logged-in' : 'logged-out'}`;
+
   return (
-    <div className="luxury-navigation-wrapper">
+    <div className={wrapperClass}>
       {/* Logo Section */}
       <div className="luxury-nav-logo">
         <Link to="/">
@@ -114,7 +121,7 @@ const LuxuryNavigation = () => {
         </ul>
       </div>
 
-      {/* User Actions */}
+      {/* User Actions - Only show when logged in */}
       {user && (
         <div className="luxury-nav-user">
           <div className="user-menu">
@@ -132,9 +139,13 @@ const LuxuryNavigation = () => {
               </div>
             </div>
             <div className="user-dropdown">
-              <Link to="/profile" className="dropdown-item">
+              <Link to="/profile" className="dropdown-item profile-edit">
                 <ion-icon name="person-outline"></ion-icon>
                 Profile
+              </Link>
+              <Link to="/profile" className="dropdown-item profile-edit">
+                <ion-icon name="create-outline"></ion-icon>
+                Edit Profile
               </Link>
               {!user.is_admin && (
                 <Link to="/orders" className="dropdown-item">
@@ -142,7 +153,7 @@ const LuxuryNavigation = () => {
                   Orders
                 </Link>
               )}
-              <button onClick={logout} className="dropdown-item logout-btn">
+              <button onClick={handleLogout} className="dropdown-item logout">
                 <ion-icon name="log-out-outline"></ion-icon>
                 Logout
               </button>
@@ -151,7 +162,7 @@ const LuxuryNavigation = () => {
         </div>
       )}
 
-      {/* Auth Buttons for non-logged users */}
+      {/* Auth Buttons - Only show when logged out */}
       {!user && (
         <div className="luxury-nav-auth">
           <Link to="/login" className="auth-btn login-btn">
