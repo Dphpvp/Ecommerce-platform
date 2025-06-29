@@ -14,7 +14,7 @@ import './styles/luxury-background.css';
 import './App.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
-import 'styles/admin/admin.css';
+import 'styles/pages/admin.css';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
