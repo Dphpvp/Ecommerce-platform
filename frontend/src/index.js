@@ -11,7 +11,7 @@ import './styles/base.css';
 import './styles/tailoring-theme.css';
 import './styles/parallax-enhancements.css';
 import './styles/luxury-background.css'; 
-import '../../styles/pages/admin.css';
+import './styles/pages/admin.css';
 import './App.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';
