@@ -1,5 +1,5 @@
 /* Parallax Section Styles */
-@import url('../../styles/tailoring-theme.css');
+@import url('../../styles/theme/luxury.css');
 
 .parallax-section {
   position: relative;
