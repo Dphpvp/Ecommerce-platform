@@ -1,4 +1,3 @@
-// frontend/src/pages/Contact.js
 import React, { useState } from 'react';
 import { useToastContext } from '../components/toast';
 import SecureForm from '../components/SecureForm';
@@ -33,26 +32,33 @@ const Contact = () => {
     
     try {
       const response = await csrfManager.makeSecureRequest(
-        `${process.env.REACT_APP_API_BASE_URL}/contact`,
+        `${process.env.REACT_APP_API_BASE_URL}/api/contact`,
         {
           method: 'POST',
           headers: {
+            'Content-Type': 'application/json',
             'X-CSRF-Token': csrfToken,
           },
-          body: JSON.stringify(sanitizedData)
+          body: JSON.stringify({
+            ...sanitizedData,
+            timestamp: new Date().toISOString(),
+            source: 'contact_form'
+          })
         }
       );
 
+      const result = await response.json();
+
       if (response.ok) {
-        showToast('Message sent successfully! We will get back to you soon.', 'success');
+        showToast('Message sent successfully! We will get back to you within 24 hours.', 'success');
         // Reset form
         document.querySelector('form').reset();
       } else {
-        const error = await response.json();
-        throw new Error(error.detail || 'Failed to send message');
+        throw new Error(result.message || result.detail || 'Failed to send message. Please try again.');
       }
     } catch (error) {
-      throw error; // Let SecureForm handle the error display
+      console.error('Contact form error:', error);
+      showToast(error.message || 'Failed to send message. Please try again later.', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -202,38 +208,14 @@ const Contact = () => {
                       </div>
                     </div>
 
-                    <div className="form-row">
-                      <div className="form-group">
-                        <label htmlFor="phone">Phone Number</label>
-                        <input
-                          type="tel"
-                          id="phone"
-                          name="phone"
-                          maxLength="20"
-                          placeholder="+44 (0) 20 7123 4567"
-                        />
-                      </div>
-
-                      <div className="form-group">
-                        <label htmlFor="service">Service Interest</label>
-                        <select id="service" name="service" className="luxury-select">
-                          <option value="">Select a service</option>
-                          <option value="bespoke-suit">Bespoke Suit</option>
-                          <option value="shirt-tailoring">Shirt Tailoring</option>
-                          <option value="formal-wear">Formal Wear</option>
-                          <option value="alterations">Alterations</option>
-                          <option value="consultation">General Consultation</option>
-                        </select>
-                      </div>
-                    </div>
-
                     <div className="form-group">
-                      <label htmlFor="preferred-date">Preferred Appointment Date</label>
+                      <label htmlFor="phone">Phone Number</label>
                       <input
-                        type="date"
-                        id="preferred-date"
-                        name="preferred_date"
-                        min={new Date().toISOString().split('T')[0]}
+                        type="tel"
+                        id="phone"
+                        name="phone"
+                        maxLength="20"
+                        placeholder="+44 (0) 20 7123 4567"
                       />
                     </div>
 
