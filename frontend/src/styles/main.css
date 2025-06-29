@@ -14,7 +14,7 @@
 @import './pages/cart.css';
 
 /* === ADMIN === */
-@import './admin.css';
+@import './pages/admin.css';
 
 /* === UTILITIES === */
 @import './utilities.css';
