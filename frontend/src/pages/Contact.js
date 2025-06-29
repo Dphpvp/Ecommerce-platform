@@ -1,4 +1,3 @@
-// frontend/src/pages/Contact.js
 import React, { useState } from 'react';
 import { useToastContext } from '../components/toast';
 import SecureForm from '../components/SecureForm';
