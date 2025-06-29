@@ -7,7 +7,6 @@
 @import './layout.css';
 
 /* === PAGE SPECIFIC === */
-@import './pages/home.css';
 @import './pages/products.css';
 @import './pages/auth.css';
 @import './pages/profile.css';
