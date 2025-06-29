@@ -7,6 +7,7 @@ import './styles/main.css';
 import './styles/layout.css';
 import './styles/utilities.css';
 import './styles/components.css';
+import './styles/base.css';
 import './styles/tailoring-theme.css';
 import './styles/parallax-enhancements.css';
 import './styles/luxury-background.css'; 
