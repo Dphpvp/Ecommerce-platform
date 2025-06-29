@@ -247,7 +247,6 @@ const Contact = () => {
                           maxLength="100"
                           required
                           placeholder="Your full name"
-                          disabled={isSubmitting}
                         />
                       </div>
 
@@ -260,7 +259,6 @@ const Contact = () => {
                           maxLength="254"
                           required
                           placeholder="your.email@example.com"
-                          disabled={isSubmitting}
                         />
                       </div>
                     </div>
@@ -273,7 +271,6 @@ const Contact = () => {
                         name="phone"
                         maxLength="20"
                         placeholder="+44 (0) 20 7123 4567"
-                        disabled={isSubmitting}
                       />
                     </div>
 
@@ -287,7 +284,6 @@ const Contact = () => {
                         maxLength="2000"
                         required
                         placeholder="Tell us about your requirements, style preferences, or any specific needs for your consultation..."
-                        disabled={isSubmitting}
                       ></textarea>
                     </div>
 
@@ -297,7 +293,6 @@ const Contact = () => {
                           type="checkbox"
                           name="send_confirmation"
                           defaultChecked={true}
-                          disabled={isSubmitting}
                         />
                         <span className="checkmark"></span>
                         Send me a confirmation copy of this message
