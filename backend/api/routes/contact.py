@@ -38,12 +38,39 @@ async def submit_contact_form(
         <p>{contact_request.message}</p>
         """
         
-        # Check email send result
+        # Send contact email to admin
         email_sent = await email_service.send_email(settings.ADMIN_EMAIL, subject, body)
         
         if not email_sent:
             print("❌ Email service returned False")
             raise HTTPException(status_code=500, detail="Failed to send email")
+        
+        # Send confirmation copy to user if requested
+        if contact_request.send_confirmation:
+            confirmation_subject = f"Message Received - {contact_request.name}"
+            confirmation_body = f"""
+            <h3>Thank you for contacting us!</h3>
+            <p>Hello {contact_request.name},</p>
+            <p>We have received your message and will get back to you within 24 hours.</p>
+            
+            <h4>Your message:</h4>
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 10px 0;">
+                <p><strong>Subject:</strong> Contact Form Inquiry</p>
+                <p><strong>Message:</strong></p>
+                <p>{contact_request.message}</p>
+            </div>
+            
+            <p>Best regards,<br>The E-Shop Team</p>
+            """
+            
+            confirmation_sent = await email_service.send_email(
+                contact_request.email, 
+                confirmation_subject, 
+                confirmation_body
+            )
+            
+            if not confirmation_sent:
+                print("⚠️ Failed to send confirmation email to user")
         
         print(f"✅ Contact email sent to {settings.ADMIN_EMAIL}")
         return MessageResponse(message="Message sent successfully")
