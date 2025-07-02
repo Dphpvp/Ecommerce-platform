@@ -4,6 +4,7 @@ from api.models.responses import MessageResponse
 from api.dependencies.auth import require_csrf_token
 from api.dependencies.rate_limiting import rate_limit
 from api.services.email_service import EmailService
+from api.core.config import get_settings
 
 router = APIRouter()
 email_service = EmailService()
@@ -16,9 +17,16 @@ async def submit_contact_form(
     csrf_valid: bool = Depends(require_csrf_token)
 ):
     try:
-        # Send contact email
-        from api.core.config import get_settings
         settings = get_settings()
+        
+        # Check if email is configured
+        if not settings.ADMIN_EMAIL:
+            print("❌ ADMIN_EMAIL not configured")
+            raise HTTPException(status_code=500, detail="Email service not configured")
+        
+        if not settings.EMAIL_USER or not settings.EMAIL_PASSWORD:
+            print("❌ Email credentials not configured")
+            raise HTTPException(status_code=500, detail="Email service not configured")
         
         subject = f"Contact Form: {contact_request.name}"
         body = f"""
@@ -30,7 +38,18 @@ async def submit_contact_form(
         <p>{contact_request.message}</p>
         """
         
-        await email_service.send_email(settings.ADMIN_EMAIL, subject, body)
+        # Check email send result
+        email_sent = await email_service.send_email(settings.ADMIN_EMAIL, subject, body)
+        
+        if not email_sent:
+            print("❌ Email service returned False")
+            raise HTTPException(status_code=500, detail="Failed to send email")
+        
+        print(f"✅ Contact email sent to {settings.ADMIN_EMAIL}")
         return MessageResponse(message="Message sent successfully")
+        
+    except HTTPException:
+        raise
     except Exception as e:
+        print(f"❌ Contact form error: {e}")
         raise HTTPException(status_code=500, detail="Failed to send message")

@@ -16,13 +16,30 @@ class EmailService:
         self.email_user = settings.EMAIL_USER
         self.email_password = settings.EMAIL_PASSWORD
         self.admin_email = settings.ADMIN_EMAIL
+        
+        # Debug email configuration on startup
+        print(f"📧 Email Service Init:")
+        print(f"   Host: {self.email_host}:{self.email_port}")
+        print(f"   User: {self.email_user[:10]}***" if self.email_user else "   User: NOT SET")
+        print(f"   Password: {'SET' if self.email_password else 'NOT SET'}")
+        print(f"   Admin: {self.admin_email}")
     
     async def send_email(self, to_email: str, subject: str, body: str) -> bool:
         if not self.email_user or not self.email_password:
-            print("Email credentials not configured")
+            print("❌ Email credentials not configured")
+            print(f"   EMAIL_USER: {'SET' if self.email_user else 'NOT SET'}")
+            print(f"   EMAIL_PASSWORD: {'SET' if self.email_password else 'NOT SET'}")
+            return False
+        
+        if not to_email:
+            print("❌ No recipient email provided")
             return False
         
         try:
+            print(f"📧 Sending email to {to_email}")
+            print(f"   Subject: {subject}")
+            print(f"   From: {self.email_user}")
+            
             msg = MIMEMultipart()
             msg['From'] = self.email_user
             msg['To'] = to_email
@@ -30,16 +47,35 @@ class EmailService:
             
             msg.attach(MIMEText(body, 'html'))
             
+            print(f"🔗 Connecting to SMTP server {self.email_host}:{self.email_port}")
             server = smtplib.SMTP(self.email_host, self.email_port)
             server.starttls()
+            
+            print("🔐 Authenticating...")
             server.login(self.email_user, self.email_password)
+            
+            print("📤 Sending message...")
             text = msg.as_string()
             server.sendmail(self.email_user, to_email, text)
             server.quit()
             
+            print("✅ Email sent successfully!")
             return True
+            
+        except smtplib.SMTPAuthenticationError as e:
+            print(f"❌ SMTP Authentication failed: {e}")
+            print("   Check EMAIL_USER and EMAIL_PASSWORD")
+            return False
+        except smtplib.SMTPConnectError as e:
+            print(f"❌ SMTP Connection failed: {e}")
+            print(f"   Check EMAIL_HOST ({self.email_host}) and EMAIL_PORT ({self.email_port})")
+            return False
+        except smtplib.SMTPException as e:
+            print(f"❌ SMTP Error: {e}")
+            return False
         except Exception as e:
-            print(f"Email sending failed: {e}")
+            print(f"❌ Email sending failed: {e}")
+            print(f"   Error type: {type(e).__name__}")
             return False
     
     async def send_verification_email(self, user_email: str, user_name: str, verification_url: str) -> bool:

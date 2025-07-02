@@ -1,4 +1,3 @@
-// frontend/src/components/SecureForm.js - Enhanced version
 import React, { useState, useEffect } from 'react';
 import { csrfManager, sanitizeInput, validateInput } from '../utils/csrf';
 import { useToastContext } from './toast';
@@ -14,17 +13,23 @@ const SecureForm = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
   const [csrfToken, setCsrfToken] = useState(null);
+  const [tokenLoading, setTokenLoading] = useState(true);
   const { showToast } = useToastContext();
 
   useEffect(() => {
-    // Get CSRF token when component mounts
     const getCsrfToken = async () => {
+      setTokenLoading(true);
       try {
         const token = await csrfManager.getToken();
         setCsrfToken(token);
+        if (!token) {
+          console.warn('⚠️ CSRF token not available');
+        }
       } catch (error) {
         console.error('Failed to get CSRF token:', error);
-        showToast('Security token failed to load', 'error');
+        showToast('Security token failed to load. Please refresh the page.', 'error');
+      } finally {
+        setTokenLoading(false);
       }
     };
     getCsrfToken();
@@ -33,14 +38,12 @@ const SecureForm = ({
   const validateField = (key, value) => {
     const errors = {};
     
-    // Email validation
     if (key.includes('email') && value) {
       if (!validateInput.email(value)) {
         errors[key] = 'Please enter a valid email address';
       }
     }
     
-    // Password validation
     if (key.includes('password') && value) {
       const result = validateInput.password(value);
       if (!result.valid) {
@@ -48,7 +51,6 @@ const SecureForm = ({
       }
     }
     
-    // Username validation
     if (key.includes('username') && value) {
       const result = validateInput.username(value);
       if (!result.valid) {
@@ -56,7 +58,6 @@ const SecureForm = ({
       }
     }
     
-    // URL validation
     if (key.includes('url') && value) {
       const result = validateInput.url(value);
       if (!result.valid) {
@@ -64,7 +65,6 @@ const SecureForm = ({
       }
     }
     
-    // Phone validation
     if (key.includes('phone') && value) {
       if (!validateInput.phone(value)) {
         errors[key] = 'Please enter a valid phone number';
@@ -72,7 +72,7 @@ const SecureForm = ({
     }
     
     // Required field validation
-    if (value === '' && key !== 'phone' && key !== 'address') {
+    if (value === '' && key !== 'phone' && key !== 'address' && key !== 'send_confirmation') {
       errors[key] = 'This field is required';
     }
     
@@ -152,7 +152,7 @@ const SecureForm = ({
   return (
     <form onSubmit={handleSubmit} className={className} {...props}>
       {errors.general && (
-        <div className="error-message" style={{ marginBottom: '1rem' }}>
+        <div className="error-message" style={{ marginBottom: '1rem', color: '#dc3545' }}>
           {errors.general}
         </div>
       )}
