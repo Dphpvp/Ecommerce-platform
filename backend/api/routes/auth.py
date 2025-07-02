@@ -409,7 +409,7 @@ async def update_profile(
         logger.error(f"Profile update error: {e}")
         raise HTTPException(status_code=500, detail="Failed to update profile")
 
-# CSRF Token endpoint
+# CSRF Token endpoint - supports both GET and POST
 @router.get("/csrf-token")
 @router.post("/csrf-token") 
 async def get_csrf_token(request: Request):
@@ -420,6 +420,8 @@ async def get_csrf_token(request: Request):
     
     settings = get_settings()
     session_id = None
+    
+    # Try to get session from cookie or header
     auth_header = request.headers.get("Authorization")
     if auth_header and auth_header.startswith("Bearer "):
         try:
@@ -428,6 +430,16 @@ async def get_csrf_token(request: Request):
             session_id = payload.get("user_id")
         except:
             pass
+    
+    # Try session cookie
+    if not session_id:
+        session_token = request.cookies.get("session_token")
+        if session_token:
+            try:
+                payload = jwt.decode(session_token, settings.JWT_SECRET, algorithms=["HS256"])
+                session_id = payload.get("user_id")
+            except:
+                pass
     
     csrf_token = csrf_protection.generate_token(session_id)
     return {"csrf_token": csrf_token}

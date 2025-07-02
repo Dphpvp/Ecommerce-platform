@@ -1,4 +1,4 @@
-// frontend/src/utils/csrf.js - FIXED API paths
+// frontend/src/utils/csrf.js - Updated for new auth.py
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
 class CSRFManager {
@@ -14,10 +14,15 @@ class CSRFManager {
     }
 
     try {
-      // FIXED: Use correct API path for CSRF token
-      const response = await fetch(`${API_BASE}/csrf-token`, {
-        credentials: 'include'
+      // UPDATED: Use correct API path matching auth.py
+      const response = await fetch(`${API_BASE}/api/auth/csrf-token`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json',
+        }
       });
+      
       if (response.ok) {
         const data = await response.json();
         this.token = data.csrf_token;
@@ -62,6 +67,11 @@ class CSRFManager {
       headers,
       credentials: 'include', // Always include cookies for session
     });
+  }
+
+  clearToken() {
+    this.token = null;
+    this.tokenExpiry = null;
   }
 }
 
