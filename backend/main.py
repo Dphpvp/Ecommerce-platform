@@ -181,12 +181,28 @@ async def health_check():
         "timestamp": datetime.now().isoformat()
     }
 
+# CSRF Token endpoint for anonymous users
 @app.get("/api/csrf-token")
 @app.post("/api/csrf-token")
 async def get_csrf_token_compat(request: Request):
-    """CSRF token endpoint for backward compatibility"""
+    """CSRF token endpoint supporting anonymous users"""
     from api.middleware.csrf import csrf_protection
-    csrf_token = csrf_protection.generate_token()
+    from jose import jwt
+    from api.core.config import get_settings
+    
+    settings = get_settings()
+    session_id = "anonymous"
+    
+    # Try to get session if available
+    session_token = request.cookies.get("session_token")
+    if session_token:
+        try:
+            payload = jwt.decode(session_token, settings.JWT_SECRET, algorithms=["HS256"])
+            session_id = payload.get("user_id", "anonymous")
+        except:
+            pass
+    
+    csrf_token = csrf_protection.generate_token(session_id)
     return {"csrf_token": csrf_token}
 
 # Global exception handlers
