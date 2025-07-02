@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToastContext } from '../toast';
 import TwoFactorSetup from '../TwoFactor/TwoFactorSetup';
-import '../../styles/pages/profile.css';
+
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
 

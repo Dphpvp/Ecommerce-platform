@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useToastContext } from '../components/toast';
 import SecureForm from '../components/SecureForm';
 import { csrfManager } from '../utils/csrf';
-import '../styles/pages/Register.css';
+
 
 const Register = ({ isSliderMode = false }) => {
   const [loading, setLoading] = useState(false);

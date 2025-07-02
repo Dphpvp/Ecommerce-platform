@@ -4,7 +4,7 @@ import SecureForm from '../components/SecureForm';
 import { ParallaxSection, ParallaxElement } from '../components/Parallax';
 import { useIntersectionObserver } from '../hooks/useParallax';
 import { csrfManager } from '../utils/csrf';
-import '../styles/pages/contact.css';
+
 
 // Animation component
 const AnimatedSection = ({ children, className = '', delay = 0 }) => {
