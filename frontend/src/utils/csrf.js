@@ -15,7 +15,7 @@ class CSRFManager {
 
     try {
       // UPDATED: Use correct API path matching auth.py
-      const response = await fetch(`${API_BASE}/api/auth/csrf-token`, {
+      const response = await fetch(`${API_BASE}/api/csrf-token`, {
         method: 'GET',
         credentials: 'include',
         headers: {

@@ -181,6 +181,14 @@ async def health_check():
         "timestamp": datetime.now().isoformat()
     }
 
+@app.get("/api/csrf-token")
+@app.post("/api/csrf-token")
+async def get_csrf_token_compat(request: Request):
+    """CSRF token endpoint for backward compatibility"""
+    from api.middleware.csrf import csrf_protection
+    csrf_token = csrf_protection.generate_token()
+    return {"csrf_token": csrf_token}
+
 # Global exception handlers
 @app.exception_handler(500)
 async def internal_server_error(request: Request, exc: Exception):
