@@ -411,6 +411,7 @@ async def update_profile(
 
 # CSRF Token endpoint
 @router.get("/csrf-token")
+@router.post("/csrf-token") 
 async def get_csrf_token(request: Request):
     """Get CSRF token for forms"""
     from api.middleware.csrf import csrf_protection

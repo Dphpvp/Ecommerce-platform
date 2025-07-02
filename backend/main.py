@@ -156,6 +156,7 @@ if STRIPE_SECRET_KEY:
 
 # Health check endpoints
 @app.get("/")
+@app.head("/")
 async def root():
     return {
         "message": "E-commerce API is running", 
@@ -215,35 +216,44 @@ async def startup_event():
         from api.core.database import get_database
         db = get_database()
         
-        # Create database indexes with error handling
-        indexes_to_create = [
-            (db.products, "category", {}),
-            (db.products, "name", {}),
-            (db.products, "price", {}),
-            (db.products, [("name", "text"), ("description", "text")], {}),
-            (db.users, "email", {"unique": True}),
-            (db.users, "username", {"unique": True}),
-            (db.users, "phone", {"unique": True, "sparse": True}),
-            (db.orders, "user_id", {}),
-            (db.orders, "status", {}),
-            (db.orders, "created_at", {}),
-            (db.orders, "order_number", {"unique": True}),
-            (db.cart, "user_id", {}),
-            (db.cart, [("user_id", 1), ("product_id", 1)], {"unique": True}),
-        ]
-        
-        for collection, index_spec, options in indexes_to_create:
+        # Check and create indexes safely
+        async def ensure_index(collection, index_spec, options=None):
+            options = options or {}
             try:
-                await collection.create_index(index_spec, **options)
-            except Exception as idx_error:
-                if "already exists" in str(idx_error) or "same name" in str(idx_error):
-                    continue  # Index already exists, skip
-                print(f"⚠️ Failed to create index {index_spec}: {idx_error}")
+                existing_indexes = await collection.list_indexes().to_list(None)
+                index_names = [idx['name'] for idx in existing_indexes]
+                
+                # Generate expected index name
+                if isinstance(index_spec, list):
+                    expected_name = "_".join([f"{field}_{direction}" for field, direction in index_spec])
+                else:
+                    expected_name = f"{index_spec}_1"
+                
+                if expected_name not in index_names:
+                    await collection.create_index(index_spec, **options)
+                    
+            except Exception as e:
+                if "already exists" not in str(e).lower():
+                    print(f"⚠️ Index warning: {e}")
+        
+        # Create indexes
+        await ensure_index(db.products, "category")
+        await ensure_index(db.products, "name") 
+        await ensure_index(db.products, "price")
+        await ensure_index(db.products, [("name", "text"), ("description", "text")])
+        await ensure_index(db.users, "email", {"unique": True})
+        await ensure_index(db.users, "username", {"unique": True})
+        await ensure_index(db.orders, "user_id")
+        await ensure_index(db.orders, "status")
+        await ensure_index(db.orders, "created_at")
+        await ensure_index(db.orders, "order_number", {"unique": True})
+        await ensure_index(db.cart, "user_id")
+        await ensure_index(db.cart, [("user_id", 1), ("product_id", 1)], {"unique": True})
         
         print("📊 Database indexes verified/created successfully")
         
     except Exception as e:
-        print(f"⚠️ Index creation failed: {e}")
+        print(f"⚠️ Database setup warning: {e}")
     
     # Configuration status
     email_user = os.getenv("EMAIL_USER")
