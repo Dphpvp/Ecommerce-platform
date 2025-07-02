@@ -215,22 +215,32 @@ async def startup_event():
         from api.core.database import get_database
         db = get_database()
         
-        # Create database indexes
-        await db.products.create_index("category")
-        await db.products.create_index("name")
-        await db.products.create_index("price")
-        await db.products.create_index([("name", "text"), ("description", "text")])
-        await db.users.create_index("email", unique=True)
-        await db.users.create_index("username", unique=True)
-        await db.users.create_index("phone", unique=True)
-        await db.orders.create_index("user_id")
-        await db.orders.create_index("status")
-        await db.orders.create_index("created_at")
-        await db.orders.create_index("order_number")
-        await db.cart.create_index("user_id")
-        await db.cart.create_index([("user_id", 1), ("product_id", 1)], unique=True)
+        # Create database indexes with error handling
+        indexes_to_create = [
+            (db.products, "category", {}),
+            (db.products, "name", {}),
+            (db.products, "price", {}),
+            (db.products, [("name", "text"), ("description", "text")], {}),
+            (db.users, "email", {"unique": True}),
+            (db.users, "username", {"unique": True}),
+            (db.users, "phone", {"unique": True, "sparse": True}),
+            (db.orders, "user_id", {}),
+            (db.orders, "status", {}),
+            (db.orders, "created_at", {}),
+            (db.orders, "order_number", {"unique": True}),
+            (db.cart, "user_id", {}),
+            (db.cart, [("user_id", 1), ("product_id", 1)], {"unique": True}),
+        ]
         
-        print("📊 Database indexes created successfully")
+        for collection, index_spec, options in indexes_to_create:
+            try:
+                await collection.create_index(index_spec, **options)
+            except Exception as idx_error:
+                if "already exists" in str(idx_error) or "same name" in str(idx_error):
+                    continue  # Index already exists, skip
+                print(f"⚠️ Failed to create index {index_spec}: {idx_error}")
+        
+        print("📊 Database indexes verified/created successfully")
         
     except Exception as e:
         print(f"⚠️ Index creation failed: {e}")
