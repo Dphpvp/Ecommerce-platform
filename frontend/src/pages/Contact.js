@@ -40,7 +40,7 @@ const Contact = () => {
       };
 
       const response = await csrfManager.makeSecureRequest(
-        `${process.env.REACT_APP_API_BASE_URL}/api/contact`,
+        `${process.env.REACT_APP_API_BASE_URL}/contact`,
         {
           method: 'POST',
           headers: {
