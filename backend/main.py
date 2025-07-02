@@ -1,13 +1,14 @@
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from datetime import datetime
 import stripe
 import os
+import asyncio
 
 from api.main import router as api_router
-# Remove admin_router import to avoid conflicts
 
 # Configuration
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
@@ -26,6 +27,27 @@ app = FastAPI(
 
 # Include only the main API router (admin routes are already included in api_router)
 app.include_router(api_router)
+
+# Timeout middleware
+class TimeoutMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        try:
+            # Different timeouts for different endpoints
+            timeout = 30.0  # Default 30 seconds
+            
+            if request.url.path.startswith(('/api/uploads', '/api/admin/dashboard')):
+                timeout = 60.0  # 60 seconds for uploads and dashboard
+            elif request.url.path.startswith('/api/auth'):
+                timeout = 15.0  # 15 seconds for auth endpoints
+            
+            return await asyncio.wait_for(call_next(request), timeout=timeout)
+        except asyncio.TimeoutError:
+            return JSONResponse(
+                {"error": "Request timeout", "message": "Request took too long to process"}, 
+                status_code=408
+            )
+
+app.add_middleware(TimeoutMiddleware)
 
 # Security middleware
 if ALLOWED_HOSTS:
@@ -154,6 +176,7 @@ async def health_check():
         "frontend_url": FRONTEND_URL,
         "cors_origins": origins,
         "credentials_enabled": True,
+        "timeout_enabled": True,
         "timestamp": datetime.now().isoformat()
     }
 
@@ -161,12 +184,26 @@ async def health_check():
 @app.exception_handler(500)
 async def internal_server_error(request: Request, exc: Exception):
     print(f"❌ Internal Server Error: {exc}")
-    return {"error": "Internal server error", "message": "Something went wrong"}
+    return JSONResponse(
+        {"error": "Internal server error", "message": "Something went wrong"}, 
+        status_code=500
+    )
 
 @app.exception_handler(404)
 async def not_found_handler(request: Request, exc: HTTPException):
     print(f"❌ 404 Not Found: {request.url}")
-    return {"error": "Not found", "path": str(request.url), "message": "Endpoint not found"}
+    return JSONResponse(
+        {"error": "Not found", "path": str(request.url), "message": "Endpoint not found"}, 
+        status_code=404
+    )
+
+@app.exception_handler(408)
+async def timeout_handler(request: Request, exc: HTTPException):
+    print(f"⏰ Request Timeout: {request.url}")
+    return JSONResponse(
+        {"error": "Request timeout", "message": "Request took too long to process"}, 
+        status_code=408
+    )
 
 # Startup event
 @app.on_event("startup")
@@ -212,6 +249,7 @@ async def startup_event():
     print(f"🌐 Frontend URL: {FRONTEND_URL}")
     print(f"🔐 CORS Origins: {origins}")
     print(f"🍪 Credentials Enabled: True")
+    print(f"⏱️ Request Timeout: Enabled (15-60s)")
     
     if os.getenv("MONGODB_URL"):
         print(f"💾 Database: ✅ CONFIGURED")

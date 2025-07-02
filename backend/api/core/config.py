@@ -18,6 +18,33 @@ class Settings(BaseSettings):
     ADMIN_EMAIL: str = os.getenv("ADMIN_EMAIL", "")
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
 
+    class Config:
+        env_file = ".env"
+        case_sensitive = True
+        
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        # Validate required fields in production
+        if self.ENVIRONMENT == "production":
+            required = ["MONGODB_URL", "JWT_SECRET", "EMAIL_USER"]
+            missing = [field for field in required if not getattr(self, field)]
+            if missing:
+                raise ValueError(f"Missing required env vars: {missing}")
+        
+        # Validate JWT secret strength
+        if len(self.JWT_SECRET) < 32:
+            if self.ENVIRONMENT == "production":
+                raise ValueError("JWT_SECRET must be at least 32 characters in production")
+            print("⚠️ Warning: JWT_SECRET should be at least 32 characters")
+        
+        # Validate email configuration
+        if self.EMAIL_USER and not self.EMAIL_PASSWORD:
+            print("⚠️ Warning: EMAIL_USER set but EMAIL_PASSWORD missing")
+        
+        # Validate URLs
+        if not self.FRONTEND_URL.startswith(('http://', 'https://')):
+            raise ValueError("FRONTEND_URL must start with http:// or https://")
+
 @lru_cache()
 def get_settings() -> Settings:
     return Settings()
