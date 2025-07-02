@@ -1,17 +1,11 @@
-// frontend/src/App.js - Corrected with AuthSlider
+// frontend/src/App.js - Updated with consolidated CSS imports
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
-import './index.css';
-import './styles/variables.css';
-import './styles/main.css';
-import './styles/layout.css';
-import './styles/utilities.css';
-import './styles/components.css';
-import './styles/base.css';
-import './styles/parallax-enhancements.css';
-import './styles/pages/admin.css';
+
+// UPDATED: Only 2 CSS imports instead of 10+
+import './styles.css';
 import './App.css';
 
 import { AuthProvider } from './contexts/AuthContext';
@@ -59,102 +53,31 @@ const App = () => {
                 <LuxuryNavigation />
                 <BackToTop />
                 <ParallaxContainer>
-                  <div className="app" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
-                    
-                    
-                    <main className="main" style={{ flex: '1' }}>
+                  <div className="app">
+                    <main className="main">
                       <Routes>
                         <Route path="/" element={<Home />} />
                         <Route path="/products" element={<Products />} />
                         <Route path="/about" element={<About />} />
                         <Route path="/contact" element={<Contact />} />
                         
-                        {/* Auth routes using AuthSlider */}
                         <Route path="/login" element={<AuthSlider />} />
                         <Route path="/register" element={<AuthSlider />} />
-                        
-                        {/* Standalone auth pages */}
                         <Route path="/reset-password" element={<ResetPassword />} />
                         <Route path="/verify-email" element={<EmailVerification />} />
 
-                        {/* Protected routes */}
-                        <Route
-                          path="/cart"
-                          element={
-                            <PrivateRoute>
-                              <Cart />
-                            </PrivateRoute>
-                          }
-                        />
-                        <Route
-                          path="/checkout"
-                          element={
-                            <PrivateRoute>
-                              <Checkout />
-                            </PrivateRoute>
-                          }
-                        />
-                        <Route
-                          path="/orders"
-                          element={
-                            <PrivateRoute>
-                              <Orders />
-                            </PrivateRoute>
-                          }
-                        />
-                        <Route
-                          path="/profile"
-                          element={
-                            <PrivateRoute>
-                              <Profile />
-                            </PrivateRoute>
-                          }
-                        />
+                        <Route path="/cart" element={<PrivateRoute><Cart /></PrivateRoute>} />
+                        <Route path="/checkout" element={<PrivateRoute><Checkout /></PrivateRoute>} />
+                        <Route path="/orders" element={<PrivateRoute><Orders /></PrivateRoute>} />
+                        <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
 
-                        {/* Admin routes */}
-                        <Route
-                          path="/admin/dashboard"
-                          element={
-                            <AdminRoute>
-                              <AdminDashboard />
-                            </AdminRoute>
-                          }
-                        />
-                        <Route
-                          path="/admin/orders"
-                          element={
-                            <AdminRoute>
-                              <AdminOrders />
-                            </AdminRoute>
-                          }
-                        />
-                        <Route
-                          path="/admin/users"
-                          element={
-                            <AdminRoute>
-                              <AdminUsers />
-                            </AdminRoute>
-                          }
-                        />
-                        <Route
-                          path="/admin/products"
-                          element={
-                            <AdminRoute>
-                              <AdminProducts />
-                            </AdminRoute>
-                          }
-                        />
-                        <Route
-                          path="/admin/categories-list"
-                          element={
-                            <AdminRoute>
-                              <AdminCategories />
-                            </AdminRoute>
-                          }
-                        />
+                        <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+                        <Route path="/admin/orders" element={<AdminRoute><AdminOrders /></AdminRoute>} />
+                        <Route path="/admin/users" element={<AdminRoute><AdminUsers /></AdminRoute>} />
+                        <Route path="/admin/products" element={<AdminRoute><AdminProducts /></AdminRoute>} />
+                        <Route path="/admin/categories-list" element={<AdminRoute><AdminCategories /></AdminRoute>} />
                       </Routes>
                     </main>
-                    
                     <Footer />
                   </div>
                 </ParallaxContainer>
