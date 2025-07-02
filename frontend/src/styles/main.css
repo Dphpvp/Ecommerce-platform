@@ -8,6 +8,7 @@
 
 /* === THEME === */
 @import './theme/luxury.css';         /* Consolidated luxury theme */
+@import './theme/luxury-theme.css';
 
 /* === COMPONENTS === */
 @import './components/LuxuryNavigation.css';
