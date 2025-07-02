@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCart } from '../../contexts/CartContext';
-import '../../styles/components/LuxuryNavigation.css';
+
 
 const LuxuryNavigation = () => {
   const [activeIndex, setActiveIndex] = useState(0);

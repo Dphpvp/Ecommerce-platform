@@ -11,7 +11,6 @@
 @import './theme/luxury-theme.css';
 
 /* === COMPONENTS === */
-@import './components/LuxuryNavigation.css';
 @import './components/BackToTop.css';
 @import './components/Modal.css';
 @import './components/footer.css';
