@@ -17,12 +17,7 @@
 @import './components/toast.css';
 
 /* === PAGES === */
-@import './pages/products.css';
 @import './pages/admin.css';
-@import './pages/contact.css';
-@import './pages/about.css';
-@import './pages/orders.css';
-@import './pages/profile.css';
 @import './pages/AuthSlider.css';
 
 /* === UTILITIES === */
