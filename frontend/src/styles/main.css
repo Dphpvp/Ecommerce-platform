@@ -1,8 +1,7 @@
 /* frontend/src/styles/main.css - Optimized Import Structure */
 
 /* === CORE SYSTEM === */
-@import './variables.css';            /* CSS variables first */       /* Design system */
-@import './base.css';                 /* Reset, base elements */               /* Grid, flexbox, containers */
+@import './variables.css';            /* CSS variables first */                          
 @import './components.css';           /* Buttons, forms, cards, modals */
 
 /* === THEME === */
