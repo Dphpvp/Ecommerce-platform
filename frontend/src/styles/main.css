@@ -3,6 +3,7 @@
 /* === CORE SYSTEM === */
 @import './variables.css';            /* CSS variables first */                          
 @import './components.css';           /* Buttons, forms, cards, modals */
+@import './utilities.css';
 
 /* === THEME === */
 @import './styles.css';         /* Base luxury theme */  /* Complete luxury theme */
@@ -17,6 +18,6 @@
 @import './pages/admin.css';
 
 /* === UTILITIES === */
-@import './utilities.css';
+
 
 /* === ENHANCEMENTS === */

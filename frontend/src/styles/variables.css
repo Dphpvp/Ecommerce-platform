@@ -1,4 +1,4 @@
-/* frontend/src/styles/variables.css - Single Source of Truth */
+/* frontend/src/styles/variables.css - Compact & Stylish */
 
 :root {
   /* === PRIMARY COLORS === */
@@ -52,16 +52,16 @@
   --font-sans: 'Inter', 'Helvetica Neue', sans-serif;
   --font-mono: 'Source Code Pro', monospace;
   
-  /* === FONT SIZES === */
-  --text-xs: 0.75rem;
-  --text-sm: 0.875rem;
-  --text-base: 1rem;
-  --text-lg: 1.125rem;
-  --text-xl: 1.25rem;
-  --text-2xl: 1.5rem;
-  --text-3xl: 1.875rem;
-  --text-4xl: 2.25rem;
-  --text-5xl: 3rem;
+  /* === FONT SIZES - REDUCED === */
+  --text-xs: 0.65rem;
+  --text-sm: 0.75rem;
+  --text-base: 0.875rem;
+  --text-lg: 1rem;
+  --text-xl: 1.125rem;
+  --text-2xl: 1.25rem;
+  --text-3xl: 1.5rem;
+  --text-4xl: 1.875rem;
+  --text-5xl: 2.25rem;
   
   /* === FONT WEIGHTS === */
   --font-light: 300;
@@ -71,31 +71,31 @@
   --font-bold: 700;
   
   /* === LINE HEIGHTS === */
-  --leading-tight: 1.25;
-  --leading-normal: 1.5;
-  --leading-relaxed: 1.625;
+  --leading-tight: 1.2;
+  --leading-normal: 1.4;
+  --leading-relaxed: 1.5;
   
-  /* === SPACING === */
+  /* === SPACING - REDUCED === */
   --space-0: 0;
-  --space-1: 0.25rem;
-  --space-2: 0.5rem;
-  --space-3: 0.75rem;
-  --space-4: 1rem;
-  --space-5: 1.25rem;
-  --space-6: 1.5rem;
-  --space-8: 2rem;
-  --space-10: 2.5rem;
-  --space-12: 3rem;
-  --space-16: 4rem;
-  --space-20: 5rem;
-  --space-24: 6rem;
+  --space-1: 0.125rem;
+  --space-2: 0.25rem;
+  --space-3: 0.5rem;
+  --space-4: 0.75rem;
+  --space-5: 1rem;
+  --space-6: 1.25rem;
+  --space-8: 1.5rem;
+  --space-10: 2rem;
+  --space-12: 2.5rem;
+  --space-16: 3rem;
+  --space-20: 4rem;
+  --space-24: 5rem;
   
   /* === BORDER RADIUS === */
-  --radius-sm: 0.375rem;
-  --radius-base: 0.5rem;
-  --radius-md: 0.75rem;
-  --radius-lg: 1rem;
-  --radius-xl: 1.5rem;
+  --radius-sm: 0.25rem;
+  --radius-base: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
   --radius-full: 9999px;
   
   /* === SHADOWS === */
@@ -104,9 +104,9 @@
   --shadow-md: 0 4px 6px rgba(27, 41, 81, 0.07), 0 2px 4px rgba(27, 41, 81, 0.06);
   --shadow-lg: 0 10px 15px rgba(27, 41, 81, 0.1), 0 4px 6px rgba(27, 41, 81, 0.05);
   --shadow-xl: 0 20px 25px rgba(27, 41, 81, 0.1), 0 10px 10px rgba(27, 41, 81, 0.04);
-  --shadow-luxury: 0 8px 32px rgba(27, 41, 81, 0.15);
-  --shadow-gold: 0 4px 20px rgba(212, 175, 55, 0.25);
-  --shadow-deep: 0 12px 40px rgba(0, 0, 0, 0.2);
+  --shadow-luxury: 0 6px 24px rgba(27, 41, 81, 0.12);
+  --shadow-gold: 0 3px 15px rgba(212, 175, 55, 0.2);
+  --shadow-deep: 0 8px 30px rgba(0, 0, 0, 0.15);
   
   /* === GRADIENTS === */
   --gradient-primary: linear-gradient(135deg, #1B2951 0%, #36454F 100%);
@@ -114,11 +114,11 @@
   --gradient-surface: linear-gradient(135deg, #F5F5DC 0%, #F7E7CE 100%);
   
   /* === TRANSITIONS === */
-  --transition-fast: 0.15s ease;
-  --transition-base: 0.2s ease;
-  --transition-smooth: 0.3s ease;
-  --transition-slow: 0.5s ease;
-  --transition-luxury: 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  --transition-fast: 0.1s ease;
+  --transition-base: 0.15s ease;
+  --transition-smooth: 0.2s ease;
+  --transition-slow: 0.3s ease;
+  --transition-luxury: 0.25s cubic-bezier(0.23, 1, 0.32, 1);
   
   /* === Z-INDEX === */
   --z-dropdown: 1000;
@@ -137,17 +137,17 @@
   --container-xl: 1280px;
   --container-2xl: 1536px;
   
-  /* === FORMS === */
-  --input-height: 2.75rem;
-  --input-padding-x: 1rem;
-  --input-padding-y: 0.75rem;
-  --input-border-width: 2px;
+  /* === FORMS - COMPACT === */
+  --input-height: 2.25rem;
+  --input-padding-x: 0.75rem;
+  --input-padding-y: 0.5rem;
+  --input-border-width: 1px;
   
-  /* === BUTTONS === */
-  --btn-padding-x: 1.5rem;
-  --btn-padding-y: 0.75rem;
-  --btn-height: 2.75rem;
-  --btn-border-width: 2px;
+  /* === BUTTONS - COMPACT === */
+  --btn-padding-x: 1rem;
+  --btn-padding-y: 0.5rem;
+  --btn-height: 2.25rem;
+  --btn-border-width: 1px;
   
   /* === BREAKPOINTS === */
   --breakpoint-sm: 640px;
