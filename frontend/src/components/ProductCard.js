@@ -1,136 +1,158 @@
+// frontend/src/components/ProductCard.js - Updated with luxury styling
 import React, { useState } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useToastContext } from './toast';
 import Modal from './modal/modal';
 
-
-
-const fabricImages = [
-  '1594736797933-d0401ba2fe65', // Fabric rolls
-  '1566146340949-72de7aa8ed26', // Tailoring workspace
-  '1581833971358-2c8b550f87b3', // Sewing machine
-  '1578662996443-48f949d9e1cc', // Fabric textures
-  '1560472354-bb2ecca2c5c9', // Luxury fabrics
-  '1558618666-fcd25c85cd64', // Wool fabric
-  '1573855619003-a1d7d9c6d2d5', // Cotton fabric
-  '1593062096033-9a26b2ae0d4c', // Silk fabric
-  '1566207732320-45beff2f7ad0', // Leather texture
-  '1582542021108-bdb97845f21b', // Denim fabric
-  '1504594843904-e4b2a3ed1ff0', // Linen fabric
-  '1566156596628-24ad1d6e03de'  // Velvet fabric
-];
-
-const getRandomFabricImage = () => {
-  return fabricImages[Math.floor(Math.random() * fabricImages.length)];
-};
-
 const ProductCard = ({ product }) => {
+  const [showModal, setShowModal] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
   const { addToCart } = useCart();
   const { user } = useAuth();
   const { showToast } = useToastContext();
-  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const handleAddToCart = async () => {
+  const handleAddToCart = async (e) => {
+    e.stopPropagation();
+    
     if (!user) {
       showToast('Please login to add items to cart', 'error');
       return;
     }
-    
+
+    setIsAdding(true);
     try {
       const success = await addToCart(product._id, 1);
       if (success) {
-        showToast('Added to cart!', 'success');
+        showToast('Added to cart successfully!', 'success');
       } else {
         showToast('Failed to add to cart', 'error');
       }
     } catch (error) {
       showToast('Failed to add to cart', 'error');
+    } finally {
+      setIsAdding(false);
     }
+  };
+
+  const getStockStatus = () => {
+    if (product.stock_quantity > 10) return 'in-stock';
+    if (product.stock_quantity > 0) return 'low-stock';
+    return 'out-of-stock';
+  };
+
+  const getStockText = () => {
+    if (product.stock_quantity > 10) return 'In Stock';
+    if (product.stock_quantity > 0) return `${product.stock_quantity} Left`;
+    return 'Out of Stock';
   };
 
   return (
     <>
-      <div className="luxury-product-card-compact" onClick={() => setIsModalOpen(true)}>
+      <div 
+        className="luxury-product-card-compact"
+        onClick={() => setShowModal(true)}
+      >
         <div className="product-image-container-compact">
           <img 
-            src={product.image_url || `https://images.unsplash.com/photo-${getRandomFabricImage()}?w=300&h=200&fit=crop&auto=format`} 
+            src={product.image_url} 
             alt={product.name}
+            loading="lazy"
             onError={(e) => {
-              e.target.src = `https://images.unsplash.com/photo-1594736797933-d0401ba2fe65?w=300&h=200&fit=crop&auto=format`;
+              e.target.src = '/images/placeholder-product.jpg';
             }}
           />
           <div className="product-overlay-compact">
-            <span className="view-details">👁 View Details</span>
+            <span>View Details</span>
           </div>
         </div>
-        
+
         <div className="luxury-product-info-compact">
           <h3 className="product-name-compact">{product.name}</h3>
-          <span className="product-category-compact">{product.category}</span>
+          <p className="product-category-compact">{product.category}</p>
           
           <div className="price-stock-compact">
             <div className="price-section-compact">
               <span className="currency">$</span>
               <span className="price-amount-compact">{product.price}</span>
             </div>
-            
-            <div className={`stock-dot-compact ${product.stock > 10 ? 'in-stock' : product.stock > 0 ? 'low-stock' : 'out-of-stock'}`}></div>
+            <div className={`stock-dot-compact ${getStockStatus()}`} 
+                 title={getStockText()}>
+            </div>
           </div>
         </div>
       </div>
 
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+      <Modal isOpen={showModal} onClose={() => setShowModal(false)}>
         <div className="product-modal-content">
           <div className="product-modal-image">
             <img 
-              src={product.image_url || `https://images.unsplash.com/photo-${getRandomFabricImage()}?w=500&h=400&fit=crop&auto=format`} 
+              src={product.image_url} 
               alt={product.name}
+              onError={(e) => {
+                e.target.src = '/images/placeholder-product.jpg';
+              }}
             />
           </div>
-          
+
           <div className="product-modal-details">
             <div className="modal-header">
               <h2 className="modal-product-name">{product.name}</h2>
               <span className="modal-category">{product.category}</span>
             </div>
-            
-            <p className="modal-description">
-              {product.description || 'Premium quality fabric for discerning clientele. Expertly crafted with attention to detail and superior materials.'}
-            </p>
-            
+
+            {product.description && (
+              <p className="modal-description">{product.description}</p>
+            )}
+
             <div className="modal-specifications">
               <div className="spec-item">
-                <span className="spec-label">Material:</span>
+                <span className="spec-label">Price</span>
+                <span className="spec-value">${product.price}</span>
+              </div>
+              <div className="spec-item">
+                <span className="spec-label">Category</span>
                 <span className="spec-value">{product.category}</span>
               </div>
               <div className="spec-item">
-                <span className="spec-label">Price:</span>
-                <span className="spec-value">${product.price} per yard</span>
-              </div>
-              <div className="spec-item">
-                <span className="spec-label">Availability:</span>
-                <span className={`spec-value ${product.stock > 10 ? 'text-green' : product.stock > 0 ? 'text-yellow' : 'text-red'}`}>
-                  {product.stock > 10 ? 'In Stock' : product.stock > 0 ? `${product.stock} yards left` : 'Out of Stock'}
+                <span className="spec-label">Availability</span>
+                <span className={`spec-value ${
+                  product.stock_quantity > 10 ? 'text-green' :
+                  product.stock_quantity > 0 ? 'text-yellow' : 'text-red'
+                }`}>
+                  {getStockText()}
                 </span>
               </div>
+              {product.material && (
+                <div className="spec-item">
+                  <span className="spec-label">Material</span>
+                  <span className="spec-value">{product.material}</span>
+                </div>
+              )}
+              {product.origin && (
+                <div className="spec-item">
+                  <span className="spec-label">Origin</span>
+                  <span className="spec-value">{product.origin}</span>
+                </div>
+              )}
             </div>
-            
+
             <div className="modal-actions">
               <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleAddToCart();
-                }}
-                className={`btn-modal-add-cart ${product.stock === 0 ? 'disabled' : ''}`}
-                disabled={product.stock === 0}
+                className={`btn-modal-add-cart ${product.stock_quantity <= 0 ? 'disabled' : ''}`}
+                onClick={handleAddToCart}
+                disabled={isAdding || product.stock_quantity <= 0}
               >
-                {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+                {isAdding ? 'Adding...' : 
+                 product.stock_quantity <= 0 ? 'Out of Stock' : 'Add to Cart'}
               </button>
-              
-              <button className="btn-modal-contact">
-                Contact for Custom Order
-              </button>
+              <a 
+                href="/contact" 
+                className="btn-modal-contact"
+                onClick={(e) => e.stopPropagation()}
+              >
+                Contact Us
+              </a>
             </div>
           </div>
         </div>

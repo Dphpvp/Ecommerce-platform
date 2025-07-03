@@ -1,12 +1,18 @@
-/* App.css - Minimal app-specific overrides */
+/* frontend/src/App.css - Updated for luxury theme */
 
 .app {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  background-color: var(--color-background);
 }
 
-/* App-specific background pattern */
+/* Ensure body has luxury nav styling */
+body.has-luxury-nav {
+  padding-top: 120px !important;
+}
+
+/* Enhanced luxury background */
 body {
   background: 
     radial-gradient(circle at 25% 25%, rgba(212, 175, 55, 0.03) 0%, transparent 50%),
@@ -24,6 +30,9 @@ body {
   
   background-size: 300px 300px, 400px 400px, 120px 120px, 100% 100%;
   background-attachment: fixed;
+  font-family: var(--font-sans);
+  color: var(--color-text-primary);
+  padding-top: 120px;
 }
 
 /* Animated shimmer effect */
@@ -55,14 +64,71 @@ body::before {
   100% { transform: translateX(120px) translateY(120px); }
 }
 
+/* Main content area */
+.main {
+  flex: 1;
+  min-height: calc(100vh - 80px);
+  position: relative;
+  z-index: 1;
+}
+
+/* Gold accent elements */
+.gold-accent {
+  color: var(--color-accent-gold);
+}
+
+.navy-accent {
+  color: var(--primary-navy);
+}
+
+/* Loading states */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: var(--color-text-muted);
+}
+
+.loading::before {
+  content: '';
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--color-border);
+  border-top: 3px solid var(--color-accent-gold);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 /* Mobile optimizations */
 @media (max-width: 768px) {
+  body {
+    padding-top: 140px;
+    background-size: 200px 200px, 300px 300px, 80px 80px, 100% 100%;
+  }
+  
+  body.has-luxury-nav {
+    padding-top: 140px !important;
+  }
+  
   body::before {
     animation-duration: 30s;
   }
-  
+}
+
+@media (max-width: 480px) {
   body {
-    background-size: 200px 200px, 300px 300px, 80px 80px, 100% 100%;
+    padding-top: 120px;
+  }
+  
+  body.has-luxury-nav {
+    padding-top: 120px !important;
   }
 }
 
@@ -70,5 +136,11 @@ body::before {
 @media (prefers-reduced-motion: reduce) {
   body::before {
     animation: none;
+  }
+  
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }

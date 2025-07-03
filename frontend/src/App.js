@@ -1,12 +1,15 @@
-// frontend/src/App.js - Updated with consolidated CSS imports
+// frontend/src/App.js - Updated with proper luxury theme imports
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 
-// UPDATED: Only 2 CSS imports instead of 10+
-import '..src/styles.css';
-import './App.css';
+// UPDATED: Comprehensive CSS imports for luxury theme
+import './styles/variables.css';           // CSS variables first
+import './styles/design-system.css';       // Design system
+import './styles/theme/luxury-theme.css';  // Main luxury theme
+import './styles/main.css';               // Core styles
+import './App.css';                       // App-specific styles
 
 import { AuthProvider } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
@@ -50,10 +53,10 @@ const App = () => {
           <AuthProvider>
             <CartProvider>
               <ToastProvider>
-                <LuxuryNavigation />
-                <BackToTop />
-                <ParallaxContainer>
-                  <div className="app">
+                <div className="app">
+                  <LuxuryNavigation />
+                  <BackToTop />
+                  <ParallaxContainer>
                     <main className="main">
                       <Routes>
                         <Route path="/" element={<Home />} />
@@ -79,8 +82,8 @@ const App = () => {
                       </Routes>
                     </main>
                     <Footer />
-                  </div>
-                </ParallaxContainer>
+                  </ParallaxContainer>
+                </div>
               </ToastProvider>
             </CartProvider>
           </AuthProvider>
