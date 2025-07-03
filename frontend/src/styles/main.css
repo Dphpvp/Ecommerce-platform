@@ -1,0 +1,24 @@
+/* frontend/src/styles/main.css - Optimized Import Structure */
+
+/* === CORE SYSTEM === */
+@import './variables.css';            /* CSS variables first */       /* Design system */
+@import './base.css';                 /* Reset, base elements */               /* Grid, flexbox, containers */
+@import './components.css';           /* Buttons, forms, cards, modals */
+
+/* === THEME === */
+@import './styles.css';         /* Base luxury theme */  /* Complete luxury theme */
+
+/* === COMPONENTS === */
+@import './components/BackToTop.css';
+@import './components/Modal.css';
+@import './components/footer.css';
+@import './components/toast.css';
+
+/* === PAGES === */
+@import './pages/admin.css';
+
+/* === UTILITIES === */
+@import './utilities.css';
+
+/* === ENHANCEMENTS === */
+@import './parallax-enhancements.css'; /* Animations & parallax */

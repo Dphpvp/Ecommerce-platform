@@ -6,8 +6,6 @@ import { Elements } from '@stripe/react-stripe-js';
 
 // UPDATED: Comprehensive CSS imports for luxury theme
 import './styles/variables.css';           // CSS variables first
-import './styles/design-system.css';       // Design system
-import './styles/theme/luxury-theme.css';  // Main luxury theme
 import './styles/main.css';               // Core styles
 import './App.css';                       // App-specific styles
 
