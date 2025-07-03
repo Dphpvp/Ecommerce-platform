@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Login from '../pages/Login';
 import Register from '../pages/Register';
-import '../styles/pages/AuthSlider.css';
+
 
 const AuthSlider = () => {
   const [isRegisterMode, setIsRegisterMode] = useState(false);

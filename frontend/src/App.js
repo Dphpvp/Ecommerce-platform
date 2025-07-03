@@ -5,7 +5,7 @@ import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 
 // UPDATED: Only 2 CSS imports instead of 10+
-import './styles.css';
+import '..src/styles.css';
 import './App.css';
 
 import { AuthProvider } from './contexts/AuthContext';
