@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import TwoFactorVerification from '../components/TwoFactor/TwoFactorVerification';
 import { useToastContext } from '../components/toast';
+import mobileCaptcha from '../utils/mobileCaptcha';
+import '../styles/mobileCaptcha.css';
 
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
@@ -25,51 +27,45 @@ const Login = ({ isSliderMode = false }) => {
   const recaptchaRef = useRef(null);
 
   useEffect(() => {
-    const loadRecaptcha = () => {
-      if (window.grecaptcha) {
-        setRecaptchaLoaded(true);
-        return;
+    const initializeCaptcha = async () => {
+      try {
+        await mobileCaptcha.initialize({
+          siteKey: process.env.REACT_APP_RECAPTCHA_SITE_KEY,
+          onLoad: () => setRecaptchaLoaded(true),
+          onComplete: (response) => {
+            console.log('Captcha completed:', response);
+          },
+          onExpired: () => {
+            console.log('Captcha expired');
+            showToast('Security verification expired. Please complete it again.', 'warning');
+          }
+        });
+      } catch (error) {
+        console.error('Failed to initialize captcha:', error);
+        showToast('Failed to load security verification. Please refresh the page.', 'error');
       }
-
-      const script = document.createElement('script');
-      script.src = 'https://www.google.com/recaptcha/api.js?onload=onRecaptchaLoadLogin&render=explicit';
-      script.async = true;
-      script.defer = true;
-
-      window.onRecaptchaLoadLogin = () => {
-        setRecaptchaLoaded(true);
-      };
-
-      document.head.appendChild(script);
-
-      return () => {
-        if (document.head.contains(script)) {
-          document.head.removeChild(script);
-        }
-        delete window.onRecaptchaLoadLogin;
-      };
     };
 
-    loadRecaptcha();
-  }, []);
+    initializeCaptcha();
+  }, [showToast]);
 
   useEffect(() => {
     if (recaptchaLoaded && recaptchaRef.current && !recaptchaWidgetId && !show2FA) {
       try {
-        const widgetId = window.grecaptcha.render(recaptchaRef.current, {
+        const widgetId = mobileCaptcha.render(recaptchaRef.current, {
           sitekey: process.env.REACT_APP_RECAPTCHA_SITE_KEY,
           callback: (response) => {
-            console.log('reCAPTCHA completed:', response);
+            console.log('Captcha completed:', response);
           },
           'expired-callback': () => {
-            console.log('reCAPTCHA expired');
-            showToast('reCAPTCHA expired. Please complete it again.', 'warning');
+            console.log('Captcha expired');
+            showToast('Security verification expired. Please complete it again.', 'warning');
           }
         });
         setRecaptchaWidgetId(widgetId);
       } catch (error) {
-        console.error('reCAPTCHA render error:', error);
-        showToast('Failed to load reCAPTCHA. Please refresh the page.', 'error');
+        console.error('Captcha render error:', error);
+        showToast('Failed to load security verification. Please refresh the page.', 'error');
       }
     }
   }, [recaptchaLoaded, show2FA, showToast]);
@@ -142,17 +138,15 @@ const Login = ({ isSliderMode = false }) => {
     e.preventDefault();
     setError('');
 
-    let recaptchaResponse = '';
+    let captchaResponse = '';
     try {
-      if (recaptchaWidgetId !== null) {
-        recaptchaResponse = window.grecaptcha.getResponse(recaptchaWidgetId);
-      }
+      captchaResponse = mobileCaptcha.getResponse(recaptchaWidgetId);
     } catch (error) {
-      console.error('reCAPTCHA error:', error);
+      console.error('Captcha error:', error);
     }
 
-    if (!recaptchaResponse) {
-      setError('Please complete the reCAPTCHA verification');
+    if (!captchaResponse) {
+      setError('Please complete the security verification');
       return;
     }
 
@@ -167,7 +161,7 @@ const Login = ({ isSliderMode = false }) => {
         },
         body: JSON.stringify({
           ...formData,
-          recaptcha_response: recaptchaResponse
+          recaptcha_response: captchaResponse
         }),
       });
 
@@ -195,7 +189,7 @@ const Login = ({ isSliderMode = false }) => {
         }
         
         if (recaptchaWidgetId !== null) {
-          window.grecaptcha.reset(recaptchaWidgetId);
+          mobileCaptcha.reset(recaptchaWidgetId);
         }
       }
     } catch (error) {
@@ -203,7 +197,7 @@ const Login = ({ isSliderMode = false }) => {
       setError('Network error. Please try again.');
       
       if (recaptchaWidgetId !== null) {
-        window.grecaptcha.reset(recaptchaWidgetId);
+        mobileCaptcha.reset(recaptchaWidgetId);
       }
     } finally {
       setLoading(false);

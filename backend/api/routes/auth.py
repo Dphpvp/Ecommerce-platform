@@ -251,7 +251,8 @@ async def generate_backup_codes(request: Request):
 @rate_limit(max_attempts=3, window_minutes=60, endpoint_name="password_reset")
 async def request_password_reset(request_data: PasswordResetRequest, http_request: Request):
     try:
-        result = await auth_service.request_password_reset(request_data.email, request_data.recaptcha_response)
+        request_headers = dict(http_request.headers) if http_request else None
+        result = await auth_service.request_password_reset(request_data.email, request_data.recaptcha_response, request_headers)
         return result
     except ValidationError as e:
         raise HTTPException(status_code=400, detail=e.detail)
@@ -286,12 +287,14 @@ async def change_password(
         current_user = await get_current_user_from_session(request)
         user_id = str(current_user["_id"])
         
+        request_headers = dict(request.headers) if request else None
         result = await auth_service.change_password(
             user_id,
             password_data.old_password,
             password_data.new_password, 
             password_data.confirm_password,
-            password_data.recaptcha_response
+            password_data.recaptcha_response,
+            request_headers
         )
         return result
     except ValidationError as e:

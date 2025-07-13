@@ -1,4 +1,6 @@
 // frontend/src/utils/csrf.js - Updated for new auth.py
+import platformDetection from './platformDetection.js';
+
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
 class CSRFManager {
@@ -20,6 +22,7 @@ class CSRFManager {
         credentials: 'include',
         headers: {
           'Accept': 'application/json',
+          ...platformDetection.getPlatformHeaders()
         }
       });
       
@@ -126,6 +129,7 @@ export const secureFetch = async (url, options = {}) => {
     credentials: 'include', // Always include cookies
     headers: {
       'Content-Type': 'application/json',
+      ...platformDetection.getPlatformHeaders(),
       ...options.headers,
     },
   };
