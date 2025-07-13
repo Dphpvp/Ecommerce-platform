@@ -6,6 +6,39 @@ const config: CapacitorConfig = {
   webDir: 'build',
   server: {
     androidScheme: 'https'
+  },
+  plugins: {
+    SplashScreen: {
+      launchShowDuration: 3000,
+      backgroundColor: '#ffffff',
+      showSpinner: true,
+      spinnerColor: '#007bff'
+    },
+    StatusBar: {
+      style: 'default',
+      backgroundColor: '#ffffff'
+    },
+    CapacitorHttp: {
+      enabled: true
+    },
+    CapacitorCookies: {
+      enabled: true
+    },
+    Toast: {
+      duration: 'short'
+    },
+    App: {
+      handleUrlOpen: true
+    }
+  },
+  android: {
+    allowMixedContent: false,
+    captureInput: true,
+    webContentsDebuggingEnabled: false
+  },
+  ios: {
+    scheme: 'VergiShop',
+    contentInset: 'automatic'
   }
 };
 

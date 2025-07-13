@@ -4,6 +4,8 @@ import { useAuth } from '../contexts/AuthContext';
 import TwoFactorVerification from '../components/TwoFactor/TwoFactorVerification';
 import { useToastContext } from '../components/toast';
 import mobileCaptcha from '../utils/mobileCaptcha';
+import { secureFetch } from '../utils/csrf';
+import platformDetection from '../utils/platformDetection';
 import '../styles/mobileCaptcha.css';
 
 
@@ -97,11 +99,15 @@ const Login = ({ isSliderMode = false }) => {
   }, [isSliderMode]);
 
   const handleGoogleLogin = async (response) => {
+    let loadingIndicator = null;
+    
     try {
-      const apiResponse = await fetch(`${API_BASE}/auth/google`, {
+      // Show platform-appropriate loading
+      loadingIndicator = await platformDetection.showLoading('Authenticating with Google...');
+      if (loadingIndicator?.present) await loadingIndicator.present();
+
+      const apiResponse = await secureFetch(`${API_BASE}/auth/google`, {
         method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: response.credential }),
       });
 
@@ -117,13 +123,22 @@ const Login = ({ isSliderMode = false }) => {
             localStorage.setItem('auth_token', data.token);
           }
           login(data.user);
+          
+          // Show success toast
+          await platformDetection.showToast('Login successful!', 2000);
           navigate('/');
         }
       } else {
         setError(data.detail || 'Google login failed');
+        await platformDetection.showToast(data.detail || 'Google login failed', 3000);
       }
     } catch (error) {
-      setError('Google login failed. Please try again.');
+      console.error('Google login error:', error);
+      const errorMessage = 'Google login failed. Please try again.';
+      setError(errorMessage);
+      await platformDetection.showToast(errorMessage, 3000);
+    } finally {
+      if (loadingIndicator?.dismiss) await loadingIndicator.dismiss();
     }
   };
 
@@ -146,19 +161,22 @@ const Login = ({ isSliderMode = false }) => {
     }
 
     if (!captchaResponse) {
-      setError('Please complete the security verification');
+      const errorMessage = 'Please complete the security verification';
+      setError(errorMessage);
+      await platformDetection.showToast(errorMessage, 3000);
       return;
     }
 
     setLoading(true);
+    let loadingIndicator = null;
 
     try {
-      const response = await fetch(`${API_BASE}/auth/login`, {
+      // Show platform-appropriate loading
+      loadingIndicator = await platformDetection.showLoading('Signing in...');
+      if (loadingIndicator?.present) await loadingIndicator.present();
+
+      const response = await secureFetch(`${API_BASE}/auth/login`, {
         method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           ...formData,
           recaptcha_response: captchaResponse
@@ -173,20 +191,26 @@ const Login = ({ isSliderMode = false }) => {
           setTwoFactorMethod(data.method || 'app');
           setShow2FA(true);
           
-          if (data.method === 'email') {
-            showToast('Verification code sent to your email', 'info');
-          } else {
-            showToast('Please enter your 2FA code', 'info');
-          }
+          const message = data.method === 'email' 
+            ? 'Verification code sent to your email' 
+            : 'Please enter your 2FA code';
+          
+          showToast(message, 'info');
+          await platformDetection.showToast(message, 3000);
         } else {
           login(data.user);
+          await platformDetection.showToast('Login successful!', 2000);
           navigate('/');
         }
       } else {
-        setError(data.detail || 'Login failed');
+        const errorMessage = data.detail || 'Login failed';
+        setError(errorMessage);
+        
         if (data.detail && data.detail.includes('Email not verified')) {
           showToast('Please verify your email address', 'error');
         }
+        
+        await platformDetection.showToast(errorMessage, 3000);
         
         if (recaptchaWidgetId !== null) {
           mobileCaptcha.reset(recaptchaWidgetId);
@@ -194,13 +218,27 @@ const Login = ({ isSliderMode = false }) => {
       }
     } catch (error) {
       console.error('Login error:', error);
-      setError('Network error. Please try again.');
+      
+      // Enhanced error handling for mobile
+      let errorMessage = 'Network error. Please try again.';
+      
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        errorMessage = 'Connection failed. Please check your internet connection.';
+      } else if (error.status === 429) {
+        errorMessage = 'Too many login attempts. Please try again later.';
+      } else if (error.status >= 500) {
+        errorMessage = 'Server error. Please try again later.';
+      }
+      
+      setError(errorMessage);
+      await platformDetection.showToast(errorMessage, 4000);
       
       if (recaptchaWidgetId !== null) {
         mobileCaptcha.reset(recaptchaWidgetId);
       }
     } finally {
       setLoading(false);
+      if (loadingIndicator?.dismiss) await loadingIndicator.dismiss();
     }
   };
 

@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useToastContext } from '../components/toast';
 import SecureForm from '../components/SecureForm';
-import { csrfManager } from '../utils/csrf';
+import { secureFetch } from '../utils/csrf';
+import platformDetection from '../utils/platformDetection';
 
 
 const Register = ({ isSliderMode = false }) => {
@@ -27,6 +28,7 @@ const Register = ({ isSliderMode = false }) => {
 
   const handleSubmit = async (sanitizedData, csrfToken) => {
     setLoading(true);
+    let loadingIndicator = null;
     
     const formDataWithPhone = {
       ...sanitizedData,
@@ -34,34 +36,53 @@ const Register = ({ isSliderMode = false }) => {
     };
     
     try {
-      const response = await csrfManager.makeSecureRequest(
+      // Show platform-appropriate loading
+      loadingIndicator = await platformDetection.showLoading('Creating account...');
+      if (loadingIndicator?.present) await loadingIndicator.present();
+
+      const response = await secureFetch(
         `${process.env.REACT_APP_API_BASE_URL}/auth/register`,
         {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-Token': csrfToken,
-          },
           body: JSON.stringify(formDataWithPhone),
         }
       );
 
       if (response.ok) {
         const result = await response.json();
-        showToast(
-          result.message ||
-            'Registration successful! Please check your email to verify your account.',
-          'success'
-        );
+        const successMessage = result.message ||
+          'Registration successful! Please check your email to verify your account.';
+        
+        showToast(successMessage, 'success');
+        await platformDetection.showToast(successMessage, 3000);
         navigate('/login');
       } else {
         const error = await response.json();
-        throw new Error(error.detail || 'Registration failed');
+        const errorMessage = error.detail || 'Registration failed';
+        showToast(errorMessage, 'error');
+        await platformDetection.showToast(errorMessage, 3000);
       }
     } catch (error) {
-      showToast(error.message || 'Registration failed', 'error');
+      console.error('Registration error:', error);
+      
+      // Enhanced mobile error handling
+      let errorMessage = 'Registration failed. Please try again.';
+      
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        errorMessage = 'Connection failed. Please check your internet connection.';
+      } else if (error.status === 429) {
+        errorMessage = 'Too many requests. Please try again later.';
+      } else if (error.status >= 500) {
+        errorMessage = 'Server error. Please try again later.';
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      showToast(errorMessage, 'error');
+      await platformDetection.showToast(errorMessage, 4000);
     } finally {
       setLoading(false);
+      if (loadingIndicator?.dismiss) await loadingIndicator.dismiss();
     }
   };
 

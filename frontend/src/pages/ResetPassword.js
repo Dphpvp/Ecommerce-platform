@@ -1,6 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useToastContext } from '../components/toast';
+import mobileCaptcha from '../utils/mobileCaptcha';
+import { secureFetch } from '../utils/csrf';
+import platformDetection from '../utils/platformDetection';
+import '../styles/mobileCaptcha.css';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
@@ -26,60 +30,50 @@ const ResetPassword = () => {
   
   const [errors, setErrors] = useState({});
 
-  // FIXED: Proper reCAPTCHA loading
+  // Initialize mobile captcha
   useEffect(() => {
     if (step !== 'request') return; // Only load for request step
 
-    const loadRecaptcha = () => {
-      // Check if reCAPTCHA is already loaded
-      if (window.grecaptcha) {
-        setRecaptchaLoaded(true);
-        return;
+    const initializeCaptcha = async () => {
+      try {
+        await mobileCaptcha.initialize({
+          siteKey: process.env.REACT_APP_RECAPTCHA_SITE_KEY,
+          onLoad: () => setRecaptchaLoaded(true),
+          onComplete: (response) => {
+            console.log('Captcha completed:', response);
+          },
+          onExpired: () => {
+            console.log('Captcha expired');
+            showToast('Security verification expired. Please complete it again.', 'warning');
+          }
+        });
+      } catch (error) {
+        console.error('Failed to initialize captcha:', error);
+        showToast('Failed to load security verification. Please refresh the page.', 'error');
       }
-
-      // Load reCAPTCHA script
-      const script = document.createElement('script');
-      script.src = 'https://www.google.com/recaptcha/api.js?onload=onRecaptchaLoadReset&render=explicit';
-      script.async = true;
-      script.defer = true;
-
-      // Define the callback function globally
-      window.onRecaptchaLoadReset = () => {
-        setRecaptchaLoaded(true);
-      };
-
-      document.head.appendChild(script);
-
-      return () => {
-        // Cleanup
-        if (document.head.contains(script)) {
-          document.head.removeChild(script);
-        }
-        delete window.onRecaptchaLoadReset;
-      };
     };
 
-    loadRecaptcha();
-  }, [step]);
+    initializeCaptcha();
+  }, [step, showToast]);
 
-  // FIXED: Render reCAPTCHA widget when loaded and form is shown
+  // Render captcha widget when loaded and form is shown
   useEffect(() => {
     if (recaptchaLoaded && step === 'request' && recaptchaRef.current && !recaptchaWidgetId) {
       try {
-        const widgetId = window.grecaptcha.render(recaptchaRef.current, {
+        const widgetId = mobileCaptcha.render(recaptchaRef.current, {
           sitekey: process.env.REACT_APP_RECAPTCHA_SITE_KEY,
           callback: (response) => {
-            console.log('reCAPTCHA completed:', response);
+            console.log('Captcha completed:', response);
           },
           'expired-callback': () => {
-            console.log('reCAPTCHA expired');
-            showToast('reCAPTCHA expired. Please complete it again.', 'warning');
+            console.log('Captcha expired');
+            showToast('Security verification expired. Please complete it again.', 'warning');
           }
         });
         setRecaptchaWidgetId(widgetId);
       } catch (error) {
-        console.error('reCAPTCHA render error:', error);
-        showToast('Failed to load reCAPTCHA. Please refresh the page.', 'error');
+        console.error('Captcha render error:', error);
+        showToast('Failed to load security verification. Please refresh the page.', 'error');
       }
     }
   }, [recaptchaLoaded, step, showToast]);
@@ -117,7 +111,7 @@ const ResetPassword = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // FIXED: Request submit with proper reCAPTCHA handling
+  // Request submit with proper captcha handling
   const handleRequestSubmit = async (e) => {
     e.preventDefault();
     
@@ -126,53 +120,77 @@ const ResetPassword = () => {
       return;
     }
 
-    // FIXED: Get reCAPTCHA response properly
-    let recaptchaResponse = '';
+    // Get captcha response
+    let captchaResponse = '';
     try {
-      if (recaptchaWidgetId !== null) {
-        recaptchaResponse = window.grecaptcha.getResponse(recaptchaWidgetId);
-      }
+      captchaResponse = mobileCaptcha.getResponse(recaptchaWidgetId);
     } catch (error) {
-      console.error('reCAPTCHA error:', error);
+      console.error('Captcha error:', error);
     }
 
-    if (!recaptchaResponse) {
-      showToast('Please complete the reCAPTCHA verification', 'error');
+    if (!captchaResponse) {
+      const errorMessage = 'Please complete the security verification';
+      setErrors({ captcha: errorMessage });
+      await platformDetection.showToast(errorMessage, 3000);
       return;
     }
     
     setLoading(true);
+    let loadingIndicator = null;
     
     try {
-      const response = await fetch(`${API_BASE}/auth/request-password-reset`, {
+      // Show platform-appropriate loading
+      loadingIndicator = await platformDetection.showLoading('Sending reset email...');
+      if (loadingIndicator?.present) await loadingIndicator.present();
+
+      const response = await secureFetch(`${API_BASE}/auth/request-password-reset`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email: requestForm.email,
-          recaptcha_response: recaptchaResponse
-        })
+          recaptcha_response: captchaResponse
+        }),
       });
       
       const data = await response.json();
       
       if (response.ok) {
         showToast('Password reset email sent! Check your inbox.', 'success');
+        await platformDetection.showToast('Password reset email sent! Check your inbox.', 3000);
         setStep('sent');
       } else {
-        showToast(data.detail || 'Failed to send reset email', 'error');
-        // Reset reCAPTCHA on error
+        const errorMessage = data.detail || 'Failed to send reset email';
+        showToast(errorMessage, 'error');
+        await platformDetection.showToast(errorMessage, 3000);
+        
+        // Reset captcha on error
         if (recaptchaWidgetId !== null) {
-          window.grecaptcha.reset(recaptchaWidgetId);
+          mobileCaptcha.reset(recaptchaWidgetId);
         }
       }
     } catch (error) {
-      showToast('Network error. Please try again.', 'error');
-      // Reset reCAPTCHA on error
+      console.error('Reset request error:', error);
+      
+      // Enhanced mobile error handling
+      let errorMessage = 'Network error. Please try again.';
+      
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        errorMessage = 'Connection failed. Please check your internet connection.';
+      } else if (error.status === 429) {
+        errorMessage = 'Too many requests. Please try again later.';
+      } else if (error.status >= 500) {
+        errorMessage = 'Server error. Please try again later.';
+      }
+      
+      showToast(errorMessage, 'error');
+      await platformDetection.showToast(errorMessage, 4000);
+      
+      // Reset captcha on error
       if (recaptchaWidgetId !== null) {
-        window.grecaptcha.reset(recaptchaWidgetId);
+        mobileCaptcha.reset(recaptchaWidgetId);
       }
     } finally {
       setLoading(false);
+      if (loadingIndicator?.dismiss) await loadingIndicator.dismiss();
     }
   };
 
@@ -318,17 +336,22 @@ const ResetPassword = () => {
               {errors.email && <span className="error-text">{errors.email}</span>}
             </div>
             
-            {/* FIXED: reCAPTCHA container */}
+            {/* Mobile-compatible captcha container */}
             <div className="form-group">
               <div 
                 ref={recaptchaRef}
-                style={{ margin: '10px 0' }}
+                style={{ 
+                  margin: '10px 0',
+                  display: 'flex',
+                  justifyContent: 'center'
+                }}
               ></div>
               {!recaptchaLoaded && (
-                <p style={{ color: '#666', fontSize: '0.9rem' }}>
+                <p style={{ color: '#666', fontSize: '0.9rem', textAlign: 'center' }}>
                   Please wait for security verification to load...
                 </p>
               )}
+              {errors.captcha && <span className="error-text">{errors.captcha}</span>}
             </div>
             
             <button 
