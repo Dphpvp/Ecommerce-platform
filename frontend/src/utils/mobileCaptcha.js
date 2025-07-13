@@ -8,17 +8,39 @@ class MobileCaptchaManager {
   constructor() {
     this.isLoaded = false;
     this.widgetId = null;
-    this.isMobile = platformDetection.isMobile;
-    this.platform = platformDetection.platform;
+    
+    // Enhanced platform detection with fallbacks
+    try {
+      this.isMobile = platformDetection.isMobile;
+      this.platform = platformDetection.platform;
+    } catch (error) {
+      console.warn('Platform detection failed, using fallback', error);
+      // Fallback: detect mobile using user agent
+      this.isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      this.platform = this.isMobile ? 'mobile' : 'web';
+    }
+    
     this.onLoadCallback = null;
     this.onCompleteCallback = null;
     this.onExpiredCallback = null;
+    
+    console.log('🔧 MobileCaptcha initialized:', {
+      isMobile: this.isMobile,
+      platform: this.platform,
+      userAgent: navigator.userAgent,
+      capacitor: !!window.Capacitor
+    });
   }
 
   /**
    * Initialize captcha system based on platform
    */
   async initialize(config = {}) {
+    console.log('🚀 Initializing captcha with config:', {
+      ...config,
+      siteKey: config.siteKey ? '***' + config.siteKey.slice(-4) : 'missing'
+    });
+
     const {
       siteKey,
       onLoad = null,
@@ -32,10 +54,25 @@ class MobileCaptchaManager {
     this.onCompleteCallback = onComplete;
     this.onExpiredCallback = onExpired;
 
-    if (this.isMobile) {
-      return this.initializeMobileCaptcha(config);
-    } else {
-      return this.initializeWebCaptcha(siteKey, theme, size);
+    try {
+      if (this.isMobile) {
+        console.log('📱 Using mobile captcha');
+        return await this.initializeMobileCaptcha(config);
+      } else {
+        console.log('🌐 Using web reCAPTCHA');
+        return await this.initializeWebCaptcha(siteKey, theme, size);
+      }
+    } catch (error) {
+      console.error('❌ Captcha initialization failed:', error);
+      
+      // Fallback: try to initialize mobile captcha even on web if reCAPTCHA fails
+      if (!this.isMobile) {
+        console.log('🔄 Falling back to mobile captcha');
+        this.isMobile = true; // Force mobile mode as fallback
+        return await this.initializeMobileCaptcha(config);
+      }
+      
+      throw error;
     }
   }
 
@@ -75,24 +112,66 @@ class MobileCaptchaManager {
    * Initialize mobile-friendly captcha (custom implementation)
    */
   async initializeMobileCaptcha(config) {
-    // For mobile, we use a simplified math captcha or pattern recognition
-    this.isLoaded = true;
-    if (this.onLoadCallback) this.onLoadCallback();
-    return Promise.resolve(true);
+    console.log('📱 Initializing mobile captcha...');
+    
+    try {
+      // For mobile, we use a simplified math captcha or pattern recognition
+      this.isLoaded = true;
+      
+      console.log('✅ Mobile captcha loaded successfully');
+      
+      if (this.onLoadCallback) {
+        console.log('🔄 Calling onLoad callback');
+        this.onLoadCallback();
+      }
+      
+      return Promise.resolve(true);
+    } catch (error) {
+      console.error('❌ Mobile captcha initialization failed:', error);
+      throw error;
+    }
   }
 
   /**
    * Render captcha widget
    */
   render(container, config = {}) {
+    console.log('🎨 Rendering captcha:', {
+      isLoaded: this.isLoaded,
+      isMobile: this.isMobile,
+      platform: this.platform,
+      containerExists: !!container
+    });
+
     if (!this.isLoaded) {
+      console.error('❌ Captcha not initialized');
       throw new Error('Captcha not initialized');
     }
 
-    if (this.isMobile) {
-      return this.renderMobileCaptcha(container, config);
-    } else {
-      return this.renderWebCaptcha(container, config);
+    if (!container) {
+      console.error('❌ No container provided');
+      throw new Error('Container element is required');
+    }
+
+    try {
+      if (this.isMobile) {
+        console.log('📱 Rendering mobile captcha');
+        return this.renderMobileCaptcha(container, config);
+      } else {
+        console.log('🌐 Rendering web reCAPTCHA');
+        return this.renderWebCaptcha(container, config);
+      }
+    } catch (error) {
+      console.error('❌ Captcha render failed:', error);
+      
+      // Fallback: try mobile captcha if web fails
+      if (!this.isMobile) {
+        console.log('🔄 Falling back to mobile captcha render');
+        this.isMobile = true;
+        return this.renderMobileCaptcha(container, config);
+      }
+      
+      throw error;
     }
   }
 
@@ -133,6 +212,8 @@ class MobileCaptchaManager {
    * Render mobile captcha (custom implementation)
    */
   renderMobileCaptcha(container, config) {
+    console.log('📱 Rendering mobile captcha widget');
+    
     const { callback } = config;
     
     // Generate a simple math problem

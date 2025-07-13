@@ -30,21 +30,41 @@ const Login = ({ isSliderMode = false }) => {
 
   useEffect(() => {
     const initializeCaptcha = async () => {
+      console.log('🚀 Login: Starting captcha initialization...');
+      
       try {
         await mobileCaptcha.initialize({
           siteKey: process.env.REACT_APP_RECAPTCHA_SITE_KEY,
-          onLoad: () => setRecaptchaLoaded(true),
+          onLoad: () => {
+            console.log('✅ Login: Captcha loaded successfully');
+            setRecaptchaLoaded(true);
+          },
           onComplete: (response) => {
-            console.log('Captcha completed:', response);
+            console.log('✅ Login: Captcha completed:', response);
           },
           onExpired: () => {
-            console.log('Captcha expired');
+            console.log('⏰ Login: Captcha expired');
             showToast('Security verification expired. Please complete it again.', 'warning');
           }
         });
+        console.log('✅ Login: Captcha initialization completed');
       } catch (error) {
-        console.error('Failed to initialize captcha:', error);
-        showToast('Failed to load security verification. Please refresh the page.', 'error');
+        console.error('❌ Login: Failed to initialize captcha:', error);
+        
+        // More specific error messages
+        let errorMessage = 'Failed to load security verification.';
+        if (error.message.includes('reCAPTCHA')) {
+          errorMessage = 'Failed to load reCAPTCHA. Using simplified verification.';
+        } else if (error.message.includes('network')) {
+          errorMessage = 'Network error loading security verification. Please check your connection.';
+        }
+        
+        showToast(errorMessage, 'error');
+        await platformDetection.showToast(errorMessage, 4000);
+        
+        // Force recaptcha loaded to true to allow fallback
+        console.log('🔄 Login: Setting recaptchaLoaded to true for fallback');
+        setRecaptchaLoaded(true);
       }
     };
 
@@ -53,21 +73,52 @@ const Login = ({ isSliderMode = false }) => {
 
   useEffect(() => {
     if (recaptchaLoaded && recaptchaRef.current && !recaptchaWidgetId && !show2FA) {
+      console.log('🎨 Login: Attempting to render captcha widget');
+      
       try {
         const widgetId = mobileCaptcha.render(recaptchaRef.current, {
           sitekey: process.env.REACT_APP_RECAPTCHA_SITE_KEY,
           callback: (response) => {
-            console.log('Captcha completed:', response);
+            console.log('✅ Login: Captcha completed:', response);
           },
           'expired-callback': () => {
-            console.log('Captcha expired');
+            console.log('⏰ Login: Captcha expired');
             showToast('Security verification expired. Please complete it again.', 'warning');
           }
         });
+        
+        console.log('✅ Login: Captcha widget rendered with ID:', widgetId);
         setRecaptchaWidgetId(widgetId);
       } catch (error) {
-        console.error('Captcha render error:', error);
-        showToast('Failed to load security verification. Please refresh the page.', 'error');
+        console.error('❌ Login: Captcha render error:', error);
+        
+        let errorMessage = 'Failed to load security verification.';
+        if (error.message.includes('not initialized')) {
+          errorMessage = 'Security verification not ready. Please wait a moment.';
+          
+          // Try again after a short delay
+          setTimeout(() => {
+            try {
+              const widgetId = mobileCaptcha.render(recaptchaRef.current, {
+                sitekey: process.env.REACT_APP_RECAPTCHA_SITE_KEY,
+                callback: (response) => {
+                  console.log('✅ Login: Captcha completed (retry):', response);
+                },
+                'expired-callback': () => {
+                  console.log('⏰ Login: Captcha expired (retry)');
+                  showToast('Security verification expired. Please complete it again.', 'warning');
+                }
+              });
+              console.log('✅ Login: Captcha widget rendered on retry with ID:', widgetId);
+              setRecaptchaWidgetId(widgetId);
+            } catch (retryError) {
+              console.error('❌ Login: Captcha render retry failed:', retryError);
+              showToast('Security verification unavailable. Please refresh the page.', 'error');
+            }
+          }, 1000);
+        } else {
+          showToast(errorMessage, 'error');
+        }
       }
     }
   }, [recaptchaLoaded, show2FA, showToast]);

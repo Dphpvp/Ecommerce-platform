@@ -4,18 +4,37 @@
 
 class PlatformDetectionManager {
   constructor() {
-    this.platform = this.detectPlatform();
-    this.isMobile = this.detectMobilePlatform();
+    try {
+      this.platform = this.detectPlatform();
+      this.isMobile = this.detectMobilePlatform();
+      
+      console.log('🔍 Platform detection:', {
+        platform: this.platform,
+        isMobile: this.isMobile,
+        capacitor: !!window.Capacitor,
+        isNativePlatform: window.Capacitor?.isNativePlatform?.() || false,
+        userAgent: navigator.userAgent
+      });
+    } catch (error) {
+      console.error('❌ Platform detection failed:', error);
+      // Fallback values
+      this.platform = 'web';
+      this.isMobile = false;
+    }
   }
 
   /**
    * Detect the current platform
    */
   detectPlatform() {
-    if (window.Capacitor) {
-      if (window.Capacitor.isNativePlatform()) {
-        return window.Capacitor.getPlatform();
+    try {
+      if (window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function') {
+        if (window.Capacitor.isNativePlatform()) {
+          return window.Capacitor.getPlatform();
+        }
       }
+    } catch (error) {
+      console.warn('Capacitor platform detection failed:', error);
     }
     return 'web';
   }
@@ -24,7 +43,14 @@ class PlatformDetectionManager {
    * Check if running on mobile platform (Capacitor)
    */
   detectMobilePlatform() {
-    return !!(window.Capacitor && window.Capacitor.isNativePlatform());
+    try {
+      return !!(window.Capacitor && 
+                typeof window.Capacitor.isNativePlatform === 'function' && 
+                window.Capacitor.isNativePlatform());
+    } catch (error) {
+      console.warn('Mobile platform detection failed:', error);
+      return false;
+    }
   }
 
   /**
