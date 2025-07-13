@@ -1,0 +1,84 @@
+/* Mobile Captcha Styles */
+.mobile-captcha {
+  margin: 10px 0;
+  padding: 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  text-align: center;
+}
+
+.captcha-question {
+  margin-bottom: 10px;
+}
+
+.captcha-question label {
+  display: block;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 8px;
+}
+
+.captcha-input {
+  width: 80px;
+  padding: 8px 12px;
+  border: 2px solid #ccc;
+  border-radius: 4px;
+  font-size: 16px;
+  text-align: center;
+  transition: border-color 0.3s ease;
+}
+
+.captcha-input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.captcha-feedback {
+  font-size: 12px;
+  margin-top: 5px;
+  min-height: 16px;
+  font-weight: 500;
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 768px) {
+  .mobile-captcha {
+    margin: 8px 0;
+    padding: 12px;
+  }
+  
+  .captcha-question label {
+    font-size: 13px;
+  }
+  
+  .captcha-input {
+    font-size: 18px;
+    padding: 10px 12px;
+  }
+}
+
+/* Dark theme support */
+@media (prefers-color-scheme: dark) {
+  .mobile-captcha {
+    background-color: #2d3748;
+    border-color: #4a5568;
+  }
+  
+  .captcha-question label {
+    color: #e2e8f0;
+  }
+  
+  .captcha-input {
+    background-color: #4a5568;
+    border-color: #718096;
+    color: #e2e8f0;
+  }
+  
+  .captcha-input:focus {
+    border-color: #63b3ed;
+    box-shadow: 0 0 0 2px rgba(99, 179, 237, 0.25);
+  }
+}

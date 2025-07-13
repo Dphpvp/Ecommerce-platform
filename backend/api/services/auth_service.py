@@ -60,6 +60,13 @@ class AuthService:
         return MessageResponse(message="User registered successfully. Please verify your email.")
     
     async def authenticate_user(self, request: UserLoginRequest, http_request, response) -> AuthResponse:
+        # Verify captcha first
+        request_headers = dict(http_request.headers) if http_request else None
+        client_ip = getattr(http_request, 'client', {}).get('host') if http_request else None
+        
+        if not verify_recaptcha(request.recaptcha_response, client_ip, request_headers):
+            raise AuthenticationError("Security verification failed")
+        
         user = await self._find_user_by_identifier(request.identifier)
         
         if not user or not self._verify_password(request.password, user["password"]):
@@ -169,12 +176,12 @@ class AuthService:
             logger.error(f"Error in resend_verification: {str(e)}")
             raise ValidationError(f"Failed to send verification email: {str(e)}")
     
-    async def request_password_reset(self, email: str, recaptcha_response: str) -> dict:
+    async def request_password_reset(self, email: str, recaptcha_response: str, request_headers: Optional[dict] = None) -> dict:
         """Request password reset with rate limiting"""
         try:
             # Verify reCAPTCHA
-            if not verify_recaptcha(recaptcha_response):
-                raise ValidationError("reCAPTCHA verification failed")
+            if not verify_recaptcha(recaptcha_response, None, request_headers):
+                raise ValidationError("Security verification failed")
             
             user = await self.db.users.find_one({"email": email})
             if not user:
@@ -249,12 +256,12 @@ class AuthService:
         
         return {"message": "Password reset successfully"}
     
-    async def change_password(self, user_id: str, old_password: str, new_password: str, confirm_password: str, recaptcha_response: str) -> dict:
+    async def change_password(self, user_id: str, old_password: str, new_password: str, confirm_password: str, recaptcha_response: str, request_headers: Optional[dict] = None) -> dict:
         """Change user password"""
         try:
             # Verify reCAPTCHA
-            if not verify_recaptcha(recaptcha_response):
-                raise ValidationError("reCAPTCHA verification failed")
+            if not verify_recaptcha(recaptcha_response, None, request_headers):
+                raise ValidationError("Security verification failed")
             
             # Validate password confirmation
             if new_password != confirm_password:

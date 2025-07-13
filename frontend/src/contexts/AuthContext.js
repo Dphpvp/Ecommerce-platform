@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { secureFetch } from '../utils/csrf';
+import platformDetection from '../utils/platformDetection';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
@@ -17,10 +19,12 @@ export const AuthProvider = ({ children }) => {
 
   const logout = useCallback(async () => {
     try {
-      await fetch(`${API_BASE}/auth/logout`, {
-        method: 'GET',
-        credentials: 'include'
+      await secureFetch(`${API_BASE}/auth/logout`, {
+        method: 'GET'
       });
+      
+      // Show platform-appropriate logout message
+      await platformDetection.showToast('Logged out successfully', 2000);
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
@@ -200,39 +204,19 @@ export const AuthProvider = ({ children }) => {
     return null;
   }, []);
 
-  // FIXED: Improved authenticated request with CSRF token support
+  // Enhanced authenticated request using secureFetch with platform support
   const makeAuthenticatedRequest = useCallback(async (url, options = {}) => {
-    const defaultOptions = {
-      credentials: 'include',
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-      ...options,
-    };
-
-    // FIXED: Add CSRF token for state-changing operations
-    const method = (options.method || 'GET').toUpperCase();
-    if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
-      const csrfToken = await getCSRFToken();
-      if (csrfToken) {
-        defaultOptions.headers['X-CSRF-Token'] = csrfToken;
-      } else {
-        console.warn('⚠️ Could not get CSRF token for request');
-      }
-    }
-
     try {
-      console.log(`🌐 Making request to ${url}`);
-      const response = await fetch(url, defaultOptions);
+      console.log(`🌐 Making authenticated request to ${url}`);
+      
+      const response = await secureFetch(url, options);
       
       if (response.status === 401) {
         console.log('🔄 Got 401, checking session...');
         
         // Check if we still have a valid session
-        const sessionCheck = await fetch(`${API_BASE}/auth/me`, {
-          credentials: 'include',
-          headers: { 'Accept': 'application/json' }
+        const sessionCheck = await secureFetch(`${API_BASE}/auth/me`, {
+          method: 'GET'
         });
         
         if (sessionCheck.ok) {
@@ -240,15 +224,8 @@ export const AuthProvider = ({ children }) => {
           const userData = await sessionCheck.json();
           setUser(userData);
           
-          // Retry original request with fresh CSRF token
-          if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(method)) {
-            const newCsrfToken = await getCSRFToken();
-            if (newCsrfToken) {
-              defaultOptions.headers['X-CSRF-Token'] = newCsrfToken;
-            }
-          }
-          
-          const retryResponse = await fetch(url, defaultOptions);
+          // Retry original request
+          const retryResponse = await secureFetch(url, options);
           
           if (!retryResponse.ok) {
             const errorData = await retryResponse.json().catch(() => ({}));
@@ -259,6 +236,7 @@ export const AuthProvider = ({ children }) => {
         } else {
           console.log('❌ Session invalid, logging out');
           setUser(null);
+          await platformDetection.showToast('Session expired. Please login again.', 3000);
           throw new Error('Authentication required');
         }
       }
@@ -271,9 +249,15 @@ export const AuthProvider = ({ children }) => {
       return await response.json();
     } catch (error) {
       console.error('🚨 Authenticated request failed:', error);
+      
+      // Enhanced mobile error handling
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        await platformDetection.showToast('Connection failed. Please check your internet connection.', 4000);
+      }
+      
       throw error;
     }
-  }, [getCSRFToken]);
+  }, []);
 
   const checkAuthStatus = useCallback(async () => {
     try {

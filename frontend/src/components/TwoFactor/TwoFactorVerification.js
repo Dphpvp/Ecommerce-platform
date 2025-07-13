@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToastContext } from '../toast';
+import { secureFetch } from '../../utils/csrf';
+import platformDetection from '../../utils/platformDetection';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
@@ -13,39 +15,56 @@ const TwoFactorVerification = ({ tempToken, onSuccess, onCancel }) => {
 
   const sendEmailCode = async () => {
     setLoading(true);
+    let loadingIndicator = null;
+    
     try {
-      // ✅ Use makeAuthenticatedRequest with credentials
-      const response = await fetch(`${API_BASE}/auth/send-2fa-email`, {
+      // Show platform-appropriate loading
+      loadingIndicator = await platformDetection.showLoading('Sending verification code...');
+      if (loadingIndicator?.present) await loadingIndicator.present();
+
+      const response = await secureFetch(`${API_BASE}/auth/send-2fa-email`, {
         method: 'POST',
-        credentials: 'include', // ✅ Use session cookies
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ temp_token: tempToken })
       });
 
       if (response.ok) {
         setEmailSent(true);
         showToast('Verification code sent to your email', 'success');
+        await platformDetection.showToast('Verification code sent to your email', 3000);
       } else {
         const data = await response.json();
-        showToast(data.detail || 'Failed to send email', 'error');
+        const errorMessage = data.detail || 'Failed to send email';
+        showToast(errorMessage, 'error');
+        await platformDetection.showToast(errorMessage, 3000);
       }
     } catch (error) {
-      showToast('Failed to send email', 'error');
+      console.error('Email send error:', error);
+      
+      let errorMessage = 'Failed to send email. Please try again.';
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        errorMessage = 'Connection failed. Please check your internet connection.';
+      }
+      
+      showToast(errorMessage, 'error');
+      await platformDetection.showToast(errorMessage, 4000);
     } finally {
       setLoading(false);
+      if (loadingIndicator?.dismiss) await loadingIndicator.dismiss();
     }
   };
 
   const verify2FA = async (e) => {
     e.preventDefault();
     setLoading(true);
+    let loadingIndicator = null;
 
     try {
-      // ✅ Use session-based request
-      const response = await fetch(`${API_BASE}/auth/verify-2fa`, {
+      // Show platform-appropriate loading
+      loadingIndicator = await platformDetection.showLoading('Verifying code...');
+      if (loadingIndicator?.present) await loadingIndicator.present();
+
+      const response = await secureFetch(`${API_BASE}/auth/verify-2fa`, {
         method: 'POST',
-        credentials: 'include', // ✅ Use session cookies
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ temp_token: tempToken, code })
       });
 
@@ -61,16 +80,29 @@ const TwoFactorVerification = ({ tempToken, onSuccess, onCancel }) => {
         
         if (data.backup_code_used) {
           showToast('Backup code used. Consider regenerating backup codes.', 'info');
+          await platformDetection.showToast('Backup code used. Consider regenerating backup codes.', 4000);
         }
         
+        await platformDetection.showToast('Verification successful!', 2000);
         onSuccess();
       } else {
-        showToast(data.detail || '2FA verification failed', 'error');
+        const errorMessage = data.detail || '2FA verification failed';
+        showToast(errorMessage, 'error');
+        await platformDetection.showToast(errorMessage, 3000);
       }
     } catch (error) {
-      showToast('2FA verification failed', 'error');
+      console.error('2FA verification error:', error);
+      
+      let errorMessage = '2FA verification failed. Please try again.';
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        errorMessage = 'Connection failed. Please check your internet connection.';
+      }
+      
+      showToast(errorMessage, 'error');
+      await platformDetection.showToast(errorMessage, 4000);
     } finally {
       setLoading(false);
+      if (loadingIndicator?.dismiss) await loadingIndicator.dismiss();
     }
   };
 
