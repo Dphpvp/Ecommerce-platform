@@ -50,9 +50,9 @@ const Login = ({ isSliderMode = false }) => {
     checkMobile();
   }, []);
 
-  // Load Google reCAPTCHA with better mobile support
+  // Check for reCAPTCHA availability (loaded via HTML head)
   useEffect(() => {
-    const loadRecaptcha = () => {
+    const checkRecaptcha = () => {
       // Check if reCAPTCHA site key is available
       const siteKey = process.env.REACT_APP_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI';
       console.log('reCAPTCHA site key:', siteKey ? 'Available' : 'Missing');
@@ -70,62 +70,36 @@ const Login = ({ isSliderMode = false }) => {
         return;
       }
 
-      if (window.grecaptcha) {
-        console.log('reCAPTCHA already loaded');
-        setRecaptchaLoaded(true);
-        return;
-      }
-
-      // Enhanced script loading for mobile
-      const script = document.createElement('script');
-      script.src = 'https://www.google.com/recaptcha/api.js?onload=onRecaptchaLoad&render=explicit';
-      script.async = true;
-      script.defer = true;
-      
-      // Add mobile-specific attributes
-      script.setAttribute('crossorigin', 'anonymous');
-      script.setAttribute('referrerpolicy', 'no-referrer-when-downgrade');
-
-      let loadTimeout;
-      
-      window.onRecaptchaLoad = () => {
-        clearTimeout(loadTimeout);
-        console.log('reCAPTCHA loaded successfully');
-        setRecaptchaLoaded(true);
-        setRecaptchaError(false);
-      };
-
-      script.onload = () => {
-        console.log('reCAPTCHA script loaded');
-        // Give it a moment to initialize
-        setTimeout(() => {
-          if (window.grecaptcha) {
-            setRecaptchaLoaded(true);
-            setRecaptchaError(false);
-          }
-        }, 100);
-      };
-
-      script.onerror = () => {
-        clearTimeout(loadTimeout);
-        console.error('Failed to load reCAPTCHA script');
-        setRecaptchaError(true);
-        setRecaptchaLoaded(false);
-        showToast('Failed to load security verification', 'error');
-      };
+      // Check for reCAPTCHA periodically
+      const checkInterval = setInterval(() => {
+        if (window.grecaptcha && window.grecaptcha.render) {
+          console.log('reCAPTCHA is ready');
+          clearInterval(checkInterval);
+          setRecaptchaLoaded(true);
+          setRecaptchaError(false);
+        }
+      }, 100);
 
       // Set timeout for loading
-      loadTimeout = setTimeout(() => {
-        console.warn('reCAPTCHA loading timeout');
-        setRecaptchaError(true);
-        setRecaptchaLoaded(false);
-        showToast('reCAPTCHA loading timeout', 'error');
+      const loadTimeout = setTimeout(() => {
+        clearInterval(checkInterval);
+        console.warn('reCAPTCHA loading timeout - checking status');
+        console.log('window.grecaptcha status:', window.grecaptcha ? 'Available' : 'Not available');
+        if (!window.grecaptcha || !window.grecaptcha.render) {
+          setRecaptchaError(true);
+          setRecaptchaLoaded(false);
+          showToast('reCAPTCHA loading timeout', 'error');
+        }
       }, 10000); // 10 second timeout
 
-      document.head.appendChild(script);
+      // Clear timeout when component unmounts
+      return () => {
+        clearInterval(checkInterval);
+        clearTimeout(loadTimeout);
+      };
     };
 
-    loadRecaptcha();
+    checkRecaptcha();
   }, [showToast]);
 
   // Render reCAPTCHA widget with mobile optimization
