@@ -22,7 +22,8 @@
       "Bash(npx cap sync:*)",
       "Bash(.gradlew:*)",
       "Bash(gradlew:*)",
-      "Bash(JAVA_HOME=\"/c/Program Files/Java/jdk-24\")"
+      "Bash(JAVA_HOME=\"/c/Program Files/Java/jdk-24\")",
+      "Bash(npm start)"
     ],
     "deny": []
   }

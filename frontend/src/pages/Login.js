@@ -6,7 +6,7 @@ import { useToastContext } from '../components/toast';
 import { secureFetch } from '../utils/csrf';
 import platformDetection from '../utils/platformDetection';
 
-const API_BASE = process.env.REACT_APP_API_BASE_URL;
+const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
 
 const Login = ({ isSliderMode = false }) => {
   const [formData, setFormData] = useState({
@@ -53,6 +53,23 @@ const Login = ({ isSliderMode = false }) => {
   // Load Google reCAPTCHA with better mobile support
   useEffect(() => {
     const loadRecaptcha = () => {
+      // Check if reCAPTCHA site key is available
+      const siteKey = process.env.REACT_APP_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI';
+      console.log('reCAPTCHA site key:', siteKey ? 'Available' : 'Missing');
+      console.log('Environment variables:', {
+        REACT_APP_RECAPTCHA_SITE_KEY: process.env.REACT_APP_RECAPTCHA_SITE_KEY,
+        REACT_APP_API_BASE_URL: process.env.REACT_APP_API_BASE_URL,
+        NODE_ENV: process.env.NODE_ENV
+      });
+      
+      if (!siteKey) {
+        console.error('reCAPTCHA site key is not configured');
+        setRecaptchaError(true);
+        setRecaptchaLoaded(false);
+        showToast('reCAPTCHA configuration error', 'error');
+        return;
+      }
+
       if (window.grecaptcha) {
         console.log('reCAPTCHA already loaded');
         setRecaptchaLoaded(true);
@@ -102,6 +119,7 @@ const Login = ({ isSliderMode = false }) => {
         console.warn('reCAPTCHA loading timeout');
         setRecaptchaError(true);
         setRecaptchaLoaded(false);
+        showToast('reCAPTCHA loading timeout', 'error');
       }, 10000); // 10 second timeout
 
       document.head.appendChild(script);
@@ -121,8 +139,9 @@ const Login = ({ isSliderMode = false }) => {
         console.log('Attempting to render reCAPTCHA widget');
         
         // Mobile-friendly reCAPTCHA configuration
+        const siteKey = process.env.REACT_APP_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI';
         const config = {
-          sitekey: process.env.REACT_APP_RECAPTCHA_SITE_KEY,
+          sitekey: siteKey,
           size: isMobile ? 'compact' : 'normal',
           theme: 'light',
           callback: (response) => {
@@ -156,8 +175,9 @@ const Login = ({ isSliderMode = false }) => {
         setTimeout(() => {
           if (window.grecaptcha && recaptchaRef.current) {
             try {
+              const siteKey = process.env.REACT_APP_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI';
               const widgetId = window.grecaptcha.render(recaptchaRef.current, {
-                sitekey: process.env.REACT_APP_RECAPTCHA_SITE_KEY,
+                sitekey: siteKey,
                 size: isMobile ? 'compact' : 'normal',
                 callback: (response) => {
                   setCaptchaResponse(response);
