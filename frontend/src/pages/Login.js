@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import TwoFactorVerification from '../components/TwoFactor/TwoFactorVerification';
+import MobileCaptcha from '../components/MobileCaptcha';
 import { useToastContext } from '../components/toast';
 import { secureFetch } from '../utils/csrf';
 import platformDetection from '../utils/platformDetection';
@@ -20,13 +21,33 @@ const Login = ({ isSliderMode = false }) => {
   const [twoFactorMethod, setTwoFactorMethod] = useState('');
   const [recaptchaLoaded, setRecaptchaLoaded] = useState(false);
   const [recaptchaWidgetId, setRecaptchaWidgetId] = useState(null);
+  const [captchaResponse, setCaptchaResponse] = useState('');
+  const [isMobile, setIsMobile] = useState(false);
   const { login } = useAuth();
   const { showToast } = useToastContext();
   const navigate = useNavigate();
   const recaptchaRef = useRef(null);
 
-  // Load Google reCAPTCHA
+  // Detect if running in mobile app
   useEffect(() => {
+    const checkMobile = () => {
+      const isCapacitor = !!window.Capacitor;
+      const isMobileUA = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const isWebView = window.navigator.userAgent.includes('wv');
+      
+      setIsMobile(isCapacitor || isWebView || isMobileUA);
+    };
+    
+    checkMobile();
+  }, []);
+
+  // Load Google reCAPTCHA only for web
+  useEffect(() => {
+    if (isMobile) {
+      setRecaptchaLoaded(true); // Skip reCAPTCHA loading for mobile
+      return;
+    }
+
     const loadRecaptcha = () => {
       if (window.grecaptcha) {
         setRecaptchaLoaded(true);
@@ -46,38 +67,45 @@ const Login = ({ isSliderMode = false }) => {
       script.onerror = () => {
         console.error('Failed to load reCAPTCHA');
         showToast('Failed to load security verification', 'error');
+        setRecaptchaLoaded(true); // Allow form to work without reCAPTCHA
       };
 
       document.head.appendChild(script);
     };
 
     loadRecaptcha();
-  }, [showToast]);
+  }, [isMobile, showToast]);
 
-  // Render reCAPTCHA widget
+  // Render reCAPTCHA widget only for web
   useEffect(() => {
-    if (recaptchaLoaded && recaptchaRef.current && !recaptchaWidgetId && !show2FA) {
-      try {
-        const widgetId = window.grecaptcha.render(recaptchaRef.current, {
-          sitekey: process.env.REACT_APP_RECAPTCHA_SITE_KEY,
-          callback: (response) => {
-            console.log('reCAPTCHA completed:', response);
-          },
-          'expired-callback': () => {
-            console.log('reCAPTCHA expired');
-            showToast('Security verification expired. Please complete it again.', 'warning');
-          }
-        });
-        setRecaptchaWidgetId(widgetId);
-      } catch (error) {
-        console.error('reCAPTCHA render error:', error);
-        showToast('Failed to load security verification', 'error');
-      }
+    if (isMobile || !recaptchaLoaded || !recaptchaRef.current || recaptchaWidgetId || show2FA) {
+      return;
     }
-  }, [recaptchaLoaded, show2FA, showToast]);
 
-  // Load Google OAuth
+    try {
+      const widgetId = window.grecaptcha.render(recaptchaRef.current, {
+        sitekey: process.env.REACT_APP_RECAPTCHA_SITE_KEY,
+        callback: (response) => {
+          console.log('reCAPTCHA completed:', response);
+          setCaptchaResponse(response);
+        },
+        'expired-callback': () => {
+          console.log('reCAPTCHA expired');
+          setCaptchaResponse('');
+          showToast('Security verification expired. Please complete it again.', 'warning');
+        }
+      });
+      setRecaptchaWidgetId(widgetId);
+    } catch (error) {
+      console.error('reCAPTCHA render error:', error);
+      showToast('Failed to load security verification', 'error');
+    }
+  }, [isMobile, recaptchaLoaded, show2FA, showToast, recaptchaWidgetId]);
+
+  // Load Google OAuth only for web
   useEffect(() => {
+    if (isMobile) return; // Skip Google OAuth for mobile
+
     const loadGoogleOAuth = () => {
       const script = document.createElement('script');
       script.src = 'https://accounts.google.com/gsi/client';
@@ -108,7 +136,7 @@ const Login = ({ isSliderMode = false }) => {
     };
 
     loadGoogleOAuth();
-  }, [isSliderMode]);
+  }, [isMobile, isSliderMode]);
 
   const handleGoogleLogin = async (response) => {
     let loadingIndicator = null;
@@ -156,6 +184,10 @@ const Login = ({ isSliderMode = false }) => {
     }
   };
 
+  const handleMobileCaptchaComplete = (token) => {
+    setCaptchaResponse(token);
+  };
+
   const handleChange = (e) => {
     setFormData({
       ...formData,
@@ -167,13 +199,14 @@ const Login = ({ isSliderMode = false }) => {
     e.preventDefault();
     setError('');
 
-    // Get reCAPTCHA response
-    let captchaResponse = '';
-    if (recaptchaWidgetId !== null) {
-      captchaResponse = window.grecaptcha.getResponse(recaptchaWidgetId);
+    // Get captcha response
+    let finalCaptchaResponse = captchaResponse;
+    
+    if (!isMobile && recaptchaWidgetId !== null) {
+      finalCaptchaResponse = window.grecaptcha.getResponse(recaptchaWidgetId);
     }
 
-    if (!captchaResponse) {
+    if (!finalCaptchaResponse) {
       const errorMessage = 'Please complete the security verification';
       setError(errorMessage);
       showToast(errorMessage, 'error');
@@ -192,7 +225,7 @@ const Login = ({ isSliderMode = false }) => {
         method: 'POST',
         body: JSON.stringify({
           ...formData,
-          recaptcha_response: captchaResponse
+          recaptcha_response: finalCaptchaResponse
         }),
       });
 
@@ -231,10 +264,11 @@ const Login = ({ isSliderMode = false }) => {
         
         await platformDetection.showToast(errorMessage, 3000);
         
-        // Reset reCAPTCHA
-        if (recaptchaWidgetId !== null) {
+        // Reset captcha
+        if (!isMobile && recaptchaWidgetId !== null) {
           window.grecaptcha.reset(recaptchaWidgetId);
         }
+        setCaptchaResponse('');
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -253,10 +287,11 @@ const Login = ({ isSliderMode = false }) => {
       showToast(errorMessage, 'error');
       await platformDetection.showToast(errorMessage, 4000);
       
-      // Reset reCAPTCHA
-      if (recaptchaWidgetId !== null) {
+      // Reset captcha
+      if (!isMobile && recaptchaWidgetId !== null) {
         window.grecaptcha.reset(recaptchaWidgetId);
       }
+      setCaptchaResponse('');
     } finally {
       setLoading(false);
       if (loadingIndicator?.dismiss) await loadingIndicator.dismiss();
@@ -325,17 +360,21 @@ const Login = ({ isSliderMode = false }) => {
           </div>
           
           <div className="form-group">
-            <div 
-              ref={recaptchaRef}
-              style={{ 
-                margin: '10px 0',
-                display: 'flex',
-                justifyContent: 'center',
-                transform: 'scale(0.9)',
-                transformOrigin: 'center'
-              }}
-            ></div>
-            {!recaptchaLoaded && (
+            {isMobile ? (
+              <MobileCaptcha onComplete={handleMobileCaptchaComplete} />
+            ) : (
+              <div 
+                ref={recaptchaRef}
+                style={{ 
+                  margin: '10px 0',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  transform: 'scale(0.9)',
+                  transformOrigin: 'center'
+                }}
+              ></div>
+            )}
+            {!isMobile && !recaptchaLoaded && (
               <p style={{ color: '#666', fontSize: '0.9rem', textAlign: 'center' }}>
                 Loading security verification...
               </p>
@@ -344,20 +383,24 @@ const Login = ({ isSliderMode = false }) => {
           
           <button 
             type="submit" 
-            disabled={loading || !recaptchaLoaded} 
+            disabled={loading || (!isMobile && !recaptchaLoaded)} 
             className="btn"
           >
             {loading ? 'Logging in...' : 'Login'}
           </button>
         </form>
 
-        <div className="divider">
-          <span>OR</span>
-        </div>
+        {!isMobile && (
+          <>
+            <div className="divider">
+              <span>OR</span>
+            </div>
 
-        <div className="google-login">
-          <div id="google-signin-button"></div>
-        </div>
+            <div className="google-login">
+              <div id="google-signin-button"></div>
+            </div>
+          </>
+        )}
       </div>
     );
   }
@@ -390,11 +433,15 @@ const Login = ({ isSliderMode = false }) => {
             />
             
             <div className="form-group">
-              <div 
-                ref={recaptchaRef}
-                style={{ margin: '10px 0' }}
-              ></div>
-              {!recaptchaLoaded && (
+              {isMobile ? (
+                <MobileCaptcha onComplete={handleMobileCaptchaComplete} />
+              ) : (
+                <div 
+                  ref={recaptchaRef}
+                  style={{ margin: '10px 0' }}
+                ></div>
+              )}
+              {!isMobile && !recaptchaLoaded && (
                 <p style={{ color: '#666', fontSize: '0.9rem' }}>
                   Loading security verification...
                 </p>
@@ -403,7 +450,7 @@ const Login = ({ isSliderMode = false }) => {
             
             <button 
               type="submit" 
-              disabled={loading || !recaptchaLoaded} 
+              disabled={loading || (!isMobile && !recaptchaLoaded)} 
               className="btn btn-primary"
             >
               {loading ? 'Logging in...' : 'Login'}
@@ -414,13 +461,17 @@ const Login = ({ isSliderMode = false }) => {
             <Link to="/reset-password">Forgotten password? Click here to reset</Link>
           </p>
 
-          <div className="divider">
-            <span>OR</span>
-          </div>
+          {!isMobile && (
+            <>
+              <div className="divider">
+                <span>OR</span>
+              </div>
 
-          <div className="google-login">
-            <div id="google-signin-button"></div>
-          </div>
+              <div className="google-login">
+                <div id="google-signin-button"></div>
+              </div>
+            </>
+          )}
 
           <p>
             Don't have an account? <Link to="/register">Register here</Link>
