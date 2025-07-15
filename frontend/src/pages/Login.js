@@ -63,10 +63,11 @@ const Login = ({ isSliderMode = false }) => {
       });
       
       if (!siteKey) {
-        console.error('reCAPTCHA site key is not configured');
+        console.error('reCAPTCHA site key is not configured - this may cause white screen on mobile');
+        // Don't block the component from loading, just disable reCAPTCHA
         setRecaptchaError(true);
         setRecaptchaLoaded(false);
-        showToast('reCAPTCHA configuration error', 'error');
+        showToast('reCAPTCHA not configured - contact admin', 'warning');
         return;
       }
 
@@ -281,7 +282,7 @@ const Login = ({ isSliderMode = false }) => {
       }
     }
 
-    if (!finalCaptchaResponse) {
+    if (!finalCaptchaResponse && !recaptchaError) {
       const errorMessage = 'Please complete the security verification';
       setError(errorMessage);
       showToast(errorMessage, 'error');
@@ -296,12 +297,14 @@ const Login = ({ isSliderMode = false }) => {
       loadingIndicator = await platformDetection.showLoading('Signing in...');
       if (loadingIndicator?.present) await loadingIndicator.present();
 
+      const requestBody = {
+        ...formData,
+        ...(finalCaptchaResponse && { recaptcha_response: finalCaptchaResponse })
+      };
+
       const response = await secureFetch(`${API_BASE}/auth/login`, {
         method: 'POST',
-        body: JSON.stringify({
-          ...formData,
-          recaptcha_response: finalCaptchaResponse
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       const data = await response.json();
@@ -410,29 +413,18 @@ const Login = ({ isSliderMode = false }) => {
       return (
         <div style={{ 
           padding: '15px', 
-          border: '1px solid #f44336', 
+          border: '1px solid #ff9800', 
           borderRadius: '8px', 
-          backgroundColor: '#ffebee',
+          backgroundColor: '#fff3e0',
           margin: '10px 0',
           textAlign: 'center'
         }}>
-          <p style={{ color: '#f44336', margin: '0 0 10px 0' }}>
-            Security verification failed to load
+          <p style={{ color: '#ff9800', margin: '0 0 10px 0' }}>
+            Security verification unavailable
           </p>
-          <button 
-            type="button" 
-            onClick={() => window.location.reload()}
-            style={{
-              padding: '8px 16px',
-              backgroundColor: '#f44336',
-              color: 'white',
-              border: 'none',
-              borderRadius: '4px',
-              cursor: 'pointer'
-            }}
-          >
-            Refresh Page
-          </button>
+          <p style={{ color: '#666', margin: '0', fontSize: '0.9rem' }}>
+            Login form will work without reCAPTCHA
+          </p>
         </div>
       );
     }
