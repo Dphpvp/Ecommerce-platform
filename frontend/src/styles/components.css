@@ -1,6 +1,6 @@
 /* frontend/src/styles/components.css - Compact Component System */
 
-/* === BUTTONS === */
+/* === MODERN BUTTONS === */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -22,11 +22,24 @@
   overflow: hidden;
   min-height: var(--btn-height);
   white-space: nowrap;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
 }
 
 .btn:focus {
   outline: 2px solid var(--color-accent-gold);
   outline-offset: 2px;
+}
+
+.btn:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.btn:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
 }
 
 .btn:disabled {
@@ -81,9 +94,29 @@
   min-height: 2.75rem;
 }
 
-/* === FORMS === */
+/* Mobile-optimized button sizing */
+@media (max-width: 768px) {
+  .btn {
+    min-height: 44px; /* iOS touch target minimum */
+    padding: 0.75rem 1rem;
+    font-size: var(--text-base);
+  }
+  
+  .btn-sm {
+    min-height: 40px;
+    padding: 0.5rem 0.75rem;
+  }
+  
+  .btn-lg {
+    min-height: 48px;
+    padding: 1rem 1.5rem;
+  }
+}
+
+/* === MODERN FORMS === */
 .form-group {
   margin-bottom: var(--space-4);
+  position: relative;
 }
 
 .form-label {
@@ -118,6 +151,9 @@ select {
   transition: all var(--transition-smooth);
   min-height: var(--input-height);
   box-sizing: border-box;
+  -webkit-appearance: none;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .form-input:focus,
@@ -130,6 +166,16 @@ select:focus {
   border-color: var(--color-border-focus);
   box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.1);
   background-color: var(--color-surface);
+  transform: translateY(-1px);
+}
+
+.form-input:focus:not(:focus-visible),
+.form-textarea:focus:not(:focus-visible),
+.form-select:focus:not(:focus-visible),
+input:focus:not(:focus-visible),
+textarea:focus:not(:focus-visible),
+select:focus:not(:focus-visible) {
+  transform: none;
 }
 
 .form-textarea,
@@ -172,7 +218,48 @@ input.error {
   font-weight: var(--font-medium);
 }
 
-/* === CARDS === */
+/* Mobile Form Optimizations */
+@media (max-width: 768px) {
+  .form-input,
+  .form-textarea,
+  .form-select,
+  input,
+  textarea,
+  select {
+    font-size: 16px; /* Prevent zoom on iOS */
+    min-height: 44px; /* iOS touch target minimum */
+    padding: 0.75rem;
+    border-radius: var(--radius-md);
+  }
+  
+  .form-label {
+    font-size: var(--text-base);
+    margin-bottom: var(--space-3);
+  }
+  
+  .form-group {
+    margin-bottom: var(--space-6);
+  }
+  
+  /* Better touch targets */
+  .form-select {
+    background-size: 16px 10px;
+    background-position: right 1rem center;
+    padding-right: 3rem;
+  }
+  
+  /* iOS specific fixes */
+  @supports (-webkit-touch-callout: none) {
+    .form-input,
+    .form-textarea,
+    input,
+    textarea {
+      transform: translateZ(0); /* Force hardware acceleration */
+    }
+  }
+}
+
+/* === MODERN CARDS === */
 .card {
   background: var(--color-surface-elevated);
   backdrop-filter: blur(10px);
@@ -183,6 +270,7 @@ input.error {
   transition: all var(--transition-luxury);
   position: relative;
   overflow: hidden;
+  isolation: isolate; /* Better stacking context */
 }
 
 .card:hover {

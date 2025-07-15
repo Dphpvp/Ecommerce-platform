@@ -1,0 +1,424 @@
+/* Haptic Components Styles */
+
+/* Enhanced Button with Haptic Feedback */
+.haptic-button {
+  position: relative;
+  transition: all var(--transition-fast);
+  transform: translateZ(0); /* Enable hardware acceleration */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.haptic-button:active,
+.haptic-button.pressed {
+  transform: scale(0.95) translateZ(0);
+}
+
+.haptic-button:disabled {
+  transform: none;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Haptic Toggle Switch */
+.haptic-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.toggle-label {
+  font-size: var(--text-base);
+  font-weight: var(--font-medium);
+  color: var(--color-text-primary);
+}
+
+.toggle-switch {
+  position: relative;
+  width: 52px;
+  height: 28px;
+  background-color: var(--color-border);
+  border: none;
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all var(--transition-smooth);
+  outline: none;
+  touch-action: manipulation;
+}
+
+.toggle-switch:focus {
+  box-shadow: 0 0 0 2px var(--color-accent-gold);
+}
+
+.toggle-switch.checked {
+  background-color: var(--color-accent-gold);
+}
+
+.toggle-switch.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.toggle-handle {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 24px;
+  height: 24px;
+  background-color: white;
+  border-radius: 50%;
+  transition: transform var(--transition-smooth);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-switch.checked .toggle-handle {
+  transform: translateX(24px);
+}
+
+/* Cart Action Buttons */
+.cart-action-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  font-weight: var(--font-semibold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cart-add {
+  background: var(--gradient-gold);
+  color: var(--primary-navy);
+  border: 1px solid var(--color-accent-gold);
+}
+
+.cart-add:hover {
+  background: var(--color-accent-gold-light);
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: var(--shadow-md);
+}
+
+.cart-remove {
+  background: var(--color-error);
+  color: white;
+  border: 1px solid var(--color-error);
+}
+
+.cart-remove:hover {
+  background: #c82333;
+  transform: translateY(-1px) scale(1.02);
+  box-shadow: var(--shadow-md);
+}
+
+/* Haptic Swipe Card */
+.haptic-swipe-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  cursor: pointer;
+  transition: all var(--transition-smooth);
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.haptic-swipe-card:hover {
+  border-color: var(--color-border-focus);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.haptic-swipe-card:active {
+  transform: scale(0.98);
+}
+
+/* Enhanced Input with Haptic Feedback */
+.haptic-input {
+  transition: all var(--transition-smooth);
+  touch-action: manipulation;
+}
+
+.haptic-input:focus {
+  transform: translateY(-1px);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2), var(--shadow-sm);
+}
+
+/* Navigation Buttons */
+.haptic-nav-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px; /* Touch target minimum */
+  min-height: 44px;
+}
+
+.nav-back::before {
+  content: '←';
+  margin-right: var(--space-1);
+}
+
+.nav-forward::after {
+  content: '→';
+  margin-left: var(--space-1);
+}
+
+/* Haptic Modal */
+.haptic-modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal);
+  padding: var(--space-4);
+  animation: modalBackdropFadeIn 0.3s ease-out;
+}
+
+.haptic-modal-content {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: var(--space-6);
+  position: relative;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--shadow-xl);
+  animation: modalContentSlideIn 0.3s ease-out;
+}
+
+.modal-close-button {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--color-border);
+  color: var(--color-text-primary);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-lg);
+  cursor: pointer;
+}
+
+@keyframes modalBackdropFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalContentSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Haptic Tabs */
+.haptic-tabs {
+  display: flex;
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: var(--space-1);
+  border: 1px solid var(--color-border);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.haptic-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.tab-button {
+  flex: 1;
+  min-width: 80px;
+  padding: var(--space-3) var(--space-4);
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-weight: var(--font-medium);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-smooth);
+  white-space: nowrap;
+}
+
+.tab-button.active {
+  background: var(--color-accent-gold);
+  color: var(--primary-navy);
+  box-shadow: var(--shadow-sm);
+}
+
+.tab-button:hover:not(.active) {
+  background: var(--color-border-light);
+  color: var(--color-text-primary);
+}
+
+/* Floating Action Button */
+.haptic-fab {
+  position: fixed;
+  bottom: calc(var(--space-6) + var(--safe-area-inset-bottom, 0px));
+  right: var(--space-6);
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--gradient-gold);
+  color: var(--primary-navy);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--text-xl);
+  cursor: pointer;
+  box-shadow: var(--shadow-lg);
+  transition: all var(--transition-smooth);
+  z-index: var(--z-fixed);
+}
+
+.haptic-fab:hover {
+  transform: scale(1.1) translateY(-2px);
+  box-shadow: var(--shadow-xl);
+}
+
+.haptic-fab:active {
+  transform: scale(0.95);
+}
+
+.fab-large {
+  width: 72px;
+  height: 72px;
+  font-size: var(--text-2xl);
+}
+
+.fab-small {
+  width: 40px;
+  height: 40px;
+  font-size: var(--text-base);
+}
+
+/* Settings Item */
+.haptic-settings-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+  transition: background-color var(--transition-smooth);
+}
+
+.haptic-settings-item:hover {
+  background: var(--color-border-light);
+}
+
+.settings-info {
+  flex: 1;
+}
+
+.settings-label {
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+  margin: 0 0 var(--space-1) 0;
+}
+
+.settings-description {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  margin: 0;
+  line-height: var(--leading-normal);
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 768px) {
+  .haptic-button {
+    min-height: 44px; /* iOS touch target minimum */
+    padding: var(--space-3) var(--space-4);
+  }
+  
+  .toggle-switch {
+    width: 48px;
+    height: 26px;
+    border-radius: 13px;
+  }
+  
+  .toggle-handle {
+    width: 22px;
+    height: 22px;
+  }
+  
+  .toggle-switch.checked .toggle-handle {
+    transform: translateX(22px);
+  }
+  
+  .haptic-modal-content {
+    margin: var(--space-4);
+    padding: var(--space-4);
+  }
+  
+  .tab-button {
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--text-sm);
+  }
+  
+  .haptic-fab {
+    bottom: calc(var(--space-4) + var(--safe-area-inset-bottom, 0px));
+    right: var(--space-4);
+  }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  .haptic-button,
+  .toggle-switch,
+  .toggle-handle,
+  .haptic-swipe-card,
+  .haptic-input,
+  .haptic-fab,
+  .tab-button {
+    transition: none !important;
+    animation: none !important;
+  }
+  
+  .haptic-button:active,
+  .haptic-button.pressed,
+  .haptic-swipe-card:active {
+    transform: none;
+  }
+}
+
+/* Focus states for keyboard navigation */
+.haptic-button:focus,
+.toggle-switch:focus,
+.haptic-swipe-card:focus,
+.tab-button:focus,
+.haptic-fab:focus {
+  outline: 2px solid var(--color-accent-gold);
+  outline-offset: 2px;
+}
+
+/* Dark theme support */
+@media (prefers-color-scheme: dark) {
+  .toggle-handle {
+    background-color: #f0f0f0;
+  }
+  
+  .haptic-modal-backdrop {
+    background: rgba(0, 0, 0, 0.7);
+  }
+  
+  .modal-close-button {
+    background: rgba(212, 175, 55, 0.2);
+    color: var(--color-text-primary);
+  }
+}

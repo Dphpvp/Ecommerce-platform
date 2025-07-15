@@ -1,62 +1,164 @@
-/* Mobile Captcha Styles */
+/* Modern Mobile Captcha Styles */
 .mobile-captcha {
-  margin: 10px 0;
-  padding: 15px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  background-color: #f9f9f9;
+  margin: var(--space-4) 0;
+  padding: var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-elevated);
+  backdrop-filter: blur(10px);
   text-align: center;
+  box-shadow: var(--shadow-md);
+  transition: all var(--transition-smooth);
+  position: relative;
+  isolation: isolate;
 }
 
 .captcha-question {
-  margin-bottom: 10px;
+  margin-bottom: var(--space-4);
 }
 
 .captcha-question label {
   display: block;
-  font-size: 14px;
-  font-weight: 500;
-  color: #333;
-  margin-bottom: 8px;
+  font-family: var(--font-serif);
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-3);
+  line-height: var(--leading-normal);
 }
 
 .captcha-input {
-  width: 80px;
-  padding: 8px 12px;
-  border: 2px solid #ccc;
-  border-radius: 4px;
-  font-size: 16px;
+  width: 120px;
+  max-width: 100%;
+  padding: var(--space-3) var(--space-4);
+  border: 2px solid var(--color-border-input);
+  border-radius: var(--radius-md);
+  font-family: var(--font-sans);
+  font-size: 18px;
+  font-weight: var(--font-medium);
   text-align: center;
-  transition: border-color 0.3s ease;
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+  transition: all var(--transition-smooth);
+  -webkit-appearance: none;
+  appearance: none;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .captcha-input:focus {
   outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+  border-color: var(--color-border-focus);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.2), inset 0 1px 3px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+  background: var(--color-surface);
+}
+
+.captcha-input:focus:not(:focus-visible) {
+  transform: none;
 }
 
 .captcha-feedback {
-  font-size: 12px;
-  margin-top: 5px;
-  min-height: 16px;
-  font-weight: 500;
+  font-size: var(--text-sm);
+  margin-top: var(--space-3);
+  min-height: 20px;
+  font-weight: var(--font-medium);
+  font-family: var(--font-sans);
+  line-height: var(--leading-normal);
 }
 
-/* Mobile-specific adjustments */
+/* Mobile-specific improvements */
 @media (max-width: 768px) {
   .mobile-captcha {
-    margin: 8px 0;
-    padding: 12px;
+    margin: var(--space-3) 0;
+    padding: var(--space-4);
+    border-radius: var(--radius-md);
   }
   
   .captcha-question label {
-    font-size: 13px;
+    font-size: var(--text-lg);
+    margin-bottom: var(--space-4);
   }
   
   .captcha-input {
-    font-size: 18px;
-    padding: 10px 12px;
+    width: 140px;
+    font-size: 20px;
+    padding: var(--space-4);
+    min-height: 44px; /* iOS touch target minimum */
+    border-width: 2px;
+  }
+  
+  .captcha-feedback {
+    font-size: var(--text-base);
+    margin-top: var(--space-4);
+  }
+}
+
+@media (max-width: 480px) {
+  .mobile-captcha {
+    margin: var(--space-2) 0;
+    padding: var(--space-3);
+  }
+  
+  .captcha-input {
+    width: 100%;
+    max-width: 200px;
+  }
+}
+
+/* Android-specific styles */
+.android-captcha {
+  position: relative;
+  /* Prevent zoom on focus */
+  transform: translateZ(0);
+}
+
+.android-input {
+  /* Android WebView specific adjustments */
+  font-size: 16px !important; /* Prevent zoom on focus */
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: white;
+  
+  /* Prevent Android keyboard from causing layout shift */
+  position: relative;
+  z-index: 1;
+}
+
+.android-input:focus {
+  /* Ensure proper focus behavior on Android */
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+  
+  /* Prevent viewport scaling */
+  transform: scale(1);
+  -webkit-transform: scale(1);
+}
+
+/* Android keyboard handling */
+@media screen and (max-height: 500px) {
+  /* When Android keyboard is open */
+  .android-captcha {
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    background: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    width: 90%;
+    max-width: 300px;
+  }
+}
+
+/* Android WebView adjustments */
+@supports (-webkit-appearance: none) {
+  .android-input {
+    /* Fix for Android Chrome/WebView */
+    background-clip: padding-box;
+    -webkit-background-clip: padding-box;
   }
 }
 
@@ -80,5 +182,14 @@
   .captcha-input:focus {
     border-color: #63b3ed;
     box-shadow: 0 0 0 2px rgba(99, 179, 237, 0.25);
+  }
+  
+  .android-captcha {
+    background-color: #2d3748;
+  }
+  
+  .android-input {
+    background-color: #4a5568;
+    color: #e2e8f0;
   }
 }

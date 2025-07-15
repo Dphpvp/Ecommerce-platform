@@ -1,18 +1,21 @@
-/* frontend/src/App.css - Updated for luxury theme */
+/* frontend/src/App.css - Modern Responsive Design */
 
 .app {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  min-height: 100dvh; /* Dynamic viewport height for mobile */
   background-color: var(--color-background);
+  position: relative;
+  overflow-x: hidden;
 }
 
-/* Ensure body has luxury nav styling */
+/* Ensure body has luxury nav styling with safe area */
 body.has-luxury-nav {
-  padding-top: 120px !important;
+  padding-top: calc(120px + var(--safe-area-inset-top, 0px)) !important;
 }
 
-/* Enhanced luxury background */
+/* Enhanced luxury background with safe area support */
 body {
   background: 
     radial-gradient(circle at 25% 25%, rgba(212, 175, 55, 0.03) 0%, transparent 50%),
@@ -29,10 +32,13 @@ body {
     linear-gradient(135deg, #f8f6f0 0%, #f5f5dc 25%, #f7e7ce 50%, #f5f5dc 75%, #f0f0e8 100%);
   
   background-size: 300px 300px, 400px 400px, 120px 120px, 100% 100%;
-  background-attachment: fixed;
+  background-attachment: scroll; /* Better mobile performance */
   font-family: var(--font-sans);
   color: var(--color-text-primary);
-  padding-top: 120px;
+  padding-top: calc(120px + var(--safe-area-inset-top, 0px));
+  padding-left: var(--safe-area-inset-left, 0px);
+  padding-right: var(--safe-area-inset-right, 0px);
+  touch-action: manipulation; /* Improve touch performance */
 }
 
 /* Animated shimmer effect */
@@ -72,6 +78,33 @@ body::before {
   z-index: 1;
 }
 
+/* Loading containers for code splitting */
+.page-loading-container,
+.admin-loading-container,
+.auth-loading-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  padding: var(--space-8);
+  padding-top: calc(var(--space-8) + var(--safe-area-inset-top, 0px));
+  padding-bottom: calc(var(--space-8) + var(--safe-area-inset-bottom, 0px));
+}
+
+.admin-loading-container {
+  background: var(--color-surface-elevated);
+  border-radius: var(--radius-lg);
+  margin: var(--space-4);
+  box-shadow: var(--shadow-md);
+}
+
+.auth-loading-container {
+  background: linear-gradient(135deg, var(--color-surface) 0%, var(--color-surface-elevated) 100%);
+  border-radius: var(--radius-xl);
+  margin: var(--space-6);
+  border: 1px solid var(--color-border);
+}
+
 /* Gold accent elements */
 .gold-accent {
   color: var(--color-accent-gold);
@@ -106,29 +139,67 @@ body::before {
   100% { transform: rotate(360deg); }
 }
 
-/* Mobile optimizations */
-@media (max-width: 768px) {
+/* Responsive design improvements */
+@media (max-width: 1024px) {
   body {
-    padding-top: 140px;
-    background-size: 200px 200px, 300px 300px, 80px 80px, 100% 100%;
+    background-attachment: scroll; /* Fix iOS background issues */
+  }
+}
+
+@media (max-width: 768px) {
+  .app {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    min-height: 100dvh; /* Dynamic viewport height */
+  }
+  
+  body {
+    padding-top: calc(100px + var(--safe-area-inset-top, 0px));
+    background-size: 150px 150px, 200px 200px, 60px 60px, 100% 100%;
+    background-attachment: scroll;
   }
   
   body.has-luxury-nav {
-    padding-top: 140px !important;
+    padding-top: calc(100px + var(--safe-area-inset-top, 0px)) !important;
   }
   
   body::before {
     animation-duration: 30s;
+    background-attachment: scroll;
   }
 }
 
 @media (max-width: 480px) {
   body {
-    padding-top: 120px;
+    padding-top: calc(90px + var(--safe-area-inset-top, 0px));
+    background-size: 100px 100px, 150px 150px, 40px 40px, 100% 100%;
   }
   
   body.has-luxury-nav {
-    padding-top: 120px !important;
+    padding-top: calc(90px + var(--safe-area-inset-top, 0px)) !important;
+  }
+}
+
+/* iOS Safari specific fixes */
+@supports (-webkit-touch-callout: none) {
+  .app {
+    min-height: -webkit-fill-available;
+  }
+  
+  body {
+    background-attachment: scroll !important;
+  }
+  
+  body::before {
+    background-attachment: scroll !important;
+  }
+}
+
+/* Android Chrome specific fixes */
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  .app {
+    min-height: 100vh;
+    min-height: calc(var(--vh, 1vh) * 100);
   }
 }
 
