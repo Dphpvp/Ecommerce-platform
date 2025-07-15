@@ -54,7 +54,7 @@ const Login = ({ isSliderMode = false }) => {
   useEffect(() => {
     const checkRecaptcha = () => {
       // Check if reCAPTCHA site key is available
-      const siteKey = process.env.REACT_APP_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI';
+      const siteKey = process.env.REACT_APP_RECAPTCHA_SITE_KEY;
       console.log('reCAPTCHA site key:', siteKey ? 'Available' : 'Missing');
       console.log('Environment variables:', {
         REACT_APP_RECAPTCHA_SITE_KEY: process.env.REACT_APP_RECAPTCHA_SITE_KEY,
@@ -113,7 +113,7 @@ const Login = ({ isSliderMode = false }) => {
         console.log('Attempting to render reCAPTCHA widget');
         
         // Mobile-friendly reCAPTCHA configuration
-        const siteKey = process.env.REACT_APP_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI';
+        const siteKey = process.env.REACT_APP_RECAPTCHA_SITE_KEY;
         const config = {
           sitekey: siteKey,
           size: isMobile ? 'compact' : 'normal',
@@ -149,7 +149,7 @@ const Login = ({ isSliderMode = false }) => {
         setTimeout(() => {
           if (window.grecaptcha && recaptchaRef.current) {
             try {
-              const siteKey = process.env.REACT_APP_RECAPTCHA_SITE_KEY || '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI';
+              const siteKey = process.env.REACT_APP_RECAPTCHA_SITE_KEY;
               const widgetId = window.grecaptcha.render(recaptchaRef.current, {
                 sitekey: siteKey,
                 size: isMobile ? 'compact' : 'normal',
