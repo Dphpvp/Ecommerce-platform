@@ -28,9 +28,37 @@ class PlatformDetectionManager {
    */
   detectPlatform() {
     try {
+      // Primary: Use Capacitor API
       if (window.Capacitor && typeof window.Capacitor.isNativePlatform === 'function') {
         if (window.Capacitor.isNativePlatform()) {
           return window.Capacitor.getPlatform();
+        }
+      }
+
+      // Fallback: Parse user agent for Android
+      const userAgent = navigator.userAgent;
+      if (/Android/i.test(userAgent)) {
+        // Check if it's likely a WebView (Capacitor app)
+        const isWebView = /Chrome.*Version/i.test(userAgent) ||
+                          /wv\)/i.test(userAgent) ||
+                          window._capacitor ||
+                          window.Capacitor;
+        
+        if (isWebView) {
+          console.log('🤖 Android platform detected via user agent fallback');
+          return 'android';
+        }
+      }
+
+      // Check for iOS
+      if (/iPhone|iPad|iPod/i.test(userAgent)) {
+        const isWebView = /CriOS|FxiOS|Version.*Mobile.*Safari/i.test(userAgent) ||
+                          window._capacitor ||
+                          window.Capacitor;
+        
+        if (isWebView) {
+          console.log('🍎 iOS platform detected via user agent fallback');
+          return 'ios';
         }
       }
     } catch (error) {
@@ -44,12 +72,47 @@ class PlatformDetectionManager {
    */
   detectMobilePlatform() {
     try {
-      return !!(window.Capacitor && 
-                typeof window.Capacitor.isNativePlatform === 'function' && 
-                window.Capacitor.isNativePlatform());
+      // Primary: Check Capacitor
+      if (window.Capacitor && 
+          typeof window.Capacitor.isNativePlatform === 'function' && 
+          window.Capacitor.isNativePlatform()) {
+        return true;
+      }
+
+      // Fallback 1: Check for Android WebView patterns
+      const userAgent = navigator.userAgent;
+      const isAndroidWebView = /Android.*Chrome.*Version/i.test(userAgent) ||
+                               /Android.*wv\)/i.test(userAgent) ||
+                               /Version.*Chrome.*Mobile.*Safari/i.test(userAgent);
+      
+      // Fallback 2: Check for Capacitor app markers
+      const hasCapacitorMarkers = window._capacitor ||
+                                  window.Capacitor ||
+                                  document.querySelector('meta[name="capacitor-config"]') ||
+                                  /Capacitor/i.test(userAgent);
+
+      // Fallback 3: Check for mobile platform indicators
+      const isMobileUA = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+      const hasTouchPoints = navigator.maxTouchPoints > 0;
+      const hasTouch = 'ontouchstart' in window;
+
+      // Android-specific detection
+      if (isAndroidWebView || hasCapacitorMarkers || (isMobileUA && /Android/i.test(userAgent))) {
+        console.log('🤖 Android platform detected via fallback detection');
+        return true;
+      }
+
+      // General mobile detection
+      if (isMobileUA && (hasTouchPoints || hasTouch)) {
+        console.log('📱 Mobile platform detected via fallback detection');
+        return true;
+      }
+
+      return false;
     } catch (error) {
       console.warn('Mobile platform detection failed:', error);
-      return false;
+      // Last resort: Assume mobile if Android is in user agent
+      return /Android/i.test(navigator.userAgent);
     }
   }
 
@@ -62,6 +125,26 @@ class PlatformDetectionManager {
     if (this.isMobile) {
       headers['X-Capacitor-Platform'] = this.platform;
       headers['X-Mobile-App'] = 'true';
+      
+      // Add Android-specific headers for better WebView detection
+      if (this.platform === 'android') {
+        headers['X-Android-WebView'] = 'true';
+        headers['X-Capacitor-Android'] = 'true';
+        
+        // Include WebView version if available
+        const webViewMatch = navigator.userAgent.match(/Chrome\/(\d+\.\d+\.\d+\.\d+)/);
+        if (webViewMatch) {
+          headers['X-WebView-Version'] = webViewMatch[1];
+        }
+      }
+      
+      // Add device info for better debugging
+      headers['X-Device-Info'] = JSON.stringify({
+        platform: this.platform,
+        userAgent: navigator.userAgent.substring(0, 100), // Truncate for header size
+        screen: `${window.screen.width}x${window.screen.height}`,
+        timestamp: Date.now()
+      });
     }
     
     return headers;
@@ -75,24 +158,72 @@ class PlatformDetectionManager {
       ...options,
       headers: {
         ...options.headers,
-        ...this.getPlatformHeaders()
+        ...this.getPlatformHeaders(),
+        // Ensure proper content type for Android WebView
+        'Content-Type': options.headers?.['Content-Type'] || 'application/json'
       }
     };
 
+    // Android WebView timeout and retry logic
+    if (this.platform === 'android') {
+      return this._fetchWithAndroidFallback(url, enhancedOptions);
+    }
+
     return fetch(url, enhancedOptions);
+  }
+
+  /**
+   * Android-specific fetch with fallback handling
+   */
+  async _fetchWithAndroidFallback(url, options, maxRetries = 2) {
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+        
+        const response = await fetch(url, {
+          ...options,
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        return response;
+      } catch (error) {
+        console.warn(`🤖 Android fetch attempt ${attempt + 1} failed:`, error.message);
+        
+        if (attempt === maxRetries) {
+          throw error;
+        }
+        
+        // Wait before retry
+        await new Promise(resolve => setTimeout(resolve, 500 * (attempt + 1)));
+      }
+    }
   }
 
   /**
    * Get device information
    */
   getDeviceInfo() {
-    return {
+    const baseInfo = {
       platform: this.platform,
       isMobile: this.isMobile,
       isWeb: !this.isMobile,
       userAgent: navigator.userAgent,
       capacitorVersion: window.Capacitor?.version || null
     };
+
+    // Add Android-specific info
+    if (this.platform === 'android') {
+      const androidMatch = navigator.userAgent.match(/Android\s([\d\.]+)/);
+      const chromeMatch = navigator.userAgent.match(/Chrome\/(\d+\.\d+\.\d+\.\d+)/);
+      
+      baseInfo.androidVersion = androidMatch ? androidMatch[1] : 'unknown';
+      baseInfo.webViewVersion = chromeMatch ? chromeMatch[1] : 'unknown';
+      baseInfo.isWebView = /wv\)|Version.*Chrome/i.test(navigator.userAgent);
+    }
+
+    return baseInfo;
   }
 
   /**

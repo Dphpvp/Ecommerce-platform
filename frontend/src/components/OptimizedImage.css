@@ -1,0 +1,238 @@
+/* Optimized Image Component Styles */
+.optimized-image-container {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--color-border-light);
+  border-radius: var(--radius-base);
+}
+
+.optimized-image {
+  width: 100%;
+  height: auto;
+  transition: opacity var(--transition-smooth);
+  opacity: 0;
+}
+
+.optimized-image.loaded {
+  opacity: 1;
+}
+
+.optimized-image.loading {
+  opacity: 0;
+}
+
+.optimized-image.error {
+  display: none;
+}
+
+/* Placeholder Styles */
+.image-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    var(--color-border-light) 25%,
+    var(--color-border) 50%,
+    var(--color-border-light) 75%
+  );
+  background-size: 200% 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.placeholder-shimmer {
+  width: 100%;
+  height: 100%;
+  background: inherit;
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* Error State */
+.image-error {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--color-error-light);
+  color: var(--color-error);
+  text-align: center;
+  padding: var(--space-4);
+}
+
+.error-icon {
+  font-size: var(--text-2xl);
+  margin-bottom: var(--space-2);
+  opacity: 0.6;
+}
+
+.image-error span {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+}
+
+/* Specialized Image Types */
+
+/* Product Images */
+.product-image {
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  border-radius: var(--radius-md);
+  transition: transform var(--transition-smooth);
+}
+
+.product-image:hover {
+  transform: scale(1.05);
+}
+
+/* Hero Images */
+.hero-image {
+  width: 100%;
+  height: 400px;
+  object-fit: cover;
+  border-radius: var(--radius-lg);
+}
+
+@media (max-width: 768px) {
+  .hero-image {
+    height: 250px;
+    border-radius: var(--radius-md);
+  }
+}
+
+/* Avatar Images */
+.avatar-image {
+  border-radius: var(--radius-full);
+  object-fit: cover;
+  border: 2px solid var(--color-border);
+}
+
+.avatar-small {
+  width: 40px;
+  height: 40px;
+}
+
+.avatar-medium {
+  width: 80px;
+  height: 80px;
+}
+
+.avatar-large {
+  width: 120px;
+  height: 120px;
+}
+
+/* Thumbnail Images */
+.thumbnail-image {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+}
+
+/* Container Sizing for Different Image Types */
+.optimized-image-container.product-container {
+  aspect-ratio: 1 / 1;
+}
+
+.optimized-image-container.hero-container {
+  width: 100%;
+  height: 400px;
+}
+
+.optimized-image-container.avatar-container {
+  border-radius: var(--radius-full);
+}
+
+.optimized-image-container.thumbnail-container {
+  width: 80px;
+  height: 80px;
+}
+
+/* Performance Optimizations */
+.optimized-image {
+  /* Prevent layout shifts */
+  contain: layout;
+  
+  /* Hardware acceleration for smooth transitions */
+  transform: translateZ(0);
+  will-change: opacity;
+}
+
+/* Hover Effects for Interactive Images */
+.optimized-image-container:hover .product-image {
+  transform: scale(1.02);
+}
+
+.optimized-image-container:hover .thumbnail-image {
+  transform: scale(1.1);
+}
+
+/* Focus States for Accessibility */
+.optimized-image-container:focus-within {
+  outline: 2px solid var(--color-accent-gold);
+  outline-offset: 2px;
+}
+
+/* Dark Theme Support */
+@media (prefers-color-scheme: dark) {
+  .optimized-image-container {
+    background-color: rgba(212, 175, 55, 0.1);
+  }
+  
+  .image-placeholder {
+    background: linear-gradient(
+      90deg,
+      rgba(212, 175, 55, 0.1) 25%,
+      rgba(212, 175, 55, 0.2) 50%,
+      rgba(212, 175, 55, 0.1) 75%
+    );
+  }
+  
+  .image-error {
+    background-color: rgba(220, 53, 69, 0.2);
+    color: #ff6b6b;
+  }
+}
+
+/* High DPI Displays */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .optimized-image {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .optimized-image,
+  .product-image,
+  .thumbnail-image {
+    transition: none;
+    transform: none;
+  }
+  
+  .optimized-image-container:hover .product-image,
+  .optimized-image-container:hover .thumbnail-image {
+    transform: none;
+  }
+  
+  .placeholder-shimmer {
+    animation: none;
+    background: var(--color-border-light);
+  }
+}

@@ -59,12 +59,9 @@ class MobileCaptchaManager {
     });
 
     const {
-      siteKey,
       onLoad = null,
       onComplete = null,
       onExpired = null,
-      theme = 'light',
-      size = 'normal'
     } = config;
 
     this.onLoadCallback = onLoad;
@@ -267,17 +264,28 @@ class MobileCaptchaManager {
     const num2 = Math.floor(Math.random() * 10) + 1;
     const correctAnswer = num1 + num2;
 
+    // Check if we're on Android for special handling
+    const isAndroid = /Android/i.test(navigator.userAgent);
+    const inputMode = isAndroid ? 'tel' : 'number';
+    const androidClass = isAndroid ? 'android-input' : '';
+
     container.innerHTML = `
-      <div class="mobile-captcha">
+      <div class="mobile-captcha ${isAndroid ? 'android-captcha' : ''}">
         <div class="captcha-question">
           <label for="captcha-input">Security Check: What is ${num1} + ${num2}?</label>
           <input 
-            type="number" 
+            type="${inputMode}" 
             id="captcha-input" 
-            class="captcha-input" 
+            class="captcha-input ${androidClass}" 
             placeholder="Enter answer"
             min="0"
             max="20"
+            inputmode="numeric"
+            pattern="[0-9]*"
+            autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
           />
         </div>
         <div class="captcha-feedback"></div>
@@ -287,26 +295,12 @@ class MobileCaptchaManager {
     const input = container.querySelector('#captcha-input');
     const feedback = container.querySelector('.captcha-feedback');
     
-    input.addEventListener('input', (e) => {
-      const userAnswer = parseInt(e.target.value);
-      if (userAnswer === correctAnswer) {
-        feedback.textContent = '✓ Correct!';
-        feedback.style.color = 'green';
-        input.style.borderColor = 'green';
-        
-        // Generate a mobile captcha token
-        const mobileToken = this.generateMobileToken(num1, num2, correctAnswer);
-        if (callback) callback(mobileToken);
-        if (this.onCompleteCallback) this.onCompleteCallback(mobileToken);
-      } else if (e.target.value && userAnswer !== correctAnswer) {
-        feedback.textContent = '✗ Incorrect, try again';
-        feedback.style.color = 'red';
-        input.style.borderColor = 'red';
-      } else {
-        feedback.textContent = '';
-        input.style.borderColor = '';
-      }
-    });
+    // Android-specific input handling
+    if (isAndroid) {
+      this._setupAndroidInputHandling(input, feedback, correctAnswer, num1, num2, callback);
+    } else {
+      this._setupStandardInputHandling(input, feedback, correctAnswer, num1, num2, callback);
+    }
 
     // Store the correct answer for verification
     this.currentAnswer = correctAnswer;
@@ -316,12 +310,113 @@ class MobileCaptchaManager {
   }
 
   /**
+   * Setup Android-specific input handling
+   */
+  _setupAndroidInputHandling(input, feedback, correctAnswer, num1, num2, callback) {
+    let inputTimeout;
+    
+    // Handle Android keyboard behavior
+    input.addEventListener('focus', () => {
+      // Prevent viewport scaling on Android
+      const viewport = document.querySelector('meta[name="viewport"]');
+      if (viewport) {
+        const originalContent = viewport.content;
+        viewport.content = originalContent + ', user-scalable=no';
+        
+        // Restore after focus
+        setTimeout(() => {
+          viewport.content = originalContent;
+        }, 100);
+      }
+      
+      // Scroll input into view on Android
+      setTimeout(() => {
+        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }, 300);
+    });
+    
+    // Debounced input validation for Android
+    input.addEventListener('input', (e) => {
+      clearTimeout(inputTimeout);
+      inputTimeout = setTimeout(() => {
+        this._validateInput(e, feedback, correctAnswer, num1, num2, callback);
+      }, 300);
+    });
+    
+    // Handle Android "Done" button
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.keyCode === 13) {
+        e.preventDefault();
+        input.blur();
+        this._validateInput({ target: input }, feedback, correctAnswer, num1, num2, callback);
+      }
+    });
+  }
+  
+  /**
+   * Setup standard input handling
+   */
+  _setupStandardInputHandling(input, feedback, correctAnswer, num1, num2, callback) {
+    input.addEventListener('input', (e) => {
+      this._validateInput(e, feedback, correctAnswer, num1, num2, callback);
+    });
+  }
+  
+  /**
+   * Validate captcha input
+   */
+  _validateInput(e, feedback, correctAnswer, num1, num2, callback) {
+    const userAnswer = parseInt(e.target.value);
+    if (userAnswer === correctAnswer) {
+      feedback.textContent = '✓ Correct!';
+      feedback.style.color = 'green';
+      e.target.style.borderColor = 'green';
+      
+      // Generate a mobile captcha token
+      const mobileToken = this.generateMobileToken(num1, num2, correctAnswer);
+      if (callback) callback(mobileToken);
+      if (this.onCompleteCallback) this.onCompleteCallback(mobileToken);
+    } else if (e.target.value && userAnswer !== correctAnswer) {
+      feedback.textContent = '✗ Incorrect, try again';
+      feedback.style.color = 'red';
+      e.target.style.borderColor = 'red';
+    } else {
+      feedback.textContent = '';
+      e.target.style.borderColor = '';
+    }
+  }
+
+  /**
    * Generate mobile captcha token
    */
   generateMobileToken(num1, num2, answer) {
     const timestamp = Date.now();
     const data = { num1, num2, answer, timestamp, platform: 'mobile' };
-    return btoa(JSON.stringify(data));
+    
+    // Use safer encoding for Android
+    try {
+      return btoa(JSON.stringify(data));
+    } catch (error) {
+      console.warn('🤖 btoa failed on Android, using fallback encoding');
+      // Fallback for Android devices with encoding issues
+      return this._androidSafeEncode(data);
+    }
+  }
+
+  /**
+   * Android-safe encoding fallback
+   */
+  _androidSafeEncode(data) {
+    // Simple character-by-character base64 alternative for Android
+    const str = JSON.stringify(data);
+    let result = '';
+    
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      result += char.toString(16).padStart(2, '0');
+    }
+    
+    return 'android-' + result;
   }
 
   /**

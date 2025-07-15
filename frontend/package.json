@@ -8,6 +8,8 @@
     "@capacitor/core": "^7.4.2",
     "@stripe/react-stripe-js": "^2.4.0",
     "@stripe/stripe-js": "^2.2.2",
+    "@tanstack/react-query": "^5.83.0",
+    "@tanstack/react-query-devtools": "^5.83.0",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
@@ -18,9 +20,11 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
+    "start": "craco start",
+    "build": "craco build",
+    "test": "craco test",
+    "analyze": "npm run build && npx webpack-bundle-analyzer build/static/js/*.js",
+    "build:analyze": "ANALYZE=true npm run build",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
@@ -41,5 +45,11 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://localhost:8000"
+  "proxy": "http://localhost:8000",
+  "devDependencies": {
+    "@craco/craco": "^7.1.0",
+    "compression-webpack-plugin": "^11.1.0",
+    "terser-webpack-plugin": "^5.3.14",
+    "webpack-bundle-analyzer": "^4.10.2"
+  }
 }

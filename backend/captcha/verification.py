@@ -38,6 +38,11 @@ def verify_recaptcha(captcha_response: str, remote_ip: Optional[str] = None, req
 def _is_mobile_captcha_token(token: str) -> bool:
     """Check if token is a mobile captcha token"""
     try:
+        # Check for Android-safe encoding first
+        if token.startswith('android-'):
+            return True
+            
+        # Check standard base64 encoding
         decoded = base64.b64decode(token)
         data = json.loads(decoded)
         return data.get('platform') == 'mobile'
@@ -52,10 +57,20 @@ def _verify_mobile_captcha(token: str, request_headers: Optional[dict] = None) -
         if request_headers:
             user_agent = request_headers.get('User-Agent', '').lower()
             capacitor_platform = request_headers.get('X-Capacitor-Platform')
+            android_webview = request_headers.get('X-Android-WebView')
             
-            # Allow if from Capacitor mobile app
-            if capacitor_platform or 'capacitor' in user_agent:
-                # Decode and validate the mobile token
+            # Allow if from Capacitor mobile app or Android WebView
+            is_mobile_app = (capacitor_platform or 
+                           android_webview or 
+                           'capacitor' in user_agent or
+                           'android' in user_agent)
+            
+            if is_mobile_app:
+                # Handle Android-safe encoding
+                if token.startswith('android-'):
+                    return _verify_android_safe_token(token, request_headers)
+                
+                # Handle standard base64 encoding
                 decoded = base64.b64decode(token)
                 data = json.loads(decoded)
                 
@@ -69,7 +84,42 @@ def _verify_mobile_captcha(token: str, request_headers: Optional[dict] = None) -
                 return True
         
         return False
-    except Exception:
+    except Exception as e:
+        print(f"❌ Mobile captcha verification failed: {e}")
+        return False
+
+
+def _verify_android_safe_token(token: str, request_headers: Optional[dict] = None) -> bool:
+    """Verify Android-safe encoded token"""
+    try:
+        # Remove 'android-' prefix
+        hex_data = token[8:]
+        
+        # Decode hex to string
+        decoded_str = ''
+        for i in range(0, len(hex_data), 2):
+            hex_char = hex_data[i:i+2]
+            if len(hex_char) == 2:
+                decoded_str += chr(int(hex_char, 16))
+        
+        # Parse JSON
+        data = json.loads(decoded_str)
+        
+        # Validate timestamp (5 minutes)
+        timestamp = data.get('timestamp', 0)
+        current_time = time.time() * 1000
+        if current_time - timestamp > 300000:
+            return False
+        
+        # Validate platform
+        if data.get('platform') != 'mobile':
+            return False
+        
+        print(f"✅ Android-safe token verified successfully")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Android-safe token verification failed: {e}")
         return False
 
 
