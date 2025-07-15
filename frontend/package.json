@@ -24,7 +24,12 @@
   },
   "scripts": {
     "start": "craco start",
-    "build": "craco build",
+    "build": "craco build && node scripts/clean-build.js",
+    "build:android": "node scripts/cap-sync.js",
+    "build:web": "craco build",
+    "build:original": "craco build",
+    "build:clean": "craco build && npm run clean:gz",
+    "clean:gz": "find build -name '*.gz' -delete || echo 'No .gz files to delete'",
     "test": "craco test",
     "analyze": "npm run build && npx webpack-bundle-analyzer build/static/js/*.js",
     "build:analyze": "ANALYZE=true npm run build",
@@ -52,6 +57,7 @@
   "devDependencies": {
     "@craco/craco": "^7.1.0",
     "compression-webpack-plugin": "^11.1.0",
+    "cross-env": "^7.0.3",
     "terser-webpack-plugin": "^5.3.14",
     "webpack-bundle-analyzer": "^4.10.2"
   }

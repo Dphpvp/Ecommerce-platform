@@ -72,15 +72,18 @@ module.exports = {
           ],
         };
 
-        // Add compression plugin
-        webpackConfig.plugins.push(
-          new CompressionPlugin({
-            algorithm: 'gzip',
-            test: /\.(js|css|html|svg)$/,
-            threshold: 8192,
-            minRatio: 0.8,
-          })
-        );
+        // Add compression plugin (disabled for Android builds)
+        const isAndroidBuild = process.env.ANDROID_BUILD === 'true';
+        if (!isAndroidBuild) {
+          webpackConfig.plugins.push(
+            new CompressionPlugin({
+              algorithm: 'gzip',
+              test: /\.(js|css|html|svg)$/,
+              threshold: 8192,
+              minRatio: 0.8,
+            })
+          );
+        }
 
         // Preload important chunks
         webpackConfig.output = {
