@@ -1,13 +1,15 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 
 buildscript {
-    
     repositories {
         google()
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.7.2'
+        // Downgrade AGP to 7.4.2 for compatibility
+        classpath 'com.android.tools.build:gradle:8.11.1'
+
+        // Keep your Google services plugin if you use Firebase or Google APIs
         classpath 'com.google.gms:google-services:4.4.2'
 
         // NOTE: Do not place your application dependencies here; they belong

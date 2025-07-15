@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./gradlew:*)",
+      "Bash(where java)",
+      "Bash(java:*)",
+      "Bash(echo $JAVA_HOME)",
+      "Bash(export:*)",
+      "Bash(export PATH=\"$JAVA_HOME/bin:$PATH\")",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx cap copy:*)",
+      "WebFetch(domain:www.google.com)",
+      "Bash(rm:*)",
+      "WebFetch(domain:vergishop.vercel.app)",
+      "WebFetch(domain:vs1.vercel.app)",
+      "WebFetch(domain:ecommerce-platform-nizy.onrender.com)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(npx cap sync:*)",
+      "Bash(.gradlew:*)",
+      "Bash(gradlew:*)",
+      "Bash(JAVA_HOME=\"/c/Program Files/Java/jdk-24\")"
+    ],
+    "deny": []
+  }
+}

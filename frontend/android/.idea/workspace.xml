@@ -6,8 +6,77 @@
   <component name="ChangeListManager">
     <list default="true" id="6f24bd5f-c9f7-438a-b820-b3d6f5c93ad0" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/../../.claude/settings.local.json" beforeDir="false" afterPath="$PROJECT_DIR$/../../.claude/settings.local.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/capacitor.build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/app/capacitor.build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/capacitor.config.json" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/capacitor.config.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/capacitor.plugins.json" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/capacitor.plugins.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/asset-manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/public/asset-manifest.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/public/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/public/manifest.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/robots.txt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/public/robots.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/css/common.aa0ff8d8.chunk.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/css/common.aa0ff8d8.chunk.css.gz" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/css/common.aa0ff8d8.chunk.css.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/css/styles.518fdc63.css" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/css/styles.518fdc63.css.gz" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/css/styles.518fdc63.css.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/152.720afb9e.chunk.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/152.720afb9e.chunk.js.gz" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/152.720afb9e.chunk.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/236.6a8e7a4b.chunk.js" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/public/static/js/236.6a8e7a4b.chunk.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/250.72a74011.chunk.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/250.72a74011.chunk.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/471.25898996.chunk.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/471.25898996.chunk.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/533.012f5bed.chunk.js" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/public/static/js/533.012f5bed.chunk.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/54.2300e056.chunk.js" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/public/static/js/54.2300e056.chunk.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/615.5b9fc574.chunk.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/615.5b9fc574.chunk.js.gz" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/615.5b9fc574.chunk.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/623.eebc06ce.chunk.js" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/public/static/js/623.eebc06ce.chunk.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/623.eebc06ce.chunk.js.gz" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/63.31b2cec8.chunk.js" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/public/static/js/63.31b2cec8.chunk.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/640.f702f222.chunk.js" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/public/static/js/640.f702f222.chunk.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/665.139004ed.chunk.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/665.139004ed.chunk.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/686.6255e40d.chunk.js" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/public/static/js/686.6255e40d.chunk.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/686.6255e40d.chunk.js.gz" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/723.e378b272.chunk.js" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/public/static/js/723.e378b272.chunk.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/736.2f77e8f0.chunk.js" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/public/static/js/736.2f77e8f0.chunk.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/818.ef3061ce.chunk.js" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/public/static/js/818.ef3061ce.chunk.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/818.ef3061ce.chunk.js.gz" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/841.06bace8f.chunk.js" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/public/static/js/841.06bace8f.chunk.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/850.3cbe9565.chunk.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/850.3cbe9565.chunk.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/common.5a09f69b.chunk.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/common.5a09f69b.chunk.js.gz" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/common.5a09f69b.chunk.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/main.eb531917.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/main.eb531917.js.gz" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/main.eb531917.js.map" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/react.7ef6106e.js" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/public/static/js/react.7ef6106e.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/react.7ef6106e.js.gz" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/stripe.7fbf0cef.js" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/public/static/js/stripe.7fbf0cef.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/stripe.7fbf0cef.js.gz" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/styles.8d8c66ff.js" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/vendors.00596bed.js" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/public/static/js/vendors.00596bed.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/vendors.00596bed.js.gz" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/xml/config.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/xml/config.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/capacitor-cordova-android-plugins/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/capacitor-cordova-android-plugins/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/capacitor-cordova-android-plugins/cordova.variables.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/capacitor-cordova-android-plugins/cordova.variables.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/capacitor-cordova-android-plugins/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/capacitor-cordova-android-plugins/src/main/AndroidManifest.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/capacitor-cordova-android-plugins/src/main/res/.gitkeep" beforeDir="false" afterPath="$PROJECT_DIR$/capacitor-cordova-android-plugins/src/main/res/.gitkeep" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/capacitor.settings.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/capacitor.settings.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gradle.properties" beforeDir="false" afterPath="$PROJECT_DIR$/gradle.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gradle/wrapper/gradle-wrapper.jar" beforeDir="false" afterPath="$PROJECT_DIR$/gradle/wrapper/gradle-wrapper.jar" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gradle/wrapper/gradle-wrapper.properties" beforeDir="false" afterPath="$PROJECT_DIR$/gradle/wrapper/gradle-wrapper.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gradlew" beforeDir="false" afterPath="$PROJECT_DIR$/gradlew" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gradlew.bat" beforeDir="false" afterPath="$PROJECT_DIR$/gradlew.bat" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../package-lock.json" beforeDir="false" afterPath="$PROJECT_DIR$/../package-lock.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../package.json" beforeDir="false" afterPath="$PROJECT_DIR$/../package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../../package.json" beforeDir="false" afterPath="$PROJECT_DIR$/../../package.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -17,13 +86,48 @@
   <component name="ClangdSettings">
     <option name="formatViaClangd" value="false" />
   </component>
+  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[DeviceId(pluginId=LocalEmulator, isTemplate=false, identifier=path=C:\Users\razva\.android\avd\Medium_Phone.avd)]" />
+  <component name="ExternalProjectsData">
+    <projectState path="$PROJECT_DIR$">
+      <ProjectState />
+    </projectState>
+  </component>
+  <component name="ExternalProjectsManager">
+    <system id="GRADLE">
+      <state>
+        <projects_view>
+          <tree_state>
+            <expand>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="android" type="f1a62948:ProjectNode" />
+              </path>
+            </expand>
+            <select />
+          </tree_state>
+        </projects_view>
+      </state>
+    </system>
+  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../.." />
   </component>
-  <component name="ProjectColorInfo"><![CDATA[{
-  "customColor": "",
-  "associatedIndex": 3
+  <component name="GitHubPullRequestSearchHistory"><![CDATA[{
+  "lastFilter": {
+    "state": "OPEN",
+    "assignee": "Dphpvp"
+  }
 }]]></component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/Dphpvp/Ecommerce-platform.git",
+    "accountId": "aa968ff8-3e64-4c98-84ed-1375f003e3e9"
+  }
+}]]></component>
+  <component name="ProjectColorInfo">{
+  &quot;customColor&quot;: &quot;&quot;,
+  &quot;associatedIndex&quot;: 3
+}</component>
   <component name="ProjectId" id="2ztrIE3UCdQW5NYH5PW9S2BhGn8" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
@@ -31,20 +135,95 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Android App.app.executor": "Run",
     "Gradle.Upgrade Gradle wrapper.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "RunOnceActivity.cidr.known.project.marker": "true",
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.readMode.enableVisualFormatting": "true",
-    "android.gradle.sync.needed": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "cf.first.check.clang-format": "false",
     "cidr.known.project.marker": "true",
-    "git-widget-placeholder": "Android",
+    "git-widget-placeholder": "main",
     "ignore.virus.scanning.warn.message": "true",
     "kotlin-language-version-configured": "true"
   }
 }]]></component>
+  <component name="RunManager">
+    <configuration name="app" type="AndroidRunConfigurationType" factoryName="Android App" activateToolWindowBeforeRun="false">
+      <module name="android.app" />
+      <option name="ANDROID_RUN_CONFIGURATION_SCHEMA_VERSION" value="1" />
+      <option name="DEPLOY" value="true" />
+      <option name="DEPLOY_APK_FROM_BUNDLE" value="false" />
+      <option name="DEPLOY_AS_INSTANT" value="false" />
+      <option name="ARTIFACT_NAME" value="" />
+      <option name="PM_INSTALL_OPTIONS" value="" />
+      <option name="ALL_USERS" value="false" />
+      <option name="ALWAYS_INSTALL_WITH_PM" value="false" />
+      <option name="ALLOW_ASSUME_VERIFIED" value="false" />
+      <option name="CLEAR_APP_STORAGE" value="false" />
+      <option name="DYNAMIC_FEATURES_DISABLED_LIST" value="" />
+      <option name="ACTIVITY_EXTRA_FLAGS" value="" />
+      <option name="MODE" value="default_activity" />
+      <option name="RESTORE_ENABLED" value="false" />
+      <option name="RESTORE_FILE" value="" />
+      <option name="RESTORE_FRESH_INSTALL_ONLY" value="false" />
+      <option name="CLEAR_LOGCAT" value="false" />
+      <option name="SHOW_LOGCAT_AUTOMATICALLY" value="false" />
+      <option name="TARGET_SELECTION_MODE" value="DEVICE_AND_SNAPSHOT_COMBO_BOX" />
+      <option name="SELECTED_CLOUD_MATRIX_CONFIGURATION_ID" value="-1" />
+      <option name="SELECTED_CLOUD_MATRIX_PROJECT_ID" value="" />
+      <option name="DEBUGGER_TYPE" value="Auto" />
+      <Auto>
+        <option name="USE_JAVA_AWARE_DEBUGGER" value="false" />
+        <option name="SHOW_STATIC_VARS" value="true" />
+        <option name="WORKING_DIR" value="" />
+        <option name="TARGET_LOGGING_CHANNELS" value="lldb process:gdb-remote packets" />
+        <option name="SHOW_OPTIMIZED_WARNING" value="true" />
+        <option name="ATTACH_ON_WAIT_FOR_DEBUGGER" value="false" />
+        <option name="DEBUG_SANDBOX_SDK" value="false" />
+      </Auto>
+      <Hybrid>
+        <option name="USE_JAVA_AWARE_DEBUGGER" value="false" />
+        <option name="SHOW_STATIC_VARS" value="true" />
+        <option name="WORKING_DIR" value="" />
+        <option name="TARGET_LOGGING_CHANNELS" value="lldb process:gdb-remote packets" />
+        <option name="SHOW_OPTIMIZED_WARNING" value="true" />
+        <option name="ATTACH_ON_WAIT_FOR_DEBUGGER" value="false" />
+        <option name="DEBUG_SANDBOX_SDK" value="false" />
+      </Hybrid>
+      <Java>
+        <option name="ATTACH_ON_WAIT_FOR_DEBUGGER" value="false" />
+        <option name="DEBUG_SANDBOX_SDK" value="false" />
+      </Java>
+      <Native>
+        <option name="USE_JAVA_AWARE_DEBUGGER" value="false" />
+        <option name="SHOW_STATIC_VARS" value="true" />
+        <option name="WORKING_DIR" value="" />
+        <option name="TARGET_LOGGING_CHANNELS" value="lldb process:gdb-remote packets" />
+        <option name="SHOW_OPTIMIZED_WARNING" value="true" />
+        <option name="ATTACH_ON_WAIT_FOR_DEBUGGER" value="false" />
+        <option name="DEBUG_SANDBOX_SDK" value="false" />
+      </Native>
+      <Profilers>
+        <option name="ADVANCED_PROFILING_ENABLED" value="false" />
+        <option name="STARTUP_PROFILING_ENABLED" value="false" />
+        <option name="STARTUP_CPU_PROFILING_ENABLED" value="false" />
+        <option name="STARTUP_CPU_PROFILING_CONFIGURATION_NAME" value="Java/Kotlin Method Sample (legacy)" />
+        <option name="STARTUP_NATIVE_MEMORY_PROFILING_ENABLED" value="false" />
+        <option name="NATIVE_MEMORY_SAMPLE_RATE_BYTES" value="2048" />
+      </Profilers>
+      <option name="DEEP_LINK" value="" />
+      <option name="ACTIVITY" value="" />
+      <option name="ACTIVITY_CLASS" value="" />
+      <option name="SEARCH_ACTIVITY_IN_GLOBAL_SCOPE" value="false" />
+      <option name="SKIP_ACTIVITY_VALIDATION" value="false" />
+      <method v="2">
+        <option name="Android.Gradle.BeforeRunTask" enabled="true" />
+      </method>
+    </configuration>
+  </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="6f24bd5f-c9f7-438a-b820-b3d6f5c93ad0" name="Changes" comment="" />

@@ -4,6 +4,10 @@
         <domain includeSubdomains="true">onrender.com</domain>
         <domain includeSubdomains="true">vercel.app</domain>
         <domain includeSubdomains="true">ecommerce-platform-nizy.onrender.com</domain>
+        <domain includeSubdomains="true">google.com</domain>
+        <domain includeSubdomains="true">gstatic.com</domain>
+        <domain includeSubdomains="true">recaptcha.google.com</domain>
+        <domain includeSubdomains="true">www.recaptcha.net</domain>
     </domain-config>
     
     <!-- Allow cleartext traffic for development -->
