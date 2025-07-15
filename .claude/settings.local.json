@@ -13,7 +13,11 @@
       "Bash(where java)",
       "Bash(npx cap clean:*)",
       "Bash(rm:*)",
-      "Bash(npx cap add:*)"
+      "Bash(npx cap add:*)",
+      "Bash(gradlew.bat assembleDebug:*)",
+      "Bash(dir)",
+      "Bash(.gradlew.bat assembleDebug)",
+      "Bash(chmod:*)"
     ],
     "deny": []
   }
