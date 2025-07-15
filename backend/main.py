@@ -65,6 +65,15 @@ if FRONTEND_URL and FRONTEND_URL not in origins:
 if os.getenv("ENVIRONMENT") == "development":
     origins.extend(["http://localhost:3000", "http://127.0.0.1:3000"])
 
+# Add mobile origins for Capacitor
+mobile_origins = [
+    "capacitor://localhost",
+    "ionic://localhost", 
+    "http://localhost",
+    "https://localhost"
+]
+origins.extend(mobile_origins)
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -79,7 +88,9 @@ app.add_middleware(
         "X-CSRF-Token",
         "X-Request-Signature",
         "X-Request-Timestamp",
-        "Cache-Control"
+        "Cache-Control",
+        "X-Platform",
+        "X-Device-Type"
     ],
     expose_headers=["Set-Cookie"],
     max_age=600,

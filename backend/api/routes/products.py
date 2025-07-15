@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi import APIRouter, HTTPException, Depends, Query, Request
 from typing import Optional
 from api.services.product_service import ProductService
 from api.models.product import ProductRequest, ProductSearchRequest
@@ -25,13 +25,22 @@ async def create_product(
 
 @router.get("")
 async def get_products(
+    request: Request,
     category: Optional[str] = None, 
     limit: int = Query(50, le=100), 
     skip: int = Query(0, ge=0)
 ):
     try:
+        # Log mobile request info
+        headers = dict(request.headers)
+        platform = headers.get("x-platform", "unknown")
+        device_type = headers.get("x-device-type", "unknown")
+        user_agent = headers.get("user-agent", "unknown")
+        
+        logger.info(f"Products request - Platform: {platform}, Device: {device_type}, UA: {user_agent}")
+        
         products = await product_service.get_products(category, limit, skip)
-        logger.info(f"Products retrieved: {len(products)} items")
+        logger.info(f"Products retrieved: {len(products)} items for platform: {platform}")
         return products
     except Exception as e:
         logger.error(f"Get products error: {e}")
@@ -70,6 +79,33 @@ async def get_categories():
     except Exception as e:
         logger.error(f"Get categories error: {e}")
         raise HTTPException(status_code=500, detail="Failed to get categories")
+
+@router.get("/mobile-test")
+async def mobile_test(request: Request):
+    """Simple endpoint to test mobile connectivity"""
+    try:
+        headers = dict(request.headers)
+        platform = headers.get("x-platform", "unknown")
+        device_type = headers.get("x-device-type", "unknown")
+        
+        # Test database connection
+        db_count = await product_service.db.products.count_documents({})
+        
+        return {
+            "status": "success",
+            "message": "Mobile API connection working",
+            "platform": platform,
+            "device_type": device_type,
+            "products_count": db_count,
+            "timestamp": "2024-01-01T00:00:00Z"
+        }
+    except Exception as e:
+        logger.error(f"Mobile test error: {e}")
+        return {
+            "status": "error",
+            "message": str(e),
+            "timestamp": "2024-01-01T00:00:00Z"
+        }
 
 @router.get("/{product_id}")
 async def get_product(product_id: str):
