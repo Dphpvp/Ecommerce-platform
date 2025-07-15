@@ -63,11 +63,11 @@ const Login = ({ isSliderMode = false }) => {
       });
       
       if (!siteKey) {
-        console.error('reCAPTCHA site key is not configured - this may cause white screen on mobile');
+        console.error('reCAPTCHA site key is not configured - showing fallback message');
         // Don't block the component from loading, just disable reCAPTCHA
         setRecaptchaError(true);
         setRecaptchaLoaded(false);
-        showToast('reCAPTCHA not configured - contact admin', 'warning');
+        // Don't show toast - just visual message in form
         return;
       }
 
@@ -412,18 +412,15 @@ const Login = ({ isSliderMode = false }) => {
     if (recaptchaError) {
       return (
         <div style={{ 
-          padding: '15px', 
-          border: '1px solid #ff9800', 
-          borderRadius: '8px', 
-          backgroundColor: '#fff3e0',
+          padding: '10px', 
+          border: '1px solid #2196f3', 
+          borderRadius: '6px', 
+          backgroundColor: '#e3f2fd',
           margin: '10px 0',
           textAlign: 'center'
         }}>
-          <p style={{ color: '#ff9800', margin: '0 0 10px 0' }}>
-            Security verification unavailable
-          </p>
-          <p style={{ color: '#666', margin: '0', fontSize: '0.9rem' }}>
-            Login form will work without reCAPTCHA
+          <p style={{ color: '#1976d2', margin: '0', fontSize: '0.9rem' }}>
+            ℹ️ Security verification disabled for mobile
           </p>
         </div>
       );
