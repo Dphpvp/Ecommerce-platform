@@ -32,9 +32,9 @@ const Checkout = () => {
     }
   }, [user, authLoading, navigate, showToast]);
 
-  const total = cartItems.reduce((sum, item) => 
-    sum + (item.product.price * item.quantity), 0
-  );
+  const total = cartItems?.reduce((sum, item) => 
+    sum + ((item.product?.price || 0) * (item.quantity || 0)), 0
+  ) || 0;
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -51,7 +51,7 @@ const Checkout = () => {
       return;
     }
 
-    if (cartItems.length === 0) {
+    if (!cartItems || cartItems.length === 0) {
       setError('Your cart is empty');
       navigate('/cart');
       return;
@@ -228,7 +228,7 @@ const Checkout = () => {
 
             <button 
               type="submit" 
-              disabled={!stripe || processing || cartItems.length === 0}
+              disabled={!stripe || processing || !cartItems || cartItems.length === 0}
               className="btn btn-primary"
             >
               {processing ? 'Processing...' : `Pay $${total.toFixed(2)}`}

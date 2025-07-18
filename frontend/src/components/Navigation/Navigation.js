@@ -8,7 +8,7 @@ const Navigation = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const { user, logout } = useAuth();
-  const { cart } = useCart();
+  const { cartItems } = useCart();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -33,7 +33,7 @@ const Navigation = () => {
 
   const isActive = (path) => location.pathname === path;
 
-  const cartItemCount = cart.reduce((total, item) => total + item.quantity, 0);
+  const cartItemCount = cartItems?.reduce((total, item) => total + (item.quantity || 0), 0) || 0;
 
   return (
     <nav className={`app-nav ${isScrolled ? 'scrolled' : ''}`}>

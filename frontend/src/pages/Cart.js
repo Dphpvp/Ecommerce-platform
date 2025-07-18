@@ -6,12 +6,12 @@ const Cart = () => {
   const { cartItems, removeFromCart } = useCart();
   const navigate = useNavigate();
 
-  const total = cartItems.reduce((sum, item) => 
-    sum + (item.product.price * item.quantity), 0
-  );
+  const total = cartItems?.reduce((sum, item) => 
+    sum + ((item.product?.price || 0) * (item.quantity || 0)), 0
+  ) || 0;
 
   const handleCheckout = () => {
-    if (cartItems.length === 0) {
+    if (!cartItems || cartItems.length === 0) {
       alert('Your cart is empty');
       return;
     }
@@ -23,7 +23,7 @@ const Cart = () => {
       <div className="container">
         <h1>Shopping Cart</h1>
         
-        {cartItems.length === 0 ? (
+        {!cartItems || cartItems.length === 0 ? (
           <div className="empty-cart">
             <p>Your cart is empty</p>
             <Link to="/products" className="btn btn-primary">Continue Shopping</Link>
@@ -31,14 +31,14 @@ const Cart = () => {
         ) : (
           <>
             <div className="cart-items">
-              {cartItems.map(item => (
+              {cartItems?.map(item => (
                 <div key={item.id} className="cart-item">
-                  <img src={item.product.image_url} alt={item.product.name} />
+                  <img src={item.product?.image_url} alt={item.product?.name} />
                   <div className="item-details">
-                    <h3>{item.product.name}</h3>
-                    <p>Price: ${item.product.price}</p>
+                    <h3>{item.product?.name}</h3>
+                    <p>Price: ${item.product?.price}</p>
                     <p>Quantity: {item.quantity}</p>
-                    <p>Subtotal: ${(item.product.price * item.quantity).toFixed(2)}</p>
+                    <p>Subtotal: ${((item.product?.price || 0) * (item.quantity || 0)).toFixed(2)}</p>
                   </div>
                   <button 
                     onClick={() => removeFromCart(item.id)}
