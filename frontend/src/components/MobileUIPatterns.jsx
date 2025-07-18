@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useHapticFeedback } from '../utils/hapticFeedback';
 import { useSwipe, useLongPress } from '../hooks/useGestures';
 import platformDetection from '../utils/platformDetection';
-import './MobileUIPatterns.css';
+// Styles included in main theme
 
 // Bottom Sheet Component
 export const BottomSheet = ({

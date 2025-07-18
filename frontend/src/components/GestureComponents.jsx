@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useSwipe, usePinchZoom, useLongPress } from '../hooks/useGestures';
 import platformDetection from '../utils/platformDetection';
-import './GestureComponents.css';
+// Styles included in main theme
 
 // Swipeable carousel component
 export const SwipeableCarousel = ({ 

@@ -1,6 +1,6 @@
 import React from 'react';
 import { usePullToRefresh } from '../hooks/usePullToRefresh';
-import './PullToRefresh.css';
+// Styles included in main theme
 
 // Pull to refresh indicator component
 const RefreshIndicator = ({ 

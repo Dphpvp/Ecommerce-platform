@@ -2,7 +2,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useParallax, useIntersectionObserver } from '../../hooks/useParallax';
 import { useParallaxContext } from './ParallaxContainer';
-import './ParallaxSection.css';
+// Styles included in main theme
 
 const ParallaxSection = ({ 
   children, 

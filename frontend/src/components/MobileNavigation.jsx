@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useHapticFeedback } from '../utils/hapticFeedback';
 import { useSwipe } from '../hooks/useGestures';
 import platformDetection from '../utils/platformDetection';
-import './MobileNavigation.css';
+// Styles included in main theme
 
 // Bottom navigation component
 export const BottomNavigation = ({ 

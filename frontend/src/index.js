@@ -2,11 +2,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 
-// CSS imports in correct order for luxury theme
-
-import './styles/base.css';
-import './styles/pages.css';
-import './styles/components.css';
+// CSS imports - Using single theme.css entry point
 import './styles/theme.css';
 
 

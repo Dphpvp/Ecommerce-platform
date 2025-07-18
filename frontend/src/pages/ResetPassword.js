@@ -4,7 +4,7 @@ import { useToastContext } from '../components/toast';
 import mobileCaptcha from '../utils/mobileCaptcha';
 import { secureFetch } from '../utils/csrf';
 import platformDetection from '../utils/platformDetection';
-import '../styles/mobileCaptcha.css';
+// Styles included in main theme
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
 

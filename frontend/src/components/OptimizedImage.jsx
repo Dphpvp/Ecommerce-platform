@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import './OptimizedImage.css';
+// Styles included in main theme
 
 const OptimizedImage = ({
   src,
