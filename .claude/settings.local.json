@@ -17,8 +17,34 @@
       "Bash(gradlew.bat assembleDebug:*)",
       "Bash(dir)",
       "Bash(.gradlew.bat assembleDebug)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(code --version)",
+      "Bash(code:*)",
+      "Bash(where code)",
+      "Bash(npm update:*)",
+      "Bash(dir:*)",
+      "Bash(echo $PATH)",
+      "Bash(where claude)",
+      "mcp__ide__getDiagnostics",
+      "Bash(npx craco:*)",
+      "Bash(npm uninstall:*)",
+      "Bash(npm run lint)",
+      "Bash(npm run:*)",
+      "Bash(timeout 30 npm start)",
+      "Bash(git add:*)",
+      "Bash(git rm:*)"
     ],
-    "deny": []
+    "deny": [],
+    "fileSystem": {
+      "allowedPaths": [
+        "C:/Users/razva/ecommerce-platform/Ecommerce-platform-1/"
+      ]
+    },
+    "shell": {
+      "enabled": true,
+      "allowedWorkingDirectories": [
+        "C:/Users/razva/ecommerce-platform/Ecommerce-platform-1/"
+      ]
+    }
   }
 }

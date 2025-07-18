@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "claude-code --allow-path=\"C:/Users/razva/ecommerce-platform/Ecommerce-platform-1/\""
+    ],
+    "deny": []
+  }
+}
