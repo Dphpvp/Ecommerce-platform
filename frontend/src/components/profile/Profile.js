@@ -52,11 +52,11 @@ const Profile = () => {
   useEffect(() => {
     if (user) {
       setFormData({
-        full_name: user.full_name || '',
-        email: user.email || '',
-        phone: user.phone || '',
-        address: user.address || '',
-        profile_image_url: user.profile_image_url || ''
+        full_name: user?.full_name || '',
+        email: user?.email || '',
+        phone: user?.phone || '',
+        address: user?.address || '',
+        profile_image_url: user?.profile_image_url || ''
       });
     }
   }, [user]);
@@ -130,7 +130,7 @@ const Profile = () => {
       const response = await fetch(`${API_BASE}/auth/resend-verification`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: user.email })
+        body: JSON.stringify({ email: user?.email })
       });
 
       if (response.ok) {
@@ -306,11 +306,11 @@ const Profile = () => {
     setIsEditing(false);
     if (user) {
       setFormData({
-        full_name: user.full_name || '',
-        email: user.email || '',
-        phone: user.phone || '',
-        address: user.address || '',
-        profile_image_url: user.profile_image_url || ''
+        full_name: user?.full_name || '',
+        email: user?.email || '',
+        phone: user?.phone || '',
+        address: user?.address || '',
+        profile_image_url: user?.profile_image_url || ''
       });
     }
   };
@@ -412,12 +412,12 @@ const Profile = () => {
 
   const getDisplayAvatar = () => {
     if (user?.profile_image_url) {
-      return user.profile_image_url;
+      return user?.profile_image_url;
     }
     return `https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.username || 'default'}`;
   };
 
-  const canChangePassword = user && !user.google_id;
+  const canChangePassword = user && !user?.google_id;
 
   const handleSaveProfile = async (e) => {
     e.preventDefault();

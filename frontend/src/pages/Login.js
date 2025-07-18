@@ -238,7 +238,13 @@ const Login = ({ isSliderMode = false }) => {
           if (data.token) {
             localStorage.setItem('auth_token', data.token);
           }
-          login(data.user);
+          // Ensure user object is valid before passing to login
+          if (data.user && typeof data.user === 'object') {
+            login(data.user);
+          } else {
+            // If user data is missing or invalid, try to get it from session
+            login(null);
+          }
           showToast('Login successful!', 'success');
           await platformDetection.showToast('Login successful!', 2000);
           navigate('/');
@@ -325,7 +331,13 @@ const Login = ({ isSliderMode = false }) => {
           if (data.token) {
             localStorage.setItem('auth_token', data.token);
           }
-          login(data.user);
+          // Ensure user object is valid before passing to login
+          if (data.user && typeof data.user === 'object') {
+            login(data.user);
+          } else {
+            // If user data is missing or invalid, try to get it from session
+            login(null);
+          }
           showToast('Login successful!', 'success');
           await platformDetection.showToast('Login successful!', 2000);
           navigate('/');

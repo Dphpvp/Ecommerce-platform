@@ -98,7 +98,7 @@ const Navigation = () => {
                   onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                 >
                   <span className="avatar-fallback">
-                    {user.full_name?.charAt(0).toUpperCase() || user.name?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase() || '?'}
+                    {user?.full_name?.charAt(0).toUpperCase() || user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || '?'}
                   </span>
                 </button>
                 
@@ -110,7 +110,7 @@ const Navigation = () => {
                     <Link to="/orders" className="dropdown-item">
                       📦 Orders
                     </Link>
-                    {user.is_admin && (
+                    {user?.is_admin && (
                       <Link to="/admin/dashboard" className="dropdown-item">
                         ⚙️ Admin
                       </Link>
@@ -195,7 +195,7 @@ const Navigation = () => {
                 >
                   📦 Orders
                 </Link>
-                {user.isAdmin && (
+                {user?.is_admin && (
                   <Link 
                     to="/admin/dashboard" 
                     className="mobile-nav-link"
