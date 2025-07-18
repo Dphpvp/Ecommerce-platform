@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../../contexts/AuthContext";
+import { useToastContext } from '../toast';
 // Styles included in main theme
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
@@ -38,11 +39,11 @@ const OrderManagementCard = ({ order, onStatusUpdate, getStatusColor }) => {
       <div className="order-management-card">
         <div className="order-header">
           <div className="order-basic-info">
-            <h3>Order #{order._id.slice(-8)}</h3>
+            <h3>Order #{order._id?.slice(-8) || 'Unknown'}</h3>
             <p>
               Customer: {order.user_info?.full_name || 'Unknown'} ({order.user_info?.email || 'Unknown'})
             </p>
-            <p>Total: ${order.total_amount.toFixed(2)}</p>
+            <p>Total: ${(order.total_amount || 0).toFixed(2)}</p>
             <p>Date: {formatDate(order.created_at)}</p>
           </div>
           <div className="order-status-section">
@@ -50,7 +51,7 @@ const OrderManagementCard = ({ order, onStatusUpdate, getStatusColor }) => {
               className="current-status"
               style={{ backgroundColor: getStatusColor(order.status) }}
             >
-              {order.status.toUpperCase()}
+              {(order.status || 'unknown').toUpperCase()}
             </span>
             <button
               className="details-toggle"
@@ -157,6 +158,7 @@ const AdminOrders = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
   const { makeAuthenticatedRequest } = useAuth();
+  const { showToast } = useToastContext();
 
   useEffect(() => {
     const fetchOrdersWithFilter = async () => {
@@ -189,12 +191,12 @@ const AdminOrders = () => {
         body: JSON.stringify({ status: newStatus })
       });
 
-      alert(`Order status updated to ${newStatus}`);
+      showToast(`Order status updated to ${newStatus}`, 'success');
       // Trigger re-fetch by updating filter
       setFilter(filter + "");
     } catch (error) {
       console.error("Failed to update order:", error);
-      alert("Failed to update order status");
+      showToast('Failed to update order status', 'error');
     }
   };
 

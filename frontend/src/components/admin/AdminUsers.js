@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useToastContext } from '../toast';
 // Styles included in main theme
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
@@ -12,6 +13,7 @@ const AdminUsers = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const { makeAuthenticatedRequest } = useAuth();
+  const { showToast } = useToastContext();
 
   const fetchUsers = useCallback(async () => {
     try {
@@ -51,13 +53,13 @@ const AdminUsers = () => {
         body: JSON.stringify(editFormData)
       });
 
-      alert('User updated successfully');
+      showToast('User updated successfully', 'success');
       fetchUsers();
       setEditingUser(null);
       setEditFormData({});
     } catch (error) {
       console.error('Failed to update user:', error);
-      alert(error.message || 'Failed to update user');
+      showToast(error.message || 'Failed to update user', 'error');
     }
   };
 
@@ -69,11 +71,11 @@ const AdminUsers = () => {
         method: 'DELETE'
       });
 
-      alert('User deleted successfully');
+      showToast('User deleted successfully', 'success');
       fetchUsers();
     } catch (error) {
       console.error('Failed to delete user:', error);
-      alert(error.message || 'Failed to delete user');
+      showToast(error.message || 'Failed to delete user', 'error');
     }
   };
 
@@ -85,11 +87,11 @@ const AdminUsers = () => {
       });
 
       const roleText = isAdmin ? 'admin' : 'regular user';
-      alert(`User role updated to ${roleText}`);
+      showToast(`User role updated to ${roleText}`, 'success');
       fetchUsers();
     } catch (error) {
       console.error('Failed to update user role:', error);
-      alert(error.message || 'Failed to update user role');
+      showToast(error.message || 'Failed to update user role', 'error');
     }
   };
 

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useToastContext } from '../toast';
 // Styles included in main theme
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
@@ -9,6 +10,7 @@ const AdminDashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const { makeAuthenticatedRequest } = useAuth();
+  const { showToast } = useToastContext();
 
   const fetchDashboardData = useCallback(async () => {
     try {
@@ -16,7 +18,7 @@ const AdminDashboard = () => {
       setDashboardData(data);
     } catch (error) {
       console.error('Failed to fetch dashboard:', error);
-      alert('Failed to fetch dashboard data');
+      showToast('Failed to fetch dashboard data', 'error');
     } finally {
       setLoading(false);
     }

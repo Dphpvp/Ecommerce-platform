@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useToastContext } from '../toast';
 // Styles included in main theme
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
@@ -19,6 +20,7 @@ const AdminCategories = () => {
   const [editFormData, setEditFormData] = useState({});
   const [expandedCategories, setExpandedCategories] = useState(new Set());
   const { makeAuthenticatedRequest } = useAuth();
+  const { showToast } = useToastContext();
   const productsRef = useRef(null);
 
   useEffect(() => {
@@ -74,7 +76,7 @@ const AdminCategories = () => {
       fetchDebugInfo();
     } catch (error) {
       console.error('Failed to create category:', error);
-      alert(error.message || 'Failed to create category');
+      showToast(error.message || 'Failed to create category', 'error');
     } finally {
       setCreating(false);
     }
@@ -103,7 +105,7 @@ const AdminCategories = () => {
         method: 'DELETE'
       });
       
-      alert(result.message);
+      showToast(result.message, 'success');
       fetchCategories();
       fetchDebugInfo();
       if (selectedCategory === categoryName) {
@@ -112,7 +114,7 @@ const AdminCategories = () => {
       }
     } catch (error) {
       console.error('Failed to delete category:', error);
-      alert(error.message || 'Failed to delete category');
+      showToast(error.message || 'Failed to delete category', 'error');
     }
   };
 
@@ -234,7 +236,7 @@ const AdminCategories = () => {
       }, 100);
     } catch (error) {
       console.error('Failed to fetch products:', error);
-      alert('Failed to load products');
+      showToast('Failed to load products', 'error');
     } finally {
       setLoadingProducts(false);
     }
@@ -269,7 +271,7 @@ const AdminCategories = () => {
       setEditFormData({});
     } catch (error) {
       console.error('Failed to update product:', error);
-      alert('Failed to update product');
+      showToast('Failed to update product', 'error');
     }
   };
 
@@ -286,7 +288,7 @@ const AdminCategories = () => {
       fetchDebugInfo();
     } catch (error) {
       console.error('Failed to delete product:', error);
-      alert('Failed to delete product');
+      showToast('Failed to delete product', 'error');
     }
   };
 
