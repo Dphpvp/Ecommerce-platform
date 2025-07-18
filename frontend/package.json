@@ -33,12 +33,14 @@
     "test": "craco test",
     "analyze": "npm run build && npx webpack-bundle-analyzer build/static/js/*.js",
     "build:analyze": "ANALYZE=true npm run build",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "lint": "eslint src"
   },
   "eslintConfig": {
     "extends": [
       "react-app",
-      "react-app/jest"
+      "react-app/jest",
+      "plugin:jsx-a11y/recommended"
     ]
   },
   "browserslist": {

@@ -3,6 +3,9 @@ import React, { useState, useEffect, useCallback } from 'react';
 import ProductCard from '../components/ProductCard';
 import { ParallaxSection, ParallaxElement } from '../components/Parallax';
 import { useIntersectionObserver } from '../hooks/useParallax';
+import { usePullToRefresh } from '../hooks/usePullToRefresh';
+import PullToRefresh from 'react-simple-pull-to-refresh';
+import { withSwipeableNavigation } from '../components/withSwipeableNavigation';
 
 
 
@@ -32,6 +35,8 @@ const Products = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+
+  const { isRefreshing, handleRefresh } = usePullToRefresh(fetchProducts);
 
   const fetchProducts = useCallback(async () => {
     try {
@@ -67,6 +72,7 @@ const Products = () => {
     .slice(0, 30); // Increased to 30 products
 
   return (
+    <PullToRefresh onRefresh={handleRefresh} isRefreshing={isRefreshing}>
     <div className="luxury-products-page">
       {/* Products Hero Section */}
       <ParallaxSection
@@ -280,7 +286,8 @@ const Products = () => {
         </div>
       </ParallaxSection>
     </div>
+    </PullToRefresh>
   );
 };
 
-export default Products;
+export default withSwipeableNavigation(Products);

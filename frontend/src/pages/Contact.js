@@ -4,6 +4,8 @@ import SecureForm from '../components/SecureForm';
 import { ParallaxSection, ParallaxElement } from '../components/Parallax';
 import { useIntersectionObserver } from '../hooks/useParallax';
 import { csrfManager } from '../utils/csrf';
+import { HapticButton } from '../components/HapticComponents';
+import { withSwipeableNavigation } from '../components/withSwipeableNavigation';
 
 
 // Animation component
@@ -306,7 +308,7 @@ const Contact = () => {
                       </small>
                     </div>
 
-                    <button 
+                    <HapticButton
                       type="submit" 
                       className="btn-luxury contact-submit-btn"
                       disabled={isSubmitting}
@@ -321,7 +323,7 @@ const Contact = () => {
                           'Request Consultation'
                         )}
                       </span>
-                    </button>
+                    </HapticButton>
                   </SecureForm>
                 </div>
               </AnimatedSection>
@@ -465,4 +467,4 @@ const Contact = () => {
   );
 };
 
-export default Contact;
+export default withSwipeableNavigation(Contact);

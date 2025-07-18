@@ -5,6 +5,7 @@ import TwoFactorVerification from '../components/TwoFactor/TwoFactorVerification
 import { useToastContext } from '../components/toast';
 import { secureFetch } from '../utils/csrf';
 import platformDetection from '../utils/platformDetection';
+import { HapticButton } from '../components/HapticComponents';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
 
@@ -498,13 +499,13 @@ const Login = ({ isSliderMode = false }) => {
             )}
           </div>
           
-          <button 
+          <HapticButton
             type="submit" 
             disabled={loading || (!recaptchaLoaded && !recaptchaError)} 
             className="btn"
           >
             {loading ? 'Logging in...' : 'Login'}
-          </button>
+          </HapticButton>
         </form>
 
         {!isMobile && (
@@ -558,13 +559,13 @@ const Login = ({ isSliderMode = false }) => {
               )}
             </div>
             
-            <button 
+            <HapticButton
               type="submit" 
               disabled={loading || (!recaptchaLoaded && !recaptchaError)} 
               className="btn btn-primary"
             >
               {loading ? 'Logging in...' : 'Login'}
-            </button>
+            </HapticButton>
           </form>
 
           <p className="forgot-password">
