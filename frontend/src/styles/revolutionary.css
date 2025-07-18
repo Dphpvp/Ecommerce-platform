@@ -257,20 +257,20 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-3);
-  padding: var(--space-5) var(--space-10);
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-6);
   font-family: var(--font-modern);
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   font-weight: var(--font-weight-semibold);
   text-decoration: none;
   border: none;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-lg);
   cursor: pointer;
   transition: all var(--transition-luxury);
   transform-style: preserve-3d;
   position: relative;
   overflow: hidden;
-  min-height: 60px;
+  min-height: 38px;
   box-shadow: var(--shadow-3d);
 }
 
@@ -291,12 +291,12 @@ body {
 }
 
 .btn-revolutionary:hover {
-  transform: translateY(-5px) translateZ(20px) rotateX(10deg);
+  transform: translateY(-3px) translateZ(10px) rotateX(5deg);
   box-shadow: var(--shadow-3d-hover);
 }
 
 .btn-revolutionary:active {
-  transform: translateY(-2px) translateZ(10px) rotateX(5deg);
+  transform: translateY(-1px) translateZ(5px) rotateX(2deg);
 }
 
 .btn-luxury-revolutionary {
@@ -784,9 +784,9 @@ body {
 /* === REVOLUTIONARY PRODUCT CARDS === */
 .product-grid-revolutionary {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: var(--space-8);
-  padding: var(--space-8) 0;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-5);
+  padding: var(--space-6) 0;
   perspective: 1000px;
 }
 
@@ -832,7 +832,7 @@ body {
 
 .product-image-revolutionary {
   position: relative;
-  height: 300px;
+  height: 220px;
   overflow: hidden;
   background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
 }
@@ -878,24 +878,25 @@ body {
 }
 
 .product-content-revolutionary {
-  padding: var(--space-8);
+  padding: var(--space-5);
   position: relative;
   z-index: 2;
 }
 
 .product-title-revolutionary {
   font-family: var(--font-luxury);
-  font-size: 1.5rem;
+  font-size: 1.1rem;
   font-weight: var(--font-weight-semibold);
   color: var(--luxury-navy);
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-3);
   line-height: 1.3;
 }
 
 .product-description-revolutionary {
   color: var(--luxury-gray-dark);
-  margin-bottom: var(--space-6);
-  line-height: 1.6;
+  margin-bottom: var(--space-4);
+  line-height: 1.5;
+  font-size: 0.9rem;
 }
 
 .product-price-revolutionary {
@@ -1301,7 +1302,7 @@ body {
   }
   
   .btn-revolutionary {
-    min-width: 280px;
+    min-width: 200px;
   }
   
   .section-revolutionary {
@@ -1363,6 +1364,472 @@ body {
   }
 }
 
+/* === REVOLUTIONARY PRODUCT MODAL === */
+.product-modal-revolutionary {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal);
+  padding: var(--space-6);
+}
+
+.modal-glass-container {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: var(--radius-3xl);
+  box-shadow: var(--shadow-3d-hover);
+  max-width: 800px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.modal-close-btn {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  background: rgba(255, 255, 255, 0.9);
+  border: none;
+  border-radius: var(--radius-full);
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  z-index: 10;
+  color: var(--luxury-navy);
+}
+
+.modal-close-btn:hover {
+  background: var(--luxury-navy);
+  color: var(--luxury-white);
+  transform: scale(1.1);
+}
+
+.modal-content-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  min-height: 400px;
+}
+
+.modal-image-section {
+  position: relative;
+  border-radius: var(--radius-3xl) 0 0 var(--radius-3xl);
+  overflow: hidden;
+}
+
+.modal-image-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+}
+
+.modal-image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-slow);
+}
+
+.modal-image-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--gradient-hero);
+  opacity: 0.3;
+  transition: opacity var(--transition-fast);
+}
+
+.modal-details-section {
+  padding: var(--space-8);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.modal-header {
+  margin-bottom: var(--space-6);
+}
+
+.modal-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--gradient-luxury);
+  color: var(--luxury-navy);
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-bold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-3);
+}
+
+.modal-title {
+  font-family: var(--font-luxury);
+  font-size: 1.75rem;
+  font-weight: var(--font-weight-bold);
+  color: var(--luxury-navy);
+  margin: 0 0 var(--space-2) 0;
+  line-height: 1.2;
+}
+
+.modal-category {
+  color: var(--luxury-gray-dark);
+  font-size: 0.95rem;
+  font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.modal-description {
+  color: var(--luxury-gray-dark);
+  line-height: 1.6;
+  margin-bottom: var(--space-6);
+  font-size: 0.95rem;
+}
+
+.modal-specs {
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  margin-bottom: var(--space-6);
+  border: 1px solid rgba(212, 175, 55, 0.1);
+}
+
+.spec-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.spec-row:last-child {
+  border-bottom: none;
+}
+
+.spec-label {
+  font-weight: var(--font-weight-medium);
+  color: var(--luxury-navy);
+  font-size: 0.9rem;
+}
+
+.spec-value {
+  font-weight: var(--font-weight-semibold);
+  color: var(--luxury-gray-dark);
+  font-size: 0.9rem;
+}
+
+.spec-value.price {
+  color: var(--luxury-gold);
+  font-size: 1.1rem;
+}
+
+.spec-value.stock.in-stock {
+  color: #22c55e;
+}
+
+.spec-value.stock.low-stock {
+  color: #f59e0b;
+}
+
+.spec-value.stock.out-of-stock {
+  color: #ef4444;
+}
+
+.modal-actions {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.modal-actions .btn-revolutionary {
+  flex: 1;
+  min-width: 120px;
+}
+
+.modal-actions .btn-revolutionary.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  .modal-content-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .modal-image-section {
+    border-radius: var(--radius-3xl) var(--radius-3xl) 0 0;
+  }
+  
+  .modal-image-container {
+    min-height: 250px;
+  }
+  
+  .modal-details-section {
+    padding: var(--space-6);
+  }
+  
+  .modal-title {
+    font-size: 1.5rem;
+  }
+  
+  .modal-actions {
+    flex-direction: column;
+  }
+  
+  .modal-actions .btn-revolutionary {
+    min-width: 100%;
+  }
+}
+
+/* === HERO SECTION SIZE ADJUSTMENTS === */
+.hero-revolutionary {
+  height: 70vh;
+  min-height: 500px;
+}
+
+.hero-glass-card {
+  padding: var(--space-8);
+  max-width: 500px;
+}
+
+.hero-glass-card.compact {
+  padding: var(--space-6);
+  max-width: 450px;
+}
+
+.hero-title-revolutionary {
+  font-size: clamp(2rem, 4vw, 3rem);
+  margin-bottom: var(--space-4);
+}
+
+.hero-subtitle-revolutionary {
+  font-size: clamp(1rem, 2vw, 1.2rem);
+  margin-bottom: var(--space-6);
+}
+
+.hero-buttons-revolutionary {
+  gap: var(--space-3);
+}
+
+/* === SECTION SPACING ADJUSTMENTS === */
+.section-revolutionary {
+  padding: var(--space-12) 0;
+}
+
+.section-title-revolutionary {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  margin-bottom: var(--space-3);
+}
+
+.section-subtitle-revolutionary {
+  font-size: clamp(0.9rem, 2vw, 1rem);
+  margin-bottom: var(--space-6);
+}
+
+/* === CONTACT PAGE STYLES === */
+.contact-content-revolutionary {
+  padding: var(--space-12) 0;
+}
+
+.contact-grid-revolutionary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-8);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.contact-info-revolutionary {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-3d);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.contact-info-header {
+  margin-bottom: var(--space-6);
+}
+
+.contact-items-revolutionary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.contact-item-revolutionary {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+  padding: var(--space-3);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-fast);
+}
+
+.contact-item-revolutionary:hover {
+  background: rgba(212, 175, 55, 0.1);
+  transform: translateX(5px);
+}
+
+.contact-icon-revolutionary {
+  width: 40px;
+  height: 40px;
+  background: var(--gradient-luxury);
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--luxury-navy);
+  flex-shrink: 0;
+}
+
+.contact-details-revolutionary h4 {
+  font-size: 1rem;
+  font-weight: var(--font-weight-semibold);
+  color: var(--luxury-navy);
+  margin-bottom: var(--space-1);
+}
+
+.contact-details-revolutionary p {
+  color: var(--luxury-gray-dark);
+  font-size: 0.9rem;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.contact-form-revolutionary {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  border-radius: var(--radius-2xl);
+  padding: var(--space-6);
+  box-shadow: var(--shadow-3d);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.form-header-revolutionary {
+  margin-bottom: var(--space-6);
+}
+
+.form-revolutionary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.form-row-revolutionary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+}
+
+.form-group-revolutionary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.form-group-revolutionary label {
+  font-size: 0.9rem;
+  font-weight: var(--font-weight-medium);
+  color: var(--luxury-navy);
+}
+
+.form-group-revolutionary input,
+.form-group-revolutionary textarea {
+  padding: var(--space-3);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: var(--radius-lg);
+  background: rgba(255, 255, 255, 0.8);
+  font-size: 0.9rem;
+  transition: all var(--transition-fast);
+  resize: vertical;
+}
+
+.form-group-revolutionary input:focus,
+.form-group-revolutionary textarea:focus {
+  outline: none;
+  border-color: var(--luxury-gold);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+}
+
+.checkbox-revolutionary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--luxury-gray-dark);
+}
+
+.checkbox-revolutionary input[type="checkbox"] {
+  display: none;
+}
+
+.checkmark-revolutionary {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--luxury-gold);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-fast);
+}
+
+.checkbox-revolutionary input[type="checkbox"]:checked + .checkmark-revolutionary {
+  background: var(--luxury-gold);
+}
+
+.checkbox-revolutionary input[type="checkbox"]:checked + .checkmark-revolutionary::after {
+  content: '✓';
+  color: var(--luxury-navy);
+  font-size: 12px;
+  font-weight: bold;
+}
+
+@media (max-width: 768px) {
+  .contact-grid-revolutionary {
+    grid-template-columns: 1fr;
+    gap: var(--space-6);
+  }
+  
+  .form-row-revolutionary {
+    grid-template-columns: 1fr;
+  }
+  
+  .contact-info-revolutionary,
+  .contact-form-revolutionary {
+    padding: var(--space-5);
+  }
+  
+  .hero-revolutionary {
+    height: 60vh;
+    min-height: 400px;
+  }
+}
+
 /* === DARK MODE === */
 @media (prefers-color-scheme: dark) {
   :root {
@@ -1379,5 +1846,33 @@ body {
   
   .hero-revolutionary {
     background-blend-mode: multiply, overlay, normal;
+  }
+  
+  .modal-glass-container {
+    background: rgba(42, 42, 42, 0.95);
+    color: var(--luxury-white);
+  }
+  
+  .modal-close-btn {
+    background: rgba(42, 42, 42, 0.9);
+    color: var(--luxury-white);
+  }
+  
+  .modal-close-btn:hover {
+    background: var(--luxury-white);
+    color: var(--luxury-navy);
+  }
+  
+  .contact-info-revolutionary,
+  .contact-form-revolutionary {
+    background: rgba(42, 42, 42, 0.95);
+    color: var(--luxury-white);
+  }
+  
+  .form-group-revolutionary input,
+  .form-group-revolutionary textarea {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--luxury-white);
+    border-color: rgba(212, 175, 55, 0.3);
   }
 }

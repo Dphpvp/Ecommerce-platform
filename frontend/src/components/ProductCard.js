@@ -84,75 +84,104 @@ const ProductCard = ({ product }) => {
       </div>
 
       <Modal isOpen={showModal} onClose={() => setShowModal(false)}>
-        <div className="product-modal-content">
-          <div className="product-modal-image">
-            <img 
-              src={product.image_url} 
-              alt={product.name}
-              onError={(e) => {
-                e.target.src = '/images/placeholder-product.jpg';
-              }}
-            />
-          </div>
-
-          <div className="product-modal-details">
-            <div className="modal-header">
-              <h2 className="modal-product-name">{product.name}</h2>
-              <span className="modal-category">{product.category}</span>
-            </div>
-
-            {product.description && (
-              <p className="modal-description">{product.description}</p>
-            )}
-
-            <div className="modal-specifications">
-              <div className="spec-item">
-                <span className="spec-label">Price</span>
-                <span className="spec-value">${product.price}</span>
-              </div>
-              <div className="spec-item">
-                <span className="spec-label">Category</span>
-                <span className="spec-value">{product.category}</span>
-              </div>
-              <div className="spec-item">
-                <span className="spec-label">Availability</span>
-                <span className={`spec-value ${
-                  product.stock_quantity > 10 ? 'text-green' :
-                  product.stock_quantity > 0 ? 'text-yellow' : 'text-red'
-                }`}>
-                  {getStockText()}
-                </span>
-              </div>
-              {product.material && (
-                <div className="spec-item">
-                  <span className="spec-label">Material</span>
-                  <span className="spec-value">{product.material}</span>
+        <div className="product-modal-revolutionary">
+          <div className="modal-glass-container">
+            <button 
+              className="modal-close-btn"
+              onClick={() => setShowModal(false)}
+            >
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 6L6 18M6 6l12 12"/>
+              </svg>
+            </button>
+            
+            <div className="modal-content-grid">
+              <div className="modal-image-section">
+                <div className="modal-image-container">
+                  <img 
+                    src={product.image_url || `https://images.unsplash.com/photo-${1594938328870 + Math.floor(Math.random() * 100)}-${Math.random().toString(36).substr(2, 9)}?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80`} 
+                    alt={product.name}
+                    onError={(e) => {
+                      e.target.src = 'https://images.unsplash.com/photo-1594938328870-28d8b92e2c8a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+                    }}
+                  />
+                  <div className="modal-image-overlay"></div>
                 </div>
-              )}
-              {product.origin && (
-                <div className="spec-item">
-                  <span className="spec-label">Origin</span>
-                  <span className="spec-value">{product.origin}</span>
-                </div>
-              )}
-            </div>
+              </div>
 
-            <div className="modal-actions">
-              <button 
-                className={`btn-modal-add-cart ${product.stock_quantity <= 0 ? 'disabled' : ''}`}
-                onClick={handleAddToCart}
-                disabled={isAdding || product.stock_quantity <= 0}
-              >
-                {isAdding ? 'Adding...' : 
-                 product.stock_quantity <= 0 ? 'Out of Stock' : 'Add to Cart'}
-              </button>
-              <a 
-                href="/contact" 
-                className="btn-modal-contact"
-                onClick={(e) => e.stopPropagation()}
-              >
-                Contact Us
-              </a>
+              <div className="modal-details-section">
+                <div className="modal-header">
+                  <div className="modal-badge">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                    </svg>
+                    Premium
+                  </div>
+                  <h2 className="modal-title">{product.name}</h2>
+                  <p className="modal-category">{product.category}</p>
+                </div>
+
+                {product.description && (
+                  <p className="modal-description">{product.description}</p>
+                )}
+
+                <div className="modal-specs">
+                  <div className="spec-row">
+                    <span className="spec-label">Price:</span>
+                    <span className="spec-value price">${product.price}</span>
+                  </div>
+                  <div className="spec-row">
+                    <span className="spec-label">Stock:</span>
+                    <span className={`spec-value stock ${
+                      product.stock_quantity > 10 ? 'in-stock' :
+                      product.stock_quantity > 0 ? 'low-stock' : 'out-of-stock'
+                    }`}>
+                      {getStockText()}
+                    </span>
+                  </div>
+                  {product.material && (
+                    <div className="spec-row">
+                      <span className="spec-label">Material:</span>
+                      <span className="spec-value">{product.material}</span>
+                    </div>
+                  )}
+                  {product.origin && (
+                    <div className="spec-row">
+                      <span className="spec-label">Origin:</span>
+                      <span className="spec-value">{product.origin}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="modal-actions">
+                  <button 
+                    className={`btn-revolutionary btn-luxury-revolutionary ${product.stock_quantity <= 0 ? 'disabled' : ''}`}
+                    onClick={handleAddToCart}
+                    disabled={isAdding || product.stock_quantity <= 0}
+                  >
+                    <span>{isAdding ? 'Adding...' : 
+                     product.stock_quantity <= 0 ? 'Out of Stock' : 'Add to Cart'}</span>
+                    {!isAdding && product.stock_quantity > 0 && (
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M3 3h2l.4 2m0 0L8 16h8l1.4-8.5H5.4z"/>
+                        <circle cx="9" cy="21" r="1"/>
+                        <circle cx="20" cy="21" r="1"/>
+                      </svg>
+                    )}
+                  </button>
+                  <a 
+                    href="/contact" 
+                    className="btn-revolutionary btn-glass-revolutionary"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <span>Contact Us</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                      <polyline points="22,6 12,13 2,6"/>
+                    </svg>
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
         </div>
