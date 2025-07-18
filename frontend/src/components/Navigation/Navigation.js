@@ -40,7 +40,8 @@ const Navigation = () => {
       <div className="nav-container-revolutionary">
         {/* Revolutionary Brand */}
         <Link to="/" className="nav-logo-revolutionary">
-          Luxe Elegance
+          <img src="/images/logo.png" alt="Vergi Designs" className="nav-logo-image" />
+          <span className="nav-logo-text">Vergi Designs</span>
         </Link>
 
         {/* Revolutionary Desktop Navigation */}
