@@ -1,22 +1,25 @@
-/* frontend/src/styles/theme.css - Main Theme Entry Point */
+/* frontend/src/styles/theme.css - Revolutionary Theme Entry Point */
 
 /* === IMPORT ORDER IS IMPORTANT === */
-/* 1. Variables first */
+/* 1. Revolutionary CSS Framework */
+@import './revolutionary.css';
+
+/* 2. Variables */
 @import './variables.css';
 
-/* 2. Base styles */
+/* 3. Base styles */
 @import './base.css';
 
-/* 3. Utilities */
+/* 4. Utilities */
 @import './utilities.css';
 
-/* 4. Components */
+/* 5. Components */
 @import './components.css';
 
-/* 5. Pages */
+/* 6. Pages */
 @import './pages.css';
 
-/* 6. Mobile (should be last to override) */
+/* 7. Mobile (should be last to override) */
 @import './mobile.css';
 
 /* === THEME OVERRIDES === */
