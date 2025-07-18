@@ -8,20 +8,15 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { registerSW, setCallbacks } from './utils/serviceWorker';
 import { queryClient, prefetchQueries } from './utils/queryClient';
 
-// UPDATED: Comprehensive CSS imports for luxury theme
-import './styles/variables.css';           // CSS variables first
-import './styles/main.css';               // Core styles
-import './styles/enhanced-theme.css';     // Enhanced luxury theme styles
-import './styles/components.css';         // Component styles
-import './styles/styles.css'              // Main style
-import './App.css';                       // App-specific styles
+// UPDATED: New comprehensive luxury theme
+import './styles/theme.css';              // Main theme entry point (imports all styles)
 
 // Core providers and components (not lazy loaded for better UX)
 import { AuthProvider } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
 import { ToastProvider } from './components/toast';
 import { ParallaxContainer } from './components/Parallax';
-import LuxuryNavigation from './components/LuxuryNavigation/LuxuryNavigation';
+import Navigation from './components/Navigation';
 import Footer from './components/Footer';
 import PrivateRoute from './components/PrivateRoute';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -124,9 +119,9 @@ const App = () => {
               <CartProvider>
                 <ToastProvider>
                   <div className="app">
-                  <LuxuryNavigation />
-                  <BackToTop />
-                  <ParallaxContainer>
+                    <Navigation />
+                    <BackToTop />
+                    <ParallaxContainer>
                     <main className="main">
                       <Routes>
                         {/* Public pages with enhanced Suspense */}
