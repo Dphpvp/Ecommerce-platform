@@ -4,6 +4,7 @@ import { useToastContext } from '../components/toast';
 import SecureForm from '../components/SecureForm';
 import { secureFetch } from '../utils/csrf';
 import platformDetection from '../utils/platformDetection';
+import { HapticButton } from '../components/HapticComponents';
 
 
 const Register = ({ isSliderMode = false }) => {
@@ -210,9 +211,9 @@ const Register = ({ isSliderMode = false }) => {
             )}
           </div>
 
-          <button type="submit" disabled={loading} className="btn">
+          <HapticButton type="submit" disabled={loading} className="btn">
             {loading ? 'Registering...' : 'Register'}
-          </button>
+          </HapticButton>
         </SecureForm>
         
         <p>or register with social platforms</p>
@@ -327,9 +328,9 @@ const Register = ({ isSliderMode = false }) => {
               )}
             </div>
 
-            <button type="submit" disabled={loading} className="btn btn-primary">
+            <HapticButton type="submit" disabled={loading} className="btn btn-primary">
               {loading ? 'Registering...' : 'Register'}
-            </button>
+            </HapticButton>
           </SecureForm>
           <p>
             Already have an account? <Link to="/login">Login here</Link>

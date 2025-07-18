@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { usePullToRefresh } from '../hooks/usePullToRefresh';
+import PullToRefresh from 'react-simple-pull-to-refresh';
+import { withSwipeableNavigation } from '../components/withSwipeableNavigation';
 
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL;
@@ -25,6 +28,8 @@ const Orders = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const { makeAuthenticatedRequest } = useAuth();
+
+  const { isRefreshing, handleRefresh } = usePullToRefresh(fetchOrders);
 
   const fetchOrders = useCallback(async () => {
     try {
@@ -81,6 +86,7 @@ const Orders = () => {
   }
 
   return (
+    <PullToRefresh onRefresh={handleRefresh} isRefreshing={isRefreshing}>
     <div className="orders">
       <div className="container">
         <h1>My Orders</h1>
@@ -168,7 +174,8 @@ const Orders = () => {
         </Modal>
       </div>
     </div>
+    </PullToRefresh>
   );
 };
 
-export default Orders;
+export default withSwipeableNavigation(Orders);
