@@ -4,16 +4,16 @@ import React from 'react';
 
 const Footer = () => {
   return (
-    <footer className="footer">
+    <footer className="footer-compact">
       <div className="container">
-        <div className="footer-content">
-          <p className="footer-text">
+        <div className="footer-compact-content">
+          <p className="footer-compact-text">
             Made by{' '}
             <a 
               href="https://github.com/pradian" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="footer-link"
+              className="footer-compact-link"
             >
               Petre Alexandru
             </a>{' '}
@@ -22,13 +22,12 @@ const Footer = () => {
               href="https://github.com/Dphpvp" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="footer-link"
+              className="footer-compact-link"
             >
               Dph
             </a>
-          </p>
-          <p className="footer-copyright">
-            © 2025 All rights reserved
+            <span className="footer-compact-separator">•</span>
+            <span className="footer-compact-copyright">© 2025 All rights reserved</span>
           </p>
         </div>
       </div>
