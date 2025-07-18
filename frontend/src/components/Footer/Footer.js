@@ -1,5 +1,5 @@
 import React from 'react';
-// Styles included in main theme
+
 
 
 const Footer = () => {

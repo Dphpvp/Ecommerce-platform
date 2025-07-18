@@ -17,6 +17,7 @@ class Settings(BaseSettings):
     EMAIL_PASSWORD: str = os.getenv("EMAIL_PASSWORD", "")
     ADMIN_EMAIL: str = os.getenv("ADMIN_EMAIL", "")
     ENVIRONMENT: str = os.getenv("ENVIRONMENT", "development")
+    ALLOWED_HOSTS: str = os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1")
 
     class Config:
         env_file = ".env"

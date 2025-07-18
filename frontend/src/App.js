@@ -72,6 +72,7 @@ const AuthLoadingFallback = () => (
 );
 
 const App = () => {
+  // Main application component with routing, context providers, and lazy loading
   // Initialize service worker
   useEffect(() => {
     const initServiceWorker = async () => {

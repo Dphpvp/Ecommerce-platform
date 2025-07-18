@@ -49,9 +49,9 @@ class TimeoutMiddleware(BaseHTTPMiddleware):
 
 app.add_middleware(TimeoutMiddleware)
 
-# Security middleware
-if ALLOWED_HOSTS:
-    app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS)
+# Security middleware (disabled for local development)
+# if ALLOWED_HOSTS:
+#     app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS)
 
 # CORS configuration
 origins = [
@@ -63,7 +63,7 @@ if FRONTEND_URL and FRONTEND_URL not in origins:
     origins.append(FRONTEND_URL)
 
 if os.getenv("ENVIRONMENT") == "development":
-    origins.extend(["http://localhost:3000", "http://127.0.0.1:3000"])
+    origins.extend(["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:8000", "http://127.0.0.1:8000"])
 
 # Add mobile origins for Capacitor
 mobile_origins = [
@@ -219,7 +219,7 @@ async def get_csrf_token_compat(request: Request):
 # Global exception handlers
 @app.exception_handler(500)
 async def internal_server_error(request: Request, exc: Exception):
-    print(f"❌ Internal Server Error: {exc}")
+    print(f"Internal Server Error: {exc}")
     return JSONResponse(
         {"error": "Internal server error", "message": "Something went wrong"}, 
         status_code=500
@@ -227,7 +227,7 @@ async def internal_server_error(request: Request, exc: Exception):
 
 @app.exception_handler(404)
 async def not_found_handler(request: Request, exc: HTTPException):
-    print(f"❌ 404 Not Found: {request.url}")
+    print(f"404 Not Found: {request.url}")
     return JSONResponse(
         {"error": "Not found", "path": str(request.url), "message": "Endpoint not found"}, 
         status_code=404
@@ -235,7 +235,7 @@ async def not_found_handler(request: Request, exc: HTTPException):
 
 @app.exception_handler(408)
 async def timeout_handler(request: Request, exc: HTTPException):
-    print(f"⏰ Request Timeout: {request.url}")
+    print(f"Request Timeout: {request.url}")
     return JSONResponse(
         {"error": "Request timeout", "message": "Request took too long to process"}, 
         status_code=408
@@ -244,7 +244,7 @@ async def timeout_handler(request: Request, exc: HTTPException):
 # Startup event
 @app.on_event("startup")
 async def startup_event():
-    print("🚀 E-commerce Backend Starting Up...")
+    print("E-commerce Backend Starting Up...")
     print("=" * 50)
     
     try:
@@ -285,10 +285,10 @@ async def startup_event():
         await ensure_index(db.cart, "user_id")
         await ensure_index(db.cart, [("user_id", 1), ("product_id", 1)], {"unique": True})
         
-        print("📊 Database indexes verified/created successfully")
+        print("Database indexes verified/created successfully")
         
     except Exception as e:
-        print(f"⚠️ Database setup warning: {e}")
+        print(f"Database setup warning: {e}")
     
     # Configuration status
     email_user = os.getenv("EMAIL_USER")
@@ -296,29 +296,29 @@ async def startup_event():
     admin_email = os.getenv("ADMIN_EMAIL")
     
     if email_user and email_password:
-        print(f"📧 Email Configuration: ✅ CONFIGURED")
-        print(f"📧 Admin Email: {admin_email}")
+        print(f"Email Configuration: CONFIGURED")
+        print(f"Admin Email: {admin_email}")
     else:
-        print(f"📧 Email Configuration: ❌ NOT CONFIGURED")
+        print(f"Email Configuration: NOT CONFIGURED")
     
-    print(f"🌐 Frontend URL: {FRONTEND_URL}")
-    print(f"🔐 CORS Origins: {origins}")
-    print(f"🍪 Credentials Enabled: True")
-    print(f"⏱️ Request Timeout: Enabled (15-60s)")
+    print(f"Frontend URL: {FRONTEND_URL}")
+    print(f"CORS Origins: {origins}")
+    print(f"Credentials Enabled: True")
+    print(f"Request Timeout: Enabled (15-60s)")
     
     if os.getenv("MONGODB_URL"):
-        print(f"💾 Database: ✅ CONFIGURED")
+        print(f"Database: CONFIGURED")
     else:
-        print(f"💾 Database: ❌ NOT CONFIGURED")
+        print(f"Database: NOT CONFIGURED")
     
     if STRIPE_SECRET_KEY:
         key_preview = STRIPE_SECRET_KEY[:7] + "..." + STRIPE_SECRET_KEY[-4:]
-        print(f"💳 Stripe: ✅ CONFIGURED ({key_preview})")
+        print(f"Stripe: CONFIGURED ({key_preview})")
     else:
-        print(f"💳 Stripe: ❌ NOT CONFIGURED")
+        print(f"Stripe: NOT CONFIGURED")
     
     print("=" * 50)
-    print("🎯 Ready to handle requests!")
+    print("Ready to handle requests!")
 
 if __name__ == "__main__":
     import uvicorn

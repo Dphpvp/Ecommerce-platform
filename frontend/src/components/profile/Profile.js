@@ -5,7 +5,7 @@ import { useToastContext } from '../toast';
 import TwoFactorSetup from '../TwoFactor/TwoFactorSetup';
 
 
-const API_BASE = process.env.REACT_APP_API_BASE_URL;
+const API_BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api';
 
 const Profile = () => {
   const { user, makeAuthenticatedRequest, login, refetchUser } = useAuth();

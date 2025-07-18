@@ -1,3 +1,5 @@
+# Ecommerce Platform
+
 After the pull you need to follow the following steps to work:
 
 cd backend

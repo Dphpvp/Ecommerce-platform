@@ -14,7 +14,7 @@ import { preloadImages } from '../utils/parallax';
 import { parallaxConfig } from '../config/parallax';
 
 
-const API_BASE = process.env.REACT_APP_API_BASE_URL;
+const API_BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api';
 
 // Animation component for scroll-triggered animations
 const AnimatedSection = ({ children, className = '', delay = 0, animationType = 'fadeIn' }) => {

@@ -6,11 +6,17 @@
   padding-top: 80px; /* Account for fixed header */
   display: flex;
   flex-direction: column;
+  background: var(--color-background);
 }
 
 .page-content {
   flex: 1;
   padding: var(--space-6) 0;
+  max-width: var(--container-xl);
+  margin: 0 auto;
+  width: 100%;
+  padding-left: var(--space-6);
+  padding-right: var(--space-6);
 }
 
 .page-header {
@@ -18,6 +24,19 @@
   border-bottom: 1px solid var(--color-border);
   padding: var(--space-8) 0;
   margin-bottom: var(--space-6);
+  position: relative;
+  overflow: hidden;
+}
+
+.page-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, transparent 0%, rgba(201, 168, 118, 0.05) 100%);
+  pointer-events: none;
 }
 
 .page-title {
@@ -27,6 +46,9 @@
   color: var(--color-text-primary);
   text-align: center;
   margin-bottom: var(--space-4);
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .page-subtitle {
@@ -35,6 +57,9 @@
   text-align: center;
   max-width: 600px;
   margin: 0 auto;
+  position: relative;
+  z-index: 1;
+  line-height: var(--leading-relaxed);
 }
 
 /* === HOME PAGE === */
@@ -93,6 +118,11 @@
 
 .services-section {
   padding: var(--space-16) 0;
+  background: linear-gradient(135deg, rgba(254, 252, 248, 0.95) 0%, rgba(245, 241, 232, 0.98) 100%), url('https://images.unsplash.com/photo-1497366216548-37526070297c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2069&q=80');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  position: relative;
 }
 
 .services-grid {
@@ -105,12 +135,14 @@
 .service-card {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--space-6);
+  border-radius: var(--radius-xl);
+  padding: var(--space-8);
   text-align: center;
   transition: all var(--transition-luxury);
   position: relative;
   overflow: hidden;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
 }
 
 .service-card::before {
@@ -142,7 +174,11 @@
 
 .process-section {
   padding: var(--space-16) 0;
-  background: var(--color-surface);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(254, 252, 248, 0.98) 100%), url('https://images.unsplash.com/photo-1600880292203-757bb62b4baf?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  position: relative;
 }
 
 .process-steps {
@@ -192,6 +228,11 @@
 
 .featured-products-section {
   padding: var(--space-16) 0;
+  background: linear-gradient(135deg, rgba(254, 252, 248, 0.98) 0%, rgba(255, 255, 255, 0.95) 100%), url('https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  position: relative;
 }
 
 .product-grid {

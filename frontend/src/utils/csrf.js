@@ -1,7 +1,7 @@
 // frontend/src/utils/csrf.js - Updated for new auth.py
 import platformDetection from './platformDetection.js';
 
-const API_BASE = process.env.REACT_APP_API_BASE_URL;
+const API_BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api';
 
 class CSRFManager {
   constructor() {

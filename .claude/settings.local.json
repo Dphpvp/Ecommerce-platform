@@ -33,7 +33,21 @@
       "Bash(timeout 30 npm start)",
       "Bash(git add:*)",
       "Bash(git rm:*)",
-      "Bash(pip install:*)"
+      "Bash(pip install:*)",
+      "Bash(pip show:*)",
+      "Bash(pip uninstall:*)",
+      "Bash(set PYTHONIOENCODING=utf-8)",
+      "Bash(curl:*)",
+      "Bash(taskkill:*)",
+      "Bash(wmic process where:*)",
+      "Bash(powershell:*)",
+      "Bash(claude-code --version)",
+      "Bash(npx:*)",
+      "Bash(node:*)",
+      "Bash(where bash)",
+      "Bash(setx:*)",
+      "Bash(set CLAUDE_CODE_GIT_BASH_PATH=C:Program FilesGitusrbinbash.exe)",
+      "Bash(git clean:*)"
     ],
     "deny": [],
     "fileSystem": {

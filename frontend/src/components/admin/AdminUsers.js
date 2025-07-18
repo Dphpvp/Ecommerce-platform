@@ -3,7 +3,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useToastContext } from '../toast';
 // Styles included in main theme
 
-const API_BASE = process.env.REACT_APP_API_BASE_URL;
+const API_BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api';
 
 const AdminUsers = () => {
   const [users, setUsers] = useState([]);

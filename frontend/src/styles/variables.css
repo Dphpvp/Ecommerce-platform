@@ -2,66 +2,66 @@
 
 :root {
   /* === PRIMARY COLORS === */
-  --primary-navy: #1B2951;
-  --primary-gold: #D4AF37;
-  --primary-cream: #F5F5DC;
-  --primary-charcoal: #36454F;
-  --primary-champagne: #F7E7CE;
+  --primary-navy: #1E2A47;
+  --primary-gold: #C9A876;
+  --primary-cream: #FEFCF8;
+  --primary-charcoal: #2C3E50;
+  --primary-champagne: #F5F1E8;
   
   /* === SEMANTIC COLORS === */
-  --color-background: #F5F5DC;
+  --color-background: #FEFCF8;
   --color-surface: #FFFFFF;
-  --color-surface-elevated: rgba(255, 255, 255, 0.95);
-  --color-text-primary: #1B2951;
-  --color-text-secondary: #36454F;
-  --color-text-muted: rgba(54, 69, 79, 0.7);
-  --color-text-inverse: #F5F5DC;
+  --color-surface-elevated: rgba(255, 255, 255, 0.98);
+  --color-text-primary: #1E2A47;
+  --color-text-secondary: #2C3E50;
+  --color-text-muted: rgba(44, 62, 80, 0.65);
+  --color-text-inverse: #FEFCF8;
   
   /* === ACCENT COLORS === */
-  --color-accent-gold: #D4AF37;
-  --color-accent-gold-light: #FFD700;
-  --color-accent-gold-dark: #B8941F;
+  --color-accent-gold: #C9A876;
+  --color-accent-gold-light: #D4B987;
+  --color-accent-gold-dark: #B8976B;
   
   /* === STATUS COLORS === */
-  --color-success: #28a745;
-  --color-success-light: #d4edda;
-  --color-warning: #ffc107;
-  --color-warning-light: #fff3cd;
-  --color-error: #dc3545;
-  --color-error-light: #f8d7da;
-  --color-info: #17a2b8;
-  --color-info-light: #d1ecf1;
+  --color-success: #10B981;
+  --color-success-light: #D1FAE5;
+  --color-warning: #F59E0B;
+  --color-warning-light: #FEF3C7;
+  --color-error: #EF4444;
+  --color-error-light: #FEE2E2;
+  --color-info: #3B82F6;
+  --color-info-light: #DBEAFE;
   
   /* === ORDER STATUS === */
-  --status-pending: #ffc107;
-  --status-accepted: #17a2b8;
-  --status-processing: #007bff;
-  --status-shipped: #6f42c1;
-  --status-delivered: #28a745;
-  --status-cancelled: #dc3545;
+  --status-pending: #F59E0B;
+  --status-accepted: #3B82F6;
+  --status-processing: #8B5CF6;
+  --status-shipped: #6366F1;
+  --status-delivered: #10B981;
+  --status-cancelled: #EF4444;
   
   /* === BORDERS === */
-  --color-border: rgba(212, 175, 55, 0.2);
-  --color-border-light: rgba(212, 175, 55, 0.1);
-  --color-border-strong: rgba(212, 175, 55, 0.4);
-  --color-border-input: #F7E7CE;
-  --color-border-focus: #D4AF37;
+  --color-border: rgba(201, 168, 118, 0.15);
+  --color-border-light: rgba(201, 168, 118, 0.08);
+  --color-border-strong: rgba(201, 168, 118, 0.3);
+  --color-border-input: #F5F1E8;
+  --color-border-focus: #C9A876;
   
   /* === TYPOGRAPHY === */
-  --font-serif: 'Playfair Display', 'Georgia', serif;
-  --font-sans: 'Inter', 'Helvetica Neue', sans-serif;
-  --font-mono: 'Source Code Pro', monospace;
+  --font-serif: 'Playfair Display', 'Crimson Text', 'Georgia', serif;
+  --font-sans: 'Inter', 'SF Pro Display', 'Helvetica Neue', sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Source Code Pro', monospace;
   
   /* === RESPONSIVE FONT SIZES === */
-  --text-xs: clamp(0.7rem, 0.5vw + 0.6rem, 0.75rem);
-  --text-sm: clamp(0.8rem, 0.5vw + 0.7rem, 0.875rem);
-  --text-base: clamp(0.9rem, 0.8vw + 0.8rem, 1rem);
-  --text-lg: clamp(1rem, 1vw + 0.9rem, 1.125rem);
-  --text-xl: clamp(1.1rem, 1.2vw + 1rem, 1.25rem);
-  --text-2xl: clamp(1.25rem, 1.5vw + 1.1rem, 1.5rem);
-  --text-3xl: clamp(1.5rem, 2vw + 1.3rem, 1.875rem);
-  --text-4xl: clamp(1.875rem, 3vw + 1.5rem, 2.25rem);
-  --text-5xl: clamp(2.25rem, 4vw + 1.8rem, 3rem);
+  --text-xs: clamp(0.75rem, 0.5vw + 0.65rem, 0.8rem);
+  --text-sm: clamp(0.875rem, 0.5vw + 0.8rem, 0.9rem);
+  --text-base: clamp(1rem, 0.8vw + 0.9rem, 1.1rem);
+  --text-lg: clamp(1.125rem, 1vw + 1rem, 1.25rem);
+  --text-xl: clamp(1.25rem, 1.2vw + 1.1rem, 1.5rem);
+  --text-2xl: clamp(1.5rem, 1.5vw + 1.3rem, 1.875rem);
+  --text-3xl: clamp(1.875rem, 2vw + 1.5rem, 2.25rem);
+  --text-4xl: clamp(2.25rem, 3vw + 1.8rem, 3rem);
+  --text-5xl: clamp(3rem, 4vw + 2.5rem, 4rem);
   
   /* === FONT WEIGHTS === */
   --font-light: 300;

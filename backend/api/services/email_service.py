@@ -18,7 +18,7 @@ class EmailService:
         self.admin_email = settings.ADMIN_EMAIL
         
         # Debug email configuration on startup
-        print(f"📧 Email Service Init:")
+        print("Email Service Init:")
         print(f"   Host: {self.email_host}:{self.email_port}")
         print(f"   User: {self.email_user[:10]}***" if self.email_user else "   User: NOT SET")
         print(f"   Password: {'SET' if self.email_password else 'NOT SET'}")
