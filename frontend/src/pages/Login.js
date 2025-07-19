@@ -55,7 +55,7 @@ const Login = ({ isSliderMode = false }) => {
     initializeRecaptcha();
   }, []);
 
-  // Render Google reCAPTCHA when loaded - Single instance approach with global protection
+  // Render Google reCAPTCHA when loaded - Ultra-safe single instance approach
   useEffect(() => {
     if (!recaptchaLoaded || !window.grecaptcha || recaptchaWidgetId !== null || recaptchaRenderInProgress) {
       return;
@@ -64,6 +64,12 @@ const Login = ({ isSliderMode = false }) => {
     const renderRecaptcha = () => {
       // Safety check for ref and global flag
       if (!recaptchaRef.current || recaptchaRenderInProgress) {
+        return;
+      }
+
+      // Check if element already has reCAPTCHA content
+      if (recaptchaRef.current.children.length > 0) {
+        console.log('reCAPTCHA element already has content, skipping render');
         return;
       }
 
@@ -77,9 +83,6 @@ const Login = ({ isSliderMode = false }) => {
           showToast('Security verification not configured', 'error');
           return;
         }
-
-        // Clear any existing content
-        recaptchaRef.current.innerHTML = '';
 
         // Render directly to the ref element
         const widgetId = window.grecaptcha.render(recaptchaRef.current, {
@@ -105,7 +108,7 @@ const Login = ({ isSliderMode = false }) => {
       } catch (error) {
         console.error('Failed to render reCAPTCHA:', error);
         
-        // Only show error to user if it's not a duplicate render issue
+        // Silently handle duplicate render errors - they're expected during development
         if (!error.message.includes('already been rendered')) {
           showToast('Failed to load security verification', 'error');
         }
@@ -121,7 +124,7 @@ const Login = ({ isSliderMode = false }) => {
       } else {
         renderRecaptcha();
       }
-    }, 100);
+    }, 150);
 
     return () => {
       clearTimeout(timeoutId);
@@ -389,6 +392,7 @@ const Login = ({ isSliderMode = false }) => {
           
           {/* Google reCAPTCHA */}
           <div className="form-group">
+            <label className="form-label">Security Verification</label>
             <div className="captcha-container">
               <div ref={recaptchaRef} className="captcha-widget"></div>
               {!recaptchaLoaded && (
@@ -402,6 +406,16 @@ const Login = ({ isSliderMode = false }) => {
                   <span>Security verification failed to load. Please refresh the page.</span>
                 </div>
               )}
+              {recaptchaLoaded && window.grecaptcha && recaptchaWidgetId === null && (
+                <div className="captcha-error">
+                  <span>Setting up security verification...</span>
+                </div>
+              )}
+              <div style={{fontSize: '12px', color: '#666', marginTop: '5px'}}>
+                Debug: Loaded: {recaptchaLoaded ? 'Yes' : 'No'} | 
+                grecaptcha: {window.grecaptcha ? 'Yes' : 'No'} | 
+                Widget ID: {recaptchaWidgetId || 'None'}
+              </div>
             </div>
           </div>
           
@@ -500,6 +514,11 @@ const Login = ({ isSliderMode = false }) => {
                   {recaptchaLoaded && !window.grecaptcha && (
                     <div className="captcha-error">
                       <span>Security verification failed to load. Please refresh the page.</span>
+                    </div>
+                  )}
+                  {recaptchaLoaded && window.grecaptcha && recaptchaWidgetId === null && (
+                    <div className="captcha-error">
+                      <span>Setting up security verification...</span>
                     </div>
                   )}
                 </div>
