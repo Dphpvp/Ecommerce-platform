@@ -4,7 +4,6 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useToastContext } from '../toast';
 import TwoFactorSetup from '../TwoFactor/TwoFactorSetup';
 
-
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api';
 
 const Profile = () => {
@@ -333,7 +332,6 @@ const Profile = () => {
     }
   };
 
-  // NEW: Avatar upload functionality
   const handleChangeAvatar = async () => {
     try {
       const data = await makeAuthenticatedRequest(`${API_BASE}/uploads/avatar/samples`);
@@ -368,7 +366,7 @@ const Profile = () => {
       const response = await makeAuthenticatedRequest(`${API_BASE}/uploads/avatar`, {
         method: 'POST',
         body: formData,
-        headers: {} // Don't set Content-Type for FormData
+        headers: {}
       });
 
       const updatedUser = { ...user, profile_image_url: response.avatar_url };
@@ -443,7 +441,6 @@ const Profile = () => {
   return (
     <div className="luxury-profile-page">
       <div className="container">
-        {/* Luxury Header Section */}
         <div className="luxury-profile-header">
           <div className="profile-hero-content">
             <div className="profile-badge">My Account</div>
@@ -453,7 +450,6 @@ const Profile = () => {
           <div className="profile-hero-decoration"></div>
         </div>
         
-        {/* Avatar Section with Luxury Design */}
         <div className="luxury-avatar-section">
           <div className="avatar-container-luxury">
             <div className="avatar-frame">
@@ -489,13 +485,11 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* UPDATED: Avatar modal with upload functionality */}
         {isChangingAvatar && (
           <div className="avatar-modal-overlay">
             <div className="avatar-modal">
               <h3>Choose Your Avatar</h3>
               
-              {/* Upload Custom Avatar */}
               <div className="upload-section" style={{ marginBottom: '2rem' }}>
                 <input
                   type="file"
@@ -530,7 +524,6 @@ const Profile = () => {
                 </p>
               </div>
 
-              {/* Divider */}
               <div style={{ 
                 textAlign: 'center', 
                 margin: '1rem 0',
@@ -546,7 +539,6 @@ const Profile = () => {
                 </span>
               </div>
               
-              {/* Sample Avatars */}
               <div className="avatar-grid">
                 {availableAvatars.map((avatar, index) => (
                   <img
@@ -572,7 +564,6 @@ const Profile = () => {
           </div>
         )}
 
-        {/* Main Content Grid */}
         <div className="luxury-profile-content">
           <div className="profile-main-card">
             <div className="card-header">
@@ -597,125 +588,126 @@ const Profile = () => {
             <div className="card-content">
               {isEditing ? (
                 <form onSubmit={handleSaveProfile} className="luxury-form">
-                <div className="form-group">
-                  <label>Full Name:</label>
-                  <input
-                    type="text"
-                    name="full_name"
-                    value={formData.full_name}
-                    onChange={handleInputChange}
-                    placeholder="Enter your full name"
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <label>Email:</label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    placeholder="Enter your email"
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <label>Phone:</label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleInputChange}
-                    placeholder="Enter your phone number"
-                  />
-                </div>
-                
-                <div className="form-group">
-                  <label>Address:</label>
-                  <textarea
-                    name="address"
-                    value={formData.address}
-                    onChange={handleInputChange}
-                    placeholder="Enter your address"
-                    rows="3"
-                  />
-                </div>
+                  <div className="form-group">
+                    <label>Full Name:</label>
+                    <input
+                      type="text"
+                      name="full_name"
+                      value={formData.full_name}
+                      onChange={handleInputChange}
+                      placeholder="Enter your full name"
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label>Email:</label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      placeholder="Enter your email"
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label>Phone:</label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      placeholder="Enter your phone number"
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label>Address:</label>
+                    <textarea
+                      name="address"
+                      value={formData.address}
+                      onChange={handleInputChange}
+                      placeholder="Enter your address"
+                      rows="3"
+                    />
+                  </div>
 
-                <div className="form-actions">
-                  <button 
-                    type="submit" 
-                    className="btn btn-primary"
-                    disabled={loading}
-                  >
-                    {loading ? 'Saving...' : 'Save Changes'}
-                  </button>
-                  <button 
-                    type="button" 
-                    onClick={handleCancelEdit}
-                    className="btn btn-outline"
-                    disabled={loading}
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <>
-                <div className="info-group">
-                  <label>Email:</label>
-                  <div className="email-info">
-                    <span>{user?.email}</span>
-                    {user?.email_verified ? (
-                      <span className="verification-badge verified">✅ Verified</span>
-                    ) : (
-                      <div className="unverified-section">
-                        <span className="verification-badge unverified">❌ Unverified</span>
-                        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
-                          <button 
-                            onClick={sendVerificationEmail}
-                            className="btn btn-sm btn-outline"
-                            disabled={sendingVerification}
-                            style={{ flex: 0 }}
-                          >
-                            {sendingVerification ? 'Sending...' : 'Resend'}
-                          </button>
-                          <button 
-                            onClick={() => window.location.href = '/verify-email'}
-                            className="btn btn-sm btn-primary"
-                            style={{ flex: 2 }}
-                          >
-                            Verify Code
-                          </button>
+                  <div className="form-actions">
+                    <button 
+                      type="submit" 
+                      className="btn btn-primary"
+                      disabled={loading}
+                    >
+                      {loading ? 'Saving...' : 'Save Changes'}
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={handleCancelEdit}
+                      className="btn btn-outline"
+                      disabled={loading}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <>
+                  <div className="info-group">
+                    <label>Email:</label>
+                    <div className="email-info">
+                      <span>{user?.email}</span>
+                      {user?.email_verified ? (
+                        <span className="verification-badge verified">✅ Verified</span>
+                      ) : (
+                        <div className="unverified-section">
+                          <span className="verification-badge unverified">❌ Unverified</span>
+                          <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                            <button 
+                              onClick={sendVerificationEmail}
+                              className="btn btn-sm btn-outline"
+                              disabled={sendingVerification}
+                              style={{ flex: 0 }}
+                            >
+                              {sendingVerification ? 'Sending...' : 'Resend'}
+                            </button>
+                            <button 
+                              onClick={() => window.location.href = '/verify-email'}
+                              className="btn btn-sm btn-primary"
+                              style={{ flex: 2 }}
+                            >
+                              Verify Code
+                            </button>
+                          </div>
                         </div>
-                      </div>
+                      )}
+                    </div>
+                  </div>
+                  {user?.is_admin && (
+                    <div className="info-group">
+                      <label>Role:</label>
+                      <span style={{ color: '#dc3545', fontWeight: 'bold' }}>Administrator</span>
+                    </div>
+                  )}
+                  
+                  <div className="profile-actions">
+                    <button 
+                      onClick={() => setIsEditing(true)}
+                      className="btn btn-primary"
+                    >
+                      Edit Profile
+                    </button>
+                    {canChangePassword && (
+                      <button 
+                        onClick={() => setIsChangingPassword(true)}
+                        className="btn btn-outline"
+                      >
+                        Change Password
+                      </button>
                     )}
                   </div>
-                </div>
-                {user?.is_admin && (
-                  <div className="info-group">
-                    <label>Role:</label>
-                    <span style={{ color: '#dc3545', fontWeight: 'bold' }}>Administrator</span>
-                  </div>
-                )}
-                
-                <div className="profile-actions">
-                  <button 
-                    onClick={() => setIsEditing(true)}
-                    className="btn btn-primary"
-                  >
-                    Edit Profile
-                  </button>
-                  {canChangePassword && (
-                    <button 
-                      onClick={() => setIsChangingPassword(true)}
-                      className="btn btn-outline"
-                    >
-                      Change Password
-                    </button>
-                  )}
-                </div>
-              </>
-            )}
+                </>
+              )}
+            </div>
           </div>
 
           {isChangingPassword && canChangePassword && (
