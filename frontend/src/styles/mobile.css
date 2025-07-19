@@ -1,5 +1,133 @@
 /* frontend/src/styles/mobile.css - Mobile-Optimized Styles */
 
+/* === MOBILE CAPTCHA STYLES === */
+.mobile-captcha {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-base);
+  padding: var(--space-4);
+  background: var(--color-surface);
+  margin: var(--space-3) 0;
+}
+
+.mobile-captcha.android-captcha {
+  background: #f8f9fa;
+  border-color: #dee2e6;
+}
+
+.mobile-captcha.emergency-fallback {
+  background: #fff3cd;
+  border-color: #ffeaa7;
+}
+
+.captcha-question {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.captcha-question label {
+  font-weight: 500;
+  color: var(--color-text);
+  font-size: var(--text-sm);
+}
+
+.captcha-input {
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-base);
+  font-size: var(--text-base);
+  transition: border-color var(--transition-base);
+  background: var(--color-background);
+  color: var(--color-text);
+}
+
+.captcha-input:focus {
+  outline: none;
+  border-color: var(--color-accent-gold);
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1);
+}
+
+.captcha-input.android-input {
+  min-height: 48px;
+  font-size: 16px; /* Prevents zoom on Android */
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.captcha-feedback {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  min-height: 20px;
+  transition: all var(--transition-base);
+}
+
+.captcha-container {
+  margin: var(--space-3) 0;
+}
+
+.captcha-widget {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 78px;
+}
+
+.captcha-loading {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.captcha-loading .spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--color-border);
+  border-top: 2px solid var(--color-accent-gold);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.captcha-error {
+  color: var(--color-danger);
+  font-size: var(--text-sm);
+  text-align: center;
+  padding: var(--space-2);
+}
+
+.captcha-success {
+  color: var(--color-success);
+  font-size: var(--text-sm);
+  text-align: center;
+  padding: var(--space-2);
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Mobile keyboard adjustments */
+@media screen and (max-height: 600px) {
+  .mobile-captcha {
+    margin: var(--space-2) 0;
+    padding: var(--space-3);
+  }
+  
+  .captcha-input {
+    padding: var(--space-2);
+  }
+}
+
+/* Android specific fixes */
+@supports (-webkit-appearance: none) {
+  .android-captcha .captcha-input {
+    -webkit-appearance: none;
+    -webkit-border-radius: var(--radius-base);
+  }
+}
+
 /* === MOBILE NAVIGATION === */
 .bottom-navigation {
   position: fixed;

@@ -67,9 +67,9 @@ const Login = ({ isSliderMode = false }) => {
     initializeRecaptcha();
   }, [showToast]);
 
-  // Render reCAPTCHA widget for both web and mobile
+  // Render reCAPTCHA widget or mobile fallback
   useEffect(() => {
-    if (!recaptchaLoaded || !window.grecaptcha || !recaptchaRef.current) {
+    if (!recaptchaLoaded || !recaptchaRef.current) {
       return;
     }
 
@@ -101,8 +101,8 @@ const Login = ({ isSliderMode = false }) => {
             
             const widgetConfig = {
               sitekey: siteKey,
-              theme: 'light',
-              size: platformDetection.isMobile ? 'compact' : 'normal',
+              theme: RECAPTCHA_CONFIG.THEME,
+              size: platformDetection.isMobile ? RECAPTCHA_CONFIG.MOBILE_SIZE : RECAPTCHA_CONFIG.SIZE,
               callback: (response) => {
                 setCaptchaResponse(response);
                 console.log('✅ reCAPTCHA completed successfully');
@@ -374,8 +374,14 @@ const Login = ({ isSliderMode = false }) => {
     try {
       console.log('🤖 Checking Google Auth availability...');
       
-      // First check if plugin is properly loaded
-      if (!window.Capacitor?.Plugins?.GoogleAuth) {
+      // Check Capacitor availability first
+      if (!window.Capacitor) {
+        console.warn('Capacitor not available, falling back to web Google login');
+        return await handleWebGoogleLogin();
+      }
+      
+      // Check if GoogleAuth plugin is available
+      if (!window.Capacitor.Plugins?.GoogleAuth) {
         console.warn('GoogleAuth plugin not available');
         showToast('Google login not available on this device. Please use email/password.', 'warning');
         return;
@@ -387,71 +393,119 @@ const Login = ({ isSliderMode = false }) => {
       // Use the plugin through Capacitor.Plugins
       const GoogleAuth = window.Capacitor.Plugins.GoogleAuth;
       
-      // Initialize first (this is important for the plugin)
+      // Initialize if needed (some versions require this)
       try {
-        await GoogleAuth.initialize();
-        console.log('✅ Google Auth initialized');
+        if (GoogleAuth.initialize) {
+          await GoogleAuth.initialize({
+            clientId: process.env.REACT_APP_GOOGLE_CLIENT_ID,
+            scopes: ['profile', 'email'],
+            grantOfflineAccess: true
+          });
+          console.log('✅ Google Auth initialized with config');
+        }
       } catch (initError) {
-        console.warn('Google Auth initialization warning:', initError);
-        // Continue anyway, some versions don't need explicit initialization
+        console.warn('Google Auth initialization warning (continuing):', initError);
       }
 
       // Attempt sign in
       const result = await GoogleAuth.signIn();
       
-      console.log('Google Auth result:', result);
+      console.log('Google Auth result structure:', {
+        hasAuthentication: !!result?.authentication,
+        hasIdToken: !!result?.idToken,
+        hasServerAuthCode: !!result?.serverAuthCode,
+        hasAccessToken: !!result?.accessToken,
+        keys: Object.keys(result || {})
+      });
       
-      // Handle the response - the plugin returns different structures
+      // Handle the response - try different credential sources
       let credential = null;
+      let credentialType = null;
       
       if (result?.authentication?.idToken) {
         credential = result.authentication.idToken;
-        console.log('✅ Got idToken from authentication');
+        credentialType = 'authentication.idToken';
       } else if (result?.idToken) {
         credential = result.idToken;
-        console.log('✅ Got direct idToken');
+        credentialType = 'idToken';
       } else if (result?.serverAuthCode) {
         credential = result.serverAuthCode;
-        console.log('✅ Got serverAuthCode');
+        credentialType = 'serverAuthCode';
+      } else if (result?.authentication?.accessToken) {
+        credential = result.authentication.accessToken;
+        credentialType = 'authentication.accessToken';
       } else if (result?.accessToken) {
         credential = result.accessToken;
-        console.log('✅ Got accessToken');
+        credentialType = 'accessToken';
       }
+      
+      console.log('🔑 Using credential type:', credentialType);
       
       if (credential) {
         await handleGoogleResponse({
-          credential: credential
+          credential: credential,
+          type: credentialType
         });
       } else {
-        console.error('No credential in Google Auth result:', result);
+        console.error('❌ No valid credential found in result:', result);
         showToast('Google login failed - no authentication data received', 'error');
       }
     } catch (error) {
       console.error('Mobile Google login error:', error);
       
-      // Handle specific error types
+      // Enhanced error handling
       const errorMessage = error.message || error.toString();
-      const errorCode = error.code || error.error_code;
+      const errorCode = error.code || error.error_code || error.status;
       
-      if (errorMessage.includes('cancelled') || errorMessage.includes('CANCELED') || errorCode === '12501' || errorCode === 'SIGN_IN_CANCELLED') {
+      if (errorMessage.includes('cancelled') || errorMessage.includes('CANCELED') || 
+          errorCode === '12501' || errorCode === 'SIGN_IN_CANCELLED' || errorCode === 4) {
         showToast('Google login was cancelled', 'info');
-      } else if (errorMessage.includes('network') || errorMessage.includes('NETWORK_ERROR') || errorCode === 'NETWORK_ERROR') {
+      } else if (errorMessage.includes('network') || errorMessage.includes('NETWORK_ERROR') || 
+                 errorCode === 'NETWORK_ERROR' || errorCode === 7) {
         showToast('Network error. Please check your internet connection.', 'error');
-      } else if (errorMessage.includes('not installed') || errorMessage.includes('DEVELOPER_ERROR') || errorCode === '10') {
-        showToast('Google Play Services not properly configured', 'error');
-      } else if (errorMessage.includes('SIGN_IN_FAILED') || errorCode === '12500') {
+      } else if (errorMessage.includes('not installed') || errorMessage.includes('DEVELOPER_ERROR') || 
+                 errorCode === '10' || errorCode === 10) {
+        showToast('Google Play Services not available or outdated', 'error');
+      } else if (errorMessage.includes('SIGN_IN_FAILED') || errorCode === '12500' || errorCode === 12500) {
         showToast('Google sign-in failed. Please try again.', 'error');
+      } else if (errorMessage.includes('API_NOT_CONNECTED') || errorCode === 17) {
+        showToast('Google services not connected. Please try again.', 'error');
       } else {
-        showToast('Google login failed. Please use email/password login.', 'error');
+        showToast(`Google login failed: ${errorMessage}`, 'error');
       }
       
       console.error('Detailed Google Auth error:', {
         message: errorMessage,
         code: errorCode,
-        fullError: error
+        fullError: error,
+        errorType: typeof error
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleWebGoogleLogin = async () => {
+    try {
+      // Web Google Login implementation
+      if (!window.google || !window.google.accounts) {
+        showToast('Google services not available. Please try again later.', 'error');
+        return;
+      }
+
+      // Initialize Google OAuth for web
+      window.google.accounts.id.initialize({
+        client_id: process.env.REACT_APP_GOOGLE_CLIENT_ID,
+        callback: handleGoogleResponse,
+        auto_select: false,
+        cancel_on_tap_outside: true
+      });
+
+      // Prompt for Google account selection
+      window.google.accounts.id.prompt();
+    } catch (error) {
+      console.error('Web Google login error:', error);
+      showToast('Failed to initialize Google login', 'error');
     }
   };
 

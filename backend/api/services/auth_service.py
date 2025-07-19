@@ -79,9 +79,12 @@ class AuthService:
         
         logger.info(f"Login attempt - identifier: {request.identifier}, has_recaptcha: {bool(recaptcha_response)}, client_ip: {client_ip}")
         
-        if not verify_recaptcha(recaptcha_response, client_ip, request_headers):
-            logger.warning(f"reCAPTCHA verification failed for {request.identifier}")
-            raise AuthenticationError("Security verification failed")
+        # Verify captcha (including mobile captcha tokens)
+        captcha_result = verify_recaptcha(recaptcha_response, client_ip, request_headers)
+        
+        if not captcha_result:
+            logger.warning(f"Captcha verification failed for {request.identifier}, token: {recaptcha_response[:50] if recaptcha_response else 'None'}")
+            raise AuthenticationError("Security verification failed. Please complete the captcha.")
         
         user = await self._find_user_by_identifier(request.identifier)
         

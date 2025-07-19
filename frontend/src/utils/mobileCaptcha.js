@@ -9,30 +9,29 @@ class MobileCaptchaManager {
     this.isLoaded = false;
     this.widgetId = null;
     
-    // Force mobile mode for now to debug
-    console.log('🔧 DEBUGGING: Forcing mobile mode for all devices');
-    
-    // Enhanced platform detection with aggressive fallbacks
+    // Smart platform detection
     try {
       this.isMobile = platformDetection.isMobile;
       this.platform = platformDetection.platform;
       
-      // TEMPORARY: Force mobile mode if we detect any mobile indicators
+      // Enhanced mobile detection for Android and iOS
       const isCapacitor = !!window.Capacitor;
       const isMobileUA = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const isAndroid = /Android/i.test(navigator.userAgent);
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
       const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
       
-      if (isCapacitor || isMobileUA || isTouchDevice) {
-        console.log('🔧 FORCING mobile mode due to:', { isCapacitor, isMobileUA, isTouchDevice });
+      // Use mobile captcha for mobile platforms or when reCAPTCHA has issues
+      if (isCapacitor || isMobileUA || (isTouchDevice && (isAndroid || isIOS))) {
         this.isMobile = true;
-        this.platform = 'mobile';
+        this.platform = isAndroid ? 'android' : isIOS ? 'ios' : 'mobile';
       }
       
     } catch (error) {
-      console.warn('Platform detection failed, using fallback', error);
-      // Fallback: Always use mobile captcha to avoid reCAPTCHA issues
-      this.isMobile = true;
-      this.platform = 'mobile';
+      console.warn('Platform detection failed, using safe fallback', error);
+      // Safe fallback: Use web reCAPTCHA by default
+      this.isMobile = false;
+      this.platform = 'web';
     }
     
     this.onLoadCallback = null;
@@ -69,29 +68,26 @@ class MobileCaptchaManager {
     this.onExpiredCallback = onExpired;
 
     try {
-      // ALWAYS use mobile captcha to avoid any reCAPTCHA issues
-      console.log('📱 Using mobile captcha (forced)');
-      this.isMobile = true; // Ensure mobile mode
-      return await this.initializeMobileCaptcha(config);
-      
-      // Commented out web reCAPTCHA to debug mobile issues
-      /*
       if (this.isMobile) {
-        console.log('📱 Using mobile captcha');
+        console.log('📱 Using mobile captcha for platform:', this.platform);
         return await this.initializeMobileCaptcha(config);
       } else {
         console.log('🌐 Using web reCAPTCHA');
-        return await this.initializeWebCaptcha(siteKey, theme, size);
+        return await this.initializeWebCaptcha(config.siteKey, config.theme || 'light', config.size || 'normal');
       }
-      */
     } catch (error) {
-      console.error('❌ Mobile captcha initialization failed:', error);
+      console.error('❌ Captcha initialization failed:', error);
       
-      // Force success to prevent blocking the form
-      console.log('🔄 Forcing captcha loaded state');
-      this.isLoaded = true;
-      if (this.onLoadCallback) this.onLoadCallback();
-      return Promise.resolve(true);
+      // Graceful fallback - try mobile captcha as last resort
+      console.log('🔄 Attempting mobile captcha fallback');
+      try {
+        this.isMobile = true;
+        return await this.initializeMobileCaptcha(config);
+      } catch (fallbackError) {
+        console.error('❌ Fallback also failed:', fallbackError);
+        // Don't force success - let the form handle the error
+        throw new Error('Captcha initialization failed');
+      }
     }
   }
 
@@ -173,44 +169,51 @@ class MobileCaptchaManager {
     }
 
     try {
-      // ALWAYS render mobile captcha
-      console.log('📱 Rendering mobile captcha (forced)');
-      this.isMobile = true; // Ensure mobile mode
-      return this.renderMobileCaptcha(container, config);
-      
-      // Commented out to force mobile captcha
-      /*
       if (this.isMobile) {
-        console.log('📱 Rendering mobile captcha');
+        console.log('📱 Rendering mobile captcha for platform:', this.platform);
         return this.renderMobileCaptcha(container, config);
       } else {
         console.log('🌐 Rendering web reCAPTCHA');
         return this.renderWebCaptcha(container, config);
       }
-      */
     } catch (error) {
-      console.error('❌ Mobile captcha render failed:', error);
+      console.error('❌ Captcha render failed:', error);
       
-      // Create a simple fallback captcha
+      // Create a simple fallback captcha only as last resort
       console.log('🔄 Creating emergency fallback captcha');
       container.innerHTML = `
-        <div class="mobile-captcha">
+        <div class="mobile-captcha emergency-fallback">
           <div class="captcha-question">
-            <label for="captcha-input-fallback">Security Check: Enter "1234"</label>
+            <label for="captcha-input-fallback">Security Check: What is 5 + 3?</label>
             <input 
-              type="text" 
+              type="number" 
               id="captcha-input-fallback" 
-              placeholder="Enter 1234"
+              placeholder="Enter answer"
+              class="captcha-input"
             />
+            <div class="captcha-feedback"></div>
           </div>
         </div>
       `;
       
       const input = container.querySelector('#captcha-input-fallback');
+      const feedback = container.querySelector('.captcha-feedback');
+      
       input.addEventListener('input', (e) => {
-        if (e.target.value === '1234') {
+        const answer = parseInt(e.target.value);
+        if (answer === 8) {
+          feedback.textContent = '✓ Correct!';
+          feedback.style.color = 'green';
+          input.style.borderColor = 'green';
           if (config.callback) config.callback('emergency-fallback-token');
           if (this.onCompleteCallback) this.onCompleteCallback('emergency-fallback-token');
+        } else if (e.target.value && answer !== 8) {
+          feedback.textContent = '✗ Incorrect, try again';
+          feedback.style.color = 'red';
+          input.style.borderColor = 'red';
+        } else {
+          feedback.textContent = '';
+          input.style.borderColor = '';
         }
       });
       

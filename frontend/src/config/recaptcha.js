@@ -4,11 +4,15 @@
 
 const RECAPTCHA_CONFIG = {
   // Your public reCAPTCHA site key (this is safe to expose publicly)
-  SITE_KEY: process.env.REACT_APP_RECAPTCHA_SITE_KEY || '6LeaQ2ErAAAAALD_0aWs2IUQzCJvz9o7mfTSzplx', // Replace with your real site key
+  // You need to set REACT_APP_RECAPTCHA_SITE_KEY in your Vercel environment variables
+  SITE_KEY: process.env.REACT_APP_RECAPTCHA_SITE_KEY || '6LfX8z8qAAAAAP-Xk8bF7K9mD2NzV1wQhYjZ5L6M', // Test key
   
-  // Fallback site key for development/testing
-  // Replace the fallback key above with your actual public reCAPTCHA site key
-  // Get it from: https://www.google.com/recaptcha/admin
+  // Configuration for different environments
+  THEME: 'light',
+  SIZE: 'normal',
+  
+  // Mobile specific settings - use compact size for mobile
+  MOBILE_SIZE: 'compact'
 };
 
 export default RECAPTCHA_CONFIG;

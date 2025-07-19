@@ -65,7 +65,7 @@ if FRONTEND_URL and FRONTEND_URL not in origins:
 # Always include production frontend URL
 origins.extend(["https://vergishop.vercel.app"])
 
-# Add mobile origins for Capacitor
+# Add mobile origins for Capacitor (production only)
 mobile_origins = [
     "https://vergishop.vercel.app"
 ]
@@ -118,7 +118,7 @@ async def handle_options(path: str, request: Request):
     if origin in origins:
         response.headers["Access-Control-Allow-Origin"] = origin
         response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
-        response.headers["Access-Control-Allow-Headers"] = "Accept, Accept-Language, Content-Language, Content-Type, Authorization, X-CSRF-Token, X-Request-Signature, X-Request-Timestamp"
+        response.headers["Access-Control-Allow-Headers"] = "Accept, Accept-Language, Content-Language, Content-Type, Authorization, X-CSRF-Token, X-Request-Signature, X-Request-Timestamp, X-Platform, X-Device-Type"
         response.headers["Access-Control-Allow-Credentials"] = "true"
         response.headers["Access-Control-Max-Age"] = "3600"
     

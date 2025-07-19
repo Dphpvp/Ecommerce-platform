@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useToastContext } from '../toast';
 import TwoFactorSetup from '../TwoFactor/TwoFactorSetup';
 
-const API_BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api';
+const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
 
 const Profile = () => {
   const { user, makeAuthenticatedRequest, login, refetchUser } = useAuth();
