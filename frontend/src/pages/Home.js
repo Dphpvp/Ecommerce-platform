@@ -64,7 +64,7 @@ const Home = () => {
   const opacity = Math.max(0, 1 - scrollY / 800);
 
   return (
-    <div className="home">
+    <div className="home-page">
       {/* Modern Hero Section */}
       <section className="modern-hero-section">
         <div className="hero-background">

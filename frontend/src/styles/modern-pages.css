@@ -1,5 +1,14 @@
 /* Modern Home and Products Page Styles */
 
+/* === GLOBAL PAGE BACKGROUNDS === */
+.modern-auth-page,
+.about-page,
+.home-page,
+.products-page {
+  background-color: #FEFCF8;
+  min-height: 100vh;
+}
+
 /* === MODERN HOME PAGE === */
 
 /* Modern Hero Section */
