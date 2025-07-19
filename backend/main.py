@@ -62,8 +62,8 @@ origins = [
 if FRONTEND_URL and FRONTEND_URL not in origins:
     origins.append(FRONTEND_URL)
 
-if os.getenv("ENVIRONMENT") == "development":
-    origins.extend(["https://vergishop.vercel.app"])
+# Always include production frontend URL
+origins.extend(["https://vergishop.vercel.app"])
 
 # Add mobile origins for Capacitor
 mobile_origins = [

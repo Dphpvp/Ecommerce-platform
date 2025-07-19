@@ -62,9 +62,25 @@ class AuthService:
     async def authenticate_user(self, request: UserLoginRequest, http_request, response) -> AuthResponse:
         # Verify captcha first
         request_headers = dict(http_request.headers) if http_request else None
-        client_ip = getattr(http_request, 'client', {}).get('host') if http_request else None
         
-        if not verify_recaptcha(request.recaptcha_response, client_ip, request_headers):
+        # Extract client IP properly for production (behind proxy)
+        client_ip = None
+        if http_request:
+            # Try X-Forwarded-For first (for production behind proxy like Render)
+            forwarded_for = http_request.headers.get('x-forwarded-for')
+            if forwarded_for:
+                client_ip = forwarded_for.split(',')[0].strip()
+            else:
+                # Fallback to direct client IP
+                client_ip = getattr(http_request, 'client', {}).get('host')
+        
+        # Get reCAPTCHA response (required in production)
+        recaptcha_response = request.recaptcha_response
+        
+        logger.info(f"Login attempt - identifier: {request.identifier}, has_recaptcha: {bool(recaptcha_response)}, client_ip: {client_ip}")
+        
+        if not verify_recaptcha(recaptcha_response, client_ip, request_headers):
+            logger.warning(f"reCAPTCHA verification failed for {request.identifier}")
             raise AuthenticationError("Security verification failed")
         
         user = await self._find_user_by_identifier(request.identifier)

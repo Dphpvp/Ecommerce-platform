@@ -9,6 +9,7 @@ def verify_recaptcha(captcha_response: str, remote_ip: Optional[str] = None, req
     """Verify reCAPTCHA response (web) or mobile captcha token"""
     
     if not captcha_response:
+        print("❌ CAPTCHA: No response provided")
         return False
     
     # Emergency fallback token for debugging mobile issues
@@ -128,8 +129,9 @@ def _verify_web_recaptcha(captcha_response: str, remote_ip: Optional[str] = None
     secret_key = os.getenv("RECAPTCHA_SECRET_KEY")
     
     if not secret_key:
-        # Allow in development mode
-        return os.getenv("ENVIRONMENT", "production").lower() in ["development", "dev", "local"]
+        print("❌ CAPTCHA: RECAPTCHA_SECRET_KEY environment variable not set")
+        print("🔧 PRODUCTION: This is required for production deployment on Render")
+        return False
     
     try:
         data = {
@@ -147,10 +149,20 @@ def _verify_web_recaptcha(captcha_response: str, remote_ip: Optional[str] = None
         )
         
         if response.status_code != 200:
+            print(f"❌ CAPTCHA: Google API returned status {response.status_code}")
             return False
         
         result = response.json()
-        return result.get("success", False)
+        success = result.get("success", False)
         
-    except Exception:
+        if not success:
+            error_codes = result.get("error-codes", [])
+            print(f"❌ CAPTCHA: Verification failed - {error_codes}")
+        else:
+            print("✅ CAPTCHA: Verification successful")
+            
+        return success
+        
+    except Exception as e:
+        print(f"❌ CAPTCHA: Exception during verification - {str(e)}")
         return False

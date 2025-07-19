@@ -5,7 +5,7 @@ from api.utils.security import SecurityValidator
 class UserLoginRequest(BaseModel):
     identifier: str = Field(..., description="Email, username, or phone")
     password: str = Field(..., min_length=8, max_length=128)
-    recaptcha_response: str = Field(..., description="Captcha verification token")
+    recaptcha_response: str = Field(..., description="Captcha verification token required for production")
 
 class UserRegisterRequest(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)

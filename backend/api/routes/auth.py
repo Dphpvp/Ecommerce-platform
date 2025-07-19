@@ -4,6 +4,7 @@ from datetime import datetime, timezone, timedelta
 from bson import ObjectId
 import secrets
 import bcrypt
+import os
 
 from api.services.auth_service import AuthService
 from api.services.two_factor_service import TwoFactorService
@@ -68,15 +69,28 @@ async def login(
     response: Response
 ) -> AuthResponse:
     try:
+        logger.info(f"Login attempt for: {request.identifier}")
         auth_response = await auth_service.authenticate_user(request, http_request, response)
         logger.info(f"User login successful: {request.identifier}")
         return auth_response
     except AuthenticationError as e:
-        logger.warning(f"Login failed: {e.detail}")
+        logger.warning(f"Login failed for {request.identifier}: {e.detail}")
         raise HTTPException(status_code=401, detail=e.detail)
+    except ValidationError as e:
+        logger.warning(f"Login validation failed for {request.identifier}: {e.detail}")
+        raise HTTPException(status_code=400, detail=e.detail)
     except Exception as e:
-        logger.error(f"Login error: {str(e)}")
-        raise HTTPException(status_code=500, detail="Login failed")
+        logger.error(f"Login error for {request.identifier}: {str(e)}", exc_info=True)
+        # Enhanced error details for production debugging
+        error_details = {
+            "error_type": type(e).__name__,
+            "error_message": str(e),
+            "identifier": request.identifier,
+            "has_recaptcha": bool(getattr(request, 'recaptcha_response', None)),
+            "recaptcha_secret_configured": bool(os.getenv("RECAPTCHA_SECRET_KEY"))
+        }
+        logger.error(f"Login failure details: {error_details}")
+        raise HTTPException(status_code=500, detail=f"Login failed: {str(e)}")
 
 @router.post("/logout")
 async def logout(response: Response) -> MessageResponse:
@@ -478,5 +492,29 @@ async def debug_token(token: str):
             }
         else:
             return {"found": False, "token": token}
+    except Exception as e:
+        return {"error": str(e)}
+
+@router.get("/debug-admin-setup")
+async def debug_admin_setup():
+    """Debug endpoint to check admin user setup"""
+    try:
+        db = get_database()
+        admin_count = await db.users.count_documents({"is_admin": True})
+        all_users = await db.users.find({}, {"email": 1, "is_admin": 1, "email_verified": 1}).to_list(None)
+        
+        return {
+            "admin_count": admin_count,
+            "total_users": len(all_users),
+            "users": [
+                {
+                    "email": user["email"],
+                    "is_admin": user.get("is_admin", False),
+                    "email_verified": user.get("email_verified", False)
+                }
+                for user in all_users
+            ],
+            "recaptcha_secret_configured": bool(os.getenv("RECAPTCHA_SECRET_KEY"))
+        }
     except Exception as e:
         return {"error": str(e)}
