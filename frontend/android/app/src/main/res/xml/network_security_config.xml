@@ -12,6 +12,8 @@
         <domain includeSubdomains="true">www.google.com</domain>
         <domain includeSubdomains="true">recaptcha.google.com</domain>
         <domain includeSubdomains="true">www.recaptcha.net</domain>
+        <domain includeSubdomains="true">recaptcha.net</domain>
+        <domain includeSubdomains="true">google-analytics.com</domain>
     </domain-config>
     
     <!-- Allow cleartext traffic for development -->

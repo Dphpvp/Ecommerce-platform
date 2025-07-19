@@ -7,6 +7,7 @@ import { useToastContext } from '../components/toast';
 import { secureFetch } from '../utils/csrf';
 import SecureForm from '../components/SecureForm';
 import platformDetection from '../utils/platformDetection';
+import RECAPTCHA_CONFIG from '../config/recaptcha';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
 
@@ -73,7 +74,12 @@ const Login = ({ isSliderMode = false }) => {
     }
 
     const renderRecaptcha = async () => {
-      const siteKey = process.env.REACT_APP_RECAPTCHA_SITE_KEY;
+      const siteKey = RECAPTCHA_CONFIG.SITE_KEY;
+      console.log('🔍 reCAPTCHA config check:', {
+        siteKey: siteKey ? `${siteKey.substring(0, 20)}...` : 'NOT FOUND',
+        source: 'RECAPTCHA_CONFIG'
+      });
+      
       if (!siteKey) {
         console.error('❌ reCAPTCHA site key not configured');
         showToast('reCAPTCHA not configured. Please contact support.', 'error');
@@ -91,10 +97,12 @@ const Login = ({ isSliderMode = false }) => {
         // Wait for grecaptcha to be ready
         window.grecaptcha.ready(() => {
           try {
+            console.log('🔄 grecaptcha.ready() called, preparing widget config...');
+            
             const widgetConfig = {
               sitekey: siteKey,
               theme: 'light',
-              size: platformDetection.isMobile ? 'compact' : 'normal', // Use compact size for mobile
+              size: platformDetection.isMobile ? 'compact' : 'normal',
               callback: (response) => {
                 setCaptchaResponse(response);
                 console.log('✅ reCAPTCHA completed successfully');
@@ -104,17 +112,31 @@ const Login = ({ isSliderMode = false }) => {
                 console.log('⏰ reCAPTCHA expired');
                 showToast('Security verification expired. Please complete it again.', 'warning');
               },
-              'error-callback': () => {
-                console.error('❌ reCAPTCHA error occurred');
+              'error-callback': (error) => {
+                console.error('❌ reCAPTCHA widget error:', error);
                 showToast('Security verification failed. Please try again.', 'error');
               }
             };
 
+            console.log('🔄 Rendering reCAPTCHA with config:', {
+              sitekey: `${siteKey.substring(0, 20)}...`,
+              size: widgetConfig.size,
+              theme: widgetConfig.theme,
+              isMobile: platformDetection.isMobile,
+              containerExists: !!recaptchaRef.current
+            });
+
             const widgetId = window.grecaptcha.render(recaptchaRef.current, widgetConfig);
             setRecaptchaWidgetId(widgetId);
-            console.log('✅ reCAPTCHA widget rendered successfully');
+            console.log('✅ reCAPTCHA widget rendered successfully with ID:', widgetId);
           } catch (error) {
             console.error('❌ Failed to render reCAPTCHA widget:', error);
+            console.error('Error details:', {
+              message: error.message,
+              stack: error.stack,
+              containerElement: recaptchaRef.current,
+              grecaptchaExists: !!window.grecaptcha
+            });
             showToast('Failed to render security verification. Please refresh the page.', 'error');
           }
         });
