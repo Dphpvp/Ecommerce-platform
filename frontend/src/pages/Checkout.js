@@ -143,97 +143,213 @@ const Checkout = () => {
   }
 
   return (
-    <div className="checkout">
+    <div className="modern-checkout-page">
       <div className="container">
-        <h1>Checkout</h1>
+        <div className="checkout-header">
+          <h1 className="checkout-title">Checkout</h1>
+          <p className="checkout-description">Complete your order securely</p>
+        </div>
         
         {error && (
-          <div className="error-message" style={{ marginBottom: '1rem' }}>
+          <div className="error-alert">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10"/>
+              <line x1="15" y1="9" x2="9" y2="15"/>
+              <line x1="9" y1="9" x2="15" y2="15"/>
+            </svg>
             {error}
           </div>
         )}
         
-        <div className="checkout-content">
-          <div className="order-summary">
-            <h3>Order Summary</h3>
-            {cartItems.map(item => (
-              <div key={item.id} className="order-item">
-                <span>{item.product.name} x {item.quantity}</span>
-                <span>${(item.product.price * item.quantity).toFixed(2)}</span>
+        <div className="checkout-layout">
+          {/* Order Summary */}
+          <div className="order-summary-section">
+            <div className="summary-card">
+              <div className="summary-header">
+                <h3>Order Summary</h3>
+                <span className="item-count">{cartItems.length} items</span>
               </div>
-            ))}
-            <div className="order-total">
-              <strong>Total: ${total.toFixed(2)}</strong>
+              
+              <div className="summary-items">
+                {cartItems.map(item => (
+                  <div key={item.id} className="summary-item">
+                    <div className="item-image">
+                      <img
+                        src={item.product?.image_url || '/images/placeholder-product.jpg'}
+                        alt={item.product?.name}
+                        onError={(e) => {
+                          e.target.src = '/images/placeholder-product.jpg';
+                        }}
+                      />
+                    </div>
+                    <div className="item-details">
+                      <h4>{item.product.name}</h4>
+                      <p>Quantity: {item.quantity}</p>
+                    </div>
+                    <div className="item-price">
+                      ${(item.product.price * item.quantity).toFixed(2)}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              
+              <div className="summary-totals">
+                <div className="total-line">
+                  <span>Subtotal</span>
+                  <span>${total.toFixed(2)}</span>
+                </div>
+                <div className="total-line">
+                  <span>Shipping</span>
+                  <span className="free">Free</span>
+                </div>
+                <div className="total-line">
+                  <span>Tax</span>
+                  <span>$0.00</span>
+                </div>
+                <div className="total-line final">
+                  <span>Total</span>
+                  <span>${total.toFixed(2)}</span>
+                </div>
+              </div>
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="checkout-form">
-            <div className="shipping-section">
-              <h3>Shipping Address</h3>
-              <input
-                type="text"
-                placeholder="Street Address"
-                value={shippingAddress.street}
-                onChange={(e) => setShippingAddress({...shippingAddress, street: e.target.value})}
-                required
-              />
-              <input
-                type="text"
-                placeholder="City"
-                value={shippingAddress.city}
-                onChange={(e) => setShippingAddress({...shippingAddress, city: e.target.value})}
-                required
-              />
-              <input
-                type="text"
-                placeholder="State"
-                value={shippingAddress.state}
-                onChange={(e) => setShippingAddress({...shippingAddress, state: e.target.value})}
-                required
-              />
-              <input
-                type="text"
-                placeholder="Zip Code"
-                value={shippingAddress.zipCode}
-                onChange={(e) => setShippingAddress({...shippingAddress, zipCode: e.target.value})}
-                required
-              />
-              <input
-                type="text"
-                placeholder="Country"
-                value={shippingAddress.country}
-                onChange={(e) => setShippingAddress({...shippingAddress, country: e.target.value})}
-                required
-              />
-            </div>
-
-            <div className="payment-section">
-              <h3>Payment Information</h3>
-              <div className="card-element">
-                <CardElement 
-                  options={{
-                    style: {
-                      base: {
-                        fontSize: '16px',
-                        color: '#424770',
-                        '::placeholder': {
-                          color: '#aab7c4',
-                        },
-                      },
-                    },
-                  }}
-                />
+          {/* Checkout Form */}
+          <div className="checkout-form-section">
+            <form onSubmit={handleSubmit} className="checkout-form">
+              <div className="form-section">
+                <div className="section-header">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+                    <circle cx="12" cy="10" r="3"/>
+                  </svg>
+                  <h3>Shipping Address</h3>
+                </div>
+                
+                <div className="form-grid">
+                  <div className="form-group full-width">
+                    <label>Street Address</label>
+                    <input
+                      type="text"
+                      placeholder="Enter your street address"
+                      value={shippingAddress.street}
+                      onChange={(e) => setShippingAddress({...shippingAddress, street: e.target.value})}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label>City</label>
+                    <input
+                      type="text"
+                      placeholder="City"
+                      value={shippingAddress.city}
+                      onChange={(e) => setShippingAddress({...shippingAddress, city: e.target.value})}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label>State</label>
+                    <input
+                      type="text"
+                      placeholder="State"
+                      value={shippingAddress.state}
+                      onChange={(e) => setShippingAddress({...shippingAddress, state: e.target.value})}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label>Zip Code</label>
+                    <input
+                      type="text"
+                      placeholder="Zip Code"
+                      value={shippingAddress.zipCode}
+                      onChange={(e) => setShippingAddress({...shippingAddress, zipCode: e.target.value})}
+                      required
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label>Country</label>
+                    <input
+                      type="text"
+                      placeholder="Country"
+                      value={shippingAddress.country}
+                      onChange={(e) => setShippingAddress({...shippingAddress, country: e.target.value})}
+                      required
+                    />
+                  </div>
+                </div>
               </div>
-            </div>
 
-            <button 
-              type="submit" 
-              disabled={!stripe || processing || !cartItems || cartItems.length === 0}
-              className="btn btn-primary"
-            >
-              {processing ? 'Processing...' : `Pay $${total.toFixed(2)}`}
-            </button>
-          </form>
+              <div className="form-section">
+                <div className="section-header">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                    <line x1="1" y1="10" x2="23" y2="10"/>
+                  </svg>
+                  <h3>Payment Information</h3>
+                </div>
+                
+                <div className="payment-card">
+                  <label>Card Details</label>
+                  <div className="card-element-wrapper">
+                    <CardElement 
+                      options={{
+                        style: {
+                          base: {
+                            fontSize: '16px',
+                            color: '#374151',
+                            fontFamily: 'Inter, system-ui, sans-serif',
+                            '::placeholder': {
+                              color: '#9ca3af',
+                            },
+                          },
+                          invalid: {
+                            color: '#ef4444',
+                          },
+                        },
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="checkout-actions">
+                <button 
+                  type="submit" 
+                  disabled={!stripe || processing || !cartItems || cartItems.length === 0}
+                  className="checkout-btn"
+                >
+                  {processing ? (
+                    <>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="animate-spin">
+                        <path d="M21 12a9 9 0 11-6.219-8.56"/>
+                      </svg>
+                      Processing...
+                    </>
+                  ) : (
+                    <>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                      </svg>
+                      Complete Order • ${total.toFixed(2)}
+                    </>
+                  )}
+                </button>
+                
+                <div className="security-notice">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M9 12l2 2 4-4"/>
+                    <path d="M21 12c0 4.97-4.03 9-9 9s-9-4.03-9-9 4.03-9 9-9c1.66 0 3.22.45 4.56 1.24"/>
+                  </svg>
+                  <span>Secured by Stripe • Your payment information is encrypted</span>
+                </div>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
     </div>
