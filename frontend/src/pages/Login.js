@@ -108,6 +108,8 @@ const Login = ({ isSliderMode = false }) => {
         } else {
           showToast(errorMessage, 'error');
         }
+        
+        throw new Error(errorMessage);
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -128,6 +130,7 @@ const Login = ({ isSliderMode = false }) => {
       }
       
       showToast(errorMessage, 'error');
+      throw new Error(errorMessage);
     } finally {
       setLoading(false);
     }
