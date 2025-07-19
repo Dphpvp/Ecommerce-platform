@@ -264,6 +264,11 @@ const Login = ({ isSliderMode = false }) => {
       
       let errorMessage = 'Network error. Please try again.';
       
+      // Handle CORS errors specifically
+      if (error.message.includes('Failed to fetch') || error.message.includes('CORS')) {
+        errorMessage = 'Server connection blocked. Please contact support.';
+      }
+      
       if (error.name === 'TypeError' && error.message.includes('fetch')) {
         errorMessage = 'Connection failed. Please check your internet connection.';
       } else if (error.status === 429) {

@@ -63,14 +63,11 @@ if FRONTEND_URL and FRONTEND_URL not in origins:
     origins.append(FRONTEND_URL)
 
 if os.getenv("ENVIRONMENT") == "development":
-    origins.extend(["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost:8000", "http://127.0.0.1:8000"])
+    origins.extend(["https://vergishop.vercel.app"])
 
 # Add mobile origins for Capacitor
 mobile_origins = [
-    "capacitor://localhost",
-    "ionic://localhost", 
-    "http://localhost",
-    "https://localhost"
+    "https://vergishop.vercel.app"
 ]
 origins.extend(mobile_origins)
 
