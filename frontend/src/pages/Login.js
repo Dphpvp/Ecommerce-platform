@@ -4,115 +4,21 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import TwoFactorVerification from '../components/TwoFactor/TwoFactorVerification';
 import { useToastContext } from '../components/toast';
-import { secureFetch } from '../utils/csrf';
+import { secureFetch, mobileCaptcha } from '../utils/csrf';
+import SecureForm from '../components/SecureForm';
+import platformDetection from '../utils/platformDetection';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
 
-// Global reCAPTCHA singleton manager
-class RecaptchaManager {
-  constructor() {
-    this.widgetId = null;
-    this.isRendering = false;
-    this.isInitialized = false;
-  }
-
-  async render(element, config) {
-    if (this.isRendering) {
-      console.log('reCAPTCHA is currently rendering');
-      return this.widgetId;
-    }
-    
-    // If widget exists but element is different, destroy and recreate
-    if (this.widgetId !== null && element && element.children.length === 0) {
-      console.log('reCAPTCHA widget exists but element is empty, re-rendering');
-      this.destroy();
-    } else if (this.widgetId !== null) {
-      console.log('reCAPTCHA already rendered and element has content');
-      return this.widgetId;
-    }
-
-    if (!window.grecaptcha || !element) {
-      throw new Error('reCAPTCHA not ready or element not available');
-    }
-
-    this.isRendering = true;
-    
-    try {
-      // Clear element
-      element.innerHTML = '';
-      
-      // Wait for grecaptcha to be ready
-      return new Promise((resolve, reject) => {
-        window.grecaptcha.ready(() => {
-          try {
-            this.widgetId = window.grecaptcha.render(element, config);
-            this.isInitialized = true;
-            console.log('reCAPTCHA rendered successfully');
-            resolve(this.widgetId);
-          } catch (error) {
-            reject(error);
-          } finally {
-            this.isRendering = false;
-          }
-        });
-      });
-    } catch (error) {
-      this.isRendering = false;
-      throw error;
-    }
-  }
-
-  reset() {
-    if (this.widgetId !== null && window.grecaptcha) {
-      try {
-        window.grecaptcha.reset(this.widgetId);
-      } catch (error) {
-        console.log('Error resetting reCAPTCHA:', error);
-      }
-    }
-  }
-
-  getResponse() {
-    if (this.widgetId !== null && window.grecaptcha) {
-      try {
-        return window.grecaptcha.getResponse(this.widgetId);
-      } catch (error) {
-        console.log('Error getting reCAPTCHA response:', error);
-        return '';
-      }
-    }
-    return '';
-  }
-
-  destroy() {
-    this.reset();
-    this.widgetId = null;
-    this.isInitialized = false;
-    this.isRendering = false;
-  }
-}
-
-// Global instance
-const recaptchaManager = new RecaptchaManager();
-
 const Login = ({ isSliderMode = false }) => {
-  const [formData, setFormData] = useState({
-    identifier: '',
-    password: ''
-  });
-  const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [show2FA, setShow2FA] = useState(false);
   const [tempToken, setTempToken] = useState('');
   const [twoFactorMethod, setTwoFactorMethod] = useState('');
   const [scrollY, setScrollY] = useState(0);
-  const [captchaResponse, setCaptchaResponse] = useState('');
-  const [recaptchaLoaded, setRecaptchaLoaded] = useState(false);
-  const [recaptchaWidgetId, setRecaptchaWidgetId] = useState(null);
   const { login } = useAuth();
   const { showToast } = useToastContext();
   const navigate = useNavigate();
-  const recaptchaRef = useRef(null);
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
@@ -120,120 +26,36 @@ const Login = ({ isSliderMode = false }) => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-
-  // Initialize Google reCAPTCHA
-  useEffect(() => {
-    const initializeRecaptcha = () => {
-      if (window.grecaptcha) {
-        setRecaptchaLoaded(true);
-      } else {
-        // Wait for reCAPTCHA to load
-        window.addEventListener('load', () => {
-          if (window.grecaptcha) {
-            setRecaptchaLoaded(true);
-          }
-        });
-      }
-    };
-
-    initializeRecaptcha();
-  }, []);
-
-  // Render Google reCAPTCHA using singleton manager
-  useEffect(() => {
-    if (!recaptchaLoaded || !window.grecaptcha || !recaptchaRef.current) {
-      return;
-    }
-
-    const renderRecaptcha = async () => {
-      const siteKey = process.env.REACT_APP_RECAPTCHA_SITE_KEY;
-      if (!siteKey) {
-        console.error('reCAPTCHA site key not configured');
-        showToast('Security verification not configured', 'error');
-        return;
-      }
-
-      try {
-        const widgetId = await recaptchaManager.render(recaptchaRef.current, {
-          sitekey: siteKey,
-          theme: 'light',
-          size: 'normal',
-          callback: (response) => {
-            setCaptchaResponse(response);
-            console.log('reCAPTCHA completed successfully');
-          },
-          'expired-callback': () => {
-            setCaptchaResponse('');
-            showToast('Security verification expired. Please complete it again.', 'warning');
-          },
-          'error-callback': () => {
-            console.error('reCAPTCHA error occurred');
-            showToast('Security verification failed. Please try again.', 'error');
-          }
-        });
-        
-        setRecaptchaWidgetId(widgetId);
-      } catch (error) {
-        console.error('Failed to render reCAPTCHA:', error);
-        if (!error.message.includes('already exists')) {
-          showToast('Failed to load security verification', 'error');
-        }
-      }
-    };
-
-    // Small delay to ensure DOM is ready
-    const timeoutId = setTimeout(renderRecaptcha, 100);
-    return () => clearTimeout(timeoutId);
-  }, [recaptchaLoaded, showToast]);
-
-  // Cleanup reCAPTCHA on unmount
-  useEffect(() => {
-    return () => {
-      // Don't destroy the global manager as other components might use it
-      // Just reset our local widget ID
-      setRecaptchaWidgetId(null);
-    };
-  }, []);
-
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
+  const handleSubmit = async (sanitizedData, csrfToken) => {
     setLoading(true);
-
-    // Validate Google reCAPTCHA
-    if (!captchaResponse) {
-      const currentCaptchaResponse = recaptchaManager.getResponse();
-      if (!currentCaptchaResponse) {
-        setError('Please complete the security verification');
-        setLoading(false);
-        return;
+    
+    const formDataWithAuth = {
+      ...sanitizedData
+    };
+    
+    // Add captcha verification - mobile captcha for mobile platforms
+    if (platformDetection.isMobile && mobileCaptcha.isAvailable()) {
+      const mobileToken = mobileCaptcha.generateToken();
+      if (mobileToken) {
+        formDataWithAuth.recaptcha_response = mobileToken;
+        console.log('📱 Using mobile captcha for authentication');
+      } else {
+        console.warn('⚠️ Mobile captcha generation failed, proceeding without captcha');
       }
-      setCaptchaResponse(currentCaptchaResponse);
     }
-
+    
     try {
-      const requestBody = {
-        ...formData,
-        ...(captchaResponse && { recaptcha_response: captchaResponse })
-      };
-
       console.log('🔐 Sending login request:', {
-        identifier: requestBody.identifier,
-        passwordLength: requestBody.password?.length,
-        hasRecaptcha: !!requestBody.recaptcha_response,
+        identifier: formDataWithAuth.identifier,
+        passwordLength: formDataWithAuth.password?.length,
+        isMobile: platformDetection.isMobile,
+        hasCaptcha: !!formDataWithAuth.recaptcha_response,
         apiBase: API_BASE
       });
 
       const response = await secureFetch(`${API_BASE}/auth/login`, {
         method: 'POST',
-        body: JSON.stringify(requestBody),
+        body: JSON.stringify(formDataWithAuth),
       });
 
       const data = await response.json();
@@ -275,29 +97,17 @@ const Login = ({ isSliderMode = false }) => {
         // Handle specific error codes
         if (response.status === 500) {
           errorMessage = 'Server error. Please check admin credentials or try again later.';
-          console.error('🔥 Server Error 500 - Possible causes:', {
-            'Invalid credentials': 'Check username/password',
-            'Database connection': 'Backend database might be down',
-            'Missing environment variables': 'Backend missing required config',
-            'reCAPTCHA validation failed': 'Backend reCAPTCHA validation issue'
-          });
         } else if (response.status === 422) {
           errorMessage = 'Invalid input data. Please check your credentials.';
         } else if (response.status === 401) {
           errorMessage = 'Invalid username or password.';
         }
         
-        setError(errorMessage);
-        
         if (data.detail && data.detail.includes('Email not verified')) {
           showToast('Please verify your email address', 'error');
         } else {
           showToast(errorMessage, 'error');
         }
-        
-        setCaptchaResponse('');
-        // Reset reCAPTCHA
-        recaptchaManager.reset();
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -317,14 +127,24 @@ const Login = ({ isSliderMode = false }) => {
         errorMessage = 'Server error. Please try again later.';
       }
       
-      setError(errorMessage);
       showToast(errorMessage, 'error');
-      setCaptchaResponse('');
-      // Reset reCAPTCHA on error
-      recaptchaManager.reset();
     } finally {
       setLoading(false);
     }
+  };
+
+  const validateForm = (formData) => {
+    const errors = {};
+
+    if (!formData.identifier || formData.identifier.length < 3) {
+      errors.identifier = 'Email or username must be at least 3 characters';
+    }
+
+    if (!formData.password || formData.password.length < 6) {
+      errors.password = 'Password must be at least 6 characters';
+    }
+
+    return errors;
   };
 
   const handle2FASuccess = () => {
@@ -422,17 +242,13 @@ const Login = ({ isSliderMode = false }) => {
           <p className="auth-subtitle">Sign in to your account</p>
         </div>
         
-        {error && <div className="error-message">{error}</div>}
-        
-        <form onSubmit={handleSubmit} className="auth-form">
+        <SecureForm onSubmit={handleSubmit} validate={validateForm} className="auth-form">
           <div className="form-group">
             <input
               type="text"
               id="identifier"
               name="identifier"
               placeholder="Email or Username"
-              value={formData.identifier}
-              onChange={handleChange}
               className="form-input"
               required
             />
@@ -444,8 +260,6 @@ const Login = ({ isSliderMode = false }) => {
               id="password"
               name="password"
               placeholder="Password"
-              value={formData.password}
-              onChange={handleChange}
               className="form-input"
               required
             />
@@ -455,30 +269,6 @@ const Login = ({ isSliderMode = false }) => {
             <Link to="/reset-password" className="forgot-link">
               Forgot Password?
             </Link>
-          </div>
-          
-          {/* Google reCAPTCHA */}
-          <div className="form-group">
-            <label className="form-label">Security Verification</label>
-            <div className="captcha-container">
-              <div ref={recaptchaRef} className="captcha-widget"></div>
-              {!recaptchaLoaded && (
-                <div className="captcha-loading">
-                  <div className="spinner"></div>
-                  <span>Loading security verification...</span>
-                </div>
-              )}
-              {recaptchaLoaded && !window.grecaptcha && (
-                <div className="captcha-error">
-                  <span>Security verification failed to load. Please refresh the page.</span>
-                </div>
-              )}
-              {recaptchaLoaded && window.grecaptcha && recaptchaWidgetId === null && (
-                <div className="captcha-error">
-                  <span>Setting up security verification...</span>
-                </div>
-              )}
-            </div>
           </div>
           
           <button 
@@ -507,7 +297,7 @@ const Login = ({ isSliderMode = false }) => {
             </svg>
             Continue with Google
           </button>
-        </form>
+        </SecureForm>
       </div>
     );
   }
@@ -526,9 +316,7 @@ const Login = ({ isSliderMode = false }) => {
           </div>
           
           <div className="auth-body">
-            {error && <div className="error-message">{error}</div>}
-            
-            <form onSubmit={handleSubmit} className="auth-form">
+            <SecureForm onSubmit={handleSubmit} validate={validateForm} className="auth-form">
               <div className="form-group">
                 <label htmlFor="identifier" className="form-label">Email or Username</label>
                 <input
@@ -536,8 +324,6 @@ const Login = ({ isSliderMode = false }) => {
                   id="identifier"
                   name="identifier"
                   placeholder="Enter your email or username"
-                  value={formData.identifier}
-                  onChange={handleChange}
                   className="form-input"
                   required
                 />
@@ -550,8 +336,6 @@ const Login = ({ isSliderMode = false }) => {
                   id="password"
                   name="password"
                   placeholder="Enter your password"
-                  value={formData.password}
-                  onChange={handleChange}
                   className="form-input"
                   required
                 />
@@ -561,29 +345,6 @@ const Login = ({ isSliderMode = false }) => {
                 <Link to="/reset-password" className="forgot-link">
                   Forgot your password?
                 </Link>
-              </div>
-              
-              {/* Google reCAPTCHA */}
-              <div className="form-group">
-                <div className="captcha-container">
-                  <div ref={recaptchaRef} className="captcha-widget"></div>
-                  {!recaptchaLoaded && (
-                    <div className="captcha-loading">
-                      <div className="spinner"></div>
-                      <span>Loading security verification...</span>
-                    </div>
-                  )}
-                  {recaptchaLoaded && !window.grecaptcha && (
-                    <div className="captcha-error">
-                      <span>Security verification failed to load. Please refresh the page.</span>
-                    </div>
-                  )}
-                  {recaptchaLoaded && window.grecaptcha && recaptchaWidgetId === null && (
-                    <div className="captcha-error">
-                      <span>Setting up security verification...</span>
-                    </div>
-                  )}
-                </div>
               </div>
               
               <button 
@@ -611,7 +372,7 @@ const Login = ({ isSliderMode = false }) => {
                 </svg>
                 Continue with Google
               </button>
-            </form>
+            </SecureForm>
           </div>
 
           <div className="auth-footer">

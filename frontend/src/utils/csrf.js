@@ -226,6 +226,80 @@ export const sanitizeInput = {
   }
 };
 
+// Mobile captcha utilities for platforms without reCAPTCHA
+export const mobileCaptcha = {
+  /**
+   * Generate mobile captcha token for authentication
+   */
+  generateToken() {
+    const isMobile = platformDetection.isMobile;
+    
+    if (!isMobile) {
+      console.warn('Mobile captcha requested but not on mobile platform');
+      return null;
+    }
+    
+    const tokenData = {
+      platform: 'mobile',
+      timestamp: Date.now(),
+      deviceId: this._getDeviceId(),
+      userAgent: navigator.userAgent.substring(0, 100)
+    };
+    
+    try {
+      // Use Android-safe encoding for Android platforms
+      if (platformDetection.platform === 'android') {
+        return this._encodeAndroidSafe(tokenData);
+      } else {
+        // Standard base64 encoding for other platforms
+        const jsonStr = JSON.stringify(tokenData);
+        return btoa(jsonStr);
+      }
+    } catch (error) {
+      console.error('Failed to generate mobile captcha token:', error);
+      return 'emergency-fallback-token';
+    }
+  },
+  
+  /**
+   * Android-safe encoding that avoids base64 padding issues
+   */
+  _encodeAndroidSafe(data) {
+    const jsonStr = JSON.stringify(data);
+    let hexString = '';
+    
+    for (let i = 0; i < jsonStr.length; i++) {
+      const hex = jsonStr.charCodeAt(i).toString(16).padStart(2, '0');
+      hexString += hex;
+    }
+    
+    return 'android-' + hexString;
+  },
+  
+  /**
+   * Get a device identifier for mobile captcha
+   */
+  _getDeviceId() {
+    // Try to get a consistent device identifier
+    let deviceId = localStorage.getItem('mobile_device_id');
+    
+    if (!deviceId) {
+      // Generate a new device ID
+      deviceId = 'mobile_' + Math.random().toString(36).substr(2, 12) + '_' + Date.now();
+      localStorage.setItem('mobile_device_id', deviceId);
+    }
+    
+    return deviceId;
+  },
+  
+  /**
+   * Check if mobile captcha is available/needed
+   */
+  isAvailable() {
+    return platformDetection.isMobile;
+  }
+};
+
 // Client-side validation
 export const validateInput = {
   email: (email) => {

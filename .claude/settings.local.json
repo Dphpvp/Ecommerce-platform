@@ -47,7 +47,9 @@
       "Bash(where bash)",
       "Bash(setx:*)",
       "Bash(set CLAUDE_CODE_GIT_BASH_PATH=C:Program FilesGitusrbinbash.exe)",
-      "Bash(git clean:*)"
+      "Bash(git clean:*)",
+      "Bash(npm start)",
+      "Bash(grep:*)"
     ],
     "deny": [],
     "fileSystem": {
