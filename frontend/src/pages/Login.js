@@ -8,6 +8,9 @@ import { secureFetch } from '../utils/csrf';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
 
+// Global flag to prevent multiple reCAPTCHA renders
+let recaptchaRenderInProgress = false;
+
 const Login = ({ isSliderMode = false }) => {
   const [formData, setFormData] = useState({
     identifier: '',
@@ -52,26 +55,35 @@ const Login = ({ isSliderMode = false }) => {
     initializeRecaptcha();
   }, []);
 
-  // Render Google reCAPTCHA when loaded - Single instance approach
+  // Render Google reCAPTCHA when loaded - Single instance approach with global protection
   useEffect(() => {
-    if (!recaptchaLoaded || !window.grecaptcha || recaptchaWidgetId !== null) {
+    if (!recaptchaLoaded || !window.grecaptcha || recaptchaWidgetId !== null || recaptchaRenderInProgress) {
       return;
     }
 
     const renderRecaptcha = () => {
-      // Safety check for ref
-      if (!recaptchaRef.current) {
-        console.log('reCAPTCHA ref not available, skipping render');
+      // Safety check for ref and global flag
+      if (!recaptchaRef.current || recaptchaRenderInProgress) {
         return;
       }
 
+      recaptchaRenderInProgress = true;
+
       try {
+        // Check if site key is available
+        const siteKey = process.env.REACT_APP_RECAPTCHA_SITE_KEY;
+        if (!siteKey) {
+          console.error('reCAPTCHA site key not configured');
+          showToast('Security verification not configured', 'error');
+          return;
+        }
+
         // Clear any existing content
         recaptchaRef.current.innerHTML = '';
 
         // Render directly to the ref element
         const widgetId = window.grecaptcha.render(recaptchaRef.current, {
-          sitekey: process.env.REACT_APP_RECAPTCHA_SITE_KEY,
+          sitekey: siteKey,
           theme: 'light',
           size: 'normal',
           callback: (response) => {
@@ -97,6 +109,8 @@ const Login = ({ isSliderMode = false }) => {
         if (!error.message.includes('already been rendered')) {
           showToast('Failed to load security verification', 'error');
         }
+      } finally {
+        recaptchaRenderInProgress = false;
       }
     };
 
@@ -109,7 +123,10 @@ const Login = ({ isSliderMode = false }) => {
       }
     }, 100);
 
-    return () => clearTimeout(timeoutId);
+    return () => {
+      clearTimeout(timeoutId);
+      recaptchaRenderInProgress = false;
+    };
   }, [recaptchaLoaded, recaptchaWidgetId, showToast]);
 
   // Cleanup reCAPTCHA on unmount

@@ -20,15 +20,19 @@ const AuthSlider = () => {
   return (
     <div className="auth-page">
       <div className={`auth-container ${isRegisterMode ? 'active register-mode' : ''}`}>
-        {/* Login Form */}
-        <div className="auth-form-box login">
-          <Login isSliderMode={true} />
-        </div>
+        {/* Login Form - Only render when in login mode */}
+        {!isRegisterMode && (
+          <div className="auth-form-box login">
+            <Login isSliderMode={true} />
+          </div>
+        )}
 
-        {/* Register Form */}
-        <div className="auth-form-box register">
-          <Register isSliderMode={true} />
-        </div>
+        {/* Register Form - Only render when in register mode */}
+        {isRegisterMode && (
+          <div className="auth-form-box register">
+            <Register isSliderMode={true} />
+          </div>
+        )}
 
         {/* Toggle Panels */}
         <div className="toggle-box">
