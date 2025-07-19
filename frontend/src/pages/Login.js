@@ -52,92 +52,64 @@ const Login = ({ isSliderMode = false }) => {
     initializeRecaptcha();
   }, []);
 
-  // Render Google reCAPTCHA when loaded
+  // Render Google reCAPTCHA when loaded - Single instance approach
   useEffect(() => {
-    if (recaptchaLoaded && recaptchaRef.current && recaptchaWidgetId === null && window.grecaptcha) {
-      const renderRecaptcha = () => {
-        try {
-          // Clear any existing content first
-          if (recaptchaRef.current) {
-            recaptchaRef.current.innerHTML = '';
-          }
+    if (!recaptchaLoaded || !window.grecaptcha || recaptchaWidgetId !== null) {
+      return;
+    }
 
-          // Create a new div for the reCAPTCHA widget
-          const recaptchaDiv = document.createElement('div');
-          recaptchaRef.current.appendChild(recaptchaDiv);
+    const renderRecaptcha = () => {
+      // Safety check for ref
+      if (!recaptchaRef.current) {
+        console.log('reCAPTCHA ref not available, skipping render');
+        return;
+      }
 
-          const widgetId = window.grecaptcha.render(recaptchaDiv, {
-            sitekey: process.env.REACT_APP_RECAPTCHA_SITE_KEY,
-            theme: 'light',
-            size: 'normal',
-            callback: (response) => {
-              setCaptchaResponse(response);
-              console.log('reCAPTCHA completed:', response);
-            },
-            'expired-callback': () => {
-              setCaptchaResponse('');
-              showToast('Security verification expired. Please complete it again.', 'warning');
-            },
-            'error-callback': () => {
-              console.error('reCAPTCHA error occurred');
-              showToast('Security verification failed. Please try again.', 'error');
-            }
-          });
-          
-          setRecaptchaWidgetId(widgetId);
-          console.log('reCAPTCHA rendered successfully with widget ID:', widgetId);
-        } catch (error) {
-          console.error('Failed to render reCAPTCHA:', error);
-          
-          // If still failing, try using explicit render with a timeout
-          if (error.message && error.message.includes('already been rendered')) {
-            setTimeout(() => {
-              try {
-                if (recaptchaRef.current) {
-                  recaptchaRef.current.innerHTML = '';
-                  // Use explicit render method
-                  window.grecaptcha.ready(() => {
-                    const recaptchaDiv = document.createElement('div');
-                    recaptchaRef.current.appendChild(recaptchaDiv);
-                    
-                    const widgetId = window.grecaptcha.render(recaptchaDiv, {
-                      sitekey: process.env.REACT_APP_RECAPTCHA_SITE_KEY,
-                      theme: 'light',
-                      size: 'normal',
-                      callback: (response) => {
-                        setCaptchaResponse(response);
-                        console.log('reCAPTCHA completed:', response);
-                      },
-                      'expired-callback': () => {
-                        setCaptchaResponse('');
-                        showToast('Security verification expired. Please complete it again.', 'warning');
-                      },
-                      'error-callback': () => {
-                        console.error('reCAPTCHA error occurred');
-                        showToast('Security verification failed. Please try again.', 'error');
-                      }
-                    });
-                    setRecaptchaWidgetId(widgetId);
-                  });
-                }
-              } catch (retryError) {
-                console.error('Failed to render reCAPTCHA after retry:', retryError);
-                showToast('Failed to load security verification', 'error');
-              }
-            }, 100);
-          } else {
-            showToast('Failed to load security verification', 'error');
+      try {
+        // Clear any existing content
+        recaptchaRef.current.innerHTML = '';
+
+        // Render directly to the ref element
+        const widgetId = window.grecaptcha.render(recaptchaRef.current, {
+          sitekey: process.env.REACT_APP_RECAPTCHA_SITE_KEY,
+          theme: 'light',
+          size: 'normal',
+          callback: (response) => {
+            setCaptchaResponse(response);
+            console.log('reCAPTCHA completed successfully');
+          },
+          'expired-callback': () => {
+            setCaptchaResponse('');
+            showToast('Security verification expired. Please complete it again.', 'warning');
+          },
+          'error-callback': () => {
+            console.error('reCAPTCHA error occurred');
+            showToast('Security verification failed. Please try again.', 'error');
           }
+        });
+        
+        setRecaptchaWidgetId(widgetId);
+        console.log('reCAPTCHA rendered successfully');
+      } catch (error) {
+        console.error('Failed to render reCAPTCHA:', error);
+        
+        // Only show error to user if it's not a duplicate render issue
+        if (!error.message.includes('already been rendered')) {
+          showToast('Failed to load security verification', 'error');
         }
-      };
+      }
+    };
 
-      // Use grecaptcha.ready to ensure proper initialization
+    // Delay rendering to ensure DOM is ready
+    const timeoutId = setTimeout(() => {
       if (window.grecaptcha.ready) {
         window.grecaptcha.ready(renderRecaptcha);
       } else {
         renderRecaptcha();
       }
-    }
+    }, 100);
+
+    return () => clearTimeout(timeoutId);
   }, [recaptchaLoaded, recaptchaWidgetId, showToast]);
 
   // Cleanup reCAPTCHA on unmount

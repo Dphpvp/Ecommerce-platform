@@ -77,11 +77,9 @@ export const AuthProvider = ({ children }) => {
     };
   }, [user, handleActivity, resetTimeout]);
 
-  // FIXED: Better session fetching with proper state management
+  // Better session fetching with proper state management
   const fetchUser = useCallback(async () => {
     try {
-      console.log('🔍 Fetching user session...');
-      
       const response = await fetch(`${API_BASE}/auth/me`, {
         method: 'GET',
         credentials: 'include',
@@ -92,24 +90,22 @@ export const AuthProvider = ({ children }) => {
         cache: 'no-cache'
       });
       
-      console.log('📡 Auth response status:', response.status);
-      
       if (response.ok) {
         const userData = await response.json();
-        console.log('✅ User session found:', userData.username);
+        console.log('User session found:', userData.username);
         setUser(userData);
         return userData;
       } else if (response.status === 401) {
-        console.log('❌ No valid session (401)');
+        // 401 is expected when not logged in - no need to log as error
         setUser(null);
         return null;
       } else {
-        console.error('⚠️ Unexpected auth response:', response.status);
+        console.warn('Unexpected auth response:', response.status);
         // Don't change user state on unexpected errors
         return user;
       }
     } catch (error) {
-      console.error('💥 Auth fetch error:', error);
+      console.warn('Auth fetch error:', error.message);
       // Don't change user state on network errors
       return user;
     } finally {
@@ -128,7 +124,6 @@ export const AuthProvider = ({ children }) => {
   }, [fetchUser, initialized]);
 
   const login = useCallback(async (userData) => {
-    console.log('🔐 Login called with:', userData ? 'user data' : 'no data');
     
     if (userData) {
       setUser(userData);
@@ -137,7 +132,6 @@ export const AuthProvider = ({ children }) => {
       // Fetch from session
       const freshUser = await fetchUser();
       if (!freshUser) {
-        console.error('❌ Login failed: No user data available');
         setLoading(false);
         return false;
       }
