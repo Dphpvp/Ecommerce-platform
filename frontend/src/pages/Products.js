@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import ProductCard from '../components/ProductCard';
 import { Link } from 'react-router-dom';
+import SkeletonProductCard from '../components/SkeletonProductCard';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000/api';
 
@@ -186,9 +187,10 @@ const Products = () => {
       <section className="modern-products-grid-section">
         <div className="container">
           {loading ? (
-            <div className="loading-section">
-              <div className="loading-spinner"></div>
-              <p className="loading-text">Loading products...</p>
+            <div className="modern-products-grid">
+              {Array.from({ length: 8 }).map((_, index) => (
+                <SkeletonProductCard key={index} />
+              ))}
             </div>
           ) : filteredProducts.length === 0 ? (
             <div className="no-products-section">

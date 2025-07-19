@@ -52,6 +52,14 @@ const ProductCard = ({ product }) => {
       <div 
         className="luxury-product-card-compact"
         onClick={() => setShowModal(true)}
+        role="button"
+        aria-label={`View details for ${product.name}`}
+        tabIndex="0"
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            setShowModal(true);
+          }
+        }}
       >
         <div className="product-image-container-compact">
           <img 
@@ -62,7 +70,7 @@ const ProductCard = ({ product }) => {
               e.target.src = '/images/placeholder-product.jpg';
             }}
           />
-          <div className="product-overlay-compact">
+          <div className="product-overlay-compact" aria-hidden="true">
             <span>View Details</span>
           </div>
         </div>
@@ -73,10 +81,11 @@ const ProductCard = ({ product }) => {
           
           <div className="price-stock-compact">
             <div className="price-section-compact">
-              <span className="currency">$</span>
-              <span className="price-amount-compact">{product.price}</span>
+              <span className="currency" aria-hidden="true">$</span>
+              <span className="price-amount-compact" aria-label={`Price: ${product.price} dollars`}>{product.price}</span>
             </div>
             <div className={`stock-dot-compact ${getStockStatus()}`} 
+                 aria-label={`Stock status: ${getStockText()}`}
                  title={getStockText()}>
             </div>
           </div>

@@ -25,6 +25,7 @@
   "scripts": {
     "start": "craco start",
     "build": "craco build && node scripts/clean-build.js",
+    "optimize:images": "node scripts/optimize-images.js",
     "build:android": "node scripts/cap-sync.js",
     "build:web": "craco build",
     "build:original": "craco build",
@@ -58,6 +59,7 @@
     "@craco/craco": "^7.1.0",
     "compression-webpack-plugin": "^11.1.0",
     "cross-env": "^7.0.3",
+    "sharp": "^0.32.6",
     "terser-webpack-plugin": "^5.3.14",
     "webpack-bundle-analyzer": "^4.10.2"
   }
