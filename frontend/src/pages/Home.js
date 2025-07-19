@@ -72,10 +72,6 @@ const Home = () => {
             src={heroImages[currentImageIndex]}
             alt="Premium Collection"
             className="hero-image"
-            style={{
-              transform: parallaxTransform,
-              opacity: opacity
-            }}
           />
           <div className="hero-overlay"></div>
         </div>
