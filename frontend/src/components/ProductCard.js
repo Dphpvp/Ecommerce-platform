@@ -36,14 +36,16 @@ const ProductCard = ({ product }) => {
   };
 
   const getStockStatus = () => {
-    if (product.stock_quantity > 10) return 'in-stock';
-    if (product.stock_quantity > 0) return 'low-stock';
+    const stock = product.stock || product.stock_quantity || 0;
+    if (stock > 10) return 'in-stock';
+    if (stock > 0) return 'low-stock';
     return 'out-of-stock';
   };
 
   const getStockText = () => {
-    if (product.stock_quantity > 10) return 'In Stock';
-    if (product.stock_quantity > 0) return `${product.stock_quantity} Left`;
+    const stock = product.stock || product.stock_quantity || 0;
+    if (stock > 10) return 'In Stock';
+    if (stock > 0) return `${stock} Left`;
     return 'Out of Stock';
   };
 
@@ -132,10 +134,7 @@ const ProductCard = ({ product }) => {
                   </div>
                   <div className="spec-row">
                     <span className="spec-label">Stock:</span>
-                    <span className={`spec-value stock ${
-                      product.stock_quantity > 10 ? 'in-stock' :
-                      product.stock_quantity > 0 ? 'low-stock' : 'out-of-stock'
-                    }`}>
+                    <span className={`spec-value stock ${getStockStatus()}`}>
                       {getStockText()}
                     </span>
                   </div>
@@ -155,13 +154,13 @@ const ProductCard = ({ product }) => {
 
                 <div className="modal-actions">
                   <button 
-                    className={`btn-revolutionary btn-luxury-revolutionary ${product.stock_quantity <= 0 ? 'disabled' : ''}`}
+                    className={`btn-revolutionary btn-luxury-revolutionary ${(product.stock || product.stock_quantity || 0) <= 0 ? 'disabled' : ''}`}
                     onClick={handleAddToCart}
-                    disabled={isAdding || product.stock_quantity <= 0}
+                    disabled={isAdding || (product.stock || product.stock_quantity || 0) <= 0}
                   >
                     <span>{isAdding ? 'Adding...' : 
-                     product.stock_quantity <= 0 ? 'Out of Stock' : 'Add to Cart'}</span>
-                    {!isAdding && product.stock_quantity > 0 && (
+                     (product.stock || product.stock_quantity || 0) <= 0 ? 'Out of Stock' : 'Add to Cart'}</span>
+                    {!isAdding && (product.stock || product.stock_quantity || 0) > 0 && (
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M3 3h2l.4 2m0 0L8 16h8l1.4-8.5H5.4z"/>
                         <circle cx="9" cy="21" r="1"/>

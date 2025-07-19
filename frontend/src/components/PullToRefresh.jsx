@@ -161,7 +161,7 @@ export const RefreshableProductList = ({
     >
       <div className="product-image">
         <img 
-          src={product.image || '/placeholder-product.jpg'} 
+          src={product.image_url || product.image || '/placeholder-product.jpg'} 
           alt={product.name}
           loading="lazy"
         />

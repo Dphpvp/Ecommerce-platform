@@ -121,17 +121,17 @@ const Home = () => {
               <div key={product._id} className="modern-product-card" style={{animationDelay: `${index * 0.1}s`}}>
                 <div className="modern-product-image">
                   <img 
-                    src={product.image || `https://images.unsplash.com/photo-${1594938328870 + index}-28d8b92e2c8a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80`}
+                    src={product.image_url || product.image || `https://images.unsplash.com/photo-${1594938328870 + index}-28d8b92e2c8a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80`}
                     alt={product.name}
                     loading="lazy"
                   />
                   <div className="modern-product-overlay">
-                    <Link to={`/products/${product._id}`} className="modern-view-btn">
+                    <Link to="/products" className="modern-view-btn">
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
                         <circle cx="12" cy="12" r="3"/>
                       </svg>
-                      Quick View
+                      View All Products
                     </Link>
                   </div>
                 </div>

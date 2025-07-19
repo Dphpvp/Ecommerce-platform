@@ -33,31 +33,7 @@ const ModernProductCard = ({ product, delay = 0 }) => {
       className={`modern-product-card ${isVisible ? 'visible' : ''}`}
       style={{ animationDelay: `${delay}ms` }}
     >
-      <div className="product-image-container">
-        <img 
-          src={product.image || `https://images.unsplash.com/photo-${1594938328870 + Math.floor(Math.random() * 100)}-${Math.random().toString(36).substr(2, 9)}?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80`}
-          alt={product.name}
-          className="product-image"
-          loading="lazy"
-        />
-        <div className="product-overlay">
-          <Link to={`/products/${product._id}`} className="view-product-btn">
-            View Details
-          </Link>
-        </div>
-      </div>
-      <div className="product-info">
-        <h3 className="product-name">{product.name}</h3>
-        <p className="product-description">
-          {product.description || 'High-quality product designed for exceptional performance and style.'}
-        </p>
-        <div className="product-price">
-          <span className="current-price">${product.price || 999}</span>
-        </div>
-        <button className="add-to-cart-btn">
-          Add to Cart
-        </button>
-      </div>
+      <ProductCard product={product} />
     </div>
   );
 };
