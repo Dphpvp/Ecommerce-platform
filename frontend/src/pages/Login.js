@@ -17,8 +17,17 @@ class RecaptchaManager {
   }
 
   async render(element, config) {
-    if (this.isRendering || this.widgetId !== null) {
-      console.log('reCAPTCHA already exists or is rendering');
+    if (this.isRendering) {
+      console.log('reCAPTCHA is currently rendering');
+      return this.widgetId;
+    }
+    
+    // If widget exists but element is different, destroy and recreate
+    if (this.widgetId !== null && element && element.children.length === 0) {
+      console.log('reCAPTCHA widget exists but element is empty, re-rendering');
+      this.destroy();
+    } else if (this.widgetId !== null) {
+      console.log('reCAPTCHA already rendered and element has content');
       return this.widgetId;
     }
 
@@ -215,6 +224,13 @@ const Login = ({ isSliderMode = false }) => {
         ...(captchaResponse && { recaptcha_response: captchaResponse })
       };
 
+      console.log('🔐 Sending login request:', {
+        identifier: requestBody.identifier,
+        passwordLength: requestBody.password?.length,
+        hasRecaptcha: !!requestBody.recaptcha_response,
+        apiBase: API_BASE
+      });
+
       const response = await secureFetch(`${API_BASE}/auth/login`, {
         method: 'POST',
         body: JSON.stringify(requestBody),
@@ -223,6 +239,7 @@ const Login = ({ isSliderMode = false }) => {
       const data = await response.json();
 
       if (response.ok) {
+        console.log('Login successful:', data);
         if (data.requires_2fa) {
           setTempToken(data.temp_token);
           setTwoFactorMethod(data.method || 'app');
@@ -246,7 +263,30 @@ const Login = ({ isSliderMode = false }) => {
           navigate('/');
         }
       } else {
-        const errorMessage = data.detail || 'Login failed';
+        console.error('❌ Login failed:', {
+          status: response.status,
+          statusText: response.statusText,
+          data: data,
+          url: response.url
+        });
+        
+        let errorMessage = data.detail || data.message || `Login failed (${response.status})`;
+        
+        // Handle specific error codes
+        if (response.status === 500) {
+          errorMessage = 'Server error. Please check admin credentials or try again later.';
+          console.error('🔥 Server Error 500 - Possible causes:', {
+            'Invalid credentials': 'Check username/password',
+            'Database connection': 'Backend database might be down',
+            'Missing environment variables': 'Backend missing required config',
+            'reCAPTCHA validation failed': 'Backend reCAPTCHA validation issue'
+          });
+        } else if (response.status === 422) {
+          errorMessage = 'Invalid input data. Please check your credentials.';
+        } else if (response.status === 401) {
+          errorMessage = 'Invalid username or password.';
+        }
+        
         setError(errorMessage);
         
         if (data.detail && data.detail.includes('Email not verified')) {
