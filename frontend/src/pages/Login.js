@@ -30,17 +30,34 @@ const Login = ({ isSliderMode = false }) => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Initialize Google reCAPTCHA - works on both web and mobile WebView
+  // Initialize captcha system - mobile-first approach
   useEffect(() => {
-    const initializeRecaptcha = () => {
-      // Check if reCAPTCHA script is loaded
+    const initializeCaptcha = () => {
+      // For mobile platforms, use mobile captcha by default
+      if (platformDetection.isMobile) {
+        console.log('📱 Mobile platform detected - using mobile captcha');
+        const mobileToken = mobileCaptcha.generateToken();
+        if (mobileToken) {
+          setCaptchaResponse(mobileToken);
+          setRecaptchaLoaded(true);
+          console.log('✅ Mobile captcha ready');
+          return;
+        } else {
+          setCaptchaResponse('mobile-platform-token');
+          setRecaptchaLoaded(true);
+          console.log('✅ Mobile platform token ready');
+          return;
+        }
+      }
+
+      // For web platforms, try to load reCAPTCHA
       if (window.grecaptcha) {
         console.log('✅ reCAPTCHA already loaded');
         setRecaptchaLoaded(true);
         return;
       }
 
-      // Load reCAPTCHA script dynamically for mobile WebView compatibility
+      // Load reCAPTCHA script for web
       const script = document.createElement('script');
       script.src = 'https://www.google.com/recaptcha/api.js?render=explicit';
       script.async = true;
@@ -51,22 +68,18 @@ const Login = ({ isSliderMode = false }) => {
       };
       script.onerror = () => {
         console.error('❌ Failed to load reCAPTCHA script');
-        // Fallback to mobile captcha if reCAPTCHA fails to load
-        if (platformDetection.isMobile) {
-          console.log('📱 Using mobile captcha fallback');
-          setCaptchaResponse('mobile-fallback-token');
-        }
+        setRecaptchaLoaded(true); // Still set to true to show the form
       };
       
       document.head.appendChild(script);
     };
 
-    initializeRecaptcha();
+    initializeCaptcha();
   }, []);
 
-  // Render reCAPTCHA widget when ready
+  // Render reCAPTCHA widget for web only
   useEffect(() => {
-    if (!recaptchaLoaded || !window.grecaptcha || !recaptchaRef.current) {
+    if (!recaptchaLoaded || platformDetection.isMobile || !window.grecaptcha || !recaptchaRef.current) {
       return;
     }
 
@@ -74,10 +87,6 @@ const Login = ({ isSliderMode = false }) => {
       const siteKey = process.env.REACT_APP_RECAPTCHA_SITE_KEY;
       if (!siteKey) {
         console.error('❌ reCAPTCHA site key not configured');
-        if (platformDetection.isMobile) {
-          console.log('📱 Using mobile fallback for missing site key');
-          setCaptchaResponse('mobile-fallback-token');
-        }
         return;
       }
 
@@ -93,7 +102,7 @@ const Login = ({ isSliderMode = false }) => {
             const widgetId = window.grecaptcha.render(recaptchaRef.current, {
               sitekey: siteKey,
               theme: 'light',
-              size: platformDetection.isMobile ? 'normal' : 'normal', // Both use normal size
+              size: 'normal',
               callback: (response) => {
                 setCaptchaResponse(response);
                 console.log('✅ reCAPTCHA completed');
@@ -104,12 +113,7 @@ const Login = ({ isSliderMode = false }) => {
               },
               'error-callback': () => {
                 console.error('❌ reCAPTCHA error occurred');
-                if (platformDetection.isMobile) {
-                  console.log('📱 Using mobile fallback after reCAPTCHA error');
-                  setCaptchaResponse('mobile-fallback-token');
-                } else {
-                  showToast('Security verification failed. Please try again.', 'error');
-                }
+                showToast('Security verification failed. Please try again.', 'error');
               }
             });
             
@@ -117,18 +121,10 @@ const Login = ({ isSliderMode = false }) => {
             console.log('✅ reCAPTCHA widget rendered successfully');
           } catch (error) {
             console.error('❌ Failed to render reCAPTCHA widget:', error);
-            if (platformDetection.isMobile) {
-              console.log('📱 Using mobile fallback after render error');
-              setCaptchaResponse('mobile-fallback-token');
-            }
           }
         });
       } catch (error) {
         console.error('❌ reCAPTCHA initialization error:', error);
-        if (platformDetection.isMobile) {
-          console.log('📱 Using mobile fallback after init error');
-          setCaptchaResponse('mobile-fallback-token');
-        }
       }
     };
 
@@ -490,31 +486,54 @@ const Login = ({ isSliderMode = false }) => {
             </Link>
           </div>
           
-          {/* Google reCAPTCHA */}
+          {/* Security Verification */}
           <div className="form-group">
             <label className="form-label">Security Verification</label>
             <div className="captcha-container">
-              <div ref={recaptchaRef} className="captcha-widget"></div>
-              {!recaptchaLoaded && (
-                <div className="captcha-loading">
-                  <div className="spinner"></div>
-                  <span>Loading security verification...</span>
+              {platformDetection.isMobile ? (
+                // Mobile captcha display
+                <div className="mobile-captcha-display">
+                  {!recaptchaLoaded ? (
+                    <div className="captcha-loading">
+                      <div className="spinner"></div>
+                      <span>Setting up mobile security...</span>
+                    </div>
+                  ) : captchaResponse ? (
+                    <div className="captcha-success">
+                      <span>✅ Mobile security verification ready</span>
+                    </div>
+                  ) : (
+                    <div className="captcha-info">
+                      <span>🛡️ Mobile security verification enabled</span>
+                    </div>
+                  )}
                 </div>
-              )}
-              {recaptchaLoaded && !window.grecaptcha && (
-                <div className="captcha-error">
-                  <span>Security verification failed to load. Please refresh the page.</span>
-                </div>
-              )}
-              {recaptchaLoaded && window.grecaptcha && recaptchaWidgetId === null && !captchaResponse && (
-                <div className="captcha-error">
-                  <span>Setting up security verification...</span>
-                </div>
-              )}
-              {captchaResponse && (
-                <div className="captcha-success">
-                  <span>✅ Security verification completed</span>
-                </div>
+              ) : (
+                // Web reCAPTCHA display
+                <>
+                  <div ref={recaptchaRef} className="captcha-widget"></div>
+                  {!recaptchaLoaded && (
+                    <div className="captcha-loading">
+                      <div className="spinner"></div>
+                      <span>Loading security verification...</span>
+                    </div>
+                  )}
+                  {recaptchaLoaded && !window.grecaptcha && (
+                    <div className="captcha-error">
+                      <span>Security verification failed to load. Please refresh the page.</span>
+                    </div>
+                  )}
+                  {recaptchaLoaded && window.grecaptcha && recaptchaWidgetId === null && !captchaResponse && (
+                    <div className="captcha-error">
+                      <span>Setting up security verification...</span>
+                    </div>
+                  )}
+                  {captchaResponse && !platformDetection.isMobile && (
+                    <div className="captcha-success">
+                      <span>✅ Security verification completed</span>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </div>
@@ -595,31 +614,54 @@ const Login = ({ isSliderMode = false }) => {
                 </Link>
               </div>
               
-              {/* Google reCAPTCHA */}
+              {/* Security Verification */}
               <div className="form-group">
                 <label className="form-label">Security Verification</label>
                 <div className="captcha-container">
-                  <div ref={recaptchaRef} className="captcha-widget"></div>
-                  {!recaptchaLoaded && (
-                    <div className="captcha-loading">
-                      <div className="spinner"></div>
-                      <span>Loading security verification...</span>
+                  {platformDetection.isMobile ? (
+                    // Mobile captcha display
+                    <div className="mobile-captcha-display">
+                      {!recaptchaLoaded ? (
+                        <div className="captcha-loading">
+                          <div className="spinner"></div>
+                          <span>Setting up mobile security...</span>
+                        </div>
+                      ) : captchaResponse ? (
+                        <div className="captcha-success">
+                          <span>✅ Mobile security verification ready</span>
+                        </div>
+                      ) : (
+                        <div className="captcha-info">
+                          <span>🛡️ Mobile security verification enabled</span>
+                        </div>
+                      )}
                     </div>
-                  )}
-                  {recaptchaLoaded && !window.grecaptcha && (
-                    <div className="captcha-error">
-                      <span>Security verification failed to load. Please refresh the page.</span>
-                    </div>
-                  )}
-                  {recaptchaLoaded && window.grecaptcha && recaptchaWidgetId === null && !captchaResponse && (
-                    <div className="captcha-error">
-                      <span>Setting up security verification...</span>
-                    </div>
-                  )}
-                  {captchaResponse && (
-                    <div className="captcha-success">
-                      <span>✅ Security verification completed</span>
-                    </div>
+                  ) : (
+                    // Web reCAPTCHA display
+                    <>
+                      <div ref={recaptchaRef} className="captcha-widget"></div>
+                      {!recaptchaLoaded && (
+                        <div className="captcha-loading">
+                          <div className="spinner"></div>
+                          <span>Loading security verification...</span>
+                        </div>
+                      )}
+                      {recaptchaLoaded && !window.grecaptcha && (
+                        <div className="captcha-error">
+                          <span>Security verification failed to load. Please refresh the page.</span>
+                        </div>
+                      )}
+                      {recaptchaLoaded && window.grecaptcha && recaptchaWidgetId === null && !captchaResponse && (
+                        <div className="captcha-error">
+                          <span>Setting up security verification...</span>
+                        </div>
+                      )}
+                      {captchaResponse && !platformDetection.isMobile && (
+                        <div className="captcha-success">
+                          <span>✅ Security verification completed</span>
+                        </div>
+                      )}
+                    </>
                   )}
                 </div>
               </div>

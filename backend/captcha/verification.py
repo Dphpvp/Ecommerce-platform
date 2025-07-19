@@ -22,6 +22,20 @@ def verify_recaptcha(captcha_response: str, remote_ip: Optional[str] = None, req
         
         return False
     
+    # Handle mobile platform tokens
+    if captcha_response in ['mobile-platform-token', 'mobile-fallback-token']:
+        if request_headers:
+            user_agent = request_headers.get('User-Agent', '').lower()
+            capacitor_platform = request_headers.get('X-Capacitor-Platform')
+            mobile_app_header = request_headers.get('X-Mobile-App')
+            
+            if capacitor_platform or mobile_app_header or 'capacitor' in user_agent or 'android' in user_agent:
+                print("✅ MOBILE: Mobile platform token verified")
+                return True
+        
+        print("❌ MOBILE: Mobile token from non-mobile platform rejected")
+        return False
+    
     # Emergency fallback token for debugging mobile issues
     if captcha_response == 'emergency-fallback-token':
         print("🔧 DEBUG: Using emergency fallback token")
