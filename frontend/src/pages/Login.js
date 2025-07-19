@@ -56,6 +56,12 @@ const Login = ({ isSliderMode = false }) => {
   useEffect(() => {
     if (recaptchaLoaded && recaptchaRef.current && !recaptchaWidgetId && window.grecaptcha) {
       try {
+        // Check if element already has a reCAPTCHA widget
+        if (recaptchaRef.current.hasChildNodes()) {
+          console.log('reCAPTCHA element already has content, skipping render');
+          return;
+        }
+
         const widgetId = window.grecaptcha.render(recaptchaRef.current, {
           sitekey: process.env.REACT_APP_RECAPTCHA_SITE_KEY,
           theme: 'light',
@@ -76,10 +82,57 @@ const Login = ({ isSliderMode = false }) => {
         setRecaptchaWidgetId(widgetId);
       } catch (error) {
         console.error('Failed to render reCAPTCHA:', error);
-        showToast('Failed to load security verification', 'error');
+        // If error indicates widget already exists, clear the element first
+        if (error.message && error.message.includes('already been rendered')) {
+          if (recaptchaRef.current) {
+            recaptchaRef.current.innerHTML = '';
+            // Try again after clearing
+            try {
+              const widgetId = window.grecaptcha.render(recaptchaRef.current, {
+                sitekey: process.env.REACT_APP_RECAPTCHA_SITE_KEY,
+                theme: 'light',
+                size: 'normal',
+                callback: (response) => {
+                  setCaptchaResponse(response);
+                  console.log('reCAPTCHA completed:', response);
+                },
+                'expired-callback': () => {
+                  setCaptchaResponse('');
+                  showToast('Security verification expired. Please complete it again.', 'warning');
+                },
+                'error-callback': () => {
+                  console.error('reCAPTCHA error occurred');
+                  showToast('Security verification failed. Please try again.', 'error');
+                }
+              });
+              setRecaptchaWidgetId(widgetId);
+            } catch (retryError) {
+              console.error('Failed to render reCAPTCHA after clearing:', retryError);
+              showToast('Failed to load security verification', 'error');
+            }
+          }
+        } else {
+          showToast('Failed to load security verification', 'error');
+        }
       }
     }
   }, [recaptchaLoaded, recaptchaWidgetId, showToast]);
+
+  // Cleanup reCAPTCHA on unmount
+  useEffect(() => {
+    return () => {
+      if (recaptchaWidgetId !== null && window.grecaptcha) {
+        try {
+          window.grecaptcha.reset(recaptchaWidgetId);
+        } catch (error) {
+          console.log('reCAPTCHA cleanup error:', error);
+        }
+      }
+      if (recaptchaRef.current) {
+        recaptchaRef.current.innerHTML = '';
+      }
+    };
+  }, [recaptchaWidgetId]);
 
   const handleChange = (e) => {
     setFormData({
