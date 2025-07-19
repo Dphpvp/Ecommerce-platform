@@ -8,6 +8,7 @@ import Modal from './modal/modal';
 const ProductCard = ({ product }) => {
   const [showModal, setShowModal] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
+  const [showCartPopup, setShowCartPopup] = useState(false);
   const { addToCart } = useCart();
   const { user } = useAuth();
   const { showToast } = useToastContext();
@@ -24,7 +25,8 @@ const ProductCard = ({ product }) => {
     try {
       const success = await addToCart(product._id, 1);
       if (success) {
-        showToast('Added to cart successfully!', 'success');
+        setShowCartPopup(true);
+        setShowModal(false); // Close product modal if it's open
       } else {
         showToast('Failed to add to cart', 'error');
       }
@@ -82,6 +84,18 @@ const ProductCard = ({ product }) => {
                  title={getStockText()}>
             </div>
           </div>
+          
+          <button 
+            className={`add-to-cart-btn-compact ${(product.stock || product.stock_quantity || 0) <= 0 ? 'disabled' : ''}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleAddToCart(e);
+            }}
+            disabled={isAdding || (product.stock || product.stock_quantity || 0) <= 0}
+          >
+            {isAdding ? 'Adding...' : 
+             (product.stock || product.stock_quantity || 0) <= 0 ? 'Out of Stock' : 'Add to Cart'}
+          </button>
         </div>
       </div>
 
@@ -172,6 +186,51 @@ const ProductCard = ({ product }) => {
                 </div>
               </div>
             </div>
+        </div>
+      </Modal>
+
+      {/* Cart Success Popup */}
+      <Modal isOpen={showCartPopup} onClose={() => setShowCartPopup(false)}>
+        <div className="cart-popup-container">
+          <div className="cart-popup-content">
+            <div className="success-icon">
+              <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M20 6L9 17l-5-5"/>
+              </svg>
+            </div>
+            
+            <h3 className="popup-title">Added to Cart!</h3>
+            <p className="popup-message">
+              <strong>{product.name}</strong> has been added to your cart successfully.
+            </p>
+            
+            <div className="popup-actions">
+              <button 
+                className="btn-popup btn-checkout"
+                onClick={() => {
+                  setShowCartPopup(false);
+                  window.location.href = '/checkout';
+                }}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M3 3h2l.4 2m0 0L8 16h8l1.4-8.5H5.4z"/>
+                  <circle cx="9" cy="21" r="1"/>
+                  <circle cx="20" cy="21" r="1"/>
+                </svg>
+                Proceed to Checkout
+              </button>
+              
+              <button 
+                className="btn-popup btn-continue"
+                onClick={() => setShowCartPopup(false)}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+                Continue Shopping
+              </button>
+            </div>
+          </div>
         </div>
       </Modal>
     </>
