@@ -16,9 +16,6 @@
 /* 5. Components */
 @import './components.css';
 
-/* 6. Pages */
-@import './pages.css';
-
 /* 7. Modern Pages */
 @import './modern-pages.css';
 
