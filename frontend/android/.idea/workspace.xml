@@ -5,29 +5,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6f24bd5f-c9f7-438a-b820-b3d6f5c93ad0" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/deviceManager.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../../.claude/settings.local.json" beforeDir="false" afterPath="$PROJECT_DIR$/../../.claude/settings.local.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/compiler.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/compiler.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/capacitor.build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/app/capacitor.build.gradle" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/assets/capacitor.config.json" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/capacitor.config.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/assets/capacitor.plugins.json" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/capacitor.plugins.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/asset-manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/public/asset-manifest.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/public/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/public/manifest.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/533.012f5bed.chunk.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/533.012f5bed.chunk.js.map" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/818.ef3061ce.chunk.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/818.ef3061ce.chunk.js.map" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/841.06bace8f.chunk.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/841.06bace8f.chunk.js.map" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/react.7ef6106e.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/react.7ef6106e.js.map" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/stripe.7fbf0cef.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/stripe.7fbf0cef.js.map" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/vendors.00596bed.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/static/js/vendors.00596bed.js.map" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/res/xml/config.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/xml/config.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/capacitor-cordova-android-plugins/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/capacitor-cordova-android-plugins/src/main/AndroidManifest.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/capacitor-cordova-android-plugins/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/capacitor-cordova-android-plugins/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/capacitor-cordova-android-plugins/cordova.variables.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/capacitor-cordova-android-plugins/cordova.variables.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/capacitor-cordova-android-plugins/src/main/res/.gitkeep" beforeDir="false" afterPath="$PROJECT_DIR$/capacitor-cordova-android-plugins/src/main/res/.gitkeep" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/capacitor.settings.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/capacitor.settings.gradle" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -37,7 +24,7 @@
   <component name="ClangdSettings">
     <option name="formatViaClangd" value="false" />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[DeviceId(pluginId=PhysicalDevice, isTemplate=false, identifier=serial=R5CWA2AFWXR)]" />
+  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[DeviceId(pluginId=LocalEmulator, isTemplate=false, identifier=path=C:\Users\razva\.android\avd\Pixel_3a_API_36_extension_level_17_x86_64.avd)]" />
   <component name="ExternalProjectsData">
     <projectState path="$PROJECT_DIR$">
       <ProjectState />

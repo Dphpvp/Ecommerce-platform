@@ -27,12 +27,20 @@
 		},
 		"App": {
 			"handleUrlOpen": true
+		},
+		"GoogleAuth": {
+			"scopes": [
+				"profile",
+				"email"
+			],
+			"serverClientId": "",
+			"forceCodeForRefreshToken": true
 		}
 	},
 	"android": {
 		"allowMixedContent": false,
 		"captureInput": true,
-		"webContentsDebuggingEnabled": false
+		"webContentsDebuggingEnabled": true
 	},
 	"ios": {
 		"scheme": "VergiShop",

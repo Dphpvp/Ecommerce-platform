@@ -16,15 +16,126 @@ const Login = ({ isSliderMode = false }) => {
   const [tempToken, setTempToken] = useState('');
   const [twoFactorMethod, setTwoFactorMethod] = useState('');
   const [scrollY, setScrollY] = useState(0);
+  const [captchaResponse, setCaptchaResponse] = useState('');
+  const [recaptchaLoaded, setRecaptchaLoaded] = useState(false);
+  const [recaptchaWidgetId, setRecaptchaWidgetId] = useState(null);
   const { login } = useAuth();
   const { showToast } = useToastContext();
   const navigate = useNavigate();
+  const recaptchaRef = useRef(null);
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Initialize Google reCAPTCHA - works on both web and mobile WebView
+  useEffect(() => {
+    const initializeRecaptcha = () => {
+      // Check if reCAPTCHA script is loaded
+      if (window.grecaptcha) {
+        console.log('✅ reCAPTCHA already loaded');
+        setRecaptchaLoaded(true);
+        return;
+      }
+
+      // Load reCAPTCHA script dynamically for mobile WebView compatibility
+      const script = document.createElement('script');
+      script.src = 'https://www.google.com/recaptcha/api.js?render=explicit';
+      script.async = true;
+      script.defer = true;
+      script.onload = () => {
+        console.log('✅ reCAPTCHA script loaded');
+        setRecaptchaLoaded(true);
+      };
+      script.onerror = () => {
+        console.error('❌ Failed to load reCAPTCHA script');
+        // Fallback to mobile captcha if reCAPTCHA fails to load
+        if (platformDetection.isMobile) {
+          console.log('📱 Using mobile captcha fallback');
+          setCaptchaResponse('mobile-fallback-token');
+        }
+      };
+      
+      document.head.appendChild(script);
+    };
+
+    initializeRecaptcha();
+  }, []);
+
+  // Render reCAPTCHA widget when ready
+  useEffect(() => {
+    if (!recaptchaLoaded || !window.grecaptcha || !recaptchaRef.current) {
+      return;
+    }
+
+    const renderRecaptcha = async () => {
+      const siteKey = process.env.REACT_APP_RECAPTCHA_SITE_KEY;
+      if (!siteKey) {
+        console.error('❌ reCAPTCHA site key not configured');
+        if (platformDetection.isMobile) {
+          console.log('📱 Using mobile fallback for missing site key');
+          setCaptchaResponse('mobile-fallback-token');
+        }
+        return;
+      }
+
+      try {
+        // Clear any existing widget
+        if (recaptchaRef.current) {
+          recaptchaRef.current.innerHTML = '';
+        }
+
+        // Wait for grecaptcha to be ready
+        window.grecaptcha.ready(() => {
+          try {
+            const widgetId = window.grecaptcha.render(recaptchaRef.current, {
+              sitekey: siteKey,
+              theme: 'light',
+              size: platformDetection.isMobile ? 'normal' : 'normal', // Both use normal size
+              callback: (response) => {
+                setCaptchaResponse(response);
+                console.log('✅ reCAPTCHA completed');
+              },
+              'expired-callback': () => {
+                setCaptchaResponse('');
+                showToast('Security verification expired. Please complete it again.', 'warning');
+              },
+              'error-callback': () => {
+                console.error('❌ reCAPTCHA error occurred');
+                if (platformDetection.isMobile) {
+                  console.log('📱 Using mobile fallback after reCAPTCHA error');
+                  setCaptchaResponse('mobile-fallback-token');
+                } else {
+                  showToast('Security verification failed. Please try again.', 'error');
+                }
+              }
+            });
+            
+            setRecaptchaWidgetId(widgetId);
+            console.log('✅ reCAPTCHA widget rendered successfully');
+          } catch (error) {
+            console.error('❌ Failed to render reCAPTCHA widget:', error);
+            if (platformDetection.isMobile) {
+              console.log('📱 Using mobile fallback after render error');
+              setCaptchaResponse('mobile-fallback-token');
+            }
+          }
+        });
+      } catch (error) {
+        console.error('❌ reCAPTCHA initialization error:', error);
+        if (platformDetection.isMobile) {
+          console.log('📱 Using mobile fallback after init error');
+          setCaptchaResponse('mobile-fallback-token');
+        }
+      }
+    };
+
+    // Small delay to ensure DOM is ready
+    const timeoutId = setTimeout(renderRecaptcha, 100);
+    return () => clearTimeout(timeoutId);
+  }, [recaptchaLoaded, showToast]);
 
   const handleSubmit = async (sanitizedData, csrfToken) => {
     setLoading(true);
@@ -33,15 +144,37 @@ const Login = ({ isSliderMode = false }) => {
       ...sanitizedData
     };
     
-    // Add captcha verification - mobile captcha for mobile platforms
-    if (platformDetection.isMobile && mobileCaptcha.isAvailable()) {
-      const mobileToken = mobileCaptcha.generateToken();
-      if (mobileToken) {
-        formDataWithAuth.recaptcha_response = mobileToken;
-        console.log('📱 Using mobile captcha for authentication');
+    // Validate reCAPTCHA response (or use mobile fallback)
+    if (!captchaResponse) {
+      // Try to get current response from widget
+      if (recaptchaWidgetId !== null && window.grecaptcha) {
+        const currentResponse = window.grecaptcha.getResponse(recaptchaWidgetId);
+        if (currentResponse) {
+          setCaptchaResponse(currentResponse);
+          formDataWithAuth.recaptcha_response = currentResponse;
+        } else {
+          showToast('Please complete the security verification', 'error');
+          setLoading(false);
+          return;
+        }
+      } else if (platformDetection.isMobile) {
+        // Generate mobile fallback token
+        const mobileToken = mobileCaptcha.generateToken();
+        if (mobileToken) {
+          formDataWithAuth.recaptcha_response = mobileToken;
+          console.log('📱 Using mobile fallback token');
+        } else {
+          formDataWithAuth.recaptcha_response = 'mobile-fallback-token';
+          console.log('📱 Using emergency mobile fallback');
+        }
       } else {
-        console.warn('⚠️ Mobile captcha generation failed, proceeding without captcha');
+        showToast('Please complete the security verification', 'error');
+        setLoading(false);
+        return;
       }
+    } else {
+      formDataWithAuth.recaptcha_response = captchaResponse;
+      console.log('✅ Using reCAPTCHA response');
     }
     
     try {
@@ -109,6 +242,12 @@ const Login = ({ isSliderMode = false }) => {
           showToast(errorMessage, 'error');
         }
         
+        // Reset reCAPTCHA on login error
+        if (recaptchaWidgetId !== null && window.grecaptcha) {
+          window.grecaptcha.reset(recaptchaWidgetId);
+          setCaptchaResponse('');
+        }
+        
         throw new Error(errorMessage);
       }
     } catch (error) {
@@ -130,6 +269,13 @@ const Login = ({ isSliderMode = false }) => {
       }
       
       showToast(errorMessage, 'error');
+      
+      // Reset reCAPTCHA on network error
+      if (recaptchaWidgetId !== null && window.grecaptcha) {
+        window.grecaptcha.reset(recaptchaWidgetId);
+        setCaptchaResponse('');
+      }
+      
       throw new Error(errorMessage);
     } finally {
       setLoading(false);
@@ -165,12 +311,19 @@ const Login = ({ isSliderMode = false }) => {
 
   const handleGoogleLogin = async () => {
     try {
+      // Check if running on mobile (Capacitor)
+      if (platformDetection.isMobile && window.Capacitor) {
+        await handleMobileGoogleLogin();
+        return;
+      }
+
+      // Web Google Login
       if (!window.google || !window.google.accounts) {
         showToast('Google services not available. Please try again later.', 'error');
         return;
       }
 
-      // Initialize Google OAuth
+      // Initialize Google OAuth for web
       window.google.accounts.id.initialize({
         client_id: process.env.REACT_APP_GOOGLE_CLIENT_ID,
         callback: handleGoogleResponse,
@@ -186,10 +339,75 @@ const Login = ({ isSliderMode = false }) => {
     }
   };
 
+  const handleMobileGoogleLogin = async () => {
+    try {
+      // Check if Capacitor is available
+      if (!window.Capacitor) {
+        console.warn('Capacitor not available, falling back to web login');
+        showToast('Google login currently unavailable on mobile. Please use email/password.', 'warning');
+        return;
+      }
+
+      console.log('🤖 Initiating mobile Google login');
+      setLoading(true);
+
+      // Import Google Auth plugin dynamically
+      const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth');
+      
+      console.log('Google Auth plugin loaded');
+
+      // Initialize and sign in
+      const result = await GoogleAuth.signIn();
+      
+      console.log('Google Auth result:', result);
+      
+      // Handle different response structures
+      let idToken = null;
+      
+      if (result?.authentication?.idToken) {
+        idToken = result.authentication.idToken;
+      } else if (result?.idToken) {
+        idToken = result.idToken;
+      } else if (result?.serverAuthCode) {
+        // If we only get serverAuthCode, we need to exchange it
+        console.log('Got serverAuthCode, sending to backend');
+        idToken = result.serverAuthCode;
+      }
+      
+      if (idToken) {
+        await handleGoogleResponse({
+          credential: idToken
+        });
+      } else {
+        console.error('No valid token in Google Auth result:', result);
+        showToast('Google login failed - no token received', 'error');
+      }
+    } catch (error) {
+      console.error('Mobile Google login error:', error);
+      
+      if (error.message?.includes('cancelled') || error.message?.includes('CANCELED') || error.message?.includes('12501')) {
+        showToast('Google login was cancelled', 'info');
+      } else if (error.message?.includes('network') || error.message?.includes('NETWORK_ERROR')) {
+        showToast('Network error during Google login. Please check your connection.', 'error');
+      } else if (error.message?.includes('not installed') || error.message?.includes('not configured')) {
+        showToast('Google Play Services not configured properly', 'error');
+      } else {
+        showToast('Google login failed. Please try email/password login.', 'error');
+        console.error('Detailed Google Auth error:', {
+          message: error.message,
+          code: error.code,
+          stack: error.stack,
+          fullError: error
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleGoogleResponse = async (response) => {
     try {
       setLoading(true);
-      setError('');
 
       const result = await secureFetch(`${API_BASE}/auth/google`, {
         method: 'POST',
@@ -209,13 +427,11 @@ const Login = ({ isSliderMode = false }) => {
         navigate('/');
       } else {
         const errorMessage = data.detail || 'Google login failed';
-        setError(errorMessage);
         showToast(errorMessage, 'error');
       }
     } catch (error) {
       console.error('Google login error:', error);
       const errorMessage = 'Google login failed. Please try again.';
-      setError(errorMessage);
       showToast(errorMessage, 'error');
     } finally {
       setLoading(false);
@@ -272,6 +488,35 @@ const Login = ({ isSliderMode = false }) => {
             <Link to="/reset-password" className="forgot-link">
               Forgot Password?
             </Link>
+          </div>
+          
+          {/* Google reCAPTCHA */}
+          <div className="form-group">
+            <label className="form-label">Security Verification</label>
+            <div className="captcha-container">
+              <div ref={recaptchaRef} className="captcha-widget"></div>
+              {!recaptchaLoaded && (
+                <div className="captcha-loading">
+                  <div className="spinner"></div>
+                  <span>Loading security verification...</span>
+                </div>
+              )}
+              {recaptchaLoaded && !window.grecaptcha && (
+                <div className="captcha-error">
+                  <span>Security verification failed to load. Please refresh the page.</span>
+                </div>
+              )}
+              {recaptchaLoaded && window.grecaptcha && recaptchaWidgetId === null && !captchaResponse && (
+                <div className="captcha-error">
+                  <span>Setting up security verification...</span>
+                </div>
+              )}
+              {captchaResponse && (
+                <div className="captcha-success">
+                  <span>✅ Security verification completed</span>
+                </div>
+              )}
+            </div>
           </div>
           
           <button 
@@ -348,6 +593,35 @@ const Login = ({ isSliderMode = false }) => {
                 <Link to="/reset-password" className="forgot-link">
                   Forgot your password?
                 </Link>
+              </div>
+              
+              {/* Google reCAPTCHA */}
+              <div className="form-group">
+                <label className="form-label">Security Verification</label>
+                <div className="captcha-container">
+                  <div ref={recaptchaRef} className="captcha-widget"></div>
+                  {!recaptchaLoaded && (
+                    <div className="captcha-loading">
+                      <div className="spinner"></div>
+                      <span>Loading security verification...</span>
+                    </div>
+                  )}
+                  {recaptchaLoaded && !window.grecaptcha && (
+                    <div className="captcha-error">
+                      <span>Security verification failed to load. Please refresh the page.</span>
+                    </div>
+                  )}
+                  {recaptchaLoaded && window.grecaptcha && recaptchaWidgetId === null && !captchaResponse && (
+                    <div className="captcha-error">
+                      <span>Setting up security verification...</span>
+                    </div>
+                  )}
+                  {captchaResponse && (
+                    <div className="captcha-success">
+                      <span>✅ Security verification completed</span>
+                    </div>
+                  )}
+                </div>
               </div>
               
               <button 

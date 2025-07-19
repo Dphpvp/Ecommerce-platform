@@ -29,12 +29,17 @@ const config: CapacitorConfig = {
     },
     App: {
       handleUrlOpen: true
+    },
+    GoogleAuth: {
+      scopes: ['profile', 'email'],
+      serverClientId: process.env.REACT_APP_GOOGLE_SERVER_CLIENT_ID || '',
+      forceCodeForRefreshToken: true
     }
   },
   android: {
     allowMixedContent: false,
     captureInput: true,
-    webContentsDebuggingEnabled: false
+    webContentsDebuggingEnabled: true
   },
   ios: {
     scheme: 'VergiShop',
