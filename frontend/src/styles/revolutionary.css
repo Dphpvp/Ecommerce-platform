@@ -1379,6 +1379,31 @@ body {
   }
 }
 
+/* Modern Forced Colors Mode (replaces deprecated -ms-high-contrast) */
+@media (forced-colors: active) {
+  :root {
+    --luxury-gold: CanvasText;
+    --luxury-navy: CanvasText;
+    --luxury-gray-dark: CanvasText;
+  }
+  
+  .luxury-modal-overlay,
+  .modal-glass-container,
+  .luxury-product-card-compact {
+    background: Canvas;
+    color: CanvasText;
+    border: 1px solid CanvasText;
+  }
+  
+  .btn-revolutionary,
+  .add-to-cart-btn-compact,
+  .btn-popup {
+    background: ButtonFace;
+    color: ButtonText;
+    border: 1px solid ButtonText;
+  }
+}
+
 /* === REVOLUTIONARY PRODUCT MODAL === */
 .product-modal-revolutionary {
   position: fixed;

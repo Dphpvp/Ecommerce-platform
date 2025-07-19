@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "VergiShop",
+  "name": "VergiShop - Premium E-commerce Platform",
   "icons": [
     {
       "src": "favicon.ico",
@@ -8,18 +8,20 @@
       "type": "image/x-icon"
     },
     {
-      "src": "logo192.png",
+      "src": "images/logo.png",
       "type": "image/png",
       "sizes": "192x192"
     },
     {
-      "src": "logo512.png",
+      "src": "images/logo.png",
       "type": "image/png",
       "sizes": "512x512"
     }
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "theme_color": "#D4AF37",
+  "background_color": "#1E2A47",
+  "description": "Premium e-commerce platform for luxury shopping experience",
+  "categories": ["shopping", "lifestyle"]
 }

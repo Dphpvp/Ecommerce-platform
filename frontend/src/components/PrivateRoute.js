@@ -20,7 +20,9 @@ const PrivateRoute = ({ children }) => {
     return <Navigate to="/login" replace />;
   }
   
-  console.log('✅ PrivateRoute: User authenticated, rendering children');
+  if (process.env.NODE_ENV === 'development') {
+    console.log('✅ PrivateRoute: User authenticated, rendering children');
+  }
   return children;
 };
 

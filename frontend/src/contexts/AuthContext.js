@@ -201,7 +201,9 @@ export const AuthProvider = ({ children }) => {
   // Enhanced authenticated request using secureFetch with platform support
   const makeAuthenticatedRequest = useCallback(async (url, options = {}) => {
     try {
-      console.log(`🌐 Making authenticated request to ${url}`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`🌐 Making authenticated request to ${url}`);
+      }
       
       const response = await secureFetch(url, options);
       
@@ -293,14 +295,16 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // Debug logging
+  // Debug logging (disabled in production)
   useEffect(() => {
-    console.log('🔍 Auth State:', { 
-      user: user?.username || 'none', 
-      loading, 
-      initialized, 
-      isAuthenticated 
-    });
+    if (process.env.NODE_ENV === 'development') {
+      console.log('🔍 Auth State:', { 
+        user: user?.username || 'none', 
+        loading, 
+        initialized, 
+        isAuthenticated 
+      });
+    }
   }, [user, loading, initialized, isAuthenticated]);
 
   return (

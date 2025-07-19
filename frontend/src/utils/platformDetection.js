@@ -8,13 +8,15 @@ class PlatformDetectionManager {
       this.platform = this.detectPlatform();
       this.isMobile = this.detectMobilePlatform();
       
-      console.log('🔍 Platform detection:', {
-        platform: this.platform,
-        isMobile: this.isMobile,
-        capacitor: !!window.Capacitor,
-        isNativePlatform: window.Capacitor?.isNativePlatform?.() || false,
-        userAgent: navigator.userAgent
-      });
+      if (process.env.NODE_ENV === 'development') {
+        console.log('🔍 Platform detection:', {
+          platform: this.platform,
+          isMobile: this.isMobile,
+          capacitor: !!window.Capacitor,
+          isNativePlatform: window.Capacitor?.isNativePlatform?.() || false,
+          userAgent: navigator.userAgent
+        });
+      }
     } catch (error) {
       console.error('❌ Platform detection failed:', error);
       // Fallback values
