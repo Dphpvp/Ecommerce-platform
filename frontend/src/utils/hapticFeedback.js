@@ -1,3 +1,4 @@
+import React from 'react';
 // Haptic Feedback Utilities for Mobile Apps
 import platformDetection from './platformDetection';
 
