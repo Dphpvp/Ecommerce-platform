@@ -65,230 +65,138 @@ const Home = () => {
 
   return (
     <div className="home">
-      {/* Revolutionary Hero Section */}
-      <section 
-        ref={heroRef}
-        className="hero-revolutionary"
-        style={{
-          backgroundImage: `url(${heroImages[currentImageIndex]})`,
-          transform: parallaxTransform,
-          opacity: opacity
-        }}
-      >
-        <div className="hero-content-revolutionary">
-          <div className="hero-glass-card">
-            <h1 className="hero-title-revolutionary">
-              Luxury Redefined
-            </h1>
-            <p className="hero-subtitle-revolutionary">
-              Experience the pinnacle of elegance with our exclusive collection of premium fashion and accessories
-            </p>
-            <div className="hero-buttons-revolutionary">
-              <Link to="/products" className="btn-revolutionary btn-luxury-revolutionary">
-                <span>Explore Collection</span>
-                <i className="fas fa-arrow-right"></i>
-              </Link>
-              <Link to="/contact" className="btn-revolutionary btn-glass-revolutionary">
-                <span>Book Consultation</span>
-                <i className="fas fa-calendar-alt"></i>
-              </Link>
-            </div>
-          </div>
+      {/* Modern Hero Section */}
+      <section className="modern-hero-section">
+        <div className="hero-background">
+          <img 
+            src={heroImages[currentImageIndex]}
+            alt="Premium Collection"
+            className="hero-image"
+            style={{
+              transform: parallaxTransform,
+              opacity: opacity
+            }}
+          />
+          <div className="hero-overlay"></div>
         </div>
-      </section>
-
-      {/* Revolutionary Services Section */}
-      <section className="section-revolutionary parallax-revolutionary">
-        <div className="parallax-layer parallax-bg" style={{
-          backgroundImage: 'url(https://images.unsplash.com/photo-1600880292203-757bb62b4baf?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80)',
-          transform: `translateY(${scrollY * 0.3}px)`
-        }}></div>
-        <div className="parallax-layer parallax-fg">
+        <div className="hero-content">
           <div className="container">
-            <div className="section-header-revolutionary">
-              <h2 className="section-title-revolutionary">Our Premium Services</h2>
-              <p className="section-subtitle-revolutionary">
-                Discover luxury craftsmanship with our exclusive range of bespoke services
+            <div className="hero-text">
+              <h1 className="hero-title">
+                Premium Quality,
+                <span className="hero-accent">Exceptional Style</span>
+              </h1>
+              <p className="hero-description">
+                Discover our curated collection of premium products designed for those who appreciate quality and elegance
               </p>
-            </div>
-            
-            <div className="product-grid-revolutionary">
-              {[
-                {
-                  title: "Bespoke Tailoring",
-                  description: "Custom-made suits crafted to perfection with premium fabrics and expert craftsmanship.",
-                  image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-                  icon: "✂️"
-                },
-                {
-                  title: "Luxury Alterations",
-                  description: "Professional alterations to ensure the perfect fit for your precious garments.",
-                  image: "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-                  icon: "📏"
-                },
-                {
-                  title: "Premium Accessories",
-                  description: "Curated selection of luxury accessories to complement your sophisticated style.",
-                  image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
-                  icon: "👔"
-                }
-              ].map((service, index) => (
-                <div key={index} className="product-card-revolutionary">
-                  <div className="product-image-revolutionary">
-                    <div 
-                      className="product-image-revolutionary"
-                      style={{ 
-                        backgroundImage: `url(${service.image})`,
-                        backgroundSize: 'cover',
-                        backgroundPosition: 'center'
-                      }}
-                    ></div>
-                    <div className="product-badge-revolutionary">
-                      {service.icon}
-                    </div>
-                  </div>
-                  <div className="product-content-revolutionary">
-                    <h3 className="product-title-revolutionary">{service.title}</h3>
-                    <p className="product-description-revolutionary">{service.description}</p>
-                    <div className="product-actions-revolutionary">
-                      <Link to="/contact" className="product-btn-revolutionary product-btn-primary-revolutionary">
-                        Learn More
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              ))}
+              <div className="hero-actions">
+                <Link to="/products" className="hero-btn-primary">
+                  Shop Collection
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                  </svg>
+                </Link>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Revolutionary Featured Products */}
-      <section className="section-revolutionary">
+
+      {/* Modern Featured Products Section */}
+      <section className="modern-products-section">
         <div className="container">
-          <div className="section-header-revolutionary">
-            <h2 className="section-title-revolutionary">Featured Collection</h2>
-            <p className="section-subtitle-revolutionary">
-              Handpicked luxury items that define exceptional style and quality
+          <div className="modern-section-header">
+            <div className="section-badge">
+              <span>Featured Collection</span>
+            </div>
+            <h2 className="modern-title">Curated Excellence</h2>
+            <p className="modern-subtitle">
+              Discover our handpicked selection of premium products, each chosen for its exceptional quality and design
             </p>
           </div>
           
-          <div className="product-grid-revolutionary">
-            {featuredProducts.map((product, index) => (
-              <div key={product._id} className="product-card-revolutionary">
-                <div className="product-image-revolutionary">
-                  <div 
-                    className="product-image-revolutionary"
-                    style={{ 
-                      backgroundImage: `url(${product.image || `https://images.unsplash.com/photo-${1594938328870 + index}-28d8b92e2c8a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80`})`,
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center'
-                    }}
-                  ></div>
-                  <div className="product-badge-revolutionary">
-                    Premium
+          <div className="modern-products-grid">
+            {featuredProducts.slice(0, 6).map((product, index) => (
+              <div key={product._id} className="modern-product-card" style={{animationDelay: `${index * 0.1}s`}}>
+                <div className="modern-product-image">
+                  <img 
+                    src={product.image || `https://images.unsplash.com/photo-${1594938328870 + index}-28d8b92e2c8a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80`}
+                    alt={product.name}
+                    loading="lazy"
+                  />
+                  <div className="modern-product-overlay">
+                    <Link to={`/products/${product._id}`} className="modern-view-btn">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                      </svg>
+                      Quick View
+                    </Link>
                   </div>
                 </div>
-                <div className="product-content-revolutionary">
-                  <h3 className="product-title-revolutionary">{product.name}</h3>
-                  <p className="product-description-revolutionary">
-                    Crafted with precision and attention to detail, this piece represents the pinnacle of luxury fashion.
-                  </p>
-                  <div className="product-price-revolutionary">
-                    <span className="product-price-current-revolutionary">
-                      ${product.price || 999}
-                    </span>
+                <div className="modern-product-content">
+                  <h3 className="modern-product-title">{product.name}</h3>
+                  <div className="modern-product-price">
+                    <span className="current-price">${product.price || 999}</span>
                   </div>
-                  <div className="product-actions-revolutionary">
-                    <Link to={`/products/${product._id}`} className="product-btn-revolutionary product-btn-primary-revolutionary">
-                      View Details
-                    </Link>
-                    <button className="product-btn-revolutionary product-btn-secondary-revolutionary">
-                      Add to Cart
-                    </button>
-                  </div>
+                  <button className="modern-add-to-cart">
+                    Add to Cart
+                  </button>
                 </div>
               </div>
             ))}
           </div>
           
-          <div className="text-center" style={{ marginTop: '4rem' }}>
-            <Link to="/products" className="btn-revolutionary btn-luxury-revolutionary">
-              <span>View Full Collection</span>
-              <i className="fas fa-arrow-right"></i>
+          <div className="modern-cta-section">
+            <Link to="/products" className="modern-view-all-btn">
+              View All Products
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Revolutionary CTA Section */}
-      <section className="section-revolutionary parallax-revolutionary">
-        <div className="parallax-layer parallax-bg" style={{
-          backgroundImage: 'url(https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80)',
-          transform: `translateY(${scrollY * 0.2}px)`
-        }}></div>
-        <div className="parallax-layer parallax-fg">
-          <div className="container">
-            <div className="section-header-revolutionary">
-              <h2 className="section-title-revolutionary">Ready to Experience Luxury?</h2>
-              <p className="section-subtitle-revolutionary">
-                Join thousands of satisfied customers who trust us for their luxury fashion needs
+      {/* Modern CTA Section */}
+      <section className="modern-cta-section">
+        <div className="container">
+          <div className="modern-cta-content">
+            <div className="cta-text">
+              <h2 className="cta-title">Start Your Shopping Journey</h2>
+              <p className="cta-description">
+                Discover premium products with exceptional quality and fast delivery
               </p>
-              <div style={{ marginTop: '3rem' }}>
-                <Link to="/contact" className="btn-revolutionary btn-luxury-revolutionary" style={{ marginRight: '2rem' }}>
-                  <span>Book Consultation</span>
-                  <i className="fas fa-calendar-alt"></i>
-                </Link>
-                <Link to="/products" className="btn-revolutionary btn-glass-revolutionary">
-                  <span>Shop Now</span>
-                  <i className="fas fa-shopping-bag"></i>
-                </Link>
-              </div>
+            </div>
+            <div className="cta-actions">
+              <Link to="/products" className="primary-cta-btn">
+                Shop Now
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </Link>
+              <Link to="/contact" className="secondary-cta-btn">
+                Contact Us
+              </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Revolutionary Stats Section */}
-      <section className="section-revolutionary">
+      {/* Modern Stats Section */}
+      <section className="modern-stats-section">
         <div className="container">
-          <div className="stats-grid" style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-            gap: '2rem',
-            textAlign: 'center'
-          }}>
+          <div className="stats-grid">
             {[
-              { number: '10,000+', label: 'Happy Customers', icon: '😊' },
-              { number: '25+', label: 'Years Experience', icon: '🏆' },
-              { number: '500+', label: 'Premium Products', icon: '💎' },
-              { number: '99%', label: 'Satisfaction Rate', icon: '⭐' }
+              { number: '10,000+', label: 'Happy Customers' },
+              { number: '25+', label: 'Years Experience' },
+              { number: '500+', label: 'Premium Products' },
+              { number: '99%', label: 'Satisfaction Rate' }
             ].map((stat, index) => (
-              <div key={index} className="stat-card" style={{
-                background: 'rgba(255, 255, 255, 0.1)',
-                backdropFilter: 'blur(10px)',
-                borderRadius: '2rem',
-                padding: '3rem 2rem',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                transform: 'translateY(0)',
-                transition: 'all 0.4s cubic-bezier(0.23, 1, 0.32, 1)',
-                cursor: 'pointer'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-10px) rotateX(10deg)';
-                e.currentTarget.style.boxShadow = '0 30px 60px rgba(0, 0, 0, 0.2)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0) rotateX(0deg)';
-                e.currentTarget.style.boxShadow = 'none';
-              }}>
-                <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>{stat.icon}</div>
-                <div style={{ fontSize: '3rem', fontWeight: 'bold', color: '#D4AF37', marginBottom: '0.5rem' }}>
-                  {stat.number}
-                </div>
-                <div style={{ fontSize: '1.2rem', color: '#6C757D' }}>
-                  {stat.label}
-                </div>
+              <div key={index} className="modern-stat-card">
+                <div className="stat-number">{stat.number}</div>
+                <div className="stat-label">{stat.label}</div>
               </div>
             ))}
           </div>

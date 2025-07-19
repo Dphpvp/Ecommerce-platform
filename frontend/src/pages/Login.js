@@ -5,8 +5,6 @@ import { useAuth } from '../contexts/AuthContext';
 import TwoFactorVerification from '../components/TwoFactor/TwoFactorVerification';
 import { useToastContext } from '../components/toast';
 import { secureFetch } from '../utils/csrf';
-import platformDetection from '../utils/platformDetection';
-import mobileCaptcha from '../utils/mobileCaptcha';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
 
@@ -22,7 +20,6 @@ const Login = ({ isSliderMode = false }) => {
   const [twoFactorMethod, setTwoFactorMethod] = useState('');
   const [scrollY, setScrollY] = useState(0);
   const [captchaResponse, setCaptchaResponse] = useState('');
-  const [isMobile, setIsMobile] = useState(false);
   const [recaptchaLoaded, setRecaptchaLoaded] = useState(false);
   const [recaptchaWidgetId, setRecaptchaWidgetId] = useState(null);
   const { login } = useAuth();
@@ -36,64 +33,50 @@ const Login = ({ isSliderMode = false }) => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  useEffect(() => {
-    const checkMobile = () => {
-      const isCapacitor = !!window.Capacitor;
-      const isMobileUA = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      const isWebView = window.navigator.userAgent.includes('wv');
-      
-      setIsMobile(isCapacitor || isWebView || isMobileUA);
-    };
-    
-    checkMobile();
-  }, []);
 
-  // Initialize CAPTCHA
+  // Initialize Google reCAPTCHA
   useEffect(() => {
-    const initializeCaptcha = async () => {
-      try {
-        await mobileCaptcha.initialize({
-          siteKey: process.env.REACT_APP_RECAPTCHA_SITE_KEY,
-          onLoad: () => setRecaptchaLoaded(true),
-          onComplete: (response) => {
-            setCaptchaResponse(response);
-            console.log('Captcha completed:', response);
-          },
-          onExpired: () => {
-            setCaptchaResponse('');
-            console.log('Captcha expired');
-            showToast('Security verification expired. Please complete it again.', 'warning');
+    const initializeRecaptcha = () => {
+      if (window.grecaptcha) {
+        setRecaptchaLoaded(true);
+      } else {
+        // Wait for reCAPTCHA to load
+        window.addEventListener('load', () => {
+          if (window.grecaptcha) {
+            setRecaptchaLoaded(true);
           }
         });
-      } catch (error) {
-        console.error('Failed to initialize captcha:', error);
-        setRecaptchaLoaded(true); // Allow form submission even if captcha fails
       }
     };
 
-    initializeCaptcha();
-  }, [showToast]);
+    initializeRecaptcha();
+  }, []);
 
-  // Render CAPTCHA when loaded
+  // Render Google reCAPTCHA when loaded
   useEffect(() => {
-    if (recaptchaLoaded && recaptchaRef.current && !recaptchaWidgetId) {
+    if (recaptchaLoaded && recaptchaRef.current && !recaptchaWidgetId && window.grecaptcha) {
       try {
-        const widgetId = mobileCaptcha.render(recaptchaRef.current, {
+        const widgetId = window.grecaptcha.render(recaptchaRef.current, {
           sitekey: process.env.REACT_APP_RECAPTCHA_SITE_KEY,
           theme: 'light',
           size: 'normal',
           callback: (response) => {
             setCaptchaResponse(response);
-            console.log('Captcha callback:', response);
+            console.log('reCAPTCHA completed:', response);
           },
           'expired-callback': () => {
             setCaptchaResponse('');
             showToast('Security verification expired. Please complete it again.', 'warning');
+          },
+          'error-callback': () => {
+            console.error('reCAPTCHA error occurred');
+            showToast('Security verification failed. Please try again.', 'error');
           }
         });
         setRecaptchaWidgetId(widgetId);
       } catch (error) {
-        console.error('Failed to render captcha:', error);
+        console.error('Failed to render reCAPTCHA:', error);
+        showToast('Failed to load security verification', 'error');
       }
     }
   }, [recaptchaLoaded, recaptchaWidgetId, showToast]);
@@ -110,9 +93,9 @@ const Login = ({ isSliderMode = false }) => {
     setError('');
     setLoading(true);
 
-    // Validate CAPTCHA
+    // Validate Google reCAPTCHA
     if (!captchaResponse) {
-      const currentCaptchaResponse = mobileCaptcha.getResponse(recaptchaWidgetId);
+      const currentCaptchaResponse = window.grecaptcha ? window.grecaptcha.getResponse(recaptchaWidgetId) : '';
       if (!currentCaptchaResponse) {
         setError('Please complete the security verification');
         setLoading(false);
@@ -168,6 +151,10 @@ const Login = ({ isSliderMode = false }) => {
         }
         
         setCaptchaResponse('');
+        // Reset reCAPTCHA
+        if (window.grecaptcha && recaptchaWidgetId !== null) {
+          window.grecaptcha.reset(recaptchaWidgetId);
+        }
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -185,6 +172,10 @@ const Login = ({ isSliderMode = false }) => {
       setError(errorMessage);
       showToast(errorMessage, 'error');
       setCaptchaResponse('');
+      // Reset reCAPTCHA on error
+      if (window.grecaptcha && recaptchaWidgetId !== null) {
+        window.grecaptcha.reset(recaptchaWidgetId);
+      }
     } finally {
       setLoading(false);
     }
@@ -201,6 +192,65 @@ const Login = ({ isSliderMode = false }) => {
     setShow2FA(false);
     setTempToken('');
     setTwoFactorMethod('');
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      if (!window.google || !window.google.accounts) {
+        showToast('Google services not available. Please try again later.', 'error');
+        return;
+      }
+
+      // Initialize Google OAuth
+      window.google.accounts.id.initialize({
+        client_id: process.env.REACT_APP_GOOGLE_CLIENT_ID,
+        callback: handleGoogleResponse,
+        auto_select: false,
+        cancel_on_tap_outside: true
+      });
+
+      // Prompt for Google account selection
+      window.google.accounts.id.prompt();
+    } catch (error) {
+      console.error('Google login initialization error:', error);
+      showToast('Failed to initialize Google login', 'error');
+    }
+  };
+
+  const handleGoogleResponse = async (response) => {
+    try {
+      setLoading(true);
+      setError('');
+
+      const result = await secureFetch(`${API_BASE}/auth/google`, {
+        method: 'POST',
+        body: JSON.stringify({
+          token: response.credential
+        }),
+      });
+
+      const data = await result.json();
+
+      if (result.ok) {
+        if (data.token) {
+          localStorage.setItem('auth_token', data.token);
+        }
+        login(data.user);
+        showToast('Google login successful!', 'success');
+        navigate('/');
+      } else {
+        const errorMessage = data.detail || 'Google login failed';
+        setError(errorMessage);
+        showToast(errorMessage, 'error');
+      }
+    } catch (error) {
+      console.error('Google login error:', error);
+      const errorMessage = 'Google login failed. Please try again.';
+      setError(errorMessage);
+      showToast(errorMessage, 'error');
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (show2FA) {
@@ -267,14 +317,19 @@ const Login = ({ isSliderMode = false }) => {
             </Link>
           </div>
           
-          {/* CAPTCHA */}
+          {/* Google reCAPTCHA */}
           <div className="elegant-form-group">
             <div className="elegant-captcha-container">
               <div ref={recaptchaRef} className="elegant-captcha-widget"></div>
               {!recaptchaLoaded && (
                 <div className="elegant-captcha-loading">
                   <div className="elegant-spinner"></div>
-                  <span>Loading security verification...</span>
+                  <span>Loading Google reCAPTCHA...</span>
+                </div>
+              )}
+              {recaptchaLoaded && !window.grecaptcha && (
+                <div className="elegant-captcha-error">
+                  <span>reCAPTCHA failed to load. Please refresh the page.</span>
                 </div>
               )}
             </div>
@@ -289,10 +344,7 @@ const Login = ({ isSliderMode = false }) => {
               <button 
                 type="button"
                 className="elegant-btn elegant-btn-google"
-                onClick={() => {
-                  // Add Google login logic here
-                  showToast('Google login coming soon!', 'info');
-                }}
+                onClick={handleGoogleLogin}
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                   <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -395,14 +447,19 @@ const Login = ({ isSliderMode = false }) => {
                   </Link>
                 </div>
                 
-                {/* CAPTCHA */}
+                {/* Google reCAPTCHA */}
                 <div className="elegant-form-group">
                   <div className="elegant-captcha-container">
                     <div ref={recaptchaRef} className="elegant-captcha-widget"></div>
                     {!recaptchaLoaded && (
                       <div className="elegant-captcha-loading">
                         <div className="elegant-spinner"></div>
-                        <span>Loading security verification...</span>
+                        <span>Loading Google reCAPTCHA...</span>
+                      </div>
+                    )}
+                    {recaptchaLoaded && !window.grecaptcha && (
+                      <div className="elegant-captcha-error">
+                        <span>reCAPTCHA failed to load. Please refresh the page.</span>
                       </div>
                     )}
                   </div>
@@ -417,10 +474,7 @@ const Login = ({ isSliderMode = false }) => {
                     <button 
                       type="button"
                       className="elegant-btn elegant-btn-google"
-                      onClick={() => {
-                        // Add Google login logic here
-                        showToast('Google login coming soon!', 'info');
-                      }}
+                      onClick={handleGoogleLogin}
                     >
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
                         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>

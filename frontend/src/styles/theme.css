@@ -19,7 +19,10 @@
 /* 6. Pages */
 @import './pages.css';
 
-/* 7. Mobile (should be last to override) */
+/* 7. Modern Pages */
+@import './modern-pages.css';
+
+/* 8. Mobile (should be last to override) */
 @import './mobile.css';
 
 /* === THEME OVERRIDES === */
