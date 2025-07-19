@@ -1,4 +1,4 @@
-// Elegant Luxury Register Page - Premium Experience
+// Modern Register Page - Clean and Professional
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useToastContext } from '../components/toast';
@@ -106,105 +106,90 @@ const Register = ({ isSliderMode = false }) => {
     return errors;
   };
 
-  // Slider mode layout - Elegant & Minimal
+  // Slider mode layout - Modern & Clean
   if (isSliderMode) {
     return (
-      <div className="elegant-auth-form">
-        <div className="elegant-auth-header">
-          <div className="elegant-icon">
-            <img src="/images/logo.png" alt="Vergi Designs" className="elegant-icon-image" />
+      <div className="modern-auth-form">
+        <div className="auth-header">
+          <div className="auth-logo">
+            <img src="/images/logo.png" alt="Logo" className="logo-image" />
           </div>
-          <h2 className="elegant-title">Join Us</h2>
-          <p className="elegant-subtitle">Create your luxury account</p>
+          <h2 className="auth-title">Join Us</h2>
+          <p className="auth-subtitle">Create your account</p>
         </div>
         
-        <SecureForm onSubmit={handleSubmit} validate={validateForm} className="elegant-form">
-          <div className="elegant-form-group">
-            <div className="elegant-input-wrapper">
-              <input
-                type="text"
-                id="username"
-                name="username"
-                placeholder="Username"
-                minLength={3}
-                maxLength={50}
-                pattern="^[a-zA-Z][a-zA-Z0-9_-]*$"
-                title="Username must start with a letter and contain only letters, numbers, underscore, and hyphen"
-                className="elegant-input"
-                required
-              />
-              <div className="elegant-input-border"></div>
-            </div>
+        <SecureForm onSubmit={handleSubmit} validate={validateForm} className="auth-form">
+          <div className="form-group">
+            <input
+              type="text"
+              id="username"
+              name="username"
+              placeholder="Username"
+              minLength={3}
+              maxLength={50}
+              pattern="^[a-zA-Z][a-zA-Z0-9_-]*$"
+              title="Username must start with a letter and contain only letters, numbers, underscore, and hyphen"
+              className="form-input"
+              required
+            />
           </div>
           
-          <div className="elegant-form-group">
-            <div className="elegant-input-wrapper">
-              <input
-                type="email"
-                id="email"
-                name="email"
-                placeholder="Email Address"
-                maxLength={254}
-                className="elegant-input"
-                required
-              />
-              <div className="elegant-input-border"></div>
-            </div>
+          <div className="form-group">
+            <input
+              type="email"
+              id="email"
+              name="email"
+              placeholder="Email Address"
+              maxLength={254}
+              className="form-input"
+              required
+            />
           </div>
           
-          <div className="elegant-form-group">
-            <div className="elegant-input-wrapper">
-              <input
-                type="password"
-                id="password"
-                name="password"
-                placeholder="Password"
-                minLength={8}
-                maxLength={128}
-                title="Password must be at least 8 characters with uppercase, lowercase, number, and special character"
-                className="elegant-input"
-                required
-              />
-              <div className="elegant-input-border"></div>
-            </div>
+          <div className="form-group">
+            <input
+              type="password"
+              id="password"
+              name="password"
+              placeholder="Password"
+              minLength={8}
+              maxLength={128}
+              title="Password must be at least 8 characters with uppercase, lowercase, number, and special character"
+              className="form-input"
+              required
+            />
           </div>
 
-          <div className="elegant-form-group">
-            <div className="elegant-input-wrapper">
-              <input
-                type="text"
-                id="full_name"
-                name="full_name"
-                placeholder="Full Name"
-                minLength={2}
-                maxLength={100}
-                className="elegant-input"
-                required
-              />
-              <div className="elegant-input-border"></div>
-            </div>
+          <div className="form-group">
+            <input
+              type="text"
+              id="full_name"
+              name="full_name"
+              placeholder="Full Name"
+              minLength={2}
+              maxLength={100}
+              className="form-input"
+              required
+            />
           </div>
 
-          <div className="elegant-form-group">
-            <div className="elegant-input-wrapper">
-              <input
-                type="text"
-                id="address"
-                name="address"
-                placeholder="Address (Optional)"
-                maxLength={500}
-                className="elegant-input"
-              />
-              <div className="elegant-input-border"></div>
-            </div>
+          <div className="form-group">
+            <input
+              type="text"
+              id="address"
+              name="address"
+              placeholder="Address (Optional)"
+              maxLength={500}
+              className="form-input"
+            />
           </div>
           
-          <div className="elegant-form-group">
-            <div className="elegant-phone-input">
+          <div className="form-group">
+            <div className="phone-input">
               <select
                 value={countryCode}
                 onChange={(e) => setCountryCode(e.target.value)}
-                className="elegant-country-select"
+                className="country-select"
               >
                 <option value="+40">🇷🇴 +40</option>
                 <option value="+1">🇺🇸 +1</option>
@@ -214,24 +199,21 @@ const Register = ({ isSliderMode = false }) => {
                 <option value="+39">🇮🇹 +39</option>
                 <option value="+34">🇪🇸 +34</option>
               </select>
-              <div className="elegant-input-wrapper">
-                <input
-                  type="tel"
-                  placeholder="723423225"
-                  value={phoneNumber}
-                  onChange={handlePhoneNumberChange}
-                  maxLength={9}
-                  className="elegant-input"
-                  required
-                />
-                <div className="elegant-input-border"></div>
-              </div>
+              <input
+                type="tel"
+                placeholder="723423225"
+                value={phoneNumber}
+                onChange={handlePhoneNumberChange}
+                maxLength={9}
+                className="form-input"
+                required
+              />
             </div>
-            <div className="elegant-phone-info">
+            <div className="phone-info">
               📱 Enter 9 digits (without the leading 0)
             </div>
             {phoneNumber && (
-              <div className="elegant-phone-preview">
+              <div className="phone-preview">
                 Full number: <strong>{getFullPhoneNumber()}</strong>
               </div>
             )}
@@ -240,149 +222,112 @@ const Register = ({ isSliderMode = false }) => {
           <button 
             type="submit" 
             disabled={loading} 
-            className="elegant-btn elegant-btn-primary"
+            className="submit-btn"
           >
-            <span>{loading ? 'Creating Account...' : 'Create Account'}</span>
-            {!loading && (
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                <circle cx="8.5" cy="7" r="4"/>
-                <line x1="20" y1="8" x2="20" y2="14"/>
-                <line x1="23" y1="11" x2="17" y2="11"/>
-              </svg>
-            )}
+            {loading ? 'Creating Account...' : 'Create Account'}
           </button>
         </SecureForm>
       </div>
     );
   }
 
-  // Elegant standalone page layout - Premium Experience
+  // Modern standalone page layout - Clean Experience
   return (
-    <div className="elegant-auth-page">
-      {/* Elegant Fullscreen Auth Section */}
-      <section className="elegant-auth-section">
-        <div className="elegant-auth-background">
-          <div 
-            className="elegant-bg-image" 
-            style={{
-              backgroundImage: 'url(https://images.unsplash.com/photo-1441986300917-64674bd600d8?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2340&q=80)',
-              transform: `translateY(${scrollY * 0.3}px)`
-            }}
-          ></div>
-          <div className="elegant-overlay"></div>
-          <div className="elegant-pattern"></div>
-        </div>
-        
-        <div className="elegant-auth-container">
-          <div className="elegant-auth-card elegant-register-card">
-            <div className="elegant-card-header">
-              <div className="elegant-logo">
-                <img src="/images/logo.png" alt="Vergi Designs" className="elegant-logo-image" />
-              </div>
-              <h1 className="elegant-main-title">Join Vergi Designs</h1>
-              <p className="elegant-main-subtitle">Create your luxury account today</p>
+    <div className="modern-auth-page">
+      <div className="auth-container">
+        <div className="auth-card register-card">
+          <div className="auth-header">
+            <div className="auth-logo">
+              <img src="/images/logo.png" alt="Logo" className="logo-image" />
             </div>
+            <h1 className="auth-title">Create Account</h1>
+            <p className="auth-subtitle">Join us today</p>
+          </div>
             
-            <div className="elegant-card-body">
-              <SecureForm onSubmit={handleSubmit} validate={validateForm} className="elegant-form">
-                <div className="elegant-form-row">
-                  <div className="elegant-form-group">
-                    <label htmlFor="username" className="elegant-label">Username</label>
-                    <div className="elegant-input-wrapper">
-                      <input
-                        type="text"
-                        id="username"
-                        name="username"
-                        placeholder="Enter your username"
-                        minLength={3}
-                        maxLength={50}
-                        pattern="^[a-zA-Z][a-zA-Z0-9_-]*$"
-                        title="Username must start with a letter and contain only letters, numbers, underscore, and hyphen"
-                        className="elegant-input"
-                        required
-                      />
-                      <div className="elegant-input-border"></div>
-                    </div>
-                  </div>
-                  
-                  <div className="elegant-form-group">
-                    <label htmlFor="email" className="elegant-label">Email</label>
-                    <div className="elegant-input-wrapper">
-                      <input
-                        type="email"
-                        id="email"
-                        name="email"
-                        placeholder="Enter your email"
-                        maxLength={254}
-                        className="elegant-input"
-                        required
-                      />
-                      <div className="elegant-input-border"></div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="elegant-form-row">
-                  <div className="elegant-form-group">
-                    <label htmlFor="password" className="elegant-label">Password</label>
-                    <div className="elegant-input-wrapper">
-                      <input
-                        type="password"
-                        id="password"
-                        name="password"
-                        placeholder="Create a secure password"
-                        minLength={8}
-                        maxLength={128}
-                        title="Password must be at least 8 characters with uppercase, lowercase, number, and special character"
-                        className="elegant-input"
-                        required
-                      />
-                      <div className="elegant-input-border"></div>
-                    </div>
-                  </div>
-
-                  <div className="elegant-form-group">
-                    <label htmlFor="full_name" className="elegant-label">Full Name</label>
-                    <div className="elegant-input-wrapper">
-                      <input
-                        type="text"
-                        id="full_name"
-                        name="full_name"
-                        placeholder="Enter your full name"
-                        minLength={2}
-                        maxLength={100}
-                        className="elegant-input"
-                        required
-                      />
-                      <div className="elegant-input-border"></div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="elegant-form-group">
-                  <label htmlFor="address" className="elegant-label">Address (Optional)</label>
-                  <div className="elegant-input-wrapper">
-                    <input
-                      type="text"
-                      id="address"
-                      name="address"
-                      placeholder="Enter your address"
-                      maxLength={500}
-                      className="elegant-input"
-                    />
-                    <div className="elegant-input-border"></div>
-                  </div>
+          <div className="auth-body">
+            <SecureForm onSubmit={handleSubmit} validate={validateForm} className="auth-form">
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="username" className="form-label">Username</label>
+                  <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    placeholder="Enter your username"
+                    minLength={3}
+                    maxLength={50}
+                    pattern="^[a-zA-Z][a-zA-Z0-9_-]*$"
+                    title="Username must start with a letter and contain only letters, numbers, underscore, and hyphen"
+                    className="form-input"
+                    required
+                  />
                 </div>
                 
-                <div className="elegant-form-group">
-                  <label className="elegant-label">Phone Number</label>
-                  <div className="elegant-phone-input">
-                    <select
-                      value={countryCode}
-                      onChange={(e) => setCountryCode(e.target.value)}
-                      className="elegant-country-select"
-                    >
+                <div className="form-group">
+                  <label htmlFor="email" className="form-label">Email</label>
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    placeholder="Enter your email"
+                    maxLength={254}
+                    className="form-input"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="password" className="form-label">Password</label>
+                  <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    placeholder="Create a secure password"
+                    minLength={8}
+                    maxLength={128}
+                    title="Password must be at least 8 characters with uppercase, lowercase, number, and special character"
+                    className="form-input"
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="full_name" className="form-label">Full Name</label>
+                  <input
+                    type="text"
+                    id="full_name"
+                    name="full_name"
+                    placeholder="Enter your full name"
+                    minLength={2}
+                    maxLength={100}
+                    className="form-input"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="address" className="form-label">Address (Optional)</label>
+                <input
+                  type="text"
+                  id="address"
+                  name="address"
+                  placeholder="Enter your address"
+                  maxLength={500}
+                  className="form-input"
+                />
+              </div>
+                
+              <div className="form-group">
+                <label className="form-label">Phone Number</label>
+                <div className="phone-input">
+                  <select
+                    value={countryCode}
+                    onChange={(e) => setCountryCode(e.target.value)}
+                    className="country-select"
+                  >
                       <option value="+40">🇷🇴 +40</option>
                       <option value="+1">🇺🇸 +1</option>
                       <option value="+44">🇬🇧 +44</option>
@@ -391,67 +336,45 @@ const Register = ({ isSliderMode = false }) => {
                       <option value="+39">🇮🇹 +39</option>
                       <option value="+34">🇪🇸 +34</option>
                     </select>
-                    <div className="elegant-input-wrapper">
-                      <input
-                        type="tel"
-                        placeholder="723423225"
-                        value={phoneNumber}
-                        onChange={handlePhoneNumberChange}
-                        maxLength={9}
-                        className="elegant-input"
-                        required
-                      />
-                      <div className="elegant-input-border"></div>
-                    </div>
-                  </div>
-                  <div className="elegant-phone-info">
-                    📱 Enter 9 digits (without the leading 0). Example: 723423225
-                  </div>
-                  {phoneNumber && (
-                    <div className="elegant-phone-preview">
-                      Full number: <strong>{getFullPhoneNumber()}</strong>
-                    </div>
-                  )}
+                  <input
+                    type="tel"
+                    placeholder="723423225"
+                    value={phoneNumber}
+                    onChange={handlePhoneNumberChange}
+                    maxLength={9}
+                    className="form-input"
+                    required
+                  />
                 </div>
+                <div className="phone-info">
+                  📱 Enter 9 digits (without the leading 0). Example: 723423225
+                </div>
+                {phoneNumber && (
+                  <div className="phone-preview">
+                    Full number: <strong>{getFullPhoneNumber()}</strong>
+                  </div>
+                )}
+              </div>
 
-                <button 
-                  type="submit" 
-                  disabled={loading} 
-                  className="elegant-btn elegant-btn-primary"
-                >
-                  <span>{loading ? 'Creating Account...' : 'Create Account'}</span>
-                  {!loading && (
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                      <circle cx="8.5" cy="7" r="4"/>
-                      <line x1="20" y1="8" x2="20" y2="14"/>
-                      <line x1="23" y1="11" x2="17" y2="11"/>
-                    </svg>
-                  )}
-                </button>
-              </SecureForm>
-            </div>
+              <button 
+                type="submit" 
+                disabled={loading} 
+                className="submit-btn"
+              >
+                {loading ? 'Creating Account...' : 'Create Account'}
+              </button>
+            </SecureForm>
+          </div>
 
-            <div className="elegant-card-footer">
-              <p className="elegant-footer-text">
-                Already have an account? <Link to="/login" className="elegant-link">Sign in here</Link>
-              </p>
-            </div>
+          <div className="auth-footer">
+            <p className="footer-text">
+              Already have an account? <Link to="/login" className="auth-link">Sign in here</Link>
+            </p>
           </div>
         </div>
-      </section>
+      </div>
     </div>
   );
 };
 
 export default Register;
-
-// Elegant Luxury Register Page Complete with:
-// - Fullscreen elegant design with premium aesthetics
-// - Sophisticated glassmorphism effects and form interactions
-// - Refined phone number input with elegant styling
-// - Premium visual elements and smooth animations
-// - Luxury color palette and sophisticated typography
-// - Enhanced mobile experience with touch-friendly design
-// - Elegant form validation and error handling
-// - Sophisticated parallax effects and visual depth
