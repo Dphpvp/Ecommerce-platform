@@ -50,8 +50,8 @@ class TimeoutMiddleware(BaseHTTPMiddleware):
 app.add_middleware(TimeoutMiddleware)
 
 # Security middleware (disabled for local development)
-# if ALLOWED_HOSTS:
-#     app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS)
+if ALLOWED_HOSTS:
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS)
 
 # CORS configuration
 origins = [
