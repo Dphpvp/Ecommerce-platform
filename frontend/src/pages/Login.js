@@ -95,11 +95,20 @@ const Login = ({ isSliderMode = false }) => {
       console.log('🔍 reCAPTCHA config check:', {
         siteKey: siteKey ? `${siteKey.substring(0, 20)}...` : 'NOT FOUND',
         source: platformDetection.isMobile ? 'backend-api' : 'build-env',
-        isMobile: platformDetection.isMobile
+        isMobile: platformDetection.isMobile,
+        configValue: RECAPTCHA_CONFIG.SITE_KEY ? 'SET' : 'MISSING',
+        apiBase: API_BASE,
+        configEndpoint: RECAPTCHA_CONFIG.CONFIG_ENDPOINT
       });
       
       if (!siteKey) {
         console.error('❌ reCAPTCHA site key not available');
+        console.error('Debug info:', {
+          envValue: process.env.REACT_APP_RECAPTCHA_SITE_KEY,
+          configValue: RECAPTCHA_CONFIG.SITE_KEY,
+          isMobile: platformDetection.isMobile,
+          platform: platformDetection.platform
+        });
         showToast('Security verification unavailable. Please contact support.', 'error');
         return;
       }
@@ -111,11 +120,30 @@ const Login = ({ isSliderMode = false }) => {
         }
 
         console.log('🔄 Rendering reCAPTCHA widget...');
+        console.log('🔍 Environment check:', {
+          grecaptchaExists: !!window.grecaptcha,
+          containerExists: !!recaptchaRef.current,
+          siteKeyLength: siteKey?.length,
+          userAgent: navigator.userAgent.substring(0, 100)
+        });
+
+        // Check if grecaptcha is available
+        if (!window.grecaptcha) {
+          console.error('❌ grecaptcha not loaded');
+          showToast('reCAPTCHA script not loaded. Please refresh the page.', 'error');
+          return;
+        }
 
         // Wait for grecaptcha to be ready
         window.grecaptcha.ready(() => {
           try {
             console.log('🔄 grecaptcha.ready() called, preparing widget config...');
+            
+            if (!recaptchaRef.current) {
+              console.error('❌ Container element not available');
+              showToast('reCAPTCHA container not ready. Please refresh the page.', 'error');
+              return;
+            }
             
             const widgetConfig = {
               sitekey: siteKey,
@@ -141,21 +169,32 @@ const Login = ({ isSliderMode = false }) => {
               size: widgetConfig.size,
               theme: widgetConfig.theme,
               isMobile: platformDetection.isMobile,
-              containerExists: !!recaptchaRef.current
+              containerExists: !!recaptchaRef.current,
+              containerHTML: recaptchaRef.current?.outerHTML?.substring(0, 100)
             });
 
             const widgetId = window.grecaptcha.render(recaptchaRef.current, widgetConfig);
             setRecaptchaWidgetId(widgetId);
             console.log('✅ reCAPTCHA widget rendered successfully with ID:', widgetId);
-          } catch (error) {
-            console.error('❌ Failed to render reCAPTCHA widget:', error);
-            console.error('Error details:', {
-              message: error.message,
-              stack: error.stack,
+          } catch (renderError) {
+            console.error('❌ Failed to render reCAPTCHA widget:', renderError);
+            console.error('Render error details:', {
+              message: renderError.message,
+              stack: renderError.stack,
+              siteKey: siteKey ? `${siteKey.substring(0, 10)}...${siteKey.substring(-4)}` : 'none',
               containerElement: recaptchaRef.current,
-              grecaptchaExists: !!window.grecaptcha
+              grecaptchaExists: !!window.grecaptcha,
+              grecaptchaRender: !!window.grecaptcha?.render
             });
-            showToast('Failed to render security verification. Please refresh the page.', 'error');
+            
+            // More specific error messages
+            if (renderError.message?.includes('Invalid site key')) {
+              showToast('Invalid reCAPTCHA configuration. Please contact support.', 'error');
+            } else if (renderError.message?.includes('Network')) {
+              showToast('Network error loading reCAPTCHA. Please check your connection.', 'error');
+            } else {
+              showToast('Failed to render security verification. Please refresh the page.', 'error');
+            }
           }
         });
       } catch (error) {

@@ -8,12 +8,9 @@ import android.webkit.WebView;
 import androidx.webkit.WebViewFeature;
 import androidx.webkit.WebSettingsCompat;
 import com.getcapacitor.BridgeActivity;
-import com.getcapacitor.Plugin;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.safetynet.SafetyNet;
-
-import java.util.ArrayList;
 
 public class MainActivity extends BridgeActivity {
     private static final String TAG = "VergiShop";
@@ -21,11 +18,6 @@ public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        
-        // Register plugins
-        this.init(savedInstanceState, new ArrayList<Class<? extends Plugin>>() {{
-            // Add plugins here if needed
-        }});
         
         // Check Google Play Services availability
         checkGooglePlayServices();
@@ -118,7 +110,7 @@ public class MainActivity extends BridgeActivity {
     }
     
     @Override
-    protected void onResume() {
+    public void onResume() {
         super.onResume();
         // Ensure Google Play Services are still available
         checkGooglePlayServices();
