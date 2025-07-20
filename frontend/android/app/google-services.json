@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "375146970707",
+    "project_id": "vergishop01",
+    "storage_bucket": "vergishop01.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:375146970707:android:0670b3910dc97bcaecd0a6",
+        "android_client_info": {
+          "package_name": "com.vergishop.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDB2US87ipA0wldX0GdsO6FxWYLGFhNj4g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

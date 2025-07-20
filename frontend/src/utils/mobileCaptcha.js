@@ -21,11 +21,14 @@ class MobileCaptchaManager {
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
       const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
       
-      // Use mobile captcha for mobile platforms or when reCAPTCHA has issues
-      if (isCapacitor || isMobileUA || (isTouchDevice && (isAndroid || isIOS))) {
-        this.isMobile = true;
-        this.platform = isAndroid ? 'android' : isIOS ? 'ios' : 'mobile';
-      }
+      // Always prefer web reCAPTCHA for consistency across platforms
+      // Only use mobile captcha as emergency fallback
+      this.isMobile = false;
+      this.platform = 'web';
+      
+      // Store mobile detection for enhanced WebView configuration
+      this.isActuallyMobile = isCapacitor || isMobileUA || (isTouchDevice && (isAndroid || isIOS));
+      this.actualPlatform = isAndroid ? 'android' : isIOS ? 'ios' : 'mobile';
       
     } catch (error) {
       console.warn('Platform detection failed, using safe fallback', error);
@@ -38,13 +41,13 @@ class MobileCaptchaManager {
     this.onCompleteCallback = null;
     this.onExpiredCallback = null;
     
-    console.log('🔧 MobileCaptcha initialized:', {
-      isMobile: this.isMobile,
-      platform: this.platform,
-      userAgent: navigator.userAgent,
+    console.log('🔧 MobileCaptcha initialized for consistent reCAPTCHA:', {
+      forcedPlatform: this.platform,
+      actuallyMobile: this.isActuallyMobile,
+      actualPlatform: this.actualPlatform,
+      userAgent: navigator.userAgent.substring(0, 50),
       capacitor: !!window.Capacitor,
-      touchDevice: 'ontouchstart' in window,
-      maxTouchPoints: navigator.maxTouchPoints
+      touchDevice: 'ontouchstart' in window
     });
   }
 
@@ -68,25 +71,21 @@ class MobileCaptchaManager {
     this.onExpiredCallback = onExpired;
 
     try {
-      if (this.isMobile) {
-        console.log('📱 Using mobile captcha for platform:', this.platform);
-        return await this.initializeMobileCaptcha(config);
-      } else {
-        console.log('🌐 Using web reCAPTCHA');
-        return await this.initializeWebCaptcha(config.siteKey, config.theme || 'light', config.size || 'normal');
-      }
+      // Always use web reCAPTCHA for consistency
+      console.log('🌐 Using consistent web reCAPTCHA for all platforms');
+      const size = this.isActuallyMobile ? 'compact' : (config.size || 'normal');
+      return await this.initializeWebCaptcha(config.siteKey, config.theme || 'light', size);
     } catch (error) {
-      console.error('❌ Captcha initialization failed:', error);
+      console.error('❌ reCAPTCHA initialization failed:', error);
       
-      // Graceful fallback - try mobile captcha as last resort
-      console.log('🔄 Attempting mobile captcha fallback');
+      // Only use mobile captcha as emergency fallback for deployment issues
+      console.log('🔄 Emergency fallback to mobile captcha due to reCAPTCHA failure');
       try {
         this.isMobile = true;
         return await this.initializeMobileCaptcha(config);
       } catch (fallbackError) {
-        console.error('❌ Fallback also failed:', fallbackError);
-        // Don't force success - let the form handle the error
-        throw new Error('Captcha initialization failed');
+        console.error('❌ Emergency fallback also failed:', fallbackError);
+        throw new Error('Both reCAPTCHA and fallback captcha failed');
       }
     }
   }
@@ -148,12 +147,13 @@ class MobileCaptchaManager {
   }
 
   /**
-   * Render captcha widget
+   * Render captcha widget - always reCAPTCHA unless emergency fallback
    */
   render(container, config = {}) {
-    console.log('🎨 Rendering captcha:', {
+    console.log('🎨 Rendering consistent captcha:', {
       isLoaded: this.isLoaded,
-      isMobile: this.isMobile,
+      forceMobile: this.isMobile,
+      actuallyMobile: this.isActuallyMobile,
       platform: this.platform,
       containerExists: !!container
     });
@@ -170,54 +170,20 @@ class MobileCaptchaManager {
 
     try {
       if (this.isMobile) {
-        console.log('📱 Rendering mobile captcha for platform:', this.platform);
+        // Only if we're in emergency fallback mode
+        console.log('📱 Using emergency mobile captcha fallback');
         return this.renderMobileCaptcha(container, config);
       } else {
-        console.log('🌐 Rendering web reCAPTCHA');
+        console.log('🌐 Rendering standard reCAPTCHA for all platforms');
         return this.renderWebCaptcha(container, config);
       }
     } catch (error) {
       console.error('❌ Captcha render failed:', error);
       
-      // Create a simple fallback captcha only as last resort
-      console.log('🔄 Creating emergency fallback captcha');
-      container.innerHTML = `
-        <div class="mobile-captcha emergency-fallback">
-          <div class="captcha-question">
-            <label for="captcha-input-fallback">Security Check: What is 5 + 3?</label>
-            <input 
-              type="number" 
-              id="captcha-input-fallback" 
-              placeholder="Enter answer"
-              class="captcha-input"
-            />
-            <div class="captcha-feedback"></div>
-          </div>
-        </div>
-      `;
-      
-      const input = container.querySelector('#captcha-input-fallback');
-      const feedback = container.querySelector('.captcha-feedback');
-      
-      input.addEventListener('input', (e) => {
-        const answer = parseInt(e.target.value);
-        if (answer === 8) {
-          feedback.textContent = '✓ Correct!';
-          feedback.style.color = 'green';
-          input.style.borderColor = 'green';
-          if (config.callback) config.callback('emergency-fallback-token');
-          if (this.onCompleteCallback) this.onCompleteCallback('emergency-fallback-token');
-        } else if (e.target.value && answer !== 8) {
-          feedback.textContent = '✗ Incorrect, try again';
-          feedback.style.color = 'red';
-          input.style.borderColor = 'red';
-        } else {
-          feedback.textContent = '';
-          input.style.borderColor = '';
-        }
-      });
-      
-      return 'emergency-fallback';
+      // Emergency fallback only if reCAPTCHA completely fails
+      console.log('🚨 Creating emergency fallback - reCAPTCHA failed completely');
+      this.isMobile = true; // Switch to emergency mode
+      return this.renderMobileCaptcha(container, config);
     }
   }
 
@@ -258,31 +224,37 @@ class MobileCaptchaManager {
    * Render mobile captcha (custom implementation)
    */
   renderMobileCaptcha(container, config) {
-    console.log('📱 Rendering mobile captcha widget');
+    console.log('📱 Rendering enhanced mobile captcha widget');
     
     const { callback } = config;
     
-    // Generate a simple math problem
-    const num1 = Math.floor(Math.random() * 10) + 1;
-    const num2 = Math.floor(Math.random() * 10) + 1;
-    const correctAnswer = num1 + num2;
-
+    // Enhanced captcha types for better security
+    const captchaTypes = ['math', 'pattern', 'sequence'];
+    const selectedType = captchaTypes[Math.floor(Math.random() * captchaTypes.length)];
+    
     // Check if we're on Android for special handling
     const isAndroid = /Android/i.test(navigator.userAgent);
+    const isCapacitor = !!window.Capacitor;
     const inputMode = isAndroid ? 'tel' : 'number';
     const androidClass = isAndroid ? 'android-input' : '';
 
+    let captchaData = this._generateCaptchaChallenge(selectedType);
+
     container.innerHTML = `
-      <div class="mobile-captcha ${isAndroid ? 'android-captcha' : ''}">
+      <div class="mobile-captcha enhanced-captcha ${isAndroid ? 'android-captcha' : ''} ${isCapacitor ? 'capacitor-captcha' : ''}">
+        <div class="captcha-header">
+          <div class="security-icon">🛡️</div>
+          <span class="captcha-title">Security Verification</span>
+        </div>
         <div class="captcha-question">
-          <label for="captcha-input">Security Check: What is ${num1} + ${num2}?</label>
+          <label for="captcha-input">${captchaData.question}</label>
           <input 
             type="${inputMode}" 
             id="captcha-input" 
             class="captcha-input ${androidClass}" 
-            placeholder="Enter answer"
-            min="0"
-            max="20"
+            placeholder="${captchaData.placeholder}"
+            min="${captchaData.min || 0}"
+            max="${captchaData.max || 50}"
             inputmode="numeric"
             pattern="[0-9]*"
             autocomplete="off"
@@ -290,69 +262,211 @@ class MobileCaptchaManager {
             autocapitalize="off"
             spellcheck="false"
           />
+          <div class="captcha-hint">${captchaData.hint}</div>
         </div>
         <div class="captcha-feedback"></div>
+        <div class="captcha-actions">
+          <button type="button" class="refresh-captcha" onclick="this.parentElement.parentElement.querySelector('.captcha-feedback').innerHTML = ''; this.parentElement.parentElement.parentElement.refresh();">
+            🔄 New Challenge
+          </button>
+        </div>
       </div>
     `;
 
     const input = container.querySelector('#captcha-input');
     const feedback = container.querySelector('.captcha-feedback');
+    const refreshBtn = container.querySelector('.refresh-captcha');
     
-    // Android-specific input handling
+    // Add refresh functionality
+    container.refresh = () => {
+      this.renderMobileCaptcha(container, config);
+    };
+    
+    // Enhanced input handling with better UX
     if (isAndroid) {
-      this._setupAndroidInputHandling(input, feedback, correctAnswer, num1, num2, callback);
+      this._setupEnhancedAndroidInputHandling(input, feedback, captchaData, callback);
     } else {
-      this._setupStandardInputHandling(input, feedback, correctAnswer, num1, num2, callback);
+      this._setupEnhancedInputHandling(input, feedback, captchaData, callback);
     }
 
     // Store the correct answer for verification
-    this.currentAnswer = correctAnswer;
+    this.currentAnswer = captchaData.answer;
+    this.captchaType = selectedType;
     this.widgetId = 'mobile-captcha-' + Date.now();
     
     return this.widgetId;
   }
 
   /**
-   * Setup Android-specific input handling
+   * Generate different types of captcha challenges
    */
-  _setupAndroidInputHandling(input, feedback, correctAnswer, num1, num2, callback) {
+  _generateCaptchaChallenge(type) {
+    switch (type) {
+      case 'math':
+        const num1 = Math.floor(Math.random() * 15) + 1;
+        const num2 = Math.floor(Math.random() * 15) + 1;
+        const operations = ['+', '-', '×'];
+        const operation = operations[Math.floor(Math.random() * operations.length)];
+        
+        let answer, question;
+        switch (operation) {
+          case '+':
+            answer = num1 + num2;
+            question = `What is ${num1} + ${num2}?`;
+            break;
+          case '-':
+            const larger = Math.max(num1, num2);
+            const smaller = Math.min(num1, num2);
+            answer = larger - smaller;
+            question = `What is ${larger} - ${smaller}?`;
+            break;
+          case '×':
+            const small1 = Math.floor(Math.random() * 5) + 1;
+            const small2 = Math.floor(Math.random() * 5) + 1;
+            answer = small1 * small2;
+            question = `What is ${small1} × ${small2}?`;
+            break;
+        }
+        
+        return {
+          question,
+          answer,
+          placeholder: 'Enter the number',
+          hint: 'Solve the math problem above',
+          min: 0,
+          max: 50
+        };
+        
+      case 'pattern':
+        const sequences = [
+          { seq: [2, 4, 6, 8], next: 10, question: 'Next number in sequence: 2, 4, 6, 8, ?' },
+          { seq: [1, 3, 5, 7], next: 9, question: 'Next number in sequence: 1, 3, 5, 7, ?' },
+          { seq: [5, 10, 15, 20], next: 25, question: 'Next number in sequence: 5, 10, 15, 20, ?' },
+          { seq: [3, 6, 9, 12], next: 15, question: 'Next number in sequence: 3, 6, 9, 12, ?' }
+        ];
+        const pattern = sequences[Math.floor(Math.random() * sequences.length)];
+        
+        return {
+          question: pattern.question,
+          answer: pattern.next,
+          placeholder: 'Next number',
+          hint: 'Look for the pattern in the sequence',
+          min: 0,
+          max: 100
+        };
+        
+      case 'sequence':
+        const counts = [
+          { question: 'How many letters are in "MOBILE"?', answer: 6 },
+          { question: 'How many vowels in "SECURITY"?', answer: 4 },
+          { question: 'How many digits in "2024"?', answer: 4 },
+          { question: 'How many words in "I am human"?', answer: 3 }
+        ];
+        const count = counts[Math.floor(Math.random() * counts.length)];
+        
+        return {
+          question: count.question,
+          answer: count.answer,
+          placeholder: 'Count',
+          hint: 'Count carefully',
+          min: 0,
+          max: 20
+        };
+        
+      default:
+        return this._generateCaptchaChallenge('math');
+    }
+  }
+
+  /**
+   * Setup enhanced Android-specific input handling
+   */
+  _setupEnhancedAndroidInputHandling(input, feedback, captchaData, callback) {
     let inputTimeout;
+    let attempts = 0;
+    const maxAttempts = 3;
     
-    // Handle Android keyboard behavior
+    // Handle Android keyboard behavior with better UX
     input.addEventListener('focus', () => {
       // Prevent viewport scaling on Android
       const viewport = document.querySelector('meta[name="viewport"]');
       if (viewport) {
         const originalContent = viewport.content;
-        viewport.content = originalContent + ', user-scalable=no';
+        viewport.content = originalContent + ', user-scalable=no, maximum-scale=1.0';
         
-        // Restore after focus
-        setTimeout(() => {
+        // Restore after focus lost
+        const restoreViewport = () => {
           viewport.content = originalContent;
-        }, 100);
+          input.removeEventListener('blur', restoreViewport);
+        };
+        input.addEventListener('blur', restoreViewport);
       }
       
-      // Scroll input into view on Android
+      // Enhanced scrolling for Android with haptic feedback
       setTimeout(() => {
         input.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }, 300);
+        
+        // Add haptic feedback if available
+        if (window.Capacitor?.Plugins?.Haptics) {
+          window.Capacitor.Plugins.Haptics.impact({ style: 'LIGHT' });
+        }
+      }, 200);
+      
+      // Clear any previous feedback
+      feedback.innerHTML = '';
+      feedback.className = 'captcha-feedback';
     });
     
-    // Debounced input validation for Android
+    // Enhanced input validation with better feedback
     input.addEventListener('input', (e) => {
       clearTimeout(inputTimeout);
       inputTimeout = setTimeout(() => {
-        this._validateInput(e, feedback, correctAnswer, num1, num2, callback);
+        attempts++;
+        this._validateEnhancedInput(e, feedback, captchaData, callback, attempts, maxAttempts);
       }, 300);
     });
     
-    // Handle Android "Done" button
+    // Handle Android "Done" button with immediate validation
     input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.keyCode === 13) {
         e.preventDefault();
+        clearTimeout(inputTimeout);
+        attempts++;
+        this._validateEnhancedInput({ target: input }, feedback, captchaData, callback, attempts, maxAttempts);
         input.blur();
-        this._validateInput({ target: input }, feedback, correctAnswer, num1, num2, callback);
       }
+    });
+    
+    // Add visual feedback for Android users
+    input.addEventListener('focus', () => {
+      input.parentElement.classList.add('focused');
+    });
+    
+    input.addEventListener('blur', () => {
+      input.parentElement.classList.remove('focused');
+    });
+  }
+
+  /**
+   * Setup enhanced standard input handling
+   */
+  _setupEnhancedInputHandling(input, feedback, captchaData, callback) {
+    let attempts = 0;
+    const maxAttempts = 3;
+    
+    input.addEventListener('input', (e) => {
+      attempts++;
+      this._validateEnhancedInput(e, feedback, captchaData, callback, attempts, maxAttempts);
+    });
+    
+    // Add visual feedback
+    input.addEventListener('focus', () => {
+      input.parentElement.classList.add('focused');
+      feedback.innerHTML = '';
+    });
+    
+    input.addEventListener('blur', () => {
+      input.parentElement.classList.remove('focused');
     });
   }
   
@@ -366,42 +480,107 @@ class MobileCaptchaManager {
   }
   
   /**
-   * Validate captcha input
+   * Enhanced validation with better UX
    */
-  _validateInput(e, feedback, correctAnswer, num1, num2, callback) {
+  _validateEnhancedInput(e, feedback, captchaData, callback, attempts, maxAttempts) {
     const userAnswer = parseInt(e.target.value);
-    if (userAnswer === correctAnswer) {
-      feedback.textContent = '✓ Correct!';
-      feedback.style.color = 'green';
-      e.target.style.borderColor = 'green';
+    const isCorrect = userAnswer === captchaData.answer;
+    
+    if (isCorrect) {
+      feedback.innerHTML = '<span class="success-msg">✓ Correct! Security verified</span>';
+      feedback.className = 'captcha-feedback success';
+      e.target.style.borderColor = '#4CAF50';
+      e.target.style.backgroundColor = '#f8fff8';
       
-      // Generate a mobile captcha token
-      const mobileToken = this.generateMobileToken(num1, num2, correctAnswer);
+      // Add success haptic feedback if available
+      if (window.Capacitor?.Plugins?.Haptics) {
+        window.Capacitor.Plugins.Haptics.notification({ type: 'SUCCESS' });
+      }
+      
+      // Generate enhanced mobile captcha token
+      const mobileToken = this.generateEnhancedMobileToken(captchaData, attempts);
       if (callback) callback(mobileToken);
       if (this.onCompleteCallback) this.onCompleteCallback(mobileToken);
-    } else if (e.target.value && userAnswer !== correctAnswer) {
-      feedback.textContent = '✗ Incorrect, try again';
-      feedback.style.color = 'red';
-      e.target.style.borderColor = 'red';
+      
+      // Disable input after success
+      e.target.disabled = true;
+      
+    } else if (e.target.value && !isCorrect) {
+      const remainingAttempts = maxAttempts - attempts;
+      
+      if (remainingAttempts > 0) {
+        feedback.innerHTML = `<span class="error-msg">✗ Incorrect. ${remainingAttempts} attempt${remainingAttempts > 1 ? 's' : ''} remaining</span>`;
+        feedback.className = 'captcha-feedback error';
+        e.target.style.borderColor = '#f44336';
+        e.target.style.backgroundColor = '#fff8f8';
+        
+        // Add error haptic feedback if available
+        if (window.Capacitor?.Plugins?.Haptics) {
+          window.Capacitor.Plugins.Haptics.impact({ style: 'MEDIUM' });
+        }
+      } else {
+        feedback.innerHTML = '<span class="error-msg">✗ Too many attempts. Generating new challenge...</span>';
+        feedback.className = 'captcha-feedback error';
+        
+        // Auto-refresh after max attempts
+        setTimeout(() => {
+          const container = e.target.closest('.mobile-captcha').parentElement;
+          if (container && container.refresh) {
+            container.refresh();
+          }
+        }, 2000);
+      }
     } else {
-      feedback.textContent = '';
+      feedback.innerHTML = '';
+      feedback.className = 'captcha-feedback';
       e.target.style.borderColor = '';
+      e.target.style.backgroundColor = '';
     }
   }
 
   /**
-   * Generate mobile captcha token
+   * Legacy validation for backward compatibility
    */
-  generateMobileToken(num1, num2, answer) {
+  _validateInput(e, feedback, correctAnswer, num1, num2, callback) {
+    const captchaData = { answer: correctAnswer, question: `${num1} + ${num2}` };
+    this._validateEnhancedInput(e, feedback, captchaData, callback, 1, 3);
+  }
+
+  /**
+   * Generate enhanced mobile captcha token
+   */
+  generateEnhancedMobileToken(captchaData, attempts) {
     const timestamp = Date.now();
-    const data = { num1, num2, answer, timestamp, platform: 'mobile' };
+    const data = { 
+      type: this.captchaType || 'math',
+      answer: captchaData.answer, 
+      timestamp, 
+      platform: 'mobile',
+      attempts,
+      userAgent: navigator.userAgent.substring(0, 50),
+      version: '2.0'
+    };
     
     // Use safer encoding for Android
     try {
       return btoa(JSON.stringify(data));
     } catch (error) {
       console.warn('🤖 btoa failed on Android, using fallback encoding');
-      // Fallback for Android devices with encoding issues
+      return this._androidSafeEncode(data);
+    }
+  }
+
+  /**
+   * Legacy mobile token generation
+   */
+  generateMobileToken(num1, num2, answer) {
+    const timestamp = Date.now();
+    const data = { num1, num2, answer, timestamp, platform: 'mobile', version: '1.0' };
+    
+    try {
+      return btoa(JSON.stringify(data));
+    } catch (error) {
+      console.warn('🤖 btoa failed on Android, using fallback encoding');
       return this._androidSafeEncode(data);
     }
   }

@@ -518,3 +518,37 @@ async def debug_admin_setup():
         }
     except Exception as e:
         return {"error": str(e)}
+
+@router.get("/captcha/config")
+async def get_captcha_config(request: Request):
+    """
+    Get reCAPTCHA configuration for mobile apps
+    This endpoint provides the public site key securely without hardcoding in the APK
+    """
+    try:
+        from captcha.config import RECAPTCHA_SITE_KEY
+        
+        # Log the request for monitoring
+        user_agent = request.headers.get("User-Agent", "Unknown")
+        logger.info(f"Captcha config requested from: {user_agent[:100]}")
+        
+        # Return the public site key (safe to expose)
+        if RECAPTCHA_SITE_KEY:
+            return {
+                "site_key": RECAPTCHA_SITE_KEY,
+                "theme": "light",
+                "size": "compact"  # Default to compact for mobile
+            }
+        else:
+            logger.error("reCAPTCHA site key not configured in environment")
+            raise HTTPException(
+                status_code=503, 
+                detail="reCAPTCHA service temporarily unavailable"
+            )
+            
+    except Exception as e:
+        logger.error(f"Error getting captcha config: {e}")
+        raise HTTPException(
+            status_code=500,
+            detail="Failed to retrieve captcha configuration"
+        )

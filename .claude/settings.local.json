@@ -50,7 +50,8 @@
       "Bash(git clean:*)",
       "Bash(npm start)",
       "Bash(grep:*)",
-      "Bash(npm:*)"
+      "Bash(npm:*)",
+      "Bash(keytool:*)"
     ],
     "deny": [],
     "fileSystem": {

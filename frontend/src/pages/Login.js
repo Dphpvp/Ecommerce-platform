@@ -8,6 +8,7 @@ import { secureFetch } from '../utils/csrf';
 import SecureForm from '../components/SecureForm';
 import platformDetection from '../utils/platformDetection';
 import RECAPTCHA_CONFIG from '../config/recaptcha';
+import '../styles/enhanced-captcha.css';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
 
@@ -67,22 +68,39 @@ const Login = ({ isSliderMode = false }) => {
     initializeRecaptcha();
   }, [showToast]);
 
-  // Render reCAPTCHA widget or mobile fallback
+  // Render reCAPTCHA widget - fetch key securely for mobile
   useEffect(() => {
     if (!recaptchaLoaded || !recaptchaRef.current) {
       return;
     }
 
     const renderRecaptcha = async () => {
-      const siteKey = RECAPTCHA_CONFIG.SITE_KEY;
+      let siteKey = RECAPTCHA_CONFIG.SITE_KEY;
+      
+      // For mobile apps, fetch the site key from backend to avoid hardcoding
+      if (!siteKey && platformDetection.isMobile) {
+        try {
+          console.log('📱 Fetching reCAPTCHA config from backend for mobile...');
+          const configResponse = await secureFetch(`${API_BASE}${RECAPTCHA_CONFIG.CONFIG_ENDPOINT}`);
+          if (configResponse.ok) {
+            const config = await configResponse.json();
+            siteKey = config.site_key;
+            console.log('✅ reCAPTCHA config fetched securely from backend');
+          }
+        } catch (error) {
+          console.warn('⚠️ Failed to fetch reCAPTCHA config from backend:', error);
+        }
+      }
+      
       console.log('🔍 reCAPTCHA config check:', {
         siteKey: siteKey ? `${siteKey.substring(0, 20)}...` : 'NOT FOUND',
-        source: 'RECAPTCHA_CONFIG'
+        source: platformDetection.isMobile ? 'backend-api' : 'build-env',
+        isMobile: platformDetection.isMobile
       });
       
       if (!siteKey) {
-        console.error('❌ reCAPTCHA site key not configured');
-        showToast('reCAPTCHA not configured. Please contact support.', 'error');
+        console.error('❌ reCAPTCHA site key not available');
+        showToast('Security verification unavailable. Please contact support.', 'error');
         return;
       }
 
@@ -372,7 +390,7 @@ const Login = ({ isSliderMode = false }) => {
 
   const handleMobileGoogleLogin = async () => {
     try {
-      console.log('🤖 Checking Google Auth availability...');
+      console.log('🤖 Enhanced mobile Google login starting...');
       
       // Check Capacitor availability first
       if (!window.Capacitor) {
@@ -380,97 +398,161 @@ const Login = ({ isSliderMode = false }) => {
         return await handleWebGoogleLogin();
       }
       
-      // Check if GoogleAuth plugin is available
-      if (!window.Capacitor.Plugins?.GoogleAuth) {
+      // Enhanced plugin availability check
+      const GoogleAuth = window.Capacitor?.Plugins?.GoogleAuth;
+      if (!GoogleAuth) {
         console.warn('GoogleAuth plugin not available');
+        // Try alternative authentication methods
+        if (window.Capacitor?.Plugins?.Browser) {
+          return await handleBrowserBasedGoogleLogin();
+        }
         showToast('Google login not available on this device. Please use email/password.', 'warning');
         return;
       }
 
-      console.log('🤖 Initiating mobile Google login');
+      console.log('🤖 Initiating enhanced mobile Google login');
       setLoading(true);
 
-      // Use the plugin through Capacitor.Plugins
-      const GoogleAuth = window.Capacitor.Plugins.GoogleAuth;
-      
-      // Initialize if needed (some versions require this)
+      // Enhanced initialization with better error handling
       try {
-        if (GoogleAuth.initialize) {
-          await GoogleAuth.initialize({
-            clientId: process.env.REACT_APP_GOOGLE_CLIENT_ID,
-            scopes: ['profile', 'email'],
-            grantOfflineAccess: true
-          });
-          console.log('✅ Google Auth initialized with config');
+        const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
+        if (!clientId) {
+          throw new Error('Google Client ID not configured');
         }
-      } catch (initError) {
-        console.warn('Google Auth initialization warning (continuing):', initError);
-      }
 
-      // Attempt sign in
-      const result = await GoogleAuth.signIn();
-      
-      console.log('Google Auth result structure:', {
-        hasAuthentication: !!result?.authentication,
-        hasIdToken: !!result?.idToken,
-        hasServerAuthCode: !!result?.serverAuthCode,
-        hasAccessToken: !!result?.accessToken,
-        keys: Object.keys(result || {})
-      });
-      
-      // Handle the response - try different credential sources
-      let credential = null;
-      let credentialType = null;
-      
-      if (result?.authentication?.idToken) {
-        credential = result.authentication.idToken;
-        credentialType = 'authentication.idToken';
-      } else if (result?.idToken) {
-        credential = result.idToken;
-        credentialType = 'idToken';
-      } else if (result?.serverAuthCode) {
-        credential = result.serverAuthCode;
-        credentialType = 'serverAuthCode';
-      } else if (result?.authentication?.accessToken) {
-        credential = result.authentication.accessToken;
-        credentialType = 'authentication.accessToken';
-      } else if (result?.accessToken) {
-        credential = result.accessToken;
-        credentialType = 'accessToken';
-      }
-      
-      console.log('🔑 Using credential type:', credentialType);
-      
-      if (credential) {
-        await handleGoogleResponse({
-          credential: credential,
-          type: credentialType
+        // Check if initialization is needed
+        if (GoogleAuth.initialize) {
+          const initConfig = {
+            clientId: clientId,
+            scopes: ['profile', 'email', 'openid'],
+            grantOfflineAccess: true,
+            forceCodeForRefreshToken: true
+          };
+          
+          console.log('🔧 Initializing Google Auth with enhanced config');
+          await GoogleAuth.initialize(initConfig);
+          console.log('✅ Google Auth initialized successfully');
+        }
+
+        // Enhanced sign-in with retry logic
+        let result;
+        let retryCount = 0;
+        const maxRetries = 2;
+
+        while (retryCount <= maxRetries) {
+          try {
+            console.log(`🔄 Sign-in attempt ${retryCount + 1}`);
+            result = await GoogleAuth.signIn();
+            break; // Success, exit retry loop
+          } catch (signInError) {
+            retryCount++;
+            if (retryCount > maxRetries) {
+              throw signInError; // Re-throw after max retries
+            }
+            
+            console.warn(`Sign-in attempt ${retryCount} failed, retrying...`, signInError);
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second before retry
+          }
+        }
+        
+        console.log('✅ Google Auth sign-in successful, processing result...');
+        console.log('Result structure:', {
+          hasAuthentication: !!result?.authentication,
+          hasIdToken: !!result?.idToken,
+          hasServerAuthCode: !!result?.serverAuthCode,
+          hasAccessToken: !!result?.accessToken,
+          hasEmail: !!result?.email,
+          hasName: !!result?.name,
+          keys: Object.keys(result || {})
         });
-      } else {
-        console.error('❌ No valid credential found in result:', result);
-        showToast('Google login failed - no authentication data received', 'error');
+        
+        // Enhanced credential extraction with priority order
+        let credential = null;
+        let credentialType = null;
+        let userInfo = {};
+        
+        // Extract user info
+        if (result?.email) userInfo.email = result.email;
+        if (result?.name) userInfo.name = result.name;
+        if (result?.imageUrl) userInfo.picture = result.imageUrl;
+        
+        // Priority order for credentials (most secure first)
+        if (result?.authentication?.idToken) {
+          credential = result.authentication.idToken;
+          credentialType = 'idToken';
+        } else if (result?.idToken) {
+          credential = result.idToken;
+          credentialType = 'idToken';
+        } else if (result?.serverAuthCode) {
+          credential = result.serverAuthCode;
+          credentialType = 'serverAuthCode';
+        } else if (result?.authentication?.accessToken) {
+          credential = result.authentication.accessToken;
+          credentialType = 'accessToken';
+        } else if (result?.accessToken) {
+          credential = result.accessToken;
+          credentialType = 'accessToken';
+        }
+        
+        console.log('🔑 Using credential type:', credentialType);
+        console.log('👤 User info extracted:', { ...userInfo, email: userInfo.email ? '***' : 'none' });
+        
+        if (credential) {
+          // Enhanced response handling
+          await handleEnhancedGoogleResponse({
+            credential: credential,
+            type: credentialType,
+            userInfo: userInfo,
+            platform: 'mobile'
+          });
+        } else {
+          console.error('❌ No valid credential found in result:', result);
+          showToast('Google login succeeded but no authentication token received. Please try again.', 'error');
+        }
+        
+      } catch (initError) {
+        console.error('Google Auth initialization/sign-in error:', initError);
+        throw initError;
       }
-    } catch (error) {
-      console.error('Mobile Google login error:', error);
       
-      // Enhanced error handling
+    } catch (error) {
+      console.error('Enhanced mobile Google login error:', error);
+      
+      // Enhanced error handling with more specific messages
       const errorMessage = error.message || error.toString();
       const errorCode = error.code || error.error_code || error.status;
       
+      // User cancelled
       if (errorMessage.includes('cancelled') || errorMessage.includes('CANCELED') || 
           errorCode === '12501' || errorCode === 'SIGN_IN_CANCELLED' || errorCode === 4) {
         showToast('Google login was cancelled', 'info');
-      } else if (errorMessage.includes('network') || errorMessage.includes('NETWORK_ERROR') || 
-                 errorCode === 'NETWORK_ERROR' || errorCode === 7) {
-        showToast('Network error. Please check your internet connection.', 'error');
-      } else if (errorMessage.includes('not installed') || errorMessage.includes('DEVELOPER_ERROR') || 
-                 errorCode === '10' || errorCode === 10) {
-        showToast('Google Play Services not available or outdated', 'error');
-      } else if (errorMessage.includes('SIGN_IN_FAILED') || errorCode === '12500' || errorCode === 12500) {
-        showToast('Google sign-in failed. Please try again.', 'error');
-      } else if (errorMessage.includes('API_NOT_CONNECTED') || errorCode === 17) {
-        showToast('Google services not connected. Please try again.', 'error');
-      } else {
+        return; // Don't treat cancellation as an error
+      }
+      
+      // Network issues
+      if (errorMessage.includes('network') || errorMessage.includes('NETWORK_ERROR') || 
+          errorCode === 'NETWORK_ERROR' || errorCode === 7) {
+        showToast('Network error. Please check your internet connection and try again.', 'error');
+      }
+      // Google Play Services issues
+      else if (errorMessage.includes('not installed') || errorMessage.includes('DEVELOPER_ERROR') || 
+               errorCode === '10' || errorCode === 10) {
+        showToast('Google Play Services not available. Please update Google Play Services and try again.', 'error');
+      }
+      // Sign-in failure
+      else if (errorMessage.includes('SIGN_IN_FAILED') || errorCode === '12500' || errorCode === 12500) {
+        showToast('Google sign-in failed. Please try again or use email/password login.', 'error');
+      }
+      // API connection issues
+      else if (errorMessage.includes('API_NOT_CONNECTED') || errorCode === 17) {
+        showToast('Google services temporarily unavailable. Please try again later.', 'error');
+      }
+      // Configuration issues
+      else if (errorMessage.includes('Client ID') || errorMessage.includes('configuration')) {
+        showToast('Google login configuration error. Please contact support.', 'error');
+      }
+      // Generic error
+      else {
         showToast(`Google login failed: ${errorMessage}`, 'error');
       }
       
@@ -478,7 +560,8 @@ const Login = ({ isSliderMode = false }) => {
         message: errorMessage,
         code: errorCode,
         fullError: error,
-        errorType: typeof error
+        errorType: typeof error,
+        stack: error.stack
       });
     } finally {
       setLoading(false);
@@ -509,37 +592,136 @@ const Login = ({ isSliderMode = false }) => {
     }
   };
 
-  const handleGoogleResponse = async (response) => {
+  const handleBrowserBasedGoogleLogin = async () => {
+    try {
+      console.log('🌐 Initiating browser-based Google login fallback');
+      
+      const Browser = window.Capacitor.Plugins.Browser;
+      const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
+      
+      if (!clientId) {
+        throw new Error('Google Client ID not configured');
+      }
+      
+      // OAuth URL for Google
+      const redirectUri = encodeURIComponent(`${window.location.origin}/auth/google/callback`);
+      const scope = encodeURIComponent('profile email openid');
+      const googleAuthUrl = `https://accounts.google.com/oauth/authorize?` +
+        `client_id=${clientId}&` +
+        `redirect_uri=${redirectUri}&` +
+        `response_type=code&` +
+        `scope=${scope}&` +
+        `access_type=offline`;
+      
+      await Browser.open({ 
+        url: googleAuthUrl,
+        windowName: '_self'
+      });
+      
+    } catch (error) {
+      console.error('Browser-based Google login error:', error);
+      showToast('Browser login failed. Please use email/password.', 'error');
+    }
+  };
+
+  const handleEnhancedGoogleResponse = async (response) => {
     try {
       setLoading(true);
+      console.log('🔐 Processing enhanced Google authentication...');
 
-      const result = await secureFetch(`${API_BASE}/auth/google`, {
-        method: 'POST',
-        body: JSON.stringify({
-          token: response.credential
-        }),
+      // Enhanced request with platform info
+      const requestBody = {
+        token: response.credential,
+        type: response.type,
+        platform: response.platform || 'web',
+        userInfo: response.userInfo || {}
+      };
+
+      console.log('📤 Sending enhanced auth request:', {
+        type: requestBody.type,
+        platform: requestBody.platform,
+        hasUserInfo: !!requestBody.userInfo,
+        tokenLength: requestBody.token?.length
       });
+
+      // Use appropriate fetch method based on platform
+      let result;
+      if (platformDetection.isMobile && window.Capacitor?.Plugins?.CapacitorHttp) {
+        console.log('📱 Using Capacitor HTTP for Google auth');
+        
+        const httpResponse = await window.Capacitor.Plugins.CapacitorHttp.request({
+          url: `${API_BASE}/auth/google`,
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Platform': 'mobile',
+            ...platformDetection.getPlatformHeaders()
+          },
+          data: requestBody
+        });
+        
+        result = {
+          ok: httpResponse.status >= 200 && httpResponse.status < 300,
+          status: httpResponse.status,
+          json: async () => httpResponse.data
+        };
+      } else {
+        result = await secureFetch(`${API_BASE}/auth/google`, {
+          method: 'POST',
+          headers: {
+            'X-Platform': response.platform || 'web'
+          },
+          body: JSON.stringify(requestBody),
+        });
+      }
 
       const data = await result.json();
 
       if (result.ok) {
+        console.log('✅ Google authentication successful');
+        
         if (data.token) {
           localStorage.setItem('auth_token', data.token);
         }
+        
         login(data.user);
         showToast('Google login successful!', 'success');
+        
+        // Add haptic feedback for mobile
+        if (window.Capacitor?.Plugins?.Haptics) {
+          window.Capacitor.Plugins.Haptics.notification({ type: 'SUCCESS' });
+        }
+        
         navigate('/');
       } else {
-        const errorMessage = data.detail || 'Google login failed';
+        console.error('❌ Google authentication failed:', data);
+        const errorMessage = data.detail || data.message || 'Google login failed';
         showToast(errorMessage, 'error');
       }
     } catch (error) {
-      console.error('Google login error:', error);
-      const errorMessage = 'Google login failed. Please try again.';
+      console.error('Enhanced Google login error:', error);
+      
+      let errorMessage = 'Google login failed. Please try again.';
+      
+      if (error.message?.includes('fetch')) {
+        errorMessage = 'Network error. Please check your connection and try again.';
+      } else if (error.status >= 500) {
+        errorMessage = 'Server error. Please try again later.';
+      }
+      
       showToast(errorMessage, 'error');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleGoogleResponse = async (response) => {
+    // Legacy handler - redirect to enhanced version
+    return await handleEnhancedGoogleResponse({
+      credential: response.credential,
+      type: 'idToken',
+      platform: 'web'
+    });
   };
 
   if (show2FA) {
