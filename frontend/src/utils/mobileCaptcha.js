@@ -1,15 +1,13 @@
 /**
  * Mobile-compatible captcha utility
- * Handles both web reCAPTCHA and native Android reCAPTCHA
+ * Handles web reCAPTCHA optimized for Android WebView
  */
 import platformDetection from './platformDetection.js';
-import nativeRecaptcha from './nativeRecaptcha.js';
 
 class MobileCaptchaManager {
   constructor() {
     this.isLoaded = false;
     this.widgetId = null;
-    this.useNative = false;
     
     // Smart platform detection
     try {
@@ -72,24 +70,12 @@ class MobileCaptchaManager {
     this.onCompleteCallback = onComplete;
     this.onExpiredCallback = onExpired;
 
-    // Check if native Android reCAPTCHA is available
-    if (this.isActuallyMobile && nativeRecaptcha.isAvailable()) {
-      console.log('📱 Using native Android reCAPTCHA SDK');
-      const mobileSiteKey = config.mobileSiteKey || process.env.REACT_APP_RECAPTCHA_MOBILE_SITE_KEY;
-      
-      if (!mobileSiteKey) {
-        throw new Error('Mobile reCAPTCHA site key not configured');
-      }
-      
-      return await this.initializeNativeRecaptcha(mobileSiteKey);
-    }
-
     // Determine the correct site key based on platform
     let siteKey;
     if (this.isActuallyMobile) {
-      // Use mobile-specific reCAPTCHA key for Android WebView fallback
+      // Use mobile-specific reCAPTCHA key for Android WebView
       siteKey = config.mobileSiteKey || process.env.REACT_APP_RECAPTCHA_MOBILE_SITE_KEY;
-      console.log('📱 Using mobile reCAPTCHA key for Android WebView fallback');
+      console.log('📱 Using mobile reCAPTCHA key for Android WebView');
     } else {
       // Use web-specific reCAPTCHA key for web deployment
       siteKey = config.webSiteKey || process.env.REACT_APP_RECAPTCHA_WEB_SITE_KEY;
@@ -100,32 +86,11 @@ class MobileCaptchaManager {
       throw new Error('reCAPTCHA site key not configured for platform');
     }
 
-    // Use web reCAPTCHA as fallback
+    // Use web reCAPTCHA optimized for mobile
     const size = this.isActuallyMobile ? 'compact' : (config.size || 'normal');
     return await this.initializeWebCaptcha(siteKey, config.theme || 'light', size);
   }
 
-  /**
-   * Initialize native Android reCAPTCHA
-   */
-  async initializeNativeRecaptcha(siteKey) {
-    try {
-      await nativeRecaptcha.initialize(siteKey);
-      this.isLoaded = true;
-      this.useNative = true;
-      
-      console.log('✅ Native Android reCAPTCHA initialized successfully');
-      
-      if (this.onLoadCallback) {
-        this.onLoadCallback();
-      }
-      
-      return true;
-    } catch (error) {
-      console.error('❌ Native reCAPTCHA initialization failed:', error);
-      throw error;
-    }
-  }
 
   /**
    * Initialize web reCAPTCHA
@@ -184,12 +149,11 @@ class MobileCaptchaManager {
   }
 
   /**
-   * Render captcha widget - native or web reCAPTCHA
+   * Render captcha widget - web reCAPTCHA optimized for mobile
    */
   render(container, config = {}) {
     console.log('🎨 Rendering reCAPTCHA:', {
       isLoaded: this.isLoaded,
-      useNative: this.useNative,
       actuallyMobile: this.isActuallyMobile,
       platform: this.platform,
       containerExists: !!container
@@ -200,37 +164,29 @@ class MobileCaptchaManager {
       throw new Error('Captcha not initialized');
     }
 
-    if (this.useNative) {
-      console.log('📱 Using native Android reCAPTCHA - no rendering needed');
-      return Promise.resolve('native-ready');
-    }
-
     if (!container) {
       console.error('❌ No container provided');
       throw new Error('Container element is required');
     }
 
-    // Use web reCAPTCHA for web platform or mobile fallback
+    // Use web reCAPTCHA optimized for mobile
     console.log('🌐 Rendering web reCAPTCHA for platform:', this.isActuallyMobile ? 'mobile' : 'web');
     return this.renderWebCaptcha(container, config);
   }
 
   /**
-   * Get reCAPTCHA token (works for both native and web)
+   * Get reCAPTCHA response token from rendered widget
    */
-  async getToken(action = 'login') {
-    if (!this.isLoaded) {
-      throw new Error('Captcha not initialized');
+  getResponse() {
+    if (!this.isLoaded || !this.widgetId) {
+      throw new Error('reCAPTCHA not initialized or rendered');
     }
-
-    if (this.useNative) {
-      console.log(`📱 Getting native Android reCAPTCHA token for action: ${action}`);
-      return await nativeRecaptcha.execute(action);
-    } else {
-      console.log(`🌐 Getting web reCAPTCHA token for action: ${action}`);
-      // For web reCAPTCHA, the token is obtained through the callback mechanism
-      // This method would need to be implemented based on your specific web reCAPTCHA setup
-      throw new Error('Web reCAPTCHA token retrieval not implemented in this method. Use the callback mechanism.');
+    
+    try {
+      return window.grecaptcha.getResponse(this.widgetId);
+    } catch (error) {
+      console.error('Failed to get reCAPTCHA response:', error);
+      return '';
     }
   }
 
