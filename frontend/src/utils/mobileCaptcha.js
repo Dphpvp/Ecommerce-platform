@@ -70,24 +70,25 @@ class MobileCaptchaManager {
     this.onCompleteCallback = onComplete;
     this.onExpiredCallback = onExpired;
 
-    try {
-      // Always use web reCAPTCHA for consistency
-      console.log('🌐 Using consistent web reCAPTCHA for all platforms');
-      const size = this.isActuallyMobile ? 'compact' : (config.size || 'normal');
-      return await this.initializeWebCaptcha(config.siteKey, config.theme || 'light', size);
-    } catch (error) {
-      console.error('❌ reCAPTCHA initialization failed:', error);
-      
-      // Only use mobile captcha as emergency fallback for deployment issues
-      console.log('🔄 Emergency fallback to mobile captcha due to reCAPTCHA failure');
-      try {
-        this.isMobile = true;
-        return await this.initializeMobileCaptcha(config);
-      } catch (fallbackError) {
-        console.error('❌ Emergency fallback also failed:', fallbackError);
-        throw new Error('Both reCAPTCHA and fallback captcha failed');
-      }
+    // Determine the correct site key based on platform
+    let siteKey;
+    if (this.isActuallyMobile) {
+      // Use mobile-specific reCAPTCHA key for Android
+      siteKey = config.mobileSiteKey || process.env.REACT_APP_RECAPTCHA_MOBILE_SITE_KEY;
+      console.log('📱 Using mobile reCAPTCHA key for Android platform');
+    } else {
+      // Use web-specific reCAPTCHA key for web deployment
+      siteKey = config.webSiteKey || process.env.REACT_APP_RECAPTCHA_WEB_SITE_KEY;
+      console.log('🌐 Using web reCAPTCHA key for web platform');
     }
+
+    if (!siteKey) {
+      throw new Error('reCAPTCHA site key not configured for platform');
+    }
+
+    // Always use reCAPTCHA - no math fallback
+    const size = this.isActuallyMobile ? 'compact' : (config.size || 'normal');
+    return await this.initializeWebCaptcha(siteKey, config.theme || 'light', size);
   }
 
   /**
@@ -147,12 +148,11 @@ class MobileCaptchaManager {
   }
 
   /**
-   * Render captcha widget - always reCAPTCHA unless emergency fallback
+   * Render captcha widget - always reCAPTCHA
    */
   render(container, config = {}) {
-    console.log('🎨 Rendering consistent captcha:', {
+    console.log('🎨 Rendering reCAPTCHA:', {
       isLoaded: this.isLoaded,
-      forceMobile: this.isMobile,
       actuallyMobile: this.isActuallyMobile,
       platform: this.platform,
       containerExists: !!container
@@ -168,23 +168,9 @@ class MobileCaptchaManager {
       throw new Error('Container element is required');
     }
 
-    try {
-      if (this.isMobile) {
-        // Only if we're in emergency fallback mode
-        console.log('📱 Using emergency mobile captcha fallback');
-        return this.renderMobileCaptcha(container, config);
-      } else {
-        console.log('🌐 Rendering standard reCAPTCHA for all platforms');
-        return this.renderWebCaptcha(container, config);
-      }
-    } catch (error) {
-      console.error('❌ Captcha render failed:', error);
-      
-      // Emergency fallback only if reCAPTCHA completely fails
-      console.log('🚨 Creating emergency fallback - reCAPTCHA failed completely');
-      this.isMobile = true; // Switch to emergency mode
-      return this.renderMobileCaptcha(container, config);
-    }
+    // Always use reCAPTCHA for both web and mobile
+    console.log('🌐 Rendering reCAPTCHA for platform:', this.isActuallyMobile ? 'mobile' : 'web');
+    return this.renderWebCaptcha(container, config);
   }
 
   /**

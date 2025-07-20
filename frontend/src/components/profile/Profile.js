@@ -93,7 +93,7 @@ const Profile = () => {
     if (recaptchaLoaded && isChangingPassword && recaptchaRef.current && !recaptchaWidgetId) {
       try {
         const widgetId = window.grecaptcha.render(recaptchaRef.current, {
-          sitekey: process.env.REACT_APP_RECAPTCHA_SITE_KEY,
+          sitekey: process.env.REACT_APP_RECAPTCHA_WEB_SITE_KEY,
           callback: (response) => {
             console.log('reCAPTCHA completed:', response);
           },

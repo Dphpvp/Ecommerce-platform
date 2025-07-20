@@ -37,7 +37,8 @@ const ResetPassword = () => {
     const initializeCaptcha = async () => {
       try {
         await mobileCaptcha.initialize({
-          siteKey: process.env.REACT_APP_RECAPTCHA_SITE_KEY,
+          webSiteKey: process.env.REACT_APP_RECAPTCHA_WEB_SITE_KEY,
+          mobileSiteKey: process.env.REACT_APP_RECAPTCHA_MOBILE_SITE_KEY,
           onLoad: () => setRecaptchaLoaded(true),
           onComplete: (response) => {
             console.log('Captcha completed:', response);

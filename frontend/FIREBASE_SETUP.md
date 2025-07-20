@@ -46,14 +46,14 @@ Firebase Console → Project Settings → Your Android App → Add Fingerprint
 **Vercel (Frontend):**
 ```
 REACT_APP_GOOGLE_CLIENT_ID=your_web_client_id_from_firebase
-REACT_APP_RECAPTCHA_SITE_KEY=your_recaptcha_site_key
+REACT_APP_RECAPTCHA_WEB_SITE_KEY=your_web_recaptcha_site_key
+REACT_APP_RECAPTCHA_MOBILE_SITE_KEY=your_mobile_recaptcha_site_key
 REACT_APP_API_BASE_URL=https://ecommerce-platform-nizy.onrender.com/api
 ```
 
 **Render (Backend):**
 ```
 RECAPTCHA_SECRET_KEY=your_recaptcha_secret_key
-REACT_APP_RECAPTCHA_SITE_KEY=your_recaptcha_site_key
 ```
 
 ### 6. Build and Test

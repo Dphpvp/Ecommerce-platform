@@ -12,7 +12,8 @@ GOOGLE_CLIENT_SECRET=GOCSPXxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ### **Vercel (Frontend) Environment Variables:**
 ```
 REACT_APP_API_BASE_URL=https://ecommerce-platform-nizy.onrender.com/api
-REACT_APP_RECAPTCHA_SITE_KEY=6LxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxO
+REACT_APP_RECAPTCHA_WEB_SITE_KEY=6LxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxO
+REACT_APP_RECAPTCHA_MOBILE_SITE_KEY=6LxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxO
 REACT_APP_GOOGLE_CLIENT_ID=1234567890-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com
 REACT_APP_SESSION_SECRET=your-random-session-secret
 ```

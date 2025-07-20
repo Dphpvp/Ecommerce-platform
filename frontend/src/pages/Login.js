@@ -75,30 +75,17 @@ const Login = ({ isSliderMode = false }) => {
     }
 
     const renderRecaptcha = async () => {
-      let siteKey = RECAPTCHA_CONFIG.SITE_KEY;
-      
-      // For mobile apps, fetch the site key from backend to avoid hardcoding
-      if (!siteKey && platformDetection.isMobile) {
-        try {
-          console.log('📱 Fetching reCAPTCHA config from backend for mobile...');
-          const configResponse = await secureFetch(`${API_BASE}${RECAPTCHA_CONFIG.CONFIG_ENDPOINT}`);
-          if (configResponse.ok) {
-            const config = await configResponse.json();
-            siteKey = config.site_key;
-            console.log('✅ reCAPTCHA config fetched securely from backend');
-          }
-        } catch (error) {
-          console.warn('⚠️ Failed to fetch reCAPTCHA config from backend:', error);
-        }
-      }
+      // Use appropriate site key based on platform
+      const siteKey = platformDetection.isMobile 
+        ? RECAPTCHA_CONFIG.MOBILE_SITE_KEY 
+        : RECAPTCHA_CONFIG.WEB_SITE_KEY;
       
       console.log('🔍 reCAPTCHA config check:', {
         siteKey: siteKey ? `${siteKey.substring(0, 20)}...` : 'NOT FOUND',
-        source: platformDetection.isMobile ? 'backend-api' : 'build-env',
+        platform: platformDetection.isMobile ? 'mobile' : 'web',
         isMobile: platformDetection.isMobile,
-        configValue: RECAPTCHA_CONFIG.SITE_KEY ? 'SET' : 'MISSING',
-        apiBase: API_BASE,
-        configEndpoint: RECAPTCHA_CONFIG.CONFIG_ENDPOINT
+        webKeySet: RECAPTCHA_CONFIG.WEB_SITE_KEY ? 'SET' : 'MISSING',
+        mobileKeySet: RECAPTCHA_CONFIG.MOBILE_SITE_KEY ? 'SET' : 'MISSING'
       });
       
       if (!siteKey) {

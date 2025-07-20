@@ -51,7 +51,8 @@
       "Bash(npm start)",
       "Bash(grep:*)",
       "Bash(npm:*)",
-      "Bash(keytool:*)"
+      "Bash(keytool:*)",
+      "Bash(git log:*)"
     ],
     "deny": [],
     "fileSystem": {
