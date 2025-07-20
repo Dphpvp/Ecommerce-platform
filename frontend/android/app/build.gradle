@@ -50,6 +50,9 @@ dependencies {
     implementation 'com.google.firebase:firebase-auth:22.3.1'
     implementation 'com.google.firebase:firebase-core:21.1.1'
     
+    // Native Android reCAPTCHA SDK
+    implementation 'com.google.android.recaptcha:recaptcha:18.8.0-beta01'
+    
     // WebView enhancements for better captcha support
     implementation "androidx.webkit:webkit:$androidxWebkitVersion"
     implementation 'androidx.browser:browser:1.7.0'

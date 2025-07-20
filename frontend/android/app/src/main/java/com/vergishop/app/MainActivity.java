@@ -8,19 +8,34 @@ import android.webkit.WebView;
 import androidx.webkit.WebViewFeature;
 import androidx.webkit.WebSettingsCompat;
 import com.getcapacitor.BridgeActivity;
+import com.getcapacitor.Plugin;
+import com.getcapacitor.PluginCall;
+import com.getcapacitor.PluginMethod;
+import com.getcapacitor.annotation.CapacitorPlugin;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.safetynet.SafetyNet;
+import com.google.android.recaptcha.Recaptcha;
+import com.google.android.recaptcha.RecaptchaAction;
+import com.google.android.recaptcha.RecaptchaClient;
+import com.google.android.recaptcha.RecaptchaException;
 
 public class MainActivity extends BridgeActivity {
     private static final String TAG = "VergiShop";
+    private RecaptchaClient recaptchaClient;
     
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         
+        // Register native reCAPTCHA plugin
+        registerPlugin(RecaptchaPlugin.class);
+        
         // Check Google Play Services availability
         checkGooglePlayServices();
+        
+        // Initialize native reCAPTCHA client
+        initializeRecaptchaClient();
         
         // Configure WebView for enhanced reCAPTCHA and Google Auth support
         configureWebView();
@@ -107,6 +122,52 @@ public class MainActivity extends BridgeActivity {
             
             android.util.Log.i(TAG, "WebView configured for enhanced captcha and auth support");
         }
+    }
+    
+    private void initializeRecaptchaClient() {
+        // reCAPTCHA key will be provided by the WebView when needed
+        // This avoids hardcoding keys in the APK
+        android.util.Log.i(TAG, "Native reCAPTCHA client ready for initialization");
+    }
+    
+    // Method to execute reCAPTCHA action (can be called from WebView)
+    public void executeRecaptchaAction(String action, RecaptchaActionCallback callback) {
+        if (recaptchaClient == null) {
+            callback.onError("reCAPTCHA client not initialized");
+            return;
+        }
+        
+        new Thread(() -> {
+            try {
+                RecaptchaAction recaptchaAction;
+                switch (action.toLowerCase()) {
+                    case "login":
+                        recaptchaAction = RecaptchaAction.LOGIN;
+                        break;
+                    case "signup":
+                        recaptchaAction = RecaptchaAction.SIGNUP;
+                        break;
+                    default:
+                        recaptchaAction = RecaptchaAction.custom(action);
+                        break;
+                }
+                
+                // Execute reCAPTCHA with 10 second timeout
+                String token = recaptchaClient.execute(recaptchaAction, 10000L);
+                callback.onSuccess(token);
+                android.util.Log.i(TAG, "reCAPTCHA token generated successfully");
+                
+            } catch (RecaptchaException e) {
+                android.util.Log.e(TAG, "reCAPTCHA execution failed", e);
+                callback.onError("reCAPTCHA execution failed: " + e.getMessage());
+            }
+        }).start();
+    }
+    
+    // Interface for reCAPTCHA callbacks
+    public interface RecaptchaActionCallback {
+        void onSuccess(String token);
+        void onError(String error);
     }
     
     @Override

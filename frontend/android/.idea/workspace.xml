@@ -5,11 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6f24bd5f-c9f7-438a-b820-b3d6f5c93ad0" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/deploymentTargetSelector.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/deploymentTargetSelector.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/asset-manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/public/asset-manifest.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/public/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/vergishop/app/MainActivity.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/vergishop/app/MainActivity.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -51,12 +49,12 @@
     &quot;assignee&quot;: &quot;Dphpvp&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings"><![CDATA[{
-  "selectedUrlAndAccountId": {
-    "url": "https://github.com/Dphpvp/Ecommerce-platform.git",
-    "accountId": "aa968ff8-3e64-4c98-84ed-1375f003e3e9"
+  <component name="GithubPullRequestsUISettings">{
+  &quot;selectedUrlAndAccountId&quot;: {
+    &quot;url&quot;: &quot;https://github.com/Dphpvp/Ecommerce-platform.git&quot;,
+    &quot;accountId&quot;: &quot;aa968ff8-3e64-4c98-84ed-1375f003e3e9&quot;
   }
-}]]></component>
+}</component>
   <component name="ProjectColorInfo">{
   &quot;customColor&quot;: &quot;&quot;,
   &quot;associatedIndex&quot;: 3
@@ -68,7 +66,7 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
-    "Android App.app.executor": "Debug",
+    "Android App.app.executor": "Run",
     "Gradle.Upgrade Gradle wrapper.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
