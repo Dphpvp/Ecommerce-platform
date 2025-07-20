@@ -4,7 +4,8 @@
 
 ### **Render (Backend) Environment Variables:**
 ```
-RECAPTCHA_SECRET_KEY=6LxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxO
+RECAPTCHA_SECRET_KEY=6LxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxO           # Web reCAPTCHA secret key
+RECAPTCHA_MOBILE_SECRET_KEY=6LxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxO    # Mobile reCAPTCHA secret key  
 GOOGLE_CLIENT_ID=1234567890-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com
 GOOGLE_CLIENT_SECRET=GOCSPXxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ```
@@ -12,8 +13,8 @@ GOOGLE_CLIENT_SECRET=GOCSPXxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 ### **Vercel (Frontend) Environment Variables:**
 ```
 REACT_APP_API_BASE_URL=https://ecommerce-platform-nizy.onrender.com/api
-REACT_APP_RECAPTCHA_WEB_SITE_KEY=6LxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxO
-REACT_APP_RECAPTCHA_MOBILE_SITE_KEY=6LxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxO
+REACT_APP_RECAPTCHA_WEB_SITE_KEY=6LxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxO      # Web reCAPTCHA site key
+REACT_APP_RECAPTCHA_MOBILE_SITE_KEY=6LxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxO   # Mobile reCAPTCHA site key
 REACT_APP_GOOGLE_CLIENT_ID=1234567890-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx.apps.googleusercontent.com
 REACT_APP_SESSION_SECRET=your-random-session-secret
 ```
@@ -21,10 +22,20 @@ REACT_APP_SESSION_SECRET=your-random-session-secret
 ## 📋 Google Console Setup
 
 ### **Google reCAPTCHA Console** (https://www.google.com/recaptcha/admin)
-**Domains to add:**
-- `ecommerce-platform-nizy.onrender.com`
-- `vergishop.vercel.app`
-- `vs1.vercel.app`
+
+**Create TWO reCAPTCHA Keys:**
+
+**1. Web Platform Key:**
+- Platform: Web
+- Domains: `ecommerce-platform-nizy.onrender.com`, `vergishop.vercel.app`, `vs1.vercel.app`
+- Use site key for `REACT_APP_RECAPTCHA_WEB_SITE_KEY`
+- Use secret key for `RECAPTCHA_SECRET_KEY`
+
+**2. Android Platform Key:**
+- Platform: Android  
+- Package name: `com.vergishop.app`
+- Use site key for `REACT_APP_RECAPTCHA_MOBILE_SITE_KEY`
+- Use secret key for `RECAPTCHA_MOBILE_SECRET_KEY`
 
 ### **Google Cloud Console** (https://console.cloud.google.com/)
 **Authorized JavaScript origins:**

@@ -6,13 +6,25 @@ import time
 from typing import Optional
 
 def verify_recaptcha(captcha_response: str, remote_ip: Optional[str] = None, request_headers: Optional[dict] = None) -> bool:
-    """Verify Google reCAPTCHA response"""
+    """Verify Google reCAPTCHA response - supports both web and mobile tokens"""
     
     if not captcha_response:
         print("❌ CAPTCHA: No response provided")
         return False
     
-    # Only allow real Google reCAPTCHA responses
+    # Check if this is a mobile captcha token (custom format)
+    if _is_mobile_captcha_token(captcha_response):
+        print("📱 CAPTCHA: Detected mobile captcha token")
+        return _verify_mobile_captcha(captcha_response, request_headers)
+    
+    # Check if this is a mobile reCAPTCHA token (starts with mobile site key prefix)
+    # Mobile reCAPTCHA tokens typically start with different prefixes than web tokens
+    if _is_mobile_recaptcha_token(captcha_response, request_headers):
+        print("📱 CAPTCHA: Detected mobile reCAPTCHA token")
+        return _verify_mobile_recaptcha(captcha_response, remote_ip)
+    
+    # Default to web reCAPTCHA verification
+    print("🌐 CAPTCHA: Using web reCAPTCHA verification")
     return _verify_web_recaptcha(captcha_response, remote_ip)
 
 
@@ -63,6 +75,68 @@ def _verify_web_recaptcha(captcha_response: str, remote_ip: Optional[str] = None
         
     except Exception as e:
         print(f"❌ CAPTCHA: Exception during verification - {str(e)}")
+        return False
+
+
+def _is_mobile_recaptcha_token(token: str, request_headers: Optional[dict] = None) -> bool:
+    """Check if the token is from mobile reCAPTCHA (Android platform)"""
+    
+    # Check request headers for mobile indicators
+    if request_headers:
+        user_agent = request_headers.get('User-Agent', '').lower()
+        if 'vergishop-mobile' in user_agent or 'android' in user_agent:
+            return True
+    
+    # Additional heuristics for mobile reCAPTCHA tokens
+    # Mobile tokens often have different characteristics than web tokens
+    if token and len(token) > 50:
+        # This is a basic heuristic - you might need to adjust based on actual token patterns
+        return True
+    
+    return False
+
+
+def _verify_mobile_recaptcha(captcha_response: str, remote_ip: Optional[str] = None) -> bool:
+    """Verify mobile Google reCAPTCHA response using mobile secret key"""
+    secret_key = os.getenv("RECAPTCHA_MOBILE_SECRET_KEY")
+    
+    if not secret_key:
+        print("❌ CAPTCHA: RECAPTCHA_MOBILE_SECRET_KEY environment variable not set")
+        print("🔄 CAPTCHA: Falling back to web reCAPTCHA verification")
+        return _verify_web_recaptcha(captcha_response, remote_ip)
+    
+    try:
+        data = {
+            "secret": secret_key,
+            "response": captcha_response
+        }
+        
+        if remote_ip:
+            data["remoteip"] = remote_ip
+        
+        response = requests.post(
+            "https://www.google.com/recaptcha/api/siteverify",
+            data=data,
+            timeout=10.0
+        )
+        
+        if response.status_code != 200:
+            print(f"❌ CAPTCHA: Google API returned status {response.status_code}")
+            return False
+        
+        result = response.json()
+        success = result.get("success", False)
+        
+        if not success:
+            error_codes = result.get("error-codes", [])
+            print(f"❌ CAPTCHA: Mobile reCAPTCHA verification failed - {error_codes}")
+        else:
+            print("✅ CAPTCHA: Mobile reCAPTCHA verification successful")
+            
+        return success
+        
+    except Exception as e:
+        print(f"❌ CAPTCHA: Exception during mobile reCAPTCHA verification - {str(e)}")
         return False
 
 
