@@ -6,14 +6,14 @@ import android.os.Bundle;
 import android.util.Log;
 import android.webkit.CookieManager;
 import android.webkit.PermissionRequest;
-import android.webkit.SslError;
-import android.webkit.SslErrorHandler;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.webkit.JavascriptInterface;
+import android.net.http.SslError;
+import android.webkit.SslErrorHandler;
 
 import androidx.webkit.WebViewFeature;
 import androidx.webkit.WebSettingsCompat;
@@ -57,7 +57,6 @@ public class MainActivity extends BridgeActivity {
         
         // Cache and cookie configuration
         settings.setCacheMode(WebSettings.LOAD_DEFAULT);
-        settings.setAppCacheEnabled(true);
         
         // Cookie management for Google services
         CookieManager cookieManager = CookieManager.getInstance();
@@ -160,9 +159,12 @@ public class MainActivity extends BridgeActivity {
             }
             
             @Override
-            public void onConsoleMessage(android.webkit.ConsoleMessage consoleMessage) {
-                Log.d(TAG, "Console: " + consoleMessage.message() + 
-                          " at " + consoleMessage.sourceId() + ":" + consoleMessage.lineNumber());
+            public boolean onConsoleMessage(android.webkit.ConsoleMessage consoleMessage) {
+                if (consoleMessage != null) {
+                    Log.d(TAG, "Console: " + consoleMessage.message() + 
+                              " at " + consoleMessage.sourceId() + ":" + consoleMessage.lineNumber());
+                }
+                return super.onConsoleMessage(consoleMessage);
             }
         });
     }

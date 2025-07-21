@@ -11,7 +11,6 @@ const config: CapacitorConfig = {
       "*.googleusercontent.com",
       "*.recaptcha.net"
     ],
-    hostname: "localhost",
     androidScheme: "https"
   },
   plugins: {

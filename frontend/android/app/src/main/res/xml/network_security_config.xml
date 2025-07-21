@@ -30,16 +30,6 @@
         </trust-anchors>
     </domain-config>
     
-    <!-- Development and localhost domains -->
-    <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="true">localhost</domain>
-        <domain includeSubdomains="true">127.0.0.1</domain>
-        <domain includeSubdomains="true">10.0.2.2</domain>
-        
-        <trust-anchors>
-            <certificates src="system"/>
-        </trust-anchors>
-    </domain-config>
     
     <!-- Base config for other domains -->
     <base-config cleartextTrafficPermitted="false">
