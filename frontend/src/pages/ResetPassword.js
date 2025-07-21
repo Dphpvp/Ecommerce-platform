@@ -62,7 +62,7 @@ const ResetPassword = () => {
     if (recaptchaLoaded && step === 'request' && recaptchaRef.current && !recaptchaWidgetId) {
       try {
         const widgetId = mobileCaptcha.render(recaptchaRef.current, {
-          sitekey: process.env.REACT_APP_RECAPTCHA_SITE_KEY,
+          sitekey: process.env.REACT_APP_RECAPTCHA_WEB_SITE_KEY,
           callback: (response) => {
             console.log('Captcha completed:', response);
           },

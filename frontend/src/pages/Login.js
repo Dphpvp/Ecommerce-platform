@@ -8,6 +8,7 @@ import { secureFetch } from '../utils/csrf';
 import SecureForm from '../components/SecureForm';
 import platformDetection from '../utils/platformDetection';
 import RECAPTCHA_CONFIG from '../config/recaptcha';
+import mobileCaptcha from '../utils/mobileCaptcha';
 import '../styles/enhanced-captcha.css';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
@@ -32,167 +33,55 @@ const Login = ({ isSliderMode = false }) => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Initialize Google reCAPTCHA for both web and mobile
+  // Initialize mobileCaptcha system (handles both web and mobile)
   useEffect(() => {
-    const initializeRecaptcha = () => {
-      // Check if reCAPTCHA is already loaded
-      if (window.grecaptcha) {
-        console.log('✅ reCAPTCHA already loaded');
-        setRecaptchaLoaded(true);
-        return;
-      }
-
-      console.log('🔄 Loading Google reCAPTCHA script...');
-      
-      // Load reCAPTCHA script for both web and mobile
-      const script = document.createElement('script');
-      script.src = 'https://www.google.com/recaptcha/api.js?render=explicit&hl=en';
-      script.async = true;
-      script.defer = true;
-      
-      script.onload = () => {
-        console.log('✅ reCAPTCHA script loaded successfully');
-        setRecaptchaLoaded(true);
-      };
-      
-      script.onerror = (error) => {
-        console.error('❌ Failed to load reCAPTCHA script:', error);
-        showToast('Failed to load security verification. Please check your internet connection.', 'error');
-        setRecaptchaLoaded(false);
-      };
-      
-      // Add to document head
-      document.head.appendChild(script);
-    };
-
-    initializeRecaptcha();
-  }, [showToast]);
-
-  // Render reCAPTCHA widget - fetch key securely for mobile
-  useEffect(() => {
-    if (!recaptchaLoaded || !recaptchaRef.current) {
-      return;
-    }
-
-    const renderRecaptcha = async () => {
-      // Use appropriate site key based on platform
-      const siteKey = platformDetection.isMobile 
-        ? RECAPTCHA_CONFIG.MOBILE_SITE_KEY 
-        : RECAPTCHA_CONFIG.WEB_SITE_KEY;
-      
-      console.log('🔍 reCAPTCHA config check:', {
-        siteKey: siteKey ? `${siteKey.substring(0, 20)}...` : 'NOT FOUND',
-        platform: platformDetection.isMobile ? 'mobile' : 'web',
-        isMobile: platformDetection.isMobile,
-        webKeySet: RECAPTCHA_CONFIG.WEB_SITE_KEY ? 'SET' : 'MISSING',
-        mobileKeySet: RECAPTCHA_CONFIG.MOBILE_SITE_KEY ? 'SET' : 'MISSING'
-      });
-      
-      if (!siteKey) {
-        console.error('❌ reCAPTCHA site key not available');
-        console.error('Debug info:', {
-          envValue: process.env.REACT_APP_RECAPTCHA_SITE_KEY,
-          configValue: RECAPTCHA_CONFIG.SITE_KEY,
-          isMobile: platformDetection.isMobile,
-          platform: platformDetection.platform
-        });
-        showToast('Security verification unavailable. Please contact support.', 'error');
-        return;
-      }
-
+    const initializeCaptcha = async () => {
       try {
-        // Clear any existing widget
-        if (recaptchaRef.current) {
-          recaptchaRef.current.innerHTML = '';
-        }
-
-        console.log('🔄 Rendering reCAPTCHA widget...');
-        console.log('🔍 Environment check:', {
-          grecaptchaExists: !!window.grecaptcha,
-          containerExists: !!recaptchaRef.current,
-          siteKeyLength: siteKey?.length,
-          userAgent: navigator.userAgent.substring(0, 100)
-        });
-
-        // Check if grecaptcha is available
-        if (!window.grecaptcha) {
-          console.error('❌ grecaptcha not loaded');
-          showToast('reCAPTCHA script not loaded. Please refresh the page.', 'error');
-          return;
-        }
-
-        // Wait for grecaptcha to be ready
-        window.grecaptcha.ready(() => {
-          try {
-            console.log('🔄 grecaptcha.ready() called, preparing widget config...');
-            
-            if (!recaptchaRef.current) {
-              console.error('❌ Container element not available');
-              showToast('reCAPTCHA container not ready. Please refresh the page.', 'error');
-              return;
-            }
-            
-            const widgetConfig = {
-              sitekey: siteKey,
-              theme: RECAPTCHA_CONFIG.THEME,
-              size: platformDetection.isMobile ? RECAPTCHA_CONFIG.MOBILE_SIZE : RECAPTCHA_CONFIG.SIZE,
-              callback: (response) => {
-                setCaptchaResponse(response);
-                console.log('✅ reCAPTCHA completed successfully');
-              },
-              'expired-callback': () => {
-                setCaptchaResponse('');
-                console.log('⏰ reCAPTCHA expired');
-                showToast('Security verification expired. Please complete it again.', 'warning');
-              },
-              'error-callback': (error) => {
-                console.error('❌ reCAPTCHA widget error:', error);
-                showToast('Security verification failed. Please try again.', 'error');
-              }
-            };
-
-            console.log('🔄 Rendering reCAPTCHA with config:', {
-              sitekey: `${siteKey.substring(0, 20)}...`,
-              size: widgetConfig.size,
-              theme: widgetConfig.theme,
-              isMobile: platformDetection.isMobile,
-              containerExists: !!recaptchaRef.current,
-              containerHTML: recaptchaRef.current?.outerHTML?.substring(0, 100)
-            });
-
-            const widgetId = window.grecaptcha.render(recaptchaRef.current, widgetConfig);
-            setRecaptchaWidgetId(widgetId);
-            console.log('✅ reCAPTCHA widget rendered successfully with ID:', widgetId);
-          } catch (renderError) {
-            console.error('❌ Failed to render reCAPTCHA widget:', renderError);
-            console.error('Render error details:', {
-              message: renderError.message,
-              stack: renderError.stack,
-              siteKey: siteKey ? `${siteKey.substring(0, 10)}...${siteKey.substring(-4)}` : 'none',
-              containerElement: recaptchaRef.current,
-              grecaptchaExists: !!window.grecaptcha,
-              grecaptchaRender: !!window.grecaptcha?.render
-            });
-            
-            // More specific error messages
-            if (renderError.message?.includes('Invalid site key')) {
-              showToast('Invalid reCAPTCHA configuration. Please contact support.', 'error');
-            } else if (renderError.message?.includes('Network')) {
-              showToast('Network error loading reCAPTCHA. Please check your connection.', 'error');
-            } else {
-              showToast('Failed to render security verification. Please refresh the page.', 'error');
-            }
+        await mobileCaptcha.initialize({
+          webSiteKey: process.env.REACT_APP_RECAPTCHA_WEB_SITE_KEY,
+          mobileSiteKey: process.env.REACT_APP_RECAPTCHA_MOBILE_SITE_KEY,
+          onLoad: () => setRecaptchaLoaded(true),
+          onComplete: (response) => {
+            console.log('Captcha completed:', response);
+            setCaptchaResponse(response);
+          },
+          onExpired: () => {
+            console.log('Captcha expired');
+            setCaptchaResponse('');
+            showToast('Security verification expired. Please complete it again.', 'warning');
           }
         });
       } catch (error) {
-        console.error('❌ reCAPTCHA initialization error:', error);
-        showToast('Security verification initialization failed.', 'error');
+        console.error('Failed to initialize captcha:', error);
+        showToast('Failed to load security verification. Please refresh the page.', 'error');
       }
     };
 
-    // Delay to ensure DOM is ready
-    const timeoutId = setTimeout(renderRecaptcha, 200);
-    return () => clearTimeout(timeoutId);
+    initializeCaptcha();
+  }, [showToast]);
+
+  // Render captcha widget when loaded
+  useEffect(() => {
+    if (recaptchaLoaded && recaptchaRef.current && !recaptchaWidgetId) {
+      try {
+        const widgetId = mobileCaptcha.render(recaptchaRef.current, {
+          sitekey: process.env.REACT_APP_RECAPTCHA_WEB_SITE_KEY,
+          callback: (response) => {
+            console.log('Captcha completed:', response);
+            setCaptchaResponse(response);
+          },
+          'expired-callback': () => {
+            console.log('Captcha expired');
+            setCaptchaResponse('');
+            showToast('Security verification expired. Please complete it again.', 'warning');
+          }
+        });
+        setRecaptchaWidgetId(widgetId);
+      } catch (error) {
+        console.error('Captcha render error:', error);
+        showToast('Failed to load security verification. Please refresh the page.', 'error');
+      }
+    }
   }, [recaptchaLoaded, showToast]);
 
   const handleSubmit = async (sanitizedData, csrfToken) => {
@@ -202,29 +91,22 @@ const Login = ({ isSliderMode = false }) => {
       ...sanitizedData
     };
     
-    // Validate reCAPTCHA response - required for all platforms
-    if (!captchaResponse) {
-      // Try to get current response from widget
-      if (recaptchaWidgetId !== null && window.grecaptcha) {
-        const currentResponse = window.grecaptcha.getResponse(recaptchaWidgetId);
-        if (currentResponse) {
-          setCaptchaResponse(currentResponse);
-          formDataWithAuth.recaptcha_response = currentResponse;
-          console.log('✅ Using current reCAPTCHA response');
-        } else {
-          showToast('Please complete the security verification (I\'m not a robot)', 'error');
-          setLoading(false);
-          return;
-        }
-      } else {
-        showToast('Please complete the security verification first', 'error');
-        setLoading(false);
-        return;
-      }
-    } else {
-      formDataWithAuth.recaptcha_response = captchaResponse;
-      console.log('✅ Using stored reCAPTCHA response');
+    // Get captcha response
+    let captchaResponse = '';
+    try {
+      captchaResponse = mobileCaptcha.getResponse(recaptchaWidgetId);
+    } catch (error) {
+      console.error('Captcha error:', error);
     }
+
+    if (!captchaResponse) {
+      const errorMessage = 'Please complete the security verification';
+      setLoading(false);
+      showToast(errorMessage, 'error');
+      return;
+    }
+    
+    formDataWithAuth.recaptcha_response = captchaResponse;
     
     try {
       console.log('🔐 Sending login request:', {
@@ -317,9 +199,9 @@ const Login = ({ isSliderMode = false }) => {
           showToast(errorMessage, 'error');
         }
         
-        // Reset reCAPTCHA on login error
-        if (recaptchaWidgetId !== null && window.grecaptcha) {
-          window.grecaptcha.reset(recaptchaWidgetId);
+        // Reset captcha on error
+        if (recaptchaWidgetId !== null) {
+          mobileCaptcha.reset(recaptchaWidgetId);
           setCaptchaResponse('');
         }
         
@@ -345,9 +227,9 @@ const Login = ({ isSliderMode = false }) => {
       
       showToast(errorMessage, 'error');
       
-      // Reset reCAPTCHA on network error
-      if (recaptchaWidgetId !== null && window.grecaptcha) {
-        window.grecaptcha.reset(recaptchaWidgetId);
+      // Reset captcha on error
+      if (recaptchaWidgetId !== null) {
+        mobileCaptcha.reset(recaptchaWidgetId);
         setCaptchaResponse('');
       }
       
