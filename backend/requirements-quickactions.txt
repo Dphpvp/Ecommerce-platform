@@ -1,0 +1,23 @@
+# Additional dependencies for Quick Actions (Production Ready)
+# These should be added to your main requirements.txt
+
+# Email and CSV handling (likely already present)
+# fastapi
+# pymongo
+# motor  # for async MongoDB
+
+# Async operations
+asyncio  # Built into Python 3.7+
+
+# Logging (built into Python)
+# logging
+
+# Production monitoring alternatives (optional, pick one):
+# psutil==5.9.6  # Only if deploying on VPS/dedicated servers
+# sentry-sdk==1.38.0  # For error tracking in production
+# prometheus-client==0.19.0  # For metrics collection
+
+# Note: 
+# - psutil was REMOVED from the quick actions to ensure cloud compatibility
+# - The health check now uses platform module (built-in) instead
+# - All file operations use in-memory StringIO instead of disk writes

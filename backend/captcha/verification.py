@@ -149,7 +149,8 @@ def _is_mobile_captcha_token(token: str) -> bool:
     mobile_patterns = [
         'mobile_captcha_',
         'android-',
-        'emergency-fallback-token'
+        'emergency-fallback-token',
+        'mobile-bypass-token'
     ]
     
     return any(pattern in token for pattern in mobile_patterns)
@@ -162,6 +163,11 @@ def _verify_mobile_captcha(token: str, request_headers: Optional[dict] = None) -
         # Handle emergency fallback tokens
         if token == 'emergency-fallback-token':
             print("✅ CAPTCHA: Emergency fallback token accepted")
+            return True
+        
+        # Handle mobile bypass tokens (DISABLED reCAPTCHA for mobile)
+        if token == 'mobile-bypass-token':
+            print("✅ CAPTCHA: Mobile bypass token accepted - reCAPTCHA disabled for mobile")
             return True
         
         # Handle mobile captcha tokens (format: mobile_captcha_{answer}_{timestamp})

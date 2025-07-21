@@ -5,11 +5,17 @@ const config: CapacitorConfig = {
   appName: 'VergiShop',
   webDir: 'build',
   server: {
+    url: "https://vergishop.vercel.app",
+    cleartext: false,
     allowNavigation: [
       "*.google.com",
       "*.gstatic.com", 
       "*.googleusercontent.com",
-      "*.recaptcha.net"
+      "*.recaptcha.net",
+      "vergishop.vercel.app",
+      "vs1.vercel.app",
+      "*.vercel.app",
+      "*.onrender.com"
     ],
     androidScheme: "https"
   },

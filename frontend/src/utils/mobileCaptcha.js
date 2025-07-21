@@ -62,14 +62,13 @@ class MobileCaptchaManager {
   }
 
   /**
-   * Initialize captcha system with WebView-specific implementation
+   * Initialize captcha system - DISABLED for mobile devices
    */
   async initialize(config = {}) {
-    console.log('🚀 Initializing WebView reCAPTCHA with config:', {
-      ...config,
-      webSiteKey: config.webSiteKey ? '***' + config.webSiteKey.slice(-4) : 'missing',
-      mobileSiteKey: config.mobileSiteKey ? '***' + config.mobileSiteKey.slice(-4) : 'missing',
-      webViewMode: this.webViewMode
+    console.log('🚀 Initializing captcha system:', {
+      webViewMode: this.webViewMode,
+      isActuallyMobile: this.isActuallyMobile,
+      mobileBypass: this.webViewMode || this.isActuallyMobile
     });
 
     const {
@@ -82,29 +81,31 @@ class MobileCaptchaManager {
     this.onCompleteCallback = onComplete;
     this.onExpiredCallback = onExpired;
 
-    // Determine the correct site key based on platform
-    let siteKey;
+    // BYPASS reCAPTCHA for mobile devices
     if (this.webViewMode || this.isActuallyMobile) {
-      siteKey = config.mobileSiteKey || process.env.REACT_APP_RECAPTCHA_MOBILE_SITE_KEY;
-      console.log('📱 Using mobile reCAPTCHA key for Android WebView');
-    } else {
-      siteKey = config.webSiteKey || process.env.REACT_APP_RECAPTCHA_WEB_SITE_KEY;
-      console.log('🌐 Using web reCAPTCHA key for web platform');
+      console.log('📱 BYPASSING reCAPTCHA for mobile device');
+      this.isLoaded = true;
+      if (this.onLoadCallback) this.onLoadCallback();
+      return Promise.resolve(true);
     }
+
+    // Only load reCAPTCHA for web platforms
+    const siteKey = config.webSiteKey || process.env.REACT_APP_RECAPTCHA_WEB_SITE_KEY;
+    console.log('🌐 Using web reCAPTCHA key for web platform');
 
     if (!siteKey) {
-      throw new Error('reCAPTCHA site key not configured for platform');
+      throw new Error('reCAPTCHA site key not configured for web platform');
     }
 
-    // WebView-optimized reCAPTCHA initialization
-    const size = this.webViewMode ? 'compact' : (config.size || 'normal');
-    return await this.initializeWebViewCaptcha(siteKey, config.theme || 'light', size);
+    // Web-only reCAPTCHA initialization
+    const size = config.size || 'normal';
+    return await this.initializeWebCaptcha(siteKey, config.theme || 'light', size);
   }
 
   /**
-   * Initialize WebView-optimized reCAPTCHA with enhanced error handling
+   * Initialize web reCAPTCHA (web-only, not for mobile)
    */
-  async initializeWebViewCaptcha(siteKey, theme, size) {
+  async initializeWebCaptcha(siteKey, theme, size) {
     return new Promise((resolve, reject) => {
       if (window.grecaptcha) {
         this.isLoaded = true;
@@ -113,42 +114,24 @@ class MobileCaptchaManager {
         return;
       }
 
-      // Enhanced logging for WebView debugging
-      if (this.hasNativeInterface) {
-        window.RecaptchaInterface.logMessage('Loading reCAPTCHA API for WebView integration');
-      }
-
-      // Create script element with WebView-optimized settings
+      // Create script element for web reCAPTCHA
       const script = document.createElement('script');
-      script.src = 'https://www.google.com/recaptcha/api.js?onload=onWebViewCaptchaLoad&render=explicit';
+      script.src = 'https://www.google.com/recaptcha/api.js?onload=onWebCaptchaLoad&render=explicit';
       script.async = true;
       script.defer = true;
-      script.crossOrigin = 'anonymous';
 
-      // Global callback for WebView environment
-      window.onWebViewCaptchaLoad = () => {
+      // Global callback for web environment
+      window.onWebCaptchaLoad = () => {
         this.isLoaded = true;
-        console.log('✅ WebView reCAPTCHA API loaded successfully');
-        
-        // Setup WebView-specific response handler
-        this.setupWebViewResponseHandler();
-        
-        if (this.hasNativeInterface) {
-          window.RecaptchaInterface.logMessage('WebView reCAPTCHA API loaded and configured');
-        }
+        console.log('✅ Web reCAPTCHA API loaded successfully');
         
         if (this.onLoadCallback) this.onLoadCallback();
         resolve(true);
       };
 
       script.onerror = (error) => {
-        console.error('❌ Failed to load WebView reCAPTCHA script:', error);
-        
-        if (this.hasNativeInterface) {
-          window.RecaptchaInterface.onRecaptchaError('WebView script load failed: ' + error.toString());
-        }
-        
-        reject(new Error('Failed to load WebView reCAPTCHA script'));
+        console.error('❌ Failed to load web reCAPTCHA script:', error);
+        reject(new Error('Failed to load web reCAPTCHA script'));
       };
 
       document.head.appendChild(script);
@@ -195,77 +178,66 @@ class MobileCaptchaManager {
   }
 
   /**
-   * Render captcha widget with WebView-specific optimizations
+   * Render captcha widget - BYPASSED for mobile devices
    */
   render(container, config = {}) {
-    console.log('🎨 Rendering WebView reCAPTCHA:', {
+    console.log('🎨 Rendering captcha widget:', {
       isLoaded: this.isLoaded,
       webViewMode: this.webViewMode,
       actuallyMobile: this.isActuallyMobile,
-      hasNativeInterface: this.hasNativeInterface,
       platform: this.platform,
-      containerExists: !!container
+      containerExists: !!container,
+      mobileBypass: this.webViewMode || this.isActuallyMobile
     });
 
+    // BYPASS reCAPTCHA rendering for mobile devices
+    if (this.webViewMode || this.isActuallyMobile) {
+      console.log('📱 BYPASSING reCAPTCHA render for mobile device');
+      if (container) {
+        container.innerHTML = '<div style="display:none;">Mobile reCAPTCHA bypassed</div>';
+      }
+      return 'mobile-bypass';
+    }
+
     if (!this.isLoaded) {
-      console.error('❌ WebView Captcha not initialized');
-      throw new Error('WebView Captcha not initialized');
+      console.error('❌ Captcha not initialized');
+      throw new Error('Captcha not initialized');
     }
 
     if (!container) {
-      console.error('❌ No container provided for WebView reCAPTCHA');
-      throw new Error('Container element is required for WebView reCAPTCHA');
+      console.error('❌ No container provided');
+      throw new Error('Container element is required');
     }
 
-    return this.renderWebViewCaptcha(container, config);
+    return this.renderWebCaptcha(container, config);
   }
 
   /**
-   * Render WebView-optimized reCAPTCHA with token extraction
+   * Render web reCAPTCHA (web-only, not for mobile)
    */
-  renderWebViewCaptcha(container, config) {
+  renderWebCaptcha(container, config) {
     const {
       sitekey,
       theme = 'light',
-      size = this.webViewMode ? 'compact' : 'normal',
+      size = 'normal',
       callback,
       'expired-callback': expiredCallback
     } = config;
 
-    console.log('🎨 Rendering WebView reCAPTCHA widget:', { 
+    console.log('🎨 Rendering web reCAPTCHA widget:', { 
       theme, 
       size, 
-      webViewMode: this.webViewMode,
       sitekey: sitekey ? '***' + sitekey.slice(-4) : 'missing' 
     });
 
     if (!window.grecaptcha) {
-      throw new Error('WebView reCAPTCHA API not loaded');
+      throw new Error('Web reCAPTCHA API not loaded');
     }
 
     try {
-      // WebView-enhanced callback with URL token extraction
-      const webViewCallback = (response) => {
-        console.log('✅ WebView reCAPTCHA completed successfully');
-        
-        // Extract token from WebView response
-        if (this.webViewMode && response) {
-          // In WebView, we might need to handle response differently
-          const tokenData = {
-            token: response,
-            timestamp: Date.now(),
-            platform: 'android-webview'
-          };
-          
-          // Notify native interface with enhanced data
-          if (this.hasNativeInterface) {
-            window.RecaptchaInterface.onRecaptchaSuccess(response);
-            window.RecaptchaInterface.logMessage('WebView token extracted: ' + response.substring(0, 20) + '...');
-          }
-          
-          // Store for potential URL extraction
-          window.lastRecaptchaToken = response;
-        }
+      // Web callback
+      const webCallback = (response) => {
+        console.log('✅ Web reCAPTCHA completed successfully');
         
         if (this.onCompleteCallback) {
           this.onCompleteCallback(response);
@@ -276,12 +248,8 @@ class MobileCaptchaManager {
         }
       };
 
-      const webViewExpiredCallback = () => {
-        console.log('⚠️ WebView reCAPTCHA expired');
-        
-        if (this.hasNativeInterface) {
-          window.RecaptchaInterface.onRecaptchaExpired();
-        }
+      const webExpiredCallback = () => {
+        console.log('⚠️ Web reCAPTCHA expired');
         
         if (this.onExpiredCallback) {
           this.onExpiredCallback();
@@ -292,122 +260,94 @@ class MobileCaptchaManager {
         }
       };
 
-      // WebView-enhanced error callback
-      const webViewErrorCallback = (error) => {
-        console.error('❌ WebView reCAPTCHA error:', error);
-        
-        if (this.hasNativeInterface) {
-          window.RecaptchaInterface.onRecaptchaError('WebView error: ' + error.toString());
-        }
+      // Web error callback
+      const webErrorCallback = (error) => {
+        console.error('❌ Web reCAPTCHA error:', error);
       };
 
-      // Render with WebView-specific configuration
+      // Render with web configuration
       this.widgetId = window.grecaptcha.render(container, {
         sitekey,
         theme,
         size,
-        callback: webViewCallback,
-        'expired-callback': webViewExpiredCallback,
-        'error-callback': webViewErrorCallback,
-        // WebView-specific parameters
-        'hl': navigator.language || 'en',
-        'tabindex': 0
+        callback: webCallback,
+        'expired-callback': webExpiredCallback,
+        'error-callback': webErrorCallback
       });
 
-      console.log('✅ WebView reCAPTCHA widget rendered with ID:', this.widgetId);
-      
-      if (this.hasNativeInterface) {
-        window.RecaptchaInterface.logMessage('WebView reCAPTCHA widget rendered and configured');
-      }
-
+      console.log('✅ Web reCAPTCHA widget rendered with ID:', this.widgetId);
       return this.widgetId;
 
     } catch (error) {
-      console.error('❌ WebView reCAPTCHA render error:', error);
-      
-      if (this.hasNativeInterface) {
-        window.RecaptchaInterface.onRecaptchaError('WebView render error: ' + error.toString());
-      }
-      
+      console.error('❌ Web reCAPTCHA render error:', error);
       throw error;
     }
   }
 
   /**
-   * Get reCAPTCHA response token from rendered widget
+   * Get reCAPTCHA response token - BYPASSED for mobile devices
    */
   getResponse() {
+    // BYPASS reCAPTCHA for mobile devices
+    if (this.webViewMode || this.isActuallyMobile) {
+      console.log('📱 BYPASSING reCAPTCHA token for mobile device');
+      return 'mobile-bypass-token';
+    }
+
     if (!this.isLoaded || !this.widgetId) {
       throw new Error('reCAPTCHA not initialized or rendered');
     }
     
     try {
       const response = window.grecaptcha.getResponse(this.widgetId);
-      
-      if (this.hasNativeInterface && response) {
-        window.RecaptchaInterface.logMessage('reCAPTCHA response retrieved: ' + response.substring(0, 20) + '...');
-      }
-      
       return response;
     } catch (error) {
       console.error('Failed to get reCAPTCHA response:', error);
-      
-      if (this.hasNativeInterface) {
-        window.RecaptchaInterface.onRecaptchaError('Failed to get response: ' + error.toString());
-      }
-      
       return '';
     }
   }
 
   /**
-   * Reset reCAPTCHA widget
+   * Reset reCAPTCHA widget - BYPASSED for mobile devices
    */
   reset() {
+    // BYPASS reCAPTCHA for mobile devices
+    if (this.webViewMode || this.isActuallyMobile) {
+      console.log('📱 BYPASSING reCAPTCHA reset for mobile device');
+      return;
+    }
+
     if (!this.isLoaded || !this.widgetId) {
       return;
     }
     
     try {
       window.grecaptcha.reset(this.widgetId);
-      
-      if (this.hasNativeInterface) {
-        window.RecaptchaInterface.logMessage('reCAPTCHA widget reset');
-      }
-      
       console.log('🔄 reCAPTCHA widget reset');
     } catch (error) {
       console.error('Failed to reset reCAPTCHA:', error);
-      
-      if (this.hasNativeInterface) {
-        window.RecaptchaInterface.onRecaptchaError('Failed to reset: ' + error.toString());
-      }
     }
   }
 
   /**
-   * Execute invisible reCAPTCHA
+   * Execute invisible reCAPTCHA - BYPASSED for mobile devices
    */
   execute() {
+    // BYPASS reCAPTCHA for mobile devices
+    if (this.webViewMode || this.isActuallyMobile) {
+      console.log('📱 BYPASSING reCAPTCHA execute for mobile device');
+      return;
+    }
+
     if (!this.isLoaded || !this.widgetId) {
       throw new Error('reCAPTCHA not initialized or rendered');
     }
     
     try {
       window.grecaptcha.execute(this.widgetId);
-      
-      if (this.hasNativeInterface) {
-        window.RecaptchaInterface.logMessage('reCAPTCHA executed');
-      }
-      
       console.log('▶️ reCAPTCHA executed');
     } catch (error) {
       console.error('Failed to execute reCAPTCHA:', error);
-      
-      if (this.hasNativeInterface) {
-        window.RecaptchaInterface.onRecaptchaError('Failed to execute: ' + error.toString());
-      }
-      
       throw error;
     }
   }
