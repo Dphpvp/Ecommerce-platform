@@ -160,8 +160,8 @@ class MobileCaptchaManager {
    */
   setupWebViewResponseHandler() {
     // Override URL handling for WebView token extraction
-    const originalPushState = history.pushState;
-    const originalReplaceState = history.replaceState;
+    const originalPushState = window.history.pushState;
+    const originalReplaceState = window.history.replaceState;
     
     const handleUrlChange = (url) => {
       if (url && url.includes('recaptcha-token=')) {
@@ -176,14 +176,14 @@ class MobileCaptchaManager {
     };
 
     // Monitor URL changes in WebView
-    history.pushState = function(state, title, url) {
+    window.history.pushState = function(state, title, url) {
       handleUrlChange(url);
-      return originalPushState.apply(history, arguments);
+      return originalPushState.apply(window.history, arguments);
     };
 
-    history.replaceState = function(state, title, url) {
+    window.history.replaceState = function(state, title, url) {
       handleUrlChange(url);
-      return originalReplaceState.apply(history, arguments);
+      return originalReplaceState.apply(window.history, arguments);
     };
 
     // Monitor hash changes for token extraction
