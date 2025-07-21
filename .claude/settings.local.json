@@ -53,7 +53,8 @@
       "Bash(npm:*)",
       "Bash(keytool:*)",
       "Bash(git log:*)",
-      "Bash(rg:*)"
+      "Bash(rg:*)",
+      "Bash(cmd /c \"git status\")"
     ],
     "deny": [],
     "fileSystem": {
