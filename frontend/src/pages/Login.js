@@ -82,7 +82,21 @@ const Login = ({ isSliderMode = false }) => {
         showToast('Failed to load security verification. Please refresh the page.', 'error');
       }
     }
-  }, [recaptchaLoaded, showToast]);
+
+    // Cleanup function to prevent duplicate rendering
+    return () => {
+      if (recaptchaRef.current && recaptchaWidgetId) {
+        try {
+          mobileCaptcha.reset();
+          if (recaptchaRef.current) {
+            recaptchaRef.current.innerHTML = '';
+          }
+        } catch (error) {
+          console.warn('Captcha cleanup error:', error);
+        }
+      }
+    };
+  }, [recaptchaLoaded, recaptchaWidgetId, showToast]);
 
   const handleSubmit = async (sanitizedData, csrfToken) => {
     setLoading(true);

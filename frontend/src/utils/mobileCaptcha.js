@@ -234,6 +234,15 @@ class MobileCaptchaManager {
       throw new Error('Web reCAPTCHA API not loaded');
     }
 
+    // Check if container already has a reCAPTCHA widget
+    if (container.hasChildNodes() && container.children.length > 0) {
+      const existingWidget = container.querySelector('.g-recaptcha, [data-widget-id]');
+      if (existingWidget) {
+        console.log('🔄 Container already has reCAPTCHA widget, clearing it first');
+        container.innerHTML = '';
+      }
+    }
+
     try {
       // Web callback
       const webCallback = (response) => {
