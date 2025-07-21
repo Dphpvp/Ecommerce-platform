@@ -1,21 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-    <!-- Production domains with HTTPS -->
+    <!-- reCAPTCHA and Google services domains with HTTPS -->
     <domain-config cleartextTrafficPermitted="false">
+        <!-- Production domains -->
         <domain includeSubdomains="true">onrender.com</domain>
         <domain includeSubdomains="true">vercel.app</domain>
         <domain includeSubdomains="true">ecommerce-platform-nizy.onrender.com</domain>
+        
+        <!-- Google and reCAPTCHA domains -->
         <domain includeSubdomains="true">google.com</domain>
+        <domain includeSubdomains="true">www.google.com</domain>
         <domain includeSubdomains="true">googleapis.com</domain>
         <domain includeSubdomains="true">gstatic.com</domain>
+        <domain includeSubdomains="true">www.gstatic.com</domain>
+        <domain includeSubdomains="true">googleusercontent.com</domain>
         <domain includeSubdomains="true">accounts.google.com</domain>
-        <domain includeSubdomains="true">www.google.com</domain>
+        
+        <!-- reCAPTCHA specific domains -->
         <domain includeSubdomains="true">recaptcha.google.com</domain>
         <domain includeSubdomains="true">www.recaptcha.net</domain>
         <domain includeSubdomains="true">recaptcha.net</domain>
+        <domain includeSubdomains="true">firebaseappcheck.googleapis.com</domain>
+        
+        <!-- Analytics -->
         <domain includeSubdomains="true">google-analytics.com</domain>
+        
+        <trust-anchors>
+            <certificates src="system"/>
+        </trust-anchors>
     </domain-config>
     
+    <!-- Development and localhost domains -->
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">localhost</domain>
+        <domain includeSubdomains="true">127.0.0.1</domain>
+        <domain includeSubdomains="true">10.0.2.2</domain>
+        
+        <trust-anchors>
+            <certificates src="system"/>
+        </trust-anchors>
+    </domain-config>
     
     <!-- Base config for other domains -->
     <base-config cleartextTrafficPermitted="false">

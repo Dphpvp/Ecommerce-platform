@@ -5,7 +5,14 @@ const config: CapacitorConfig = {
   appName: 'VergiShop',
   webDir: 'build',
   server: {
-    androidScheme: 'https'
+    allowNavigation: [
+      "*.google.com",
+      "*.gstatic.com", 
+      "*.googleusercontent.com",
+      "*.recaptcha.net"
+    ],
+    hostname: "localhost",
+    androidScheme: "https"
   },
   plugins: {
     SplashScreen: {
@@ -37,9 +44,12 @@ const config: CapacitorConfig = {
     }
   },
   android: {
-    allowMixedContent: false,
-    captureInput: true,
-    webContentsDebuggingEnabled: true
+    allowMixedContent: true,
+    webContentsDebuggingEnabled: true,
+    minWebViewVersion: 60,
+    backgroundColor: "#ffffff",
+    captureInput: false,
+    initialFocus: true
   },
   ios: {
     scheme: 'VergiShop',
