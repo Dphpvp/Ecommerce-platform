@@ -39,8 +39,8 @@ const Login = ({ isSliderMode = false }) => {
     const initializeWebCaptcha = () => {
       // Wait for reCAPTCHA to load
       const checkRecaptcha = () => {
-        if (window.grecaptcha && window.grecaptcha.render) {
-          console.log('✅ Web reCAPTCHA loaded successfully');
+        if (window.grecaptcha && window.grecaptcha.enterprise && window.grecaptcha.enterprise.render) {
+          console.log('✅ Web reCAPTCHA Enterprise loaded successfully');
           setRecaptchaLoaded(true);
           setRecaptchaError(false);
         } else {
@@ -55,11 +55,11 @@ const Login = ({ isSliderMode = false }) => {
     
     // Cleanup on component unmount
     return () => {
-      if (recaptchaWidgetId !== null && window.grecaptcha) {
+      if (recaptchaWidgetId !== null && window.grecaptcha && window.grecaptcha.enterprise) {
         try {
-          window.grecaptcha.reset(recaptchaWidgetId);
+          window.grecaptcha.enterprise.reset(recaptchaWidgetId);
         } catch (error) {
-          console.warn('Component unmount reCAPTCHA cleanup error:', error);
+          console.warn('Component unmount reCAPTCHA Enterprise cleanup error:', error);
         }
       }
       setRecaptchaWidgetId(null);
@@ -69,7 +69,7 @@ const Login = ({ isSliderMode = false }) => {
 
   // Render web reCAPTCHA widget when loaded
   useEffect(() => {
-    if (recaptchaLoaded && recaptchaRef.current && recaptchaWidgetId === null && !recaptchaError && window.grecaptcha) {
+    if (recaptchaLoaded && recaptchaRef.current && recaptchaWidgetId === null && !recaptchaError && window.grecaptcha && window.grecaptcha.enterprise) {
       // Check if the site key is configured
       const siteKey = process.env.REACT_APP_RECAPTCHA_SITE_KEY;
       if (!siteKey) {
@@ -85,7 +85,7 @@ const Login = ({ isSliderMode = false }) => {
       }
       
       try {
-        const widgetId = window.grecaptcha.render(recaptchaRef.current, {
+        const widgetId = window.grecaptcha.enterprise.render(recaptchaRef.current, {
           sitekey: siteKey,
           callback: (response) => {
             console.log('Web reCAPTCHA completed:', response);
@@ -105,7 +105,7 @@ const Login = ({ isSliderMode = false }) => {
           }
         });
         setRecaptchaWidgetId(widgetId);
-        console.log('✅ Web reCAPTCHA widget rendered with ID:', widgetId);
+        console.log('✅ Web reCAPTCHA Enterprise widget rendered with ID:', widgetId);
       } catch (error) {
         console.error('Web reCAPTCHA render error:', error);
         setRecaptchaError(true);
@@ -128,8 +128,8 @@ const Login = ({ isSliderMode = false }) => {
     // Get web reCAPTCHA response
     let captchaResponse = '';
     try {
-      if (window.grecaptcha && recaptchaWidgetId !== null) {
-        captchaResponse = window.grecaptcha.getResponse(recaptchaWidgetId);
+      if (window.grecaptcha && window.grecaptcha.enterprise && recaptchaWidgetId !== null) {
+        captchaResponse = window.grecaptcha.enterprise.getResponse(recaptchaWidgetId);
       }
     } catch (error) {
       console.error('Web reCAPTCHA error:', error);
@@ -242,9 +242,9 @@ const Login = ({ isSliderMode = false }) => {
           showToast(errorMessage, 'error');
         }
         
-        // Reset web reCAPTCHA on error
-        if (recaptchaWidgetId !== null && window.grecaptcha) {
-          window.grecaptcha.reset(recaptchaWidgetId);
+        // Reset web reCAPTCHA Enterprise on error
+        if (recaptchaWidgetId !== null && window.grecaptcha && window.grecaptcha.enterprise) {
+          window.grecaptcha.enterprise.reset(recaptchaWidgetId);
           setCaptchaResponse('');
         }
         
@@ -270,9 +270,9 @@ const Login = ({ isSliderMode = false }) => {
       
       showToast(errorMessage, 'error');
       
-      // Reset web reCAPTCHA on error
-      if (recaptchaWidgetId !== null && window.grecaptcha) {
-        window.grecaptcha.reset(recaptchaWidgetId);
+      // Reset web reCAPTCHA Enterprise on error
+      if (recaptchaWidgetId !== null && window.grecaptcha && window.grecaptcha.enterprise) {
+        window.grecaptcha.enterprise.reset(recaptchaWidgetId);
         setCaptchaResponse('');
       }
       
@@ -743,7 +743,7 @@ const Login = ({ isSliderMode = false }) => {
                   <span>Security verification unavailable. Please contact support if this persists.</span>
                 </div>
               )}
-              {recaptchaLoaded && !recaptchaError && window.grecaptcha && recaptchaWidgetId === null && !captchaResponse && (
+              {recaptchaLoaded && !recaptchaError && window.grecaptcha && window.grecaptcha.enterprise && recaptchaWidgetId === null && !captchaResponse && (
                 <div className="captcha-loading">
                   <span>Setting up security verification...</span>
                 </div>
@@ -848,7 +848,7 @@ const Login = ({ isSliderMode = false }) => {
                       <span>Security verification unavailable. Please contact support if this persists.</span>
                     </div>
                   )}
-                  {recaptchaLoaded && !recaptchaError && window.grecaptcha && recaptchaWidgetId === null && !captchaResponse && (
+                  {recaptchaLoaded && !recaptchaError && window.grecaptcha && window.grecaptcha.enterprise && recaptchaWidgetId === null && !captchaResponse && (
                     <div className="captcha-loading">
                       <span>Setting up security verification...</span>
                     </div>

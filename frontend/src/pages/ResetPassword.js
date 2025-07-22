@@ -37,8 +37,8 @@ const ResetPassword = () => {
     const initializeWebCaptcha = () => {
       // Wait for reCAPTCHA to load
       const checkRecaptcha = () => {
-        if (window.grecaptcha && window.grecaptcha.render) {
-          console.log('✅ Web reCAPTCHA loaded for reset password');
+        if (window.grecaptcha && window.grecaptcha.enterprise && window.grecaptcha.enterprise.render) {
+          console.log('✅ Web reCAPTCHA Enterprise loaded for reset password');
           setRecaptchaLoaded(true);
         } else {
           setTimeout(checkRecaptcha, 100);
@@ -53,14 +53,14 @@ const ResetPassword = () => {
 
   // Render web reCAPTCHA widget when loaded and form is shown
   useEffect(() => {
-    if (recaptchaLoaded && step === 'request' && recaptchaRef.current && recaptchaWidgetId === null && window.grecaptcha) {
+    if (recaptchaLoaded && step === 'request' && recaptchaRef.current && recaptchaWidgetId === null && window.grecaptcha && window.grecaptcha.enterprise) {
       // Clear any existing content first
       if (recaptchaRef.current) {
         recaptchaRef.current.innerHTML = '';
       }
       
       try {
-        const widgetId = window.grecaptcha.render(recaptchaRef.current, {
+        const widgetId = window.grecaptcha.enterprise.render(recaptchaRef.current, {
           sitekey: process.env.REACT_APP_RECAPTCHA_SITE_KEY,
           callback: (response) => {
             console.log('Web reCAPTCHA completed for reset password:', response);
@@ -75,7 +75,7 @@ const ResetPassword = () => {
           }
         });
         setRecaptchaWidgetId(widgetId);
-        console.log('✅ Web reCAPTCHA widget rendered for reset password with ID:', widgetId);
+        console.log('✅ Web reCAPTCHA Enterprise widget rendered for reset password with ID:', widgetId);
       } catch (error) {
         console.error('Web reCAPTCHA render error for reset password:', error);
         // If rendering fails, clear the container
@@ -88,11 +88,11 @@ const ResetPassword = () => {
     
     // Cleanup function
     return () => {
-      if (recaptchaWidgetId !== null && window.grecaptcha) {
+      if (recaptchaWidgetId !== null && window.grecaptcha && window.grecaptcha.enterprise) {
         try {
-          window.grecaptcha.reset(recaptchaWidgetId);
+          window.grecaptcha.enterprise.reset(recaptchaWidgetId);
         } catch (error) {
-          console.warn('ResetPassword reCAPTCHA cleanup error:', error);
+          console.warn('ResetPassword reCAPTCHA Enterprise cleanup error:', error);
         }
       }
     };
@@ -143,8 +143,8 @@ const ResetPassword = () => {
     // Get web reCAPTCHA response
     let captchaResponse = '';
     try {
-      if (window.grecaptcha && recaptchaWidgetId !== null) {
-        captchaResponse = window.grecaptcha.getResponse(recaptchaWidgetId);
+      if (window.grecaptcha && window.grecaptcha.enterprise && recaptchaWidgetId !== null) {
+        captchaResponse = window.grecaptcha.enterprise.getResponse(recaptchaWidgetId);
       }
     } catch (error) {
       console.error('Web reCAPTCHA error:', error);
@@ -184,9 +184,9 @@ const ResetPassword = () => {
         showToast(errorMessage, 'error');
         await platformDetection.showToast(errorMessage, 3000);
         
-        // Reset web reCAPTCHA on error
-        if (recaptchaWidgetId !== null && window.grecaptcha) {
-          window.grecaptcha.reset(recaptchaWidgetId);
+        // Reset web reCAPTCHA Enterprise on error
+        if (recaptchaWidgetId !== null && window.grecaptcha && window.grecaptcha.enterprise) {
+          window.grecaptcha.enterprise.reset(recaptchaWidgetId);
         }
       }
     } catch (error) {
@@ -206,9 +206,9 @@ const ResetPassword = () => {
       showToast(errorMessage, 'error');
       await platformDetection.showToast(errorMessage, 4000);
       
-      // Reset web reCAPTCHA on error
-      if (recaptchaWidgetId !== null && window.grecaptcha) {
-        window.grecaptcha.reset(recaptchaWidgetId);
+      // Reset web reCAPTCHA Enterprise on error
+      if (recaptchaWidgetId !== null && window.grecaptcha && window.grecaptcha.enterprise) {
+        window.grecaptcha.enterprise.reset(recaptchaWidgetId);
       }
     } finally {
       setLoading(false);
