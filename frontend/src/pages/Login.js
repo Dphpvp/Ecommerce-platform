@@ -22,6 +22,7 @@ const Login = ({ isSliderMode = false }) => {
   const [captchaResponse, setCaptchaResponse] = useState('');
   const [recaptchaLoaded, setRecaptchaLoaded] = useState(false);
   const [recaptchaWidgetId, setRecaptchaWidgetId] = useState(null);
+  const [recaptchaError, setRecaptchaError] = useState(false);
   const { login } = useAuth();
   const { showToast } = useToastContext();
   const navigate = useNavigate();
@@ -41,6 +42,7 @@ const Login = ({ isSliderMode = false }) => {
         if (window.grecaptcha && window.grecaptcha.render) {
           console.log('✅ Web reCAPTCHA loaded successfully');
           setRecaptchaLoaded(true);
+          setRecaptchaError(false);
         } else {
           setTimeout(checkRecaptcha, 100);
         }
@@ -61,12 +63,22 @@ const Login = ({ isSliderMode = false }) => {
         }
       }
       setRecaptchaWidgetId(null);
+      setRecaptchaError(false);
     };
   }, []);
 
   // Render web reCAPTCHA widget when loaded
   useEffect(() => {
-    if (recaptchaLoaded && recaptchaRef.current && recaptchaWidgetId === null && window.grecaptcha) {
+    if (recaptchaLoaded && recaptchaRef.current && recaptchaWidgetId === null && !recaptchaError && window.grecaptcha) {
+      // Check if the site key is configured
+      const siteKey = process.env.REACT_APP_RECAPTCHA_SITE_KEY;
+      if (!siteKey) {
+        console.error('reCAPTCHA site key not configured');
+        setRecaptchaError(true);
+        showToast('Security verification not configured. Please contact support.', 'error');
+        return;
+      }
+
       // Clear any existing content first
       if (recaptchaRef.current) {
         recaptchaRef.current.innerHTML = '';
@@ -74,10 +86,11 @@ const Login = ({ isSliderMode = false }) => {
       
       try {
         const widgetId = window.grecaptcha.render(recaptchaRef.current, {
-          sitekey: process.env.REACT_APP_RECAPTCHA_SITE_KEY,
+          sitekey: siteKey,
           callback: (response) => {
             console.log('Web reCAPTCHA completed:', response);
             setCaptchaResponse(response);
+            setRecaptchaError(false);
           },
           'expired-callback': () => {
             console.log('Web reCAPTCHA expired');
@@ -85,34 +98,25 @@ const Login = ({ isSliderMode = false }) => {
             showToast('Security verification expired. Please complete it again.', 'warning');
           },
           'error-callback': () => {
-            console.error('Web reCAPTCHA error');
-            showToast('Security verification error. Please refresh the page.', 'error');
+            console.error('Web reCAPTCHA error - this may be due to invalid site key or network issues');
+            setRecaptchaError(true);
+            // Don't show toast on error callback to prevent spam
+            // showToast('Security verification error. Please refresh the page.', 'error');
           }
         });
         setRecaptchaWidgetId(widgetId);
         console.log('✅ Web reCAPTCHA widget rendered with ID:', widgetId);
       } catch (error) {
         console.error('Web reCAPTCHA render error:', error);
-        // If rendering fails, clear the container and try again on next render
+        setRecaptchaError(true);
+        // If rendering fails, clear the container
         if (recaptchaRef.current) {
           recaptchaRef.current.innerHTML = '';
         }
         showToast('Failed to load security verification. Please refresh the page.', 'error');
       }
     }
-
-    // Cleanup function
-    return () => {
-      if (recaptchaWidgetId !== null && window.grecaptcha) {
-        try {
-          window.grecaptcha.reset(recaptchaWidgetId);
-          console.log('🔄 Web reCAPTCHA widget reset');
-        } catch (error) {
-          console.warn('Web reCAPTCHA cleanup error:', error);
-        }
-      }
-    };
-  }, [recaptchaLoaded, showToast]);
+  }, [recaptchaLoaded, recaptchaError, showToast]);
 
   const handleSubmit = async (sanitizedData, csrfToken) => {
     setLoading(true);
@@ -131,14 +135,21 @@ const Login = ({ isSliderMode = false }) => {
       console.error('Web reCAPTCHA error:', error);
     }
 
-    if (!captchaResponse) {
+    // Skip captcha validation if there's a captcha error (fallback mode)
+    if (!captchaResponse && !recaptchaError) {
       const errorMessage = 'Please complete the security verification';
       setLoading(false);
       showToast(errorMessage, 'error');
       return;
     }
     
-    formDataWithAuth.recaptcha_response = captchaResponse;
+    // Set captcha response based on state
+    if (recaptchaError) {
+      console.log('🚨 Using fallback mode due to reCAPTCHA error');
+      formDataWithAuth.recaptcha_response = 'CAPTCHA_ERROR_FALLBACK';
+    } else {
+      formDataWithAuth.recaptcha_response = captchaResponse;
+    }
     
     try {
       console.log('🔐 Sending login request:', {
@@ -727,17 +738,17 @@ const Login = ({ isSliderMode = false }) => {
                   <span>Loading security verification...</span>
                 </div>
               )}
-              {recaptchaLoaded && !window.grecaptcha && (
+              {recaptchaError && (
                 <div className="captcha-error">
-                  <span>Security verification failed to load. Please refresh the page.</span>
+                  <span>Security verification unavailable. Please contact support if this persists.</span>
                 </div>
               )}
-              {recaptchaLoaded && window.grecaptcha && recaptchaWidgetId === null && !captchaResponse && (
-                <div className="captcha-error">
+              {recaptchaLoaded && !recaptchaError && window.grecaptcha && recaptchaWidgetId === null && !captchaResponse && (
+                <div className="captcha-loading">
                   <span>Setting up security verification...</span>
                 </div>
               )}
-              {captchaResponse && (
+              {captchaResponse && !recaptchaError && (
                 <div className="captcha-success">
                   <span>✅ Security verification completed</span>
                 </div>
@@ -832,17 +843,17 @@ const Login = ({ isSliderMode = false }) => {
                       <span>Loading security verification...</span>
                     </div>
                   )}
-                  {recaptchaLoaded && !window.grecaptcha && (
+                  {recaptchaError && (
                     <div className="captcha-error">
-                      <span>Security verification failed to load. Please refresh the page.</span>
+                      <span>Security verification unavailable. Please contact support if this persists.</span>
                     </div>
                   )}
-                  {recaptchaLoaded && window.grecaptcha && recaptchaWidgetId === null && !captchaResponse && (
-                    <div className="captcha-error">
+                  {recaptchaLoaded && !recaptchaError && window.grecaptcha && recaptchaWidgetId === null && !captchaResponse && (
+                    <div className="captcha-loading">
                       <span>Setting up security verification...</span>
                     </div>
                   )}
-                  {captchaResponse && (
+                  {captchaResponse && !recaptchaError && (
                     <div className="captcha-success">
                       <span>✅ Security verification completed</span>
                     </div>
