@@ -21,10 +21,6 @@ const Profile = () => {
   const [passwordLoading, setPasswordLoading] = useState(false);
   const [step, setStep] = useState(1);
   const [sendingDisableCode, setSendingDisableCode] = useState(false);
-  const [recaptchaLoaded, setRecaptchaLoaded] = useState(false);
-  const [recaptchaWidgetId, setRecaptchaWidgetId] = useState(null);
-  
-  const recaptchaRef = useRef(null);
   const fileInputRef = useRef(null);
   
   const [formData, setFormData] = useState({
@@ -60,68 +56,7 @@ const Profile = () => {
     }
   }, [user]);
 
-  useEffect(() => {
-    const loadRecaptcha = () => {
-      if (window.grecaptcha) {
-        setRecaptchaLoaded(true);
-        return;
-      }
-
-      const script = document.createElement('script');
-      script.src = 'https://www.google.com/recaptcha/api.js?onload=onRecaptchaLoad&render=explicit';
-      script.async = true;
-      script.defer = true;
-
-      window.onRecaptchaLoad = () => {
-        setRecaptchaLoaded(true);
-      };
-
-      document.head.appendChild(script);
-
-      return () => {
-        if (document.head.contains(script)) {
-          document.head.removeChild(script);
-        }
-        delete window.onRecaptchaLoad;
-      };
-    };
-
-    loadRecaptcha();
-  }, []);
-
-  useEffect(() => {
-    if (recaptchaLoaded && isChangingPassword && recaptchaRef.current && !recaptchaWidgetId) {
-      try {
-        const widgetId = window.grecaptcha.render(recaptchaRef.current, {
-          sitekey: process.env.REACT_APP_RECAPTCHA_WEB_SITE_KEY,
-          callback: (response) => {
-            console.log('reCAPTCHA completed:', response);
-          },
-          'expired-callback': () => {
-            console.log('reCAPTCHA expired');
-            showToast('reCAPTCHA expired. Please complete it again.', 'warning');
-          }
-        });
-        setRecaptchaWidgetId(widgetId);
-      } catch (error) {
-        console.error('reCAPTCHA render error:', error);
-        showToast('Failed to load reCAPTCHA. Please refresh the page.', 'error');
-      }
-    }
-  }, [recaptchaLoaded, isChangingPassword, showToast]);
-
-  useEffect(() => {
-    if (!isChangingPassword && recaptchaWidgetId !== null) {
-      try {
-        if (window.grecaptcha) {
-          window.grecaptcha.reset(recaptchaWidgetId);
-        }
-        setRecaptchaWidgetId(null);
-      } catch (error) {
-        console.error('reCAPTCHA reset error:', error);
-      }
-    }
-  }, [isChangingPassword, recaptchaWidgetId]);
+  // reCAPTCHA functionality removed - will be reimplemented fresh for web-only
 
   const sendVerificationEmail = async () => {
     setSendingVerification(true);
@@ -207,19 +142,7 @@ const Profile = () => {
       return;
     }
 
-    let recaptchaResponse = '';
-    try {
-      if (recaptchaWidgetId !== null) {
-        recaptchaResponse = window.grecaptcha.getResponse(recaptchaWidgetId);
-      }
-    } catch (error) {
-      console.error('reCAPTCHA error:', error);
-    }
-
-    if (!recaptchaResponse) {
-      showToast('Please complete the reCAPTCHA verification', 'error');
-      return;
-    }
+    // No captcha for now - will implement fresh web-only version later
     
     setPasswordLoading(true);
 
@@ -228,7 +151,7 @@ const Profile = () => {
         method: 'PUT',
         body: JSON.stringify({
           ...passwordData,
-          recaptcha_response: recaptchaResponse
+          recaptcha_response: 'NO_CAPTCHA_YET'
         })
       });
 
@@ -241,16 +164,12 @@ const Profile = () => {
       });
       setPasswordErrors({});
       
-      if (recaptchaWidgetId !== null) {
-        window.grecaptcha.reset(recaptchaWidgetId);
-      }
+      // No captcha reset needed
     } catch (error) {
       console.error('Password change error:', error);
       showToast(error.message || 'Failed to change password', 'error');
       
-      if (recaptchaWidgetId !== null) {
-        window.grecaptcha.reset(recaptchaWidgetId);
-      }
+      // No captcha reset needed
     } finally {
       setPasswordLoading(false);
     }
@@ -323,13 +242,7 @@ const Profile = () => {
     });
     setPasswordErrors({});
     
-    if (recaptchaWidgetId !== null) {
-      try {
-        window.grecaptcha.reset(recaptchaWidgetId);
-      } catch (error) {
-        console.error('reCAPTCHA reset error:', error);
-      }
-    }
+    // No captcha reset needed
   };
 
   const handleChangeAvatar = async () => {
@@ -713,11 +626,6 @@ const Profile = () => {
           {isChangingPassword && canChangePassword && (
             <div className="password-change-section">
               <h3>Change Password</h3>
-              {!recaptchaLoaded && (
-                <div className="loading-recaptcha">
-                  <p>Loading security verification...</p>
-                </div>
-              )}
               <form onSubmit={handleChangePassword} className="password-change-form">
                 <div className="form-group">
                   <label>Current Password:</label>
@@ -767,24 +675,12 @@ const Profile = () => {
                   )}
                 </div>
 
-                <div className="form-group">
-                  <label>Security Verification:</label>
-                  <div 
-                    ref={recaptchaRef}
-                    style={{ margin: '10px 0' }}
-                  ></div>
-                  {!recaptchaLoaded && (
-                    <p style={{ color: '#666', fontSize: '0.9rem' }}>
-                      Please wait for security verification to load...
-                    </p>
-                  )}
-                </div>
 
                 <div className="form-actions">
                   <button 
                     type="submit" 
                     className="btn btn-primary"
-                    disabled={passwordLoading || !recaptchaLoaded}
+                    disabled={passwordLoading}
                   >
                     {passwordLoading ? 'Changing...' : 'Change Password'}
                   </button>

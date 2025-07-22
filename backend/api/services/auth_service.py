@@ -15,7 +15,7 @@ from api.core.exceptions import AuthenticationError, ValidationError
 from api.services.email_service import EmailService
 from api.utils.security import SecurityValidator
 from api.core.logging import get_logger
-from captcha.verification import verify_recaptcha
+# from captcha.verification import verify_recaptcha  # DISABLED - reCAPTCHA removed
 
 settings = get_settings()
 logger = get_logger(__name__)
@@ -79,12 +79,9 @@ class AuthService:
         
         logger.info(f"Login attempt - identifier: {request.identifier}, has_recaptcha: {bool(recaptcha_response)}, client_ip: {client_ip}")
         
-        # Verify captcha (including mobile captcha tokens)
-        captcha_result = verify_recaptcha(recaptcha_response, client_ip, request_headers)
-        
-        if not captcha_result:
-            logger.warning(f"Captcha verification failed for {request.identifier}, token: {recaptcha_response[:50] if recaptcha_response else 'None'}")
-            raise AuthenticationError("Security verification failed. Please complete the captcha.")
+        # reCAPTCHA verification disabled - will be reimplemented fresh for web-only
+        # captcha_result = verify_recaptcha(recaptcha_response, client_ip, request_headers)
+        logger.info(f"reCAPTCHA verification temporarily disabled - token received: {recaptcha_response[:50] if recaptcha_response else 'None'}")
         
         user = await self._find_user_by_identifier(request.identifier)
         
@@ -198,9 +195,10 @@ class AuthService:
     async def request_password_reset(self, email: str, recaptcha_response: str, request_headers: Optional[dict] = None) -> dict:
         """Request password reset with rate limiting"""
         try:
-            # Verify reCAPTCHA
-            if not verify_recaptcha(recaptcha_response, None, request_headers):
-                raise ValidationError("Security verification failed")
+            # reCAPTCHA verification disabled - will be reimplemented fresh for web-only
+            # if not verify_recaptcha(recaptcha_response, None, request_headers):
+            #     raise ValidationError("Security verification failed")
+            logger.info(f"reCAPTCHA verification temporarily disabled for password reset - token: {recaptcha_response[:50] if recaptcha_response else 'None'}")
             
             user = await self.db.users.find_one({"email": email})
             if not user:
@@ -278,9 +276,10 @@ class AuthService:
     async def change_password(self, user_id: str, old_password: str, new_password: str, confirm_password: str, recaptcha_response: str, request_headers: Optional[dict] = None) -> dict:
         """Change user password"""
         try:
-            # Verify reCAPTCHA
-            if not verify_recaptcha(recaptcha_response, None, request_headers):
-                raise ValidationError("Security verification failed")
+            # reCAPTCHA verification disabled - will be reimplemented fresh for web-only  
+            # if not verify_recaptcha(recaptcha_response, None, request_headers):
+            #     raise ValidationError("Security verification failed")
+            logger.info(f"reCAPTCHA verification temporarily disabled for password change - token: {recaptcha_response[:50] if recaptcha_response else 'None'}")
             
             # Validate password confirmation
             if new_password != confirm_password:

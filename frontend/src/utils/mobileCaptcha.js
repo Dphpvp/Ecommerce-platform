@@ -1,9 +1,10 @@
 /**
- * Enhanced mobile reCAPTCHA utility for Android WebView
- * Implements WebView-specific reCAPTCHA API integration
+ * Enhanced mobile reCAPTCHA utility for Android WebView - DISABLED
+ * This file has been disabled - reCAPTCHA will be reimplemented fresh for web-only
  */
-import platformDetection from './platformDetection.js';
+// import platformDetection from './platformDetection.js'; // DISABLED
 
+/* DISABLED - MobileCaptchaManager class
 class MobileCaptchaManager {
   constructor() {
     this.isLoaded = false;
@@ -364,4 +365,11 @@ class MobileCaptchaManager {
 
 // Export singleton instance
 const mobileCaptcha = new MobileCaptchaManager();
+*/ // END OF DISABLED CODE
+
+// Placeholder export to prevent import errors
+const mobileCaptcha = {
+  disabled: true
+};
+
 export default mobileCaptcha;

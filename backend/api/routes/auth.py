@@ -33,7 +33,7 @@ from api.dependencies.rate_limiting import rate_limit
 from api.core.exceptions import AuthenticationError, ValidationError
 from api.core.logging import get_logger
 from api.core.database import get_database
-from captcha.verification import verify_recaptcha
+# from captcha.verification import verify_recaptcha  # DISABLED - reCAPTCHA removed
 
 router = APIRouter()
 logger = get_logger(__name__)
@@ -86,8 +86,7 @@ async def login(
             "error_type": type(e).__name__,
             "error_message": str(e),
             "identifier": request.identifier,
-            "has_recaptcha": bool(getattr(request, 'recaptcha_response', None)),
-            "recaptcha_secret_configured": bool(os.getenv("RECAPTCHA_SECRET_KEY"))
+            # reCAPTCHA logging disabled
         }
         logger.error(f"Login failure details: {error_details}")
         raise HTTPException(status_code=500, detail=f"Login failed: {str(e)}")
@@ -266,7 +265,7 @@ async def generate_backup_codes(request: Request):
 async def request_password_reset(request_data: PasswordResetRequest, http_request: Request):
     try:
         request_headers = dict(http_request.headers) if http_request else None
-        result = await auth_service.request_password_reset(request_data.email, request_data.recaptcha_response, request_headers)
+        result = await auth_service.request_password_reset(request_data.email, "NO_CAPTCHA_YET", request_headers)
         return result
     except ValidationError as e:
         raise HTTPException(status_code=400, detail=e.detail)
@@ -307,7 +306,7 @@ async def change_password(
             password_data.old_password,
             password_data.new_password, 
             password_data.confirm_password,
-            password_data.recaptcha_response,
+            "NO_CAPTCHA_YET",
             request_headers
         )
         return result
@@ -514,41 +513,16 @@ async def debug_admin_setup():
                 }
                 for user in all_users
             ],
-            "recaptcha_secret_configured": bool(os.getenv("RECAPTCHA_SECRET_KEY"))
+            # reCAPTCHA debugging disabled
         }
     except Exception as e:
         return {"error": str(e)}
 
-@router.get("/captcha/config")
-async def get_captcha_config(request: Request):
-    """
-    Get reCAPTCHA configuration for mobile apps
-    This endpoint provides the public site key securely without hardcoding in the APK
-    """
-    try:
-        from captcha.config import RECAPTCHA_SITE_KEY
-        
-        # Log the request for monitoring
-        user_agent = request.headers.get("User-Agent", "Unknown")
-        logger.info(f"Captcha config requested from: {user_agent[:100]}")
-        
-        # Return the public site key (safe to expose)
-        if RECAPTCHA_SITE_KEY:
-            return {
-                "site_key": RECAPTCHA_SITE_KEY,
-                "theme": "light",
-                "size": "compact"  # Default to compact for mobile
-            }
-        else:
-            logger.error("reCAPTCHA site key not configured in environment")
-            raise HTTPException(
-                status_code=503, 
-                detail="reCAPTCHA service temporarily unavailable"
-            )
-            
-    except Exception as e:
-        logger.error(f"Error getting captcha config: {e}")
-        raise HTTPException(
-            status_code=500,
-            detail="Failed to retrieve captcha configuration"
-        )
+# DISABLED - reCAPTCHA endpoint removed
+# @router.get("/captcha/config")
+# async def get_captcha_config(request: Request):
+#     """reCAPTCHA configuration endpoint - DISABLED"""
+#     raise HTTPException(
+#         status_code=503, 
+#         detail="reCAPTCHA service temporarily disabled"
+#     )

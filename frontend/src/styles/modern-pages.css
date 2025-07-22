@@ -1204,14 +1204,14 @@
   min-height: 80px;
 }
 
+/* DISABLED - reCAPTCHA styles removed
 .captcha-widget {
   width: 100%;
   display: flex;
   justify-content: center;
-  min-height: 78px; /* Standard reCAPTCHA height */
+  min-height: 78px;
 }
 
-/* Google reCAPTCHA iframe styling */
 .captcha-widget iframe {
   margin: 0 auto;
 }
@@ -1238,6 +1238,7 @@
   font-size: 0.875rem;
   text-align: center;
 }
+*/
 
 /* Error Message */
 .error-message {

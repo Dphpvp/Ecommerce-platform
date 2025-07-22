@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useToastContext } from '../components/toast';
-// import mobileCaptcha from '../utils/mobileCaptcha'; // Disabled mobile captcha for now
 import { secureFetch } from '../utils/csrf';
 import platformDetection from '../utils/platformDetection';
 // Styles included in main theme
@@ -15,9 +14,6 @@ const ResetPassword = () => {
   
   const [step, setStep] = useState(token ? 'reset' : 'request');
   const [loading, setLoading] = useState(false);
-  const [recaptchaLoaded, setRecaptchaLoaded] = useState(false);
-  const [recaptchaWidgetId, setRecaptchaWidgetId] = useState(null);
-  const recaptchaRef = useRef(null);
   
   const [requestForm, setRequestForm] = useState({
     email: ''
@@ -30,73 +26,6 @@ const ResetPassword = () => {
   
   const [errors, setErrors] = useState({});
 
-  // Initialize web-only reCAPTCHA
-  useEffect(() => {
-    if (step !== 'request') return; // Only load for request step
-
-    const initializeWebCaptcha = () => {
-      // Wait for reCAPTCHA to load
-      const checkRecaptcha = () => {
-        if (window.grecaptcha && window.grecaptcha.enterprise && window.grecaptcha.enterprise.render) {
-          console.log('✅ Web reCAPTCHA Enterprise loaded for reset password');
-          setRecaptchaLoaded(true);
-        } else {
-          setTimeout(checkRecaptcha, 100);
-        }
-      };
-      
-      checkRecaptcha();
-    };
-
-    initializeWebCaptcha();
-  }, [step]);
-
-  // Render web reCAPTCHA widget when loaded and form is shown
-  useEffect(() => {
-    if (recaptchaLoaded && step === 'request' && recaptchaRef.current && recaptchaWidgetId === null && window.grecaptcha && window.grecaptcha.enterprise) {
-      // Clear any existing content first
-      if (recaptchaRef.current) {
-        recaptchaRef.current.innerHTML = '';
-      }
-      
-      try {
-        const widgetId = window.grecaptcha.enterprise.render(recaptchaRef.current, {
-          sitekey: process.env.REACT_APP_RECAPTCHA_SITE_KEY,
-          callback: (response) => {
-            console.log('Web reCAPTCHA completed for reset password:', response);
-          },
-          'expired-callback': () => {
-            console.log('Web reCAPTCHA expired for reset password');
-            showToast('Security verification expired. Please complete it again.', 'warning');
-          },
-          'error-callback': () => {
-            console.error('Web reCAPTCHA error for reset password');
-            showToast('Security verification error. Please refresh the page.', 'error');
-          }
-        });
-        setRecaptchaWidgetId(widgetId);
-        console.log('✅ Web reCAPTCHA Enterprise widget rendered for reset password with ID:', widgetId);
-      } catch (error) {
-        console.error('Web reCAPTCHA render error for reset password:', error);
-        // If rendering fails, clear the container
-        if (recaptchaRef.current) {
-          recaptchaRef.current.innerHTML = '';
-        }
-        showToast('Failed to load security verification. Please refresh the page.', 'error');
-      }
-    }
-    
-    // Cleanup function
-    return () => {
-      if (recaptchaWidgetId !== null && window.grecaptcha && window.grecaptcha.enterprise) {
-        try {
-          window.grecaptcha.enterprise.reset(recaptchaWidgetId);
-        } catch (error) {
-          console.warn('ResetPassword reCAPTCHA Enterprise cleanup error:', error);
-        }
-      }
-    };
-  }, [recaptchaLoaded, step, showToast]);
 
   const handleRequestChange = (e) => {
     setRequestForm({ ...requestForm, [e.target.name]: e.target.value });
@@ -131,7 +60,7 @@ const ResetPassword = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  // Request submit with proper captcha handling
+  // Request submit handler
   const handleRequestSubmit = async (e) => {
     e.preventDefault();
     
@@ -140,22 +69,7 @@ const ResetPassword = () => {
       return;
     }
 
-    // Get web reCAPTCHA response
-    let captchaResponse = '';
-    try {
-      if (window.grecaptcha && window.grecaptcha.enterprise && recaptchaWidgetId !== null) {
-        captchaResponse = window.grecaptcha.enterprise.getResponse(recaptchaWidgetId);
-      }
-    } catch (error) {
-      console.error('Web reCAPTCHA error:', error);
-    }
-
-    if (!captchaResponse) {
-      const errorMessage = 'Please complete the security verification';
-      setErrors({ captcha: errorMessage });
-      await platformDetection.showToast(errorMessage, 3000);
-      return;
-    }
+    // No captcha for now - will implement fresh web-only version later
     
     setLoading(true);
     let loadingIndicator = null;
@@ -169,7 +83,7 @@ const ResetPassword = () => {
         method: 'POST',
         body: JSON.stringify({
           email: requestForm.email,
-          recaptcha_response: captchaResponse
+          recaptcha_response: 'NO_CAPTCHA_YET'
         }),
       });
       
@@ -184,10 +98,7 @@ const ResetPassword = () => {
         showToast(errorMessage, 'error');
         await platformDetection.showToast(errorMessage, 3000);
         
-        // Reset web reCAPTCHA Enterprise on error
-        if (recaptchaWidgetId !== null && window.grecaptcha && window.grecaptcha.enterprise) {
-          window.grecaptcha.enterprise.reset(recaptchaWidgetId);
-        }
+        // No captcha reset needed
       }
     } catch (error) {
       console.error('Reset request error:', error);
@@ -206,10 +117,7 @@ const ResetPassword = () => {
       showToast(errorMessage, 'error');
       await platformDetection.showToast(errorMessage, 4000);
       
-      // Reset web reCAPTCHA Enterprise on error
-      if (recaptchaWidgetId !== null && window.grecaptcha && window.grecaptcha.enterprise) {
-        window.grecaptcha.enterprise.reset(recaptchaWidgetId);
-      }
+      // No captcha reset needed
     } finally {
       setLoading(false);
       if (loadingIndicator?.dismiss) await loadingIndicator.dismiss();
@@ -338,11 +246,6 @@ const ResetPassword = () => {
           <h1>Reset Password</h1>
           <p>Enter your email address and we'll send you a link to reset your password.</p>
           
-          {!recaptchaLoaded && (
-            <div className="loading-recaptcha" style={{ margin: '10px 0' }}>
-              <p style={{ color: '#666', fontSize: '0.9rem' }}>Loading security verification...</p>
-            </div>
-          )}
           
           <form onSubmit={handleRequestSubmit}>
             <div className="form-group">
@@ -358,27 +261,9 @@ const ResetPassword = () => {
               {errors.email && <span className="error-text">{errors.email}</span>}
             </div>
             
-            {/* Mobile-compatible captcha container */}
-            <div className="form-group">
-              <div 
-                ref={recaptchaRef}
-                style={{ 
-                  margin: '10px 0',
-                  display: 'flex',
-                  justifyContent: 'center'
-                }}
-              ></div>
-              {!recaptchaLoaded && (
-                <p style={{ color: '#666', fontSize: '0.9rem', textAlign: 'center' }}>
-                  Please wait for security verification to load...
-                </p>
-              )}
-              {errors.captcha && <span className="error-text">{errors.captcha}</span>}
-            </div>
-            
             <button 
               type="submit" 
-              disabled={loading || !recaptchaLoaded} 
+              disabled={loading} 
               className="btn btn-primary"
             >
               {loading ? 'Sending...' : 'Send Reset Link'}

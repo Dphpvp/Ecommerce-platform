@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     CSRF_SECRET: str = os.getenv("CSRF_SECRET", "your-csrf-secret")
     STRIPE_SECRET_KEY: str = os.getenv("STRIPE_SECRET_KEY", "")
     GOOGLE_CLIENT_ID: str = os.getenv("GOOGLE_CLIENT_ID", "")
-    RECAPTCHA_SECRET_KEY: str = os.getenv("RECAPTCHA_SECRET_KEY", "")
+    # RECAPTCHA_SECRET_KEY: str = os.getenv("RECAPTCHA_SECRET_KEY", "")  # DISABLED - reCAPTCHA removed
     FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:3000")
     BACKEND_URL: str = os.getenv("BACKEND_URL", "http://localhost:8000")
     EMAIL_HOST: str = os.getenv("EMAIL_HOST", "smtp.gmail.com")

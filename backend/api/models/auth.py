@@ -5,7 +5,7 @@ from api.utils.security import SecurityValidator
 class UserLoginRequest(BaseModel):
     identifier: str = Field(..., description="Email, username, or phone")
     password: str = Field(..., min_length=8, max_length=128)
-    recaptcha_response: str = Field(..., description="Captcha verification token required for production")
+    recaptcha_response: str = Field(default="NO_CAPTCHA_YET", description="Captcha verification disabled")
 
 class UserRegisterRequest(BaseModel):
     username: str = Field(..., min_length=3, max_length=50)
@@ -55,13 +55,13 @@ class EmailVerificationRequest(BaseModel):
 
 class PasswordResetRequest(BaseModel):
     email: EmailStr = Field(...)
-    recaptcha_response: str = Field(...)
+    recaptcha_response: str = Field(default="NO_CAPTCHA_YET")
 
 class PasswordChangeRequest(BaseModel):
     old_password: str = Field(..., min_length=8, max_length=128)
     new_password: str = Field(..., min_length=8, max_length=128)
     confirm_password: str = Field(..., min_length=8, max_length=128)
-    recaptcha_response: str = Field(...)
+    recaptcha_response: str = Field(default="NO_CAPTCHA_YET")
 
 class TwoFactorSetup(BaseModel):
     code: str
