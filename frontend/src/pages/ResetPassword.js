@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useToastContext } from '../components/toast';
-import mobileCaptcha from '../utils/mobileCaptcha';
+// import mobileCaptcha from '../utils/mobileCaptcha'; // Disabled mobile captcha for now
 import { secureFetch } from '../utils/csrf';
 import platformDetection from '../utils/platformDetection';
 // Styles included in main theme
@@ -30,54 +30,53 @@ const ResetPassword = () => {
   
   const [errors, setErrors] = useState({});
 
-  // Initialize mobile captcha
+  // Initialize web-only reCAPTCHA
   useEffect(() => {
     if (step !== 'request') return; // Only load for request step
 
-    const initializeCaptcha = async () => {
-      try {
-        await mobileCaptcha.initialize({
-          webSiteKey: process.env.REACT_APP_RECAPTCHA_WEB_SITE_KEY,
-          mobileSiteKey: process.env.REACT_APP_RECAPTCHA_MOBILE_SITE_KEY,
-          onLoad: () => setRecaptchaLoaded(true),
-          onComplete: (response) => {
-            console.log('Captcha completed:', response);
-          },
-          onExpired: () => {
-            console.log('Captcha expired');
-            showToast('Security verification expired. Please complete it again.', 'warning');
-          }
-        });
-      } catch (error) {
-        console.error('Failed to initialize captcha:', error);
-        showToast('Failed to load security verification. Please refresh the page.', 'error');
-      }
+    const initializeWebCaptcha = () => {
+      // Wait for reCAPTCHA to load
+      const checkRecaptcha = () => {
+        if (window.grecaptcha && window.grecaptcha.render) {
+          console.log('✅ Web reCAPTCHA loaded for reset password');
+          setRecaptchaLoaded(true);
+        } else {
+          setTimeout(checkRecaptcha, 100);
+        }
+      };
+      
+      checkRecaptcha();
     };
 
-    initializeCaptcha();
-  }, [step, showToast]);
+    initializeWebCaptcha();
+  }, [step]);
 
-  // Render captcha widget when loaded and form is shown
+  // Render web reCAPTCHA widget when loaded and form is shown
   useEffect(() => {
-    if (recaptchaLoaded && step === 'request' && recaptchaRef.current && !recaptchaWidgetId) {
+    if (recaptchaLoaded && step === 'request' && recaptchaRef.current && !recaptchaWidgetId && window.grecaptcha) {
       try {
-        const widgetId = mobileCaptcha.render(recaptchaRef.current, {
-          sitekey: process.env.REACT_APP_RECAPTCHA_WEB_SITE_KEY,
+        const widgetId = window.grecaptcha.render(recaptchaRef.current, {
+          sitekey: process.env.REACT_APP_RECAPTCHA_SITE_KEY,
           callback: (response) => {
-            console.log('Captcha completed:', response);
+            console.log('Web reCAPTCHA completed for reset password:', response);
           },
           'expired-callback': () => {
-            console.log('Captcha expired');
+            console.log('Web reCAPTCHA expired for reset password');
             showToast('Security verification expired. Please complete it again.', 'warning');
+          },
+          'error-callback': () => {
+            console.error('Web reCAPTCHA error for reset password');
+            showToast('Security verification error. Please refresh the page.', 'error');
           }
         });
         setRecaptchaWidgetId(widgetId);
+        console.log('✅ Web reCAPTCHA widget rendered for reset password with ID:', widgetId);
       } catch (error) {
-        console.error('Captcha render error:', error);
+        console.error('Web reCAPTCHA render error for reset password:', error);
         showToast('Failed to load security verification. Please refresh the page.', 'error');
       }
     }
-  }, [recaptchaLoaded, step, showToast]);
+  }, [recaptchaLoaded, step, recaptchaWidgetId, showToast]);
 
   const handleRequestChange = (e) => {
     setRequestForm({ ...requestForm, [e.target.name]: e.target.value });
@@ -121,12 +120,14 @@ const ResetPassword = () => {
       return;
     }
 
-    // Get captcha response
+    // Get web reCAPTCHA response
     let captchaResponse = '';
     try {
-      captchaResponse = mobileCaptcha.getResponse(recaptchaWidgetId);
+      if (window.grecaptcha && recaptchaWidgetId !== null) {
+        captchaResponse = window.grecaptcha.getResponse(recaptchaWidgetId);
+      }
     } catch (error) {
-      console.error('Captcha error:', error);
+      console.error('Web reCAPTCHA error:', error);
     }
 
     if (!captchaResponse) {
@@ -163,9 +164,9 @@ const ResetPassword = () => {
         showToast(errorMessage, 'error');
         await platformDetection.showToast(errorMessage, 3000);
         
-        // Reset captcha on error
-        if (recaptchaWidgetId !== null) {
-          mobileCaptcha.reset(recaptchaWidgetId);
+        // Reset web reCAPTCHA on error
+        if (recaptchaWidgetId !== null && window.grecaptcha) {
+          window.grecaptcha.reset(recaptchaWidgetId);
         }
       }
     } catch (error) {
@@ -185,9 +186,9 @@ const ResetPassword = () => {
       showToast(errorMessage, 'error');
       await platformDetection.showToast(errorMessage, 4000);
       
-      // Reset captcha on error
-      if (recaptchaWidgetId !== null) {
-        mobileCaptcha.reset(recaptchaWidgetId);
+      // Reset web reCAPTCHA on error
+      if (recaptchaWidgetId !== null && window.grecaptcha) {
+        window.grecaptcha.reset(recaptchaWidgetId);
       }
     } finally {
       setLoading(false);

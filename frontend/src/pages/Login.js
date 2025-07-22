@@ -8,7 +8,7 @@ import { secureFetch } from '../utils/csrf';
 import SecureForm from '../components/SecureForm';
 import platformDetection from '../utils/platformDetection';
 import RECAPTCHA_CONFIG from '../config/recaptcha';
-import mobileCaptcha from '../utils/mobileCaptcha';
+// import mobileCaptcha from '../utils/mobileCaptcha'; // Disabled mobile captcha for now
 import '../styles/enhanced-captcha.css';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
@@ -33,66 +33,61 @@ const Login = ({ isSliderMode = false }) => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Initialize mobileCaptcha system (handles both web and mobile)
+  // Initialize web-only reCAPTCHA
   useEffect(() => {
-    const initializeCaptcha = async () => {
-      try {
-        await mobileCaptcha.initialize({
-          webSiteKey: process.env.REACT_APP_RECAPTCHA_WEB_SITE_KEY,
-          mobileSiteKey: process.env.REACT_APP_RECAPTCHA_MOBILE_SITE_KEY,
-          onLoad: () => setRecaptchaLoaded(true),
-          onComplete: (response) => {
-            console.log('Captcha completed:', response);
-            setCaptchaResponse(response);
-          },
-          onExpired: () => {
-            console.log('Captcha expired');
-            setCaptchaResponse('');
-            showToast('Security verification expired. Please complete it again.', 'warning');
-          }
-        });
-      } catch (error) {
-        console.error('Failed to initialize captcha:', error);
-        showToast('Failed to load security verification. Please refresh the page.', 'error');
-      }
+    const initializeWebCaptcha = () => {
+      // Wait for reCAPTCHA to load
+      const checkRecaptcha = () => {
+        if (window.grecaptcha && window.grecaptcha.render) {
+          console.log('✅ Web reCAPTCHA loaded successfully');
+          setRecaptchaLoaded(true);
+        } else {
+          setTimeout(checkRecaptcha, 100);
+        }
+      };
+      
+      checkRecaptcha();
     };
 
-    initializeCaptcha();
-  }, [showToast]);
+    initializeWebCaptcha();
+  }, []);
 
-  // Render captcha widget when loaded
+  // Render web reCAPTCHA widget when loaded
   useEffect(() => {
-    if (recaptchaLoaded && recaptchaRef.current && !recaptchaWidgetId) {
+    if (recaptchaLoaded && recaptchaRef.current && !recaptchaWidgetId && window.grecaptcha) {
       try {
-        const widgetId = mobileCaptcha.render(recaptchaRef.current, {
-          sitekey: process.env.REACT_APP_RECAPTCHA_WEB_SITE_KEY,
+        const widgetId = window.grecaptcha.render(recaptchaRef.current, {
+          sitekey: process.env.REACT_APP_RECAPTCHA_SITE_KEY,
           callback: (response) => {
-            console.log('Captcha completed:', response);
+            console.log('Web reCAPTCHA completed:', response);
             setCaptchaResponse(response);
           },
           'expired-callback': () => {
-            console.log('Captcha expired');
+            console.log('Web reCAPTCHA expired');
             setCaptchaResponse('');
             showToast('Security verification expired. Please complete it again.', 'warning');
+          },
+          'error-callback': () => {
+            console.error('Web reCAPTCHA error');
+            showToast('Security verification error. Please refresh the page.', 'error');
           }
         });
         setRecaptchaWidgetId(widgetId);
+        console.log('✅ Web reCAPTCHA widget rendered with ID:', widgetId);
       } catch (error) {
-        console.error('Captcha render error:', error);
+        console.error('Web reCAPTCHA render error:', error);
         showToast('Failed to load security verification. Please refresh the page.', 'error');
       }
     }
 
     // Cleanup function to prevent duplicate rendering
     return () => {
-      if (recaptchaRef.current && recaptchaWidgetId) {
+      if (recaptchaRef.current && recaptchaWidgetId !== null && window.grecaptcha) {
         try {
-          mobileCaptcha.reset();
-          if (recaptchaRef.current) {
-            recaptchaRef.current.innerHTML = '';
-          }
+          window.grecaptcha.reset(recaptchaWidgetId);
+          console.log('🔄 Web reCAPTCHA widget reset');
         } catch (error) {
-          console.warn('Captcha cleanup error:', error);
+          console.warn('Web reCAPTCHA cleanup error:', error);
         }
       }
     };
@@ -105,12 +100,14 @@ const Login = ({ isSliderMode = false }) => {
       ...sanitizedData
     };
     
-    // Get captcha response
+    // Get web reCAPTCHA response
     let captchaResponse = '';
     try {
-      captchaResponse = mobileCaptcha.getResponse(recaptchaWidgetId);
+      if (window.grecaptcha && recaptchaWidgetId !== null) {
+        captchaResponse = window.grecaptcha.getResponse(recaptchaWidgetId);
+      }
     } catch (error) {
-      console.error('Captcha error:', error);
+      console.error('Web reCAPTCHA error:', error);
     }
 
     if (!captchaResponse) {
@@ -213,9 +210,9 @@ const Login = ({ isSliderMode = false }) => {
           showToast(errorMessage, 'error');
         }
         
-        // Reset captcha on error
-        if (recaptchaWidgetId !== null) {
-          mobileCaptcha.reset(recaptchaWidgetId);
+        // Reset web reCAPTCHA on error
+        if (recaptchaWidgetId !== null && window.grecaptcha) {
+          window.grecaptcha.reset(recaptchaWidgetId);
           setCaptchaResponse('');
         }
         
@@ -241,9 +238,9 @@ const Login = ({ isSliderMode = false }) => {
       
       showToast(errorMessage, 'error');
       
-      // Reset captcha on error
-      if (recaptchaWidgetId !== null) {
-        mobileCaptcha.reset(recaptchaWidgetId);
+      // Reset web reCAPTCHA on error
+      if (recaptchaWidgetId !== null && window.grecaptcha) {
+        window.grecaptcha.reset(recaptchaWidgetId);
         setCaptchaResponse('');
       }
       
