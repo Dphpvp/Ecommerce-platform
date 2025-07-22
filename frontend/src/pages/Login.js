@@ -50,11 +50,28 @@ const Login = ({ isSliderMode = false }) => {
     };
 
     initializeWebCaptcha();
+    
+    // Cleanup on component unmount
+    return () => {
+      if (recaptchaWidgetId !== null && window.grecaptcha) {
+        try {
+          window.grecaptcha.reset(recaptchaWidgetId);
+        } catch (error) {
+          console.warn('Component unmount reCAPTCHA cleanup error:', error);
+        }
+      }
+      setRecaptchaWidgetId(null);
+    };
   }, []);
 
   // Render web reCAPTCHA widget when loaded
   useEffect(() => {
-    if (recaptchaLoaded && recaptchaRef.current && !recaptchaWidgetId && window.grecaptcha) {
+    if (recaptchaLoaded && recaptchaRef.current && recaptchaWidgetId === null && window.grecaptcha) {
+      // Clear any existing content first
+      if (recaptchaRef.current) {
+        recaptchaRef.current.innerHTML = '';
+      }
+      
       try {
         const widgetId = window.grecaptcha.render(recaptchaRef.current, {
           sitekey: process.env.REACT_APP_RECAPTCHA_SITE_KEY,
@@ -76,13 +93,17 @@ const Login = ({ isSliderMode = false }) => {
         console.log('✅ Web reCAPTCHA widget rendered with ID:', widgetId);
       } catch (error) {
         console.error('Web reCAPTCHA render error:', error);
+        // If rendering fails, clear the container and try again on next render
+        if (recaptchaRef.current) {
+          recaptchaRef.current.innerHTML = '';
+        }
         showToast('Failed to load security verification. Please refresh the page.', 'error');
       }
     }
 
-    // Cleanup function to prevent duplicate rendering
+    // Cleanup function
     return () => {
-      if (recaptchaRef.current && recaptchaWidgetId !== null && window.grecaptcha) {
+      if (recaptchaWidgetId !== null && window.grecaptcha) {
         try {
           window.grecaptcha.reset(recaptchaWidgetId);
           console.log('🔄 Web reCAPTCHA widget reset');
@@ -91,7 +112,7 @@ const Login = ({ isSliderMode = false }) => {
         }
       }
     };
-  }, [recaptchaLoaded, recaptchaWidgetId, showToast]);
+  }, [recaptchaLoaded, showToast]);
 
   const handleSubmit = async (sanitizedData, csrfToken) => {
     setLoading(true);

@@ -53,7 +53,12 @@ const ResetPassword = () => {
 
   // Render web reCAPTCHA widget when loaded and form is shown
   useEffect(() => {
-    if (recaptchaLoaded && step === 'request' && recaptchaRef.current && !recaptchaWidgetId && window.grecaptcha) {
+    if (recaptchaLoaded && step === 'request' && recaptchaRef.current && recaptchaWidgetId === null && window.grecaptcha) {
+      // Clear any existing content first
+      if (recaptchaRef.current) {
+        recaptchaRef.current.innerHTML = '';
+      }
+      
       try {
         const widgetId = window.grecaptcha.render(recaptchaRef.current, {
           sitekey: process.env.REACT_APP_RECAPTCHA_SITE_KEY,
@@ -73,10 +78,25 @@ const ResetPassword = () => {
         console.log('✅ Web reCAPTCHA widget rendered for reset password with ID:', widgetId);
       } catch (error) {
         console.error('Web reCAPTCHA render error for reset password:', error);
+        // If rendering fails, clear the container
+        if (recaptchaRef.current) {
+          recaptchaRef.current.innerHTML = '';
+        }
         showToast('Failed to load security verification. Please refresh the page.', 'error');
       }
     }
-  }, [recaptchaLoaded, step, recaptchaWidgetId, showToast]);
+    
+    // Cleanup function
+    return () => {
+      if (recaptchaWidgetId !== null && window.grecaptcha) {
+        try {
+          window.grecaptcha.reset(recaptchaWidgetId);
+        } catch (error) {
+          console.warn('ResetPassword reCAPTCHA cleanup error:', error);
+        }
+      }
+    };
+  }, [recaptchaLoaded, step, showToast]);
 
   const handleRequestChange = (e) => {
     setRequestForm({ ...requestForm, [e.target.name]: e.target.value });
