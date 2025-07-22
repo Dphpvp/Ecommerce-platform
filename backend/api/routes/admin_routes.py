@@ -28,13 +28,21 @@ import time
 # Simple in-memory rate limiting (for production, use Redis)
 request_counts = defaultdict(list)
 RATE_LIMIT_WINDOW = 300  # 5 minutes
-RATE_LIMIT_MAX_REQUESTS = 10  # 10 requests per 5 minutes for quick actions
+RATE_LIMIT_MAX_REQUESTS = 100  # 100 requests per 5 minutes for admin dashboard access
+DALYLIST_ENDPOINT_LIMIT = 300  # Higher limit for frequent dashboard access
 
 async def get_admin_user(current_user: dict = Depends(get_current_user_from_session)):
     if not current_user.get("is_admin"):
         raise HTTPException(status_code=403, detail="Admin access required")
     
-    # Basic rate limiting for admin actions
+    return current_user  # Rate limiting disabled for admin dashboard access
+
+# Separate rate limiter for bulk operations only
+async def get_admin_user_with_rate_limit(current_user: dict = Depends(get_current_user_from_session)):
+    if not current_user.get("is_admin"):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    
+    # Apply rate limiting only for bulk operations
     user_id = current_user.get("_id") or current_user.get("email", "unknown")
     current_time = time.time()
     
@@ -44,12 +52,12 @@ async def get_admin_user(current_user: dict = Depends(get_current_user_from_sess
         if current_time - req_time < RATE_LIMIT_WINDOW
     ]
     
-    # Check rate limit
+    # Check rate limit for bulk operations only
     if len(request_counts[user_id]) >= RATE_LIMIT_MAX_REQUESTS:
-        logger.warning(f"Rate limit exceeded for admin {current_user.get('email')}")
+        logger.warning(f"Rate limit exceeded for admin bulk operation {current_user.get('email')}")
         raise HTTPException(
             status_code=429, 
-            detail="Too many admin requests. Please wait before trying again."
+            detail="Too many bulk operations. Please wait before trying again."
         )
     
     # Add current request
@@ -416,7 +424,7 @@ async def get_sales_analytics(admin_user: dict = Depends(get_admin_user)):
 
 # 1. BULK SHIP ORDERS - PRODUCTION READY
 @router.post("/orders/bulk-ship")
-async def bulk_ship_orders(admin_user: dict = Depends(get_admin_user)):
+async def bulk_ship_orders(admin_user: dict = Depends(get_admin_user_with_rate_limit)):
     """Ship all orders that are ready (status: accepted or processing)"""
     logger.info(f"Bulk ship orders initiated by admin: {admin_user.get('email')}")
     
@@ -508,7 +516,7 @@ async def send_shipping_notification(order: dict, user: dict) -> bool:
 
 # 2. EXPORT INVENTORY - PRODUCTION READY  
 @router.get("/products/export")
-async def export_inventory(admin_user: dict = Depends(get_admin_user)):
+async def export_inventory(admin_user: dict = Depends(get_admin_user_with_rate_limit)):
     """Export all products inventory to CSV - Production optimized"""
     logger.info(f"Inventory export initiated by admin: {admin_user.get('email')}")
     
@@ -582,7 +590,7 @@ async def export_inventory(admin_user: dict = Depends(get_admin_user)):
 @router.get("/reports/sales")
 async def generate_sales_report(
     days: int = 30,
-    admin_user: dict = Depends(get_admin_user)
+    admin_user: dict = Depends(get_admin_user_with_rate_limit)
 ):
     """Generate comprehensive sales report"""
     try:
@@ -668,7 +676,7 @@ async def generate_sales_report(
 
 # 4. EXPORT CUSTOMERS
 @router.get("/users/export")
-async def export_customers(admin_user: dict = Depends(get_admin_user)):
+async def export_customers(admin_user: dict = Depends(get_admin_user_with_rate_limit)):
     """Export customer list to CSV"""
     try:
         # Get all users with their order stats
@@ -747,7 +755,7 @@ async def export_customers(admin_user: dict = Depends(get_admin_user)):
 
 # 5. PROCESS REFUNDS
 @router.post("/orders/process-refunds")
-async def process_refunds(admin_user: dict = Depends(get_admin_user)):
+async def process_refunds(admin_user: dict = Depends(get_admin_user_with_rate_limit)):
     """Process pending refund requests"""
     try:
         # Find orders that need refunds (cancelled orders without refund processed)
@@ -817,7 +825,7 @@ async def process_refunds(admin_user: dict = Depends(get_admin_user)):
 
 # 6. DATABASE BACKUP - PRODUCTION READY (Cloud-native)
 @router.post("/system/backup")
-async def backup_database(admin_user: dict = Depends(get_admin_user)):
+async def backup_database(admin_user: dict = Depends(get_admin_user_with_rate_limit)):
     """Create database backup metadata - Production ready for Render/Cloud deployment"""
     logger.info(f"Database backup initiated by admin: {admin_user.get('email')}")
     
@@ -877,7 +885,7 @@ async def backup_database(admin_user: dict = Depends(get_admin_user)):
 
 # 7. CLEAR CACHE
 @router.post("/system/clear-cache")
-async def clear_cache(admin_user: dict = Depends(get_admin_user)):
+async def clear_cache(admin_user: dict = Depends(get_admin_user_with_rate_limit)):
     """Clear system cache"""
     try:
         # Simulate cache clearing operations
