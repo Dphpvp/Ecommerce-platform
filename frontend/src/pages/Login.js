@@ -458,18 +458,17 @@ const Login = ({ isSliderMode = false }) => {
       setLoading(true);
       console.log('🔐 Processing enhanced Google authentication...');
 
-      // Send enhanced request - backend now supports additional fields
+      // Send simple request to match backend GoogleLoginRequest model
       const requestBody = {
-        token: response.credential,
-        type: response.type,
-        platform: response.platform || 'web',
-        userInfo: response.userInfo || {}
+        token: response.credential
       };
 
       console.log('📤 Sending Google auth request:', {
         tokenLength: requestBody.token?.length,
         platform: response.platform || 'web',
-        type: response.type || 'credential'
+        type: response.type || 'credential',
+        bodyType: typeof requestBody,
+        bodyContent: JSON.stringify(requestBody).substring(0, 100) + '...'
       });
 
       // Use appropriate fetch method based on platform
@@ -494,12 +493,18 @@ const Login = ({ isSliderMode = false }) => {
           json: async () => httpResponse.data
         };
       } else {
-        result = await secureFetch(`${API_BASE}/auth/google`, {
+        console.log('🌐 Using regular fetch for Google auth');
+        console.log('📦 Body being sent:', JSON.stringify(requestBody));
+        
+        // Try direct fetch instead of secureFetch to isolate the issue
+        result = await fetch(`${API_BASE}/auth/google`, {
           method: 'POST',
           headers: {
+            'Content-Type': 'application/json',
             'X-Platform': response.platform || 'web'
           },
           body: JSON.stringify(requestBody),
+          credentials: 'include'
         });
       }
 
