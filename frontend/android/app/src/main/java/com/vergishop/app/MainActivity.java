@@ -104,9 +104,9 @@ public class MainActivity extends BridgeActivity {
             WebSettingsCompat.setForceDark(settings, WebSettingsCompat.FORCE_DARK_AUTO);
         }
         
-        // Enable debugging for troubleshooting
+        // Enable debugging only in debug builds for security
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            WebView.setWebContentsDebuggingEnabled(true);
+            WebView.setWebContentsDebuggingEnabled(BuildConfig.DEBUG);
         }
         
         // JavaScript interface for reCAPTCHA callbacks
