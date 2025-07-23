@@ -458,7 +458,7 @@ const Login = ({ isSliderMode = false }) => {
       setLoading(true);
       console.log('🔐 Processing enhanced Google authentication...');
 
-      // Enhanced request with platform info
+      // Send enhanced request - backend now supports additional fields
       const requestBody = {
         token: response.credential,
         type: response.type,
@@ -466,11 +466,10 @@ const Login = ({ isSliderMode = false }) => {
         userInfo: response.userInfo || {}
       };
 
-      console.log('📤 Sending enhanced auth request:', {
-        type: requestBody.type,
-        platform: requestBody.platform,
-        hasUserInfo: !!requestBody.userInfo,
-        tokenLength: requestBody.token?.length
+      console.log('📤 Sending Google auth request:', {
+        tokenLength: requestBody.token?.length,
+        platform: response.platform || 'web',
+        type: response.type || 'credential'
       });
 
       // Use appropriate fetch method based on platform
@@ -523,19 +522,21 @@ const Login = ({ isSliderMode = false }) => {
         
         navigate('/');
       } else {
-        console.error('❌ Google authentication failed:', data);
-        const errorMessage = data.detail || data.message || 'Google login failed';
+        console.error('❌ Google authentication failed:', typeof data === 'object' ? JSON.stringify(data) : data);
+        const errorMessage = (typeof data === 'object' ? data.detail || data.message : data) || 'Google login failed';
         showToast(errorMessage, 'error');
       }
     } catch (error) {
-      console.error('Enhanced Google login error:', error);
+      console.error('Enhanced Google login error:', error?.message || error?.toString() || 'Unknown error');
       
       let errorMessage = 'Google login failed. Please try again.';
       
-      if (error.message?.includes('fetch')) {
+      if (error?.message?.includes('fetch')) {
         errorMessage = 'Network error. Please check your connection and try again.';
-      } else if (error.status >= 500) {
+      } else if (error?.status >= 500) {
         errorMessage = 'Server error. Please try again later.';
+      } else if (error?.message) {
+        errorMessage = `Google login failed: ${error.message}`;
       }
       
       showToast(errorMessage, 'error');

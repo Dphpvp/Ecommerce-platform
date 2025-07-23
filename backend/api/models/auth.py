@@ -36,6 +36,13 @@ class UserRegisterRequest(BaseModel):
 
 class GoogleLoginRequest(BaseModel):
     token: str = Field(..., description="Google OAuth token")
+    # Optional fields for enhanced client compatibility
+    type: Optional[str] = Field(None, description="Token type (optional)")
+    platform: Optional[str] = Field(None, description="Platform info (optional)")
+    userInfo: Optional[dict] = Field(None, description="User info (optional)")
+    
+    class Config:
+        extra = "ignore"  # Ignore any additional fields
 
 class TwoFactorSetupRequest(BaseModel):
     method: str = Field(..., description="2FA method: 'app' or 'email'")
