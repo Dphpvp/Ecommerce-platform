@@ -139,6 +139,23 @@ async def get_admin_products(admin_user: dict = Depends(get_admin_user)):
         products.append(product)
     return {"products": products}
 
+@router.post("/products")
+async def create_product(product_data: ProductRequest, admin_user: dict = Depends(get_admin_user)):
+    try:
+        product_dict = product_data.dict()
+        product_dict.update({
+            "created_at": datetime.now(timezone.utc),
+            "updated_at": datetime.now(timezone.utc)
+        })
+        
+        result = await db.products.insert_one(product_dict)
+        return {
+            "message": "Product created successfully",
+            "product_id": str(result.inserted_id)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
 @router.put("/products/{product_id}")
 async def update_product(product_id: str, product_data: dict, admin_user: dict = Depends(get_admin_user)):
     try:
@@ -330,6 +347,31 @@ async def get_all_users(admin_user: dict = Depends(get_admin_user)):
         user["order_count"] = order_count
         users.append(user)
     return {"users": users}
+
+@router.put("/users/{user_id}")
+async def update_user(user_id: str, user_data: dict, admin_user: dict = Depends(get_admin_user)):
+    try:
+        # Don't allow updating sensitive fields like password or _id
+        allowed_fields = ["full_name", "email", "phone", "address", "is_admin"]
+        update_data = {k: v for k, v in user_data.items() if k in allowed_fields}
+        
+        if not update_data:
+            raise HTTPException(status_code=400, detail="No valid fields to update")
+        
+        # Add updated timestamp
+        update_data["updated_at"] = datetime.now(timezone.utc)
+        
+        result = await db.users.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": update_data}
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        return {"message": "User updated successfully"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 @router.put("/users/{user_id}/admin")
 async def toggle_admin_status(user_id: str, admin_data: dict, admin_user: dict = Depends(get_admin_user)):
