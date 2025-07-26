@@ -13,7 +13,7 @@ class NewsletterSubscriber(BaseModel):
     preferences: Optional[dict] = Field(default_factory=dict, description="Email preferences")
     
     class Config:
-        allow_population_by_field_name = True
+        populate_by_name = True
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
 
@@ -38,7 +38,7 @@ class NewsletterCampaign(BaseModel):
     status: str = Field(default="draft", description="Campaign status: draft, sending, sent, failed")
     
     class Config:
-        allow_population_by_field_name = True
+        populate_by_name = True
         arbitrary_types_allowed = True
         json_encoders = {ObjectId: str}
 

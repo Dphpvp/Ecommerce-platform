@@ -9,7 +9,7 @@ from api.models.newsletter import (
     NewsletterSendRequest,
     NewsletterStats
 )
-from api.dependencies.auth import get_current_user, get_admin_user
+from api.dependencies.auth import get_current_user_from_session, get_admin_user
 from api.models.responses import StandardResponse
 
 logger = logging.getLogger(__name__)

@@ -54,7 +54,8 @@
       "Bash(keytool:*)",
       "Bash(git log:*)",
       "Bash(rg:*)",
-      "Bash(cmd /c \"git status\")"
+      "Bash(cmd /c \"git status\")",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "fileSystem": {
