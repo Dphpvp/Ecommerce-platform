@@ -10,13 +10,6 @@ const Modal = ({ isOpen, onClose, children }) => {
         className="luxury-modal-content"
         onClick={(e) => e.stopPropagation()}
       >
-        <button
-          onClick={onClose}
-          className="luxury-modal-close"
-          aria-label="Close modal"
-        >
-          ✕
-        </button>
         {children}
       </div>
     </div>

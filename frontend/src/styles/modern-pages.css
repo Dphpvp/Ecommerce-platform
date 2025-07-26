@@ -145,8 +145,8 @@
 
 .modern-products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
   margin-bottom: 3rem;
 }
 
@@ -171,7 +171,7 @@
 .modern-product-image {
   position: relative;
   width: 100%;
-  height: 250px;
+  height: 180px;
   overflow: hidden;
 }
 
@@ -223,15 +223,19 @@
 }
 
 .modern-product-content {
-  padding: 1.5rem;
+  padding: 1rem;
 }
 
 .modern-product-title {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
   font-weight: 600;
   color: var(--color-text-primary);
   margin-bottom: 0.5rem;
   line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .modern-product-price {
@@ -239,16 +243,16 @@
 }
 
 .current-price {
-  font-size: 1.375rem;
+  font-size: 1.2rem;
   font-weight: 700;
   color: var(--color-accent-gold);
 }
 
 .modern-add-to-cart {
   width: 100%;
-  background: #1a1a1a;
-  color: white;
-  padding: 0.875rem;
+  background: var(--gradient-gold);
+  color: var(--color-text-inverse);
+  padding: 0.75rem;
   border: none;
   border-radius: 8px;
   font-weight: 600;
@@ -734,7 +738,7 @@
 }
 
 .current-price {
-  font-size: 1.375rem;
+  font-size: 1.2rem;
   font-weight: 700;
   color: var(--color-accent-gold);
 }
