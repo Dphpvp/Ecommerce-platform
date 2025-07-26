@@ -25,6 +25,9 @@
 /* 8. Mobile (should be last to override) */
 @import './mobile.css';
 
+/* 9. Unified Glassmorphism Theme (OVERRIDES ALL) */
+@import './glassmorphism-unified.css';
+
 /* === THEME OVERRIDES === */
 /* Any additional theme-specific overrides can go here */
 

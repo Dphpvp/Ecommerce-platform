@@ -1,0 +1,519 @@
+/* === UNIFIED GLASSMORPHISM THEME === */
+/* Absolute consistency across ALL pages and components */
+
+/* Global Page Base */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+}
+
+/* Universal Background Pattern */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: 
+    radial-gradient(circle at 20% 50%, rgba(201, 168, 118, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(30, 42, 71, 0.05) 0%, transparent 50%),
+    radial-gradient(circle at 40% 80%, rgba(201, 168, 118, 0.02) 0%, transparent 50%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* === UNIVERSAL GLASSMORPHISM COMPONENTS === */
+
+/* All Cards, Containers, and Surfaces */
+.card,
+.product-card,
+.modern-product-card,
+.admin-card,
+.stat-card,
+.analytics-card,
+.order-card,
+.luxury-order-card,
+.cart-item,
+.cart-summary,
+.checkout-form,
+.auth-container,
+.admin-form,
+.newsletter-compose,
+.contact-form-card,
+.about-section,
+.import-container,
+.verification-container,
+.admin-table-container,
+.modal-content,
+.modal-dialog,
+.luxury-modal-content {
+  background: var(--color-surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--color-border-glass);
+  border-radius: 16px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(254, 252, 248, 0.1);
+  transition: all 0.3s ease;
+}
+
+/* Hover Effects for Interactive Cards */
+.card:hover,
+.product-card:hover,
+.modern-product-card:hover,
+.admin-card:hover,
+.stat-card:hover,
+.analytics-card:hover,
+.luxury-order-card:hover {
+  background: var(--color-surface-elevated);
+  border-color: var(--color-border-strong);
+  transform: translateY(-4px);
+  box-shadow: 
+    0 16px 48px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(201, 168, 118, 0.2),
+    inset 0 1px 0 rgba(254, 252, 248, 0.15);
+}
+
+/* === NAVIGATION === */
+.modern-nav,
+.nav-revolutionary,
+.app-nav {
+  background: var(--color-surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--color-border-glass);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
+}
+
+.modern-nav.scrolled,
+.app-nav.scrolled {
+  background: var(--color-surface-elevated);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* === HEADERS AND HERO SECTIONS === */
+.luxury-orders-header,
+.cart-header,
+.admin-header,
+.products-header,
+.about-hero,
+.modern-hero-section,
+.luxury-no-orders,
+.admin-filters,
+.admin-nav {
+  background: var(--gradient-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--color-border-glass);
+  border-radius: 16px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(254, 252, 248, 0.1);
+}
+
+/* === BUTTONS === */
+.btn,
+.button,
+.btn-primary,
+.btn-modern,
+.admin-btn,
+.auth-submit-btn,
+.btn-luxury-solid,
+.btn-luxury-outline,
+.modern-add-to-cart,
+.hero-btn-primary {
+  background: var(--gradient-gold);
+  color: var(--color-text-inverse);
+  border: none;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(201, 168, 118, 0.3);
+}
+
+.btn:hover,
+.button:hover,
+.btn-primary:hover,
+.btn-modern:hover,
+.admin-btn:hover,
+.auth-submit-btn:hover,
+.btn-luxury-solid:hover,
+.modern-add-to-cart:hover,
+.hero-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 
+    0 8px 24px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(201, 168, 118, 0.5),
+    0 4px 16px rgba(201, 168, 118, 0.2);
+  filter: brightness(1.1);
+}
+
+/* Secondary/Outline Buttons */
+.btn-secondary,
+.btn-outline,
+.admin-btn-secondary,
+.btn-luxury-outline {
+  background: var(--color-surface-glass);
+  color: var(--color-accent-gold);
+  border: 1px solid var(--color-border-strong);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.btn-secondary:hover,
+.btn-outline:hover,
+.admin-btn-secondary:hover,
+.btn-luxury-outline:hover {
+  background: var(--color-surface-elevated);
+  color: var(--color-text-primary);
+  border-color: var(--color-accent-gold);
+}
+
+/* === FORMS === */
+.form-group input,
+.form-group select,
+.form-group textarea,
+.modern-input,
+.modern-textarea,
+.modern-select,
+.auth-form input,
+.admin-form input,
+.admin-form select,
+.admin-form textarea,
+.checkout-form input,
+.checkout-form select,
+.checkout-form textarea {
+  background: var(--color-surface-glass);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--color-border-glass);
+  color: var(--color-text-primary);
+  border-radius: 8px;
+  padding: 12px 16px;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  width: 100%;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus,
+.modern-input:focus,
+.modern-textarea:focus,
+.modern-select:focus,
+.auth-form input:focus,
+.admin-form input:focus,
+.admin-form select:focus,
+.admin-form textarea:focus,
+.checkout-form input:focus,
+.checkout-form select:focus,
+.checkout-form textarea:focus {
+  background: var(--color-surface-elevated);
+  border-color: var(--color-accent-gold);
+  outline: none;
+  box-shadow: 
+    0 0 0 3px rgba(201, 168, 118, 0.1),
+    0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.form-group input::placeholder,
+.form-group textarea::placeholder,
+.modern-input::placeholder,
+.modern-textarea::placeholder,
+.auth-form input::placeholder,
+.admin-form input::placeholder,
+.admin-form textarea::placeholder,
+.checkout-form input::placeholder,
+.checkout-form textarea::placeholder {
+  color: var(--color-text-muted);
+}
+
+/* === TABLES === */
+.table,
+.admin-table,
+table {
+  background: var(--color-surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--color-border-glass);
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.table th,
+.admin-table th,
+table th {
+  background: var(--gradient-surface);
+  color: var(--color-text-primary);
+  padding: 16px;
+  text-align: left;
+  font-weight: 600;
+  border-bottom: 1px solid var(--color-border-glass);
+}
+
+.table td,
+.admin-table td,
+table td {
+  padding: 16px;
+  color: var(--color-text-primary);
+  border-bottom: 1px solid var(--color-border-glass);
+  background: var(--color-surface-glass);
+}
+
+.table tr:hover,
+.admin-table tr:hover,
+table tr:hover {
+  background: var(--color-surface-elevated);
+}
+
+/* === MODALS === */
+.modal,
+.modal-overlay,
+.luxury-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(10, 22, 40, 0.8);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: var(--z-modal);
+  padding: 20px;
+}
+
+/* === TOASTS === */
+.modern-toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  pointer-events: none;
+}
+
+.modern-toast {
+  background: var(--color-surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--color-border-glass);
+  border-radius: 12px;
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(254, 252, 248, 0.1);
+  pointer-events: auto;
+  animation: toastSlideIn 0.3s ease-out;
+}
+
+/* === PAGE LAYOUTS === */
+.home-page,
+.products-page,
+.cart-page,
+.checkout-page,
+.orders-page,
+.luxury-orders-page,
+.about-page,
+.contact-page,
+.auth-page,
+.login-page,
+.register-page,
+.reset-password-page,
+.email-verification-page,
+.admin-page,
+.admin-dashboard,
+.admin-container {
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  min-height: 100vh;
+  padding-top: 100px;
+}
+
+/* === PRODUCT GRIDS === */
+.products-grid,
+.modern-products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+  padding: 20px 0;
+}
+
+/* === STATUS BADGES === */
+.status-badge,
+.order-status {
+  background: var(--color-surface-glass);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--color-border-glass);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* === ALERTS === */
+.alert {
+  background: var(--color-surface-glass);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--color-border-glass);
+  padding: 16px 20px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+/* === LOADING STATES === */
+.loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px;
+  color: var(--color-text-muted);
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--color-border-glass);
+  border-top: 3px solid var(--color-accent-gold);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 16px;
+}
+
+/* === RESPONSIVE DESIGN === */
+@media (max-width: 768px) {
+  .products-grid,
+  .modern-products-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+  }
+  
+  .card,
+  .product-card,
+  .modern-product-card,
+  .admin-card {
+    border-radius: 12px;
+    padding: 16px;
+  }
+  
+  .modern-toast-container {
+    top: 10px;
+    right: 10px;
+    left: 10px;
+  }
+}
+
+/* === ANIMATIONS === */
+@keyframes toastSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* === SCROLLBAR STYLING === */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--color-background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-surface);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-surface-elevated);
+}
+
+/* === SELECTION STYLING === */
+::selection {
+  background: rgba(201, 168, 118, 0.3);
+  color: var(--color-text-primary);
+}
+
+/* === FOCUS STYLING === */
+*:focus {
+  outline: 2px solid rgba(201, 168, 118, 0.5);
+  outline-offset: 2px;
+}
+
+button:focus,
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+}
+
+/* === CONSISTENCY OVERRIDES === */
+/* Remove any inconsistent backgrounds */
+.white,
+.bg-white,
+.background-white,
+.light-bg,
+.light-background {
+  background: var(--color-surface) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+}
+
+/* Ensure all text is properly colored */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--color-text-primary);
+}
+
+p, span, div {
+  color: inherit;
+}
+
+/* Ensure all links are properly styled */
+a {
+  color: var(--color-accent-gold);
+  transition: all 0.3s ease;
+}
+
+a:hover {
+  color: var(--color-text-primary);
+  text-shadow: 0 0 8px rgba(201, 168, 118, 0.5);
+}

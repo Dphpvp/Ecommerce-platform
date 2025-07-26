@@ -10,13 +10,13 @@
 }
 
 .mobile-captcha.android-captcha {
-  background: #f8f9fa;
-  border-color: #dee2e6;
+  background: var(--color-surface);
+  border-color: var(--color-border-glass);
 }
 
 .mobile-captcha.emergency-fallback {
-  background: #fff3cd;
-  border-color: #ffeaa7;
+  background: var(--color-surface-glass);
+  border-color: var(--color-accent-gold);
 }
 
 .captcha-question {

@@ -211,7 +211,7 @@ body {
   margin-bottom: var(--space-8);
   color: var(--luxury-white);
   text-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 50%, #ffffff 100%);
+  background: linear-gradient(135deg, var(--color-text-primary) 0%, var(--color-accent-gold) 50%, var(--color-text-primary) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -566,7 +566,7 @@ body {
   top: 100%;
   right: 0;
   margin-top: var(--space-2);
-  background: var(--luxury-white);
+  background: var(--color-surface);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius-2xl);
   box-shadow: var(--shadow-3d-hover);
@@ -844,7 +844,7 @@ body {
 }
 
 .product-card-revolutionary {
-  background: var(--luxury-white);
+  background: var(--color-surface);
   border-radius: var(--radius-3xl);
   overflow: hidden;
   box-shadow: var(--shadow-3d);
@@ -1123,7 +1123,7 @@ body {
 }
 
 .modal-content-revolutionary {
-  background: var(--luxury-white);
+  background: var(--color-surface);
   border-radius: var(--radius-3xl);
   box-shadow: var(--shadow-3d-hover);
   max-width: 600px;
@@ -1177,7 +1177,7 @@ body {
 
 /* === REVOLUTIONARY FORMS === */
 .form-revolutionary {
-  background: var(--luxury-white);
+  background: var(--color-surface);
   padding: var(--space-10);
   border-radius: var(--radius-3xl);
   box-shadow: var(--shadow-3d);
@@ -1224,7 +1224,7 @@ body {
   outline: none;
   border-color: var(--luxury-gold);
   box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1);
-  background: var(--luxury-white);
+  background: var(--color-surface);
   transform: translateY(-2px) translateZ(5px);
 }
 
@@ -2111,7 +2111,7 @@ body {
   }
   
   .modal-close-btn:hover {
-    background: var(--luxury-white);
+    background: var(--color-surface);
     color: var(--luxury-navy);
   }
   
@@ -2671,7 +2671,7 @@ body {
 }
 
 .elegant-btn-google {
-  background: white;
+  background: var(--color-surface);
   color: var(--luxury-navy);
   border: 1px solid rgba(212, 175, 55, 0.2);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -3159,7 +3159,7 @@ body {
 .cart-popup-content {
   padding: 2.5rem;
   text-align: center;
-  background: white;
+  background: var(--color-surface);
   border-radius: 20px;
 }
 
@@ -3322,7 +3322,7 @@ body {
   font-size: 2.5rem;
   font-weight: 700;
   margin: 0 0 0.5rem 0;
-  background: linear-gradient(135deg, white 0%, var(--luxury-gold) 100%);
+  background: var(--gradient-gold);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -3336,7 +3336,7 @@ body {
 }
 
 .luxury-avatar-section {
-  background: white;
+  background: var(--color-surface);
   border-radius: 20px;
   padding: 2.5rem;
   margin-bottom: 2rem;
@@ -3366,7 +3366,7 @@ body {
   height: 112px;
   border-radius: 50%;
   object-fit: cover;
-  background: white;
+  background: var(--color-surface);
 }
 
 .avatar-overlay {
@@ -3415,7 +3415,7 @@ body {
 }
 
 .profile-main-card {
-  background: white;
+  background: var(--color-surface);
   border-radius: 20px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   overflow: hidden;
@@ -3471,7 +3471,7 @@ body {
   border-radius: 12px;
   font-size: 1rem;
   transition: all 0.3s ease;
-  background: white;
+  background: var(--color-surface);
 }
 
 .luxury-form input:focus,
@@ -3699,7 +3699,7 @@ body {
 
 /* Cart Items Container */
 .cart-items-container {
-  background: white;
+  background: var(--color-surface);
   border-radius: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   overflow: hidden;
@@ -3793,7 +3793,7 @@ body {
   width: 32px;
   height: 32px;
   border: none;
-  background: white;
+  background: var(--color-surface);
   border: 1px solid #d1d5db;
   border-radius: 6px;
   display: flex;
@@ -3865,7 +3865,7 @@ body {
 }
 
 .summary-card {
-  background: white;
+  background: var(--color-surface);
   border-radius: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   overflow: hidden;
@@ -4112,7 +4112,7 @@ body {
 }
 
 .summary-card {
-  background: white;
+  background: var(--color-surface);
   border-radius: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   overflow: hidden;
@@ -4254,7 +4254,7 @@ body {
 }
 
 .checkout-form {
-  background: white;
+  background: var(--color-surface);
   border-radius: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   overflow: hidden;
@@ -4316,7 +4316,7 @@ body {
   border-radius: 8px;
   font-size: 1rem;
   transition: all 0.2s ease;
-  background: white;
+  background: var(--color-surface);
 }
 
 .form-group input:focus {
@@ -4346,7 +4346,7 @@ body {
   padding: 0.75rem;
   border: 1px solid #d1d5db;
   border-radius: 8px;
-  background: white;
+  background: var(--color-surface);
   transition: all 0.2s ease;
 }
 

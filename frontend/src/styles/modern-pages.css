@@ -328,14 +328,14 @@
 
 .secondary-cta-btn:hover {
   border-color: white;
-  background: white;
+  background: var(--color-surface);
   color: #1a1a1a;
 }
 
 /* Modern Stats Section */
 .modern-stats-section {
   padding: 4rem 0;
-  background: white;
+  background: var(--color-surface);
 }
 
 .stats-grid {
@@ -462,7 +462,7 @@
 /* Modern Filters */
 .modern-filters-section {
   padding: 3rem 0;
-  background: white;
+  background: var(--color-surface);
   border-bottom: 1px solid #e9ecef;
 }
 
@@ -496,7 +496,7 @@
   border-radius: 50px;
   font-size: 1rem;
   transition: all 0.3s ease;
-  background: white;
+  background: var(--color-surface);
 }
 
 .search-input:focus {
@@ -510,7 +510,7 @@
   border: 2px solid #e9ecef;
   border-radius: 50px;
   font-size: 1rem;
-  background: white;
+  background: var(--color-surface);
   cursor: pointer;
   transition: all 0.3s ease;
   min-width: 200px;
@@ -627,7 +627,7 @@
 .pagination-note {
   text-align: center;
   padding: 2rem;
-  background: white;
+  background: var(--color-surface);
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
@@ -696,7 +696,7 @@
 }
 
 .view-product-btn {
-  background: white;
+  background: var(--color-surface);
   color: #1a1a1a;
   padding: 0.75rem 1.5rem;
   border-radius: 8px;
@@ -881,7 +881,7 @@
 /* Story Section */
 .modern-story-section {
   padding: 5rem 0;
-  background: white;
+  background: var(--color-surface);
 }
 
 .story-content {
@@ -937,7 +937,7 @@
 }
 
 .value-card {
-  background: white;
+  background: var(--color-surface);
   padding: 2.5rem 2rem;
   border-radius: 12px;
   text-align: center;
@@ -996,7 +996,7 @@
 }
 
 .auth-card {
-  background: white;
+  background: var(--color-surface);
   border-radius: 16px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
   overflow: hidden;
@@ -1069,7 +1069,7 @@
   border-radius: 8px;
   font-size: 1rem;
   transition: all 0.3s ease;
-  background: white;
+  background: var(--color-surface);
 }
 
 .form-input:focus {
@@ -1092,7 +1092,7 @@
   padding: 0.875rem;
   border: 2px solid #e9ecef;
   border-radius: 8px;
-  background: white;
+  background: var(--color-surface);
   cursor: pointer;
   flex-shrink: 0;
   min-width: 100px;
@@ -1158,7 +1158,7 @@
 
 .google-btn {
   width: 100%;
-  background: white;
+  background: var(--color-surface);
   color: #333;
   border: 2px solid #e9ecef;
   padding: 0.875rem 1rem;
@@ -1196,7 +1196,7 @@
 }
 
 .divider span {
-  background: white;
+  background: var(--color-surface);
   padding: 0 1rem;
   color: #666;
   font-size: 0.875rem;
@@ -1289,7 +1289,7 @@
   max-width: 400px;
   margin: 0 auto;
   padding: 2rem;
-  background: white;
+  background: var(--color-surface);
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
 }
@@ -1402,7 +1402,7 @@
 
 /* Dashboard Section Headers */
 .dashboard-section {
-  background: white;
+  background: var(--color-surface);
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   margin-bottom: 2rem;
@@ -1431,7 +1431,7 @@
 }
 
 .stat-card {
-  background: white;
+  background: var(--color-surface);
   border: 2px solid #e9ecef;
   border-radius: 12px;
   padding: 1.5rem;
@@ -1499,7 +1499,7 @@
 }
 
 .quick-actions-widget {
-  background: white;
+  background: var(--color-surface);
   border-radius: 12px;
   padding: 1.5rem;
   border: 1px solid #e9ecef;
@@ -1589,7 +1589,7 @@
   border: 1px solid #e9ecef;
   border-radius: 8px;
   margin-bottom: 0.75rem;
-  background: white;
+  background: var(--color-surface);
   transition: all 0.3s ease;
 }
 
@@ -1941,7 +1941,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: white;
+  background: var(--color-surface);
   padding: 2rem;
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
@@ -1971,7 +1971,7 @@
 
 /* Filter Section */
 .filter-section {
-  background: white;
+  background: var(--color-surface);
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   margin-bottom: 2rem;
@@ -2031,7 +2031,7 @@
 
 /* Orders List */
 .orders-section {
-  background: white;
+  background: var(--color-surface);
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   overflow: hidden;
@@ -2043,7 +2043,7 @@
 }
 
 .order-management-card {
-  background: white;
+  background: var(--color-surface);
   border: 2px solid #e9ecef;
   border-radius: 12px;
   margin-bottom: 1.5rem;
@@ -2131,7 +2131,7 @@
   font-size: 1.25rem;
   color: #6c757d;
   padding: 3rem;
-  background: white;
+  background: var(--color-surface);
   border-radius: 12px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
 }
@@ -2166,7 +2166,7 @@
 }
 
 .modal-content {
-  background: white;
+  background: var(--color-surface);
   border-radius: 16px;
   max-width: 800px;
   width: 95%;
@@ -2271,7 +2271,7 @@
   border-radius: 25px;
   font-size: 1rem;
   transition: all 0.3s ease;
-  background: white;
+  background: var(--color-surface);
 }
 
 .search-input:focus {
@@ -2281,7 +2281,7 @@
 }
 
 .users-section {
-  background: white;
+  background: var(--color-surface);
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   overflow: hidden;
@@ -2293,7 +2293,7 @@
 }
 
 .user-card {
-  background: white;
+  background: var(--color-surface);
   border: 2px solid #e9ecef;
   border-radius: 12px;
   padding: 1.5rem;
@@ -2487,14 +2487,14 @@
   grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
   gap: 1.5rem;
   padding: 1.5rem;
-  background: white;
+  background: var(--color-surface);
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   border: 1px solid #e9ecef;
 }
 
 .admin-product-card {
-  background: white;
+  background: var(--color-surface);
   border: 2px solid #e9ecef;
   border-radius: 12px;
   overflow: hidden;
@@ -2707,7 +2707,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background: white;
+  background: var(--color-surface);
   padding: 2rem;
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
@@ -2731,7 +2731,7 @@
 }
 
 .add-product-form-section {
-  background: white;
+  background: var(--color-surface);
   border-radius: 16px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   overflow: hidden;
@@ -2790,7 +2790,7 @@
   border-radius: 8px;
   font-size: 1rem;
   transition: all 0.3s ease;
-  background: white;
+  background: var(--color-surface);
   font-family: inherit;
 }
 

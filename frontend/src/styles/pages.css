@@ -16,8 +16,11 @@
 }
 
 .modal-content {
-  background: white;
-  border-radius: 12px;
+  background: var(--color-surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--color-border-glass);
+  border-radius: 16px;
   padding: 30px;
   max-width: 600px;
   width: 100%;

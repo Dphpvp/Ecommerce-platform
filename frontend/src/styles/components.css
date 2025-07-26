@@ -1838,12 +1838,16 @@
 }
 
 .stat-card {
-  background: white;
-  border-radius: 8px;
+  background: var(--color-surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--color-border-glass);
+  border-radius: 16px;
   padding: 20px;
   text-align: center;
-  border: 1px solid #dee2e6;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(254, 252, 248, 0.1);
 }
 
 .stat-number {
@@ -1863,11 +1867,15 @@
 }
 
 .newsletter-form {
-  background: white;
-  border-radius: 12px;
+  background: var(--color-surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--color-border-glass);
+  border-radius: 16px;
   padding: 30px;
-  border: 1px solid #dee2e6;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(254, 252, 248, 0.1);
 }
 
 .checkbox-group {
@@ -1953,7 +1961,7 @@
 }
 
 .modern-product-form {
-  background: white;
+  background: var(--color-surface);
   border-radius: 16px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   overflow: hidden;
@@ -2082,7 +2090,7 @@
   border-radius: 8px;
   font-size: 14px;
   transition: all 0.3s ease;
-  background: white;
+  background: var(--color-surface);
   font-family: inherit;
 }
 
@@ -2135,7 +2143,7 @@
   display: flex;
   gap: 12px;
   margin-bottom: 16px;
-  background: white;
+  background: var(--color-surface);
   padding: 4px;
   border-radius: 8px;
   border: 2px solid #e9ecef;
@@ -2185,7 +2193,7 @@
 }
 
 .image-preview-container {
-  background: white;
+  background: var(--color-surface);
   border: 2px dashed #dee2e6;
   border-radius: 8px;
   height: 200px;
@@ -2228,7 +2236,7 @@
 }
 
 .product-preview-card {
-  background: white;
+  background: var(--color-surface);
   border-radius: 12px;
   padding: 16px;
   border: 1px solid #e9ecef;
@@ -2347,7 +2355,7 @@
 }
 
 .btn-secondary {
-  background: white;
+  background: var(--color-surface);
   color: #6c757d;
   border: 2px solid #e9ecef;
 }
@@ -2453,7 +2461,7 @@
 }
 
 .story-card {
-  background: white;
+  background: var(--color-surface);
   border-radius: 12px;
   padding: 30px;
   margin-bottom: 30px;
@@ -2626,7 +2634,7 @@
 
 /* Contact form section */
 .contact-form-section {
-  background: white;
+  background: var(--color-surface);
 }
 
 .contact-form-container {
@@ -2739,7 +2747,7 @@
 .modern-toast {
   min-width: 320px;
   max-width: 500px;
-  background: white;
+  background: var(--color-surface);
   border-radius: 12px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   border: 1px solid rgba(0, 0, 0, 0.08);
@@ -3014,7 +3022,7 @@
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
-  background: white;
+  background: var(--color-surface);
   border-radius: 12px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   border: 1px solid rgba(0, 0, 0, 0.08);
@@ -3092,7 +3100,7 @@
   top: 80px;
   left: 0;
   right: 0;
-  background: white;
+  background: var(--color-surface);
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);
   box-shadow: 0 4px 32px rgba(0, 0, 0, 0.08);
   backdrop-filter: blur(20px);

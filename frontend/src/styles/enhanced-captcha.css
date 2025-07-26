@@ -1,18 +1,26 @@
 /* Enhanced Mobile Captcha Styles */
 
 .enhanced-captcha {
-  border: 2px solid #e0e0e0;
-  border-radius: 12px;
+  border: 1px solid var(--color-border-glass);
+  border-radius: 16px;
   padding: 20px;
-  background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  background: var(--color-surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(254, 252, 248, 0.1);
   margin: 15px 0;
   transition: all 0.3s ease;
 }
 
 .enhanced-captcha:hover {
-  border-color: #2196F3;
-  box-shadow: 0 6px 16px rgba(33,150,243,0.15);
+  border-color: var(--color-accent-gold);
+  background: var(--color-surface-elevated);
+  box-shadow: 
+    0 16px 48px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(201, 168, 118, 0.2),
+    inset 0 1px 0 rgba(254, 252, 248, 0.15);
 }
 
 .captcha-header {
@@ -30,14 +38,14 @@
 
 .captcha-title {
   font-weight: 600;
-  color: #333;
+  color: var(--color-text-primary);
   font-size: 16px;
 }
 
 .captcha-question label {
   display: block;
   font-weight: 500;
-  color: #555;
+  color: var(--color-text-secondary);
   margin-bottom: 8px;
   font-size: 15px;
 }

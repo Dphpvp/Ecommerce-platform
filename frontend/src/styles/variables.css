@@ -9,13 +9,14 @@
   --primary-champagne: #F5F1E8;
   
   /* === SEMANTIC COLORS === */
-  --color-background: #0F1419;
-  --color-surface: #1E2A47;
-  --color-surface-elevated: rgba(30, 42, 71, 0.95);
+  --color-background: #0A1628;
+  --color-surface: rgba(30, 42, 71, 0.4);
+  --color-surface-elevated: rgba(30, 42, 71, 0.6);
+  --color-surface-glass: rgba(254, 252, 248, 0.05);
   --color-text-primary: #FEFCF8;
   --color-text-secondary: #C9A876;
   --color-text-muted: rgba(254, 252, 248, 0.7);
-  --color-text-inverse: #1E2A47;
+  --color-text-inverse: #0A1628;
   
   /* === ACCENT COLORS === */
   --color-accent-gold: #C9A876;
@@ -41,10 +42,10 @@
   --status-cancelled: #EF4444;
   
   /* === BORDERS === */
-  --color-border: rgba(201, 168, 118, 0.3);
-  --color-border-light: rgba(201, 168, 118, 0.15);
-  --color-border-strong: rgba(201, 168, 118, 0.5);
-  --color-border-input: rgba(30, 42, 71, 0.8);
+  --color-border: rgba(201, 168, 118, 0.2);
+  --color-border-light: rgba(201, 168, 118, 0.1);
+  --color-border-strong: rgba(201, 168, 118, 0.4);
+  --color-border-glass: rgba(254, 252, 248, 0.1);
   --color-border-focus: #C9A876;
   
   /* === TYPOGRAPHY === */
@@ -109,9 +110,10 @@
   --shadow-deep: 0 8px 30px rgba(0, 0, 0, 0.6);
   
   /* === GRADIENTS === */
-  --gradient-primary: linear-gradient(135deg, #0F1419 0%, #1E2A47 100%);
+  --gradient-primary: linear-gradient(135deg, #0A1628 0%, #1E2A47 100%);
   --gradient-gold: linear-gradient(135deg, #C9A876 0%, #D4B987 100%);
-  --gradient-surface: linear-gradient(135deg, #1E2A47 0%, #2C3E50 100%);
+  --gradient-surface: linear-gradient(135deg, rgba(30, 42, 71, 0.6) 0%, rgba(44, 62, 80, 0.4) 100%);
+  --gradient-glass: linear-gradient(135deg, rgba(254, 252, 248, 0.1) 0%, rgba(254, 252, 248, 0.05) 100%);
   
   /* === TRANSITIONS === */
   --transition-fast: 0.1s ease;
