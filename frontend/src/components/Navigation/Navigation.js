@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCart } from '../../contexts/CartContext';
@@ -11,6 +11,7 @@ const Navigation = () => {
   const { cartItems } = useCart();
   const location = useLocation();
   const navigate = useNavigate();
+  const userMenuRef = useRef(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -21,6 +22,24 @@ const Navigation = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Close user menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setIsUserMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Close user menu when route changes
+  useEffect(() => {
+    setIsUserMenuOpen(false);
+    setIsMobileMenuOpen(false);
+  }, [location.pathname]);
 
   const handleLogout = async () => {
     try {
@@ -36,55 +55,59 @@ const Navigation = () => {
   const cartItemCount = cartItems?.reduce((total, item) => total + (item.quantity || 0), 0) || 0;
 
   return (
-    <nav className={`nav-revolutionary ${isScrolled ? 'scrolled' : ''}`}>
-      <div className="nav-container-revolutionary">
-        {/* Revolutionary Brand */}
-        <Link to="/" className="nav-logo-revolutionary">
-          <img src="/images/logo.png" alt="Vergi Designs" className="nav-logo-image" />
-          <span className="nav-logo-text">Vergi Designs</span>
+    <nav className={`modern-nav ${isScrolled ? 'scrolled' : ''}`}>
+      <div className="nav-container">
+        {/* Modern Brand */}
+        <Link to="/" className="nav-brand">
+          <div className="nav-logo">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+          </div>
+          <span className="nav-brand-text">E-Commerce</span>
         </Link>
 
-        {/* Revolutionary Desktop Navigation */}
-        <ul className="nav-menu-revolutionary">
-          <li className="nav-item-revolutionary">
+        {/* Modern Desktop Navigation */}
+        <ul className="nav-menu">
+          <li className="nav-item">
             <Link 
               to="/" 
-              className={`nav-link-revolutionary ${isActive('/') ? 'active' : ''}`}
+              className={`nav-link ${isActive('/') ? 'active' : ''}`}
             >
-              Home
+              <span>Home</span>
             </Link>
           </li>
-          <li className="nav-item-revolutionary">
+          <li className="nav-item">
             <Link 
               to="/products" 
-              className={`nav-link-revolutionary ${isActive('/products') ? 'active' : ''}`}
+              className={`nav-link ${isActive('/products') ? 'active' : ''}`}
             >
-              Collection
+              <span>Products</span>
             </Link>
           </li>
-          <li className="nav-item-revolutionary">
+          <li className="nav-item">
             <Link 
               to="/about" 
-              className={`nav-link-revolutionary ${isActive('/about') ? 'active' : ''}`}
+              className={`nav-link ${isActive('/about') ? 'active' : ''}`}
             >
-              About
+              <span>About</span>
             </Link>
           </li>
-          <li className="nav-item-revolutionary">
+          <li className="nav-item">
             <Link 
               to="/contact" 
-              className={`nav-link-revolutionary ${isActive('/contact') ? 'active' : ''}`}
+              className={`nav-link ${isActive('/contact') ? 'active' : ''}`}
             >
-              Contact
+              <span>Contact</span>
             </Link>
           </li>
         </ul>
 
-        {/* Revolutionary Actions */}
-        <div className="nav-actions-revolutionary">
-          {/* Revolutionary Cart */}
-          <Link to="/cart" className="nav-cart-revolutionary">
-            <div className="cart-icon-revolutionary">
+        {/* Modern Actions */}
+        <div className="nav-actions">
+          {/* Modern Cart */}
+          <Link to="/cart" className="nav-cart">
+            <div className="cart-icon">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M3 3h2l.4 2m0 0L8 16h8l1.4-8.5H5.4z"/>
                 <circle cx="9" cy="21" r="1"/>
@@ -92,32 +115,32 @@ const Navigation = () => {
               </svg>
             </div>
             {cartItemCount > 0 && (
-              <span className="nav-cart-count-revolutionary">{cartItemCount}</span>
+              <span className="nav-cart-count">{cartItemCount}</span>
             )}
           </Link>
 
-          {/* Revolutionary User Menu */}
+          {/* Modern User Menu */}
           {user ? (
-            <div className="user-menu-revolutionary">
+            <div className="user-menu" ref={userMenuRef}>
               <button
-                className="user-avatar-revolutionary"
+                className="user-avatar"
                 onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
               >
-                <span className="avatar-text-revolutionary">
+                <span className="avatar-text">
                   {user?.full_name?.charAt(0).toUpperCase() || user?.name?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || '?'}
                 </span>
               </button>
               
               {isUserMenuOpen && (
-                <div className="user-dropdown-revolutionary open">
-                  <Link to="/profile" className="dropdown-item-revolutionary">
+                <div className="user-dropdown open">
+                  <Link to="/profile" className="dropdown-item">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                       <circle cx="12" cy="7" r="4"/>
                     </svg>
                     Profile
                   </Link>
-                  <Link to="/orders" className="dropdown-item-revolutionary">
+                  <Link to="/orders" className="dropdown-item">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2 2z"/>
                       <path d="M8 5a2 2 0 012-2h4a2 2 0 012 2v2H8V5z"/>
@@ -125,7 +148,7 @@ const Navigation = () => {
                     Orders
                   </Link>
                   {user?.is_admin && (
-                    <Link to="/admin/dashboard" className="dropdown-item-revolutionary">
+                    <Link to="/admin/dashboard" className="dropdown-item">
                       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <circle cx="12" cy="12" r="3"/>
                         <path d="M12 1v6M12 17v6M4.22 4.22l4.24 4.24M15.54 15.54l4.24 4.24M1 12h6M17 12h6M4.22 19.78l4.24-4.24M15.54 8.46l4.24-4.24"/>
@@ -135,7 +158,7 @@ const Navigation = () => {
                   )}
                   <button 
                     onClick={handleLogout}
-                    className="dropdown-item-revolutionary logout"
+                    className="dropdown-item logout"
                   >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
@@ -146,19 +169,19 @@ const Navigation = () => {
               )}
             </div>
           ) : (
-            <div className="auth-buttons-revolutionary">
-              <Link to="/login" className="btn-revolutionary btn-glass-revolutionary">
+            <div className="auth-buttons">
+              <Link to="/login" className="btn-modern btn-glass">
                 Login
               </Link>
-              <Link to="/register" className="btn-revolutionary btn-luxury-revolutionary">
+              <Link to="/register" className="btn-modern btn-primary">
                 Register
               </Link>
             </div>
           )}
 
-          {/* Revolutionary Mobile Menu Toggle */}
+          {/* Modern Mobile Menu Toggle */}
           <button 
-            className="nav-toggle-revolutionary"
+            className="nav-toggle"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
             <span></span>
@@ -168,13 +191,13 @@ const Navigation = () => {
         </div>
       </div>
 
-      {/* Revolutionary Mobile Menu */}
+      {/* Modern Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="mobile-menu-revolutionary">
-          <div className="mobile-menu-content-revolutionary">
+        <div className="mobile-menu">
+          <div className="mobile-menu-content">
             <Link 
               to="/" 
-              className={`mobile-nav-link-revolutionary ${isActive('/') ? 'active' : ''}`}
+              className={`mobile-nav-link ${isActive('/') ? 'active' : ''}`}
               onClick={() => setIsMobileMenuOpen(false)}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -185,7 +208,7 @@ const Navigation = () => {
             </Link>
             <Link 
               to="/products" 
-              className={`mobile-nav-link-revolutionary ${isActive('/products') ? 'active' : ''}`}
+              className={`mobile-nav-link ${isActive('/products') ? 'active' : ''}`}
               onClick={() => setIsMobileMenuOpen(false)}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -197,7 +220,7 @@ const Navigation = () => {
             </Link>
             <Link 
               to="/about" 
-              className={`mobile-nav-link-revolutionary ${isActive('/about') ? 'active' : ''}`}
+              className={`mobile-nav-link ${isActive('/about') ? 'active' : ''}`}
               onClick={() => setIsMobileMenuOpen(false)}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -209,7 +232,7 @@ const Navigation = () => {
             </Link>
             <Link 
               to="/contact" 
-              className={`mobile-nav-link-revolutionary ${isActive('/contact') ? 'active' : ''}`}
+              className={`mobile-nav-link ${isActive('/contact') ? 'active' : ''}`}
               onClick={() => setIsMobileMenuOpen(false)}
             >
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -223,7 +246,7 @@ const Navigation = () => {
               <>
                 <Link 
                   to="/profile" 
-                  className="mobile-nav-link-revolutionary"
+                  className="mobile-nav-link"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -234,7 +257,7 @@ const Navigation = () => {
                 </Link>
                 <Link 
                   to="/orders" 
-                  className="mobile-nav-link-revolutionary"
+                  className="mobile-nav-link"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -246,7 +269,7 @@ const Navigation = () => {
                 {user?.is_admin && (
                   <Link 
                     to="/admin/dashboard" 
-                    className="mobile-nav-link-revolutionary"
+                    className="mobile-nav-link"
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -258,7 +281,7 @@ const Navigation = () => {
                 )}
                 <button 
                   onClick={handleLogout}
-                  className="mobile-nav-link-revolutionary logout"
+                  className="mobile-nav-link logout"
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
@@ -267,17 +290,17 @@ const Navigation = () => {
                 </button>
               </>
             ) : (
-              <div className="mobile-auth-buttons-revolutionary">
+              <div className="mobile-auth-buttons">
                 <Link 
                   to="/login" 
-                  className="btn-revolutionary btn-glass-revolutionary btn-full"
+                  className="btn-modern btn-glass btn-full"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Login
                 </Link>
                 <Link 
                   to="/register" 
-                  className="btn-revolutionary btn-luxury-revolutionary btn-full"
+                  className="btn-modern btn-primary btn-full"
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   Register
