@@ -44,8 +44,26 @@ const AdminDashboard = React.lazy(() => import('./components/admin/AdminDashboar
 const AdminOrders = React.lazy(() => import('./components/admin/AdminOrders'));
 const AdminUsers = React.lazy(() => import('./components/admin/AdminUsers'));
 const AdminProducts = React.lazy(() => import('./components/admin/AdminProducts'));
+const AddProduct = React.lazy(() => import('./components/admin/AddProduct'));
+const ProductImport = React.lazy(() => import('./components/admin/ProductImport'));
 const AdminRoute = React.lazy(() => import('./components/admin/AdminRoute'));
 const AdminCategories = React.lazy(() => import('./components/admin/AdminCategories'));
+
+// Additional admin components
+const BulkUpdateProducts = React.lazy(() => import('./components/admin/BulkUpdateProducts'));
+const OrderLabels = React.lazy(() => import('./components/admin/OrderLabels'));
+const OrderTracking = React.lazy(() => import('./components/admin/OrderTracking'));
+const CreateAdmin = React.lazy(() => import('./components/admin/CreateAdmin'));
+const ManageBans = React.lazy(() => import('./components/admin/ManageBans'));
+const TaxReport = React.lazy(() => import('./components/admin/TaxReport'));
+const PendingPayments = React.lazy(() => import('./components/admin/PendingPayments'));
+const ReconcileReport = React.lazy(() => import('./components/admin/ReconcileReport'));
+const SystemLogs = React.lazy(() => import('./components/admin/SystemLogs'));
+const DailyAnalytics = React.lazy(() => import('./components/admin/DailyAnalytics'));
+const ProductAnalytics = React.lazy(() => import('./components/admin/ProductAnalytics'));
+const CustomerAnalytics = React.lazy(() => import('./components/admin/CustomerAnalytics'));
+const SearchAnalytics = React.lazy(() => import('./components/admin/SearchAnalytics'));
+const NewsletterCompose = React.lazy(() => import('./components/admin/NewsletterCompose'));
 
 // Lazy load Stripe to improve initial bundle size
 const stripePromise = loadStripe(
@@ -232,6 +250,118 @@ const App = () => {
                           <AdminSuspense>
                             <AdminRoute>
                               <AdminCategories />
+                            </AdminRoute>
+                          </AdminSuspense>
+                        } />
+                        <Route path="/admin/products/new" element={
+                          <AdminSuspense>
+                            <AdminRoute>
+                              <AddProduct />
+                            </AdminRoute>
+                          </AdminSuspense>
+                        } />
+                        <Route path="/admin/products/import" element={
+                          <AdminSuspense>
+                            <AdminRoute>
+                              <ProductImport />
+                            </AdminRoute>
+                          </AdminSuspense>
+                        } />
+                        <Route path="/admin/products/bulk-update" element={
+                          <AdminSuspense>
+                            <AdminRoute>
+                              <BulkUpdateProducts />
+                            </AdminRoute>
+                          </AdminSuspense>
+                        } />
+                        <Route path="/admin/orders/labels" element={
+                          <AdminSuspense>
+                            <AdminRoute>
+                              <OrderLabels />
+                            </AdminRoute>
+                          </AdminSuspense>
+                        } />
+                        <Route path="/admin/orders/tracking" element={
+                          <AdminSuspense>
+                            <AdminRoute>
+                              <OrderTracking />
+                            </AdminRoute>
+                          </AdminSuspense>
+                        } />
+                        <Route path="/admin/users/new" element={
+                          <AdminSuspense>
+                            <AdminRoute>
+                              <CreateAdmin />
+                            </AdminRoute>
+                          </AdminSuspense>
+                        } />
+                        <Route path="/admin/users/suspended" element={
+                          <AdminSuspense>
+                            <AdminRoute>
+                              <ManageBans />
+                            </AdminRoute>
+                          </AdminSuspense>
+                        } />
+                        <Route path="/admin/reports/tax" element={
+                          <AdminSuspense>
+                            <AdminRoute>
+                              <TaxReport />
+                            </AdminRoute>
+                          </AdminSuspense>
+                        } />
+                        <Route path="/admin/payments/pending" element={
+                          <AdminSuspense>
+                            <AdminRoute>
+                              <PendingPayments />
+                            </AdminRoute>
+                          </AdminSuspense>
+                        } />
+                        <Route path="/admin/reports/reconcile" element={
+                          <AdminSuspense>
+                            <AdminRoute>
+                              <ReconcileReport />
+                            </AdminRoute>
+                          </AdminSuspense>
+                        } />
+                        <Route path="/admin/system/logs" element={
+                          <AdminSuspense>
+                            <AdminRoute>
+                              <SystemLogs />
+                            </AdminRoute>
+                          </AdminSuspense>
+                        } />
+                        <Route path="/admin/analytics/daily" element={
+                          <AdminSuspense>
+                            <AdminRoute>
+                              <DailyAnalytics />
+                            </AdminRoute>
+                          </AdminSuspense>
+                        } />
+                        <Route path="/admin/analytics/products" element={
+                          <AdminSuspense>
+                            <AdminRoute>
+                              <ProductAnalytics />
+                            </AdminRoute>
+                          </AdminSuspense>
+                        } />
+                        <Route path="/admin/analytics/customers" element={
+                          <AdminSuspense>
+                            <AdminRoute>
+                              <CustomerAnalytics />
+                            </AdminRoute>
+                          </AdminSuspense>
+                        } />
+                        <Route path="/admin/analytics/search" element={
+                          <AdminSuspense>
+                            <AdminRoute>
+                              <SearchAnalytics />
+                            </AdminRoute>
+                          </AdminSuspense>
+                        } />
+                        <Route path="/admin/newsletter/compose" element={
+                          <AdminSuspense>
+                            <AdminRoute>
+                              <NewsletterCompose />
                             </AdminRoute>
                           </AdminSuspense>
                         } />

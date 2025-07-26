@@ -952,6 +952,536 @@ async def clear_cache(admin_user: dict = Depends(get_admin_user_with_rate_limit)
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed to clear cache: {str(e)}")
 
+# 9. BULK UPDATE PRODUCTS
+@router.post("/products/bulk-update")
+async def bulk_update_products(
+    update_data: dict,
+    admin_user: dict = Depends(get_admin_user_with_rate_limit)
+):
+    """Bulk update product prices or stock"""
+    try:
+        product_ids = update_data.get('product_ids', [])
+        update_type = update_data.get('update_type', 'price')
+        update_value = update_data.get('update_value', 0)
+        update_method = update_data.get('update_method', 'set')
+        
+        if not product_ids:
+            raise HTTPException(status_code=400, detail="No products selected")
+        
+        # Convert string IDs to ObjectIds
+        object_ids = [ObjectId(pid) for pid in product_ids]
+        
+        # Build update query based on method
+        if update_method == 'set':
+            update_query = {"$set": {update_type: update_value}}
+        elif update_method == 'increase':
+            update_query = {"$inc": {update_type: update_value}}
+        elif update_method == 'decrease':
+            update_query = {"$inc": {update_type: -update_value}}
+        elif update_method == 'percentage':
+            # For percentage changes, we need to use aggregation
+            products = await db.products.find({"_id": {"$in": object_ids}}).to_list(None)
+            for product in products:
+                current_value = product.get(update_type, 0)
+                new_value = current_value * (1 + update_value / 100)
+                await db.products.update_one(
+                    {"_id": product["_id"]},
+                    {"$set": {update_type: new_value, "updated_at": datetime.now(timezone.utc)}}
+                )
+            return {"message": f"Updated {len(products)} products with percentage change"}
+        
+        # Apply update to all selected products
+        result = await db.products.update_many(
+            {"_id": {"$in": object_ids}},
+            {**update_query, "$set": {"updated_at": datetime.now(timezone.utc)}}
+        )
+        
+        return {
+            "message": f"Updated {result.modified_count} products",
+            "modified_count": result.modified_count
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to bulk update: {str(e)}")
+
+# 10. GENERATE SHIPPING LABELS
+@router.post("/orders/generate-labels")
+async def generate_shipping_labels(
+    label_data: dict,
+    admin_user: dict = Depends(get_admin_user_with_rate_limit)
+):
+    """Generate shipping labels for selected orders"""
+    try:
+        order_ids = label_data.get('order_ids', [])
+        
+        if not order_ids:
+            raise HTTPException(status_code=400, detail="No orders selected")
+        
+        # In a real implementation, you would integrate with shipping providers
+        # For now, we'll create a mock PDF response
+        import base64
+        
+        # Mock PDF content (in real implementation, generate actual PDF)
+        mock_pdf_content = b"Mock PDF content for shipping labels"
+        pdf_base64 = base64.b64encode(mock_pdf_content).decode('utf-8')
+        
+        return {
+            "pdf_data": pdf_base64,
+            "filename": f"shipping_labels_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf",
+            "order_count": len(order_ids)
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate labels: {str(e)}")
+
+# 11. SEND TRACKING INFORMATION
+@router.post("/orders/send-tracking")
+async def send_tracking_information(
+    tracking_data: dict,
+    admin_user: dict = Depends(get_admin_user_with_rate_limit)
+):
+    """Send tracking information to customers"""
+    try:
+        orders = tracking_data.get('orders', [])
+        
+        if not orders:
+            raise HTTPException(status_code=400, detail="No orders provided")
+        
+        sent_count = 0
+        
+        for order_info in orders:
+            order_id = order_info.get('order_id')
+            tracking_number = order_info.get('tracking_number')
+            carrier = order_info.get('carrier', 'Standard Shipping')
+            estimated_delivery = order_info.get('estimated_delivery')
+            
+            # Update order with tracking info
+            await db.orders.update_one(
+                {"_id": ObjectId(order_id)},
+                {
+                    "$set": {
+                        "tracking_number": tracking_number,
+                        "carrier": carrier,
+                        "estimated_delivery": estimated_delivery,
+                        "tracking_sent_at": datetime.now(timezone.utc)
+                    }
+                }
+            )
+            
+            # Get order and customer info
+            order = await db.orders.find_one({"_id": ObjectId(order_id)})
+            if order:
+                user = await db.users.find_one({"_id": ObjectId(order["user_id"])})
+                if user and user.get("email"):
+                    # Send tracking email
+                    email_body = f"""
+                    <html>
+                    <body style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                        <h2 style="color: #007bff;">📦 Tracking Information</h2>
+                        <p>Hello {user.get('full_name', 'Customer')},</p>
+                        <p>Your order #{order.get('order_number', order_id)} is on its way!</p>
+                        
+                        <div style="background-color: #f8f9fa; padding: 20px; margin: 20px 0; border-radius: 5px;">
+                            <p><strong>Tracking Number:</strong> {tracking_number}</p>
+                            <p><strong>Carrier:</strong> {carrier}</p>
+                            {f"<p><strong>Estimated Delivery:</strong> {estimated_delivery}</p>" if estimated_delivery else ""}
+                        </div>
+                        
+                        <p>Thank you for your business!</p>
+                    </body>
+                    </html>
+                    """
+                    
+                    try:
+                        await email_service.send_email(
+                            user["email"],
+                            f"Tracking Information - Order #{order.get('order_number', order_id)}",
+                            email_body
+                        )
+                        sent_count += 1
+                    except Exception as e:
+                        logger.error(f"Failed to send tracking email: {e}")
+        
+        return {
+            "message": f"Tracking information sent for {sent_count} orders",
+            "sent_count": sent_count
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to send tracking: {str(e)}")
+
+# 12. CREATE ADMIN USER
+@router.post("/users/create-admin")
+async def create_admin_user(
+    user_data: dict,
+    admin_user: dict = Depends(get_admin_user)
+):
+    """Create a new admin user"""
+    try:
+        from api.services.auth_service import hash_password
+        
+        # Check if email already exists
+        existing_user = await db.users.find_one({"email": user_data["email"]})
+        if existing_user:
+            raise HTTPException(status_code=400, detail="Email already exists")
+        
+        # Hash password
+        hashed_password = hash_password(user_data["password"])
+        
+        # Create admin user
+        new_admin = {
+            "email": user_data["email"],
+            "password": hashed_password,
+            "full_name": user_data["full_name"],
+            "phone": user_data.get("phone", ""),
+            "is_admin": True,
+            "created_at": datetime.now(timezone.utc),
+            "updated_at": datetime.now(timezone.utc)
+        }
+        
+        result = await db.users.insert_one(new_admin)
+        
+        return {
+            "message": "Admin user created successfully",
+            "user_id": str(result.inserted_id)
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create admin: {str(e)}")
+
+# 13. BAN/UNBAN USER
+@router.post("/users/{user_id}/ban")
+async def ban_user(
+    user_id: str,
+    ban_data: dict,
+    admin_user: dict = Depends(get_admin_user)
+):
+    """Ban a user"""
+    try:
+        result = await db.users.update_one(
+            {"_id": ObjectId(user_id)},
+            {
+                "$set": {
+                    "is_banned": True,
+                    "ban_reason": ban_data.get("reason", "Violation of terms"),
+                    "banned_at": datetime.now(timezone.utc),
+                    "banned_by": admin_user.get("email")
+                }
+            }
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        return {"message": "User banned successfully"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to ban user: {str(e)}")
+
+@router.post("/users/{user_id}/unban")
+async def unban_user(
+    user_id: str,
+    admin_user: dict = Depends(get_admin_user)
+):
+    """Unban a user"""
+    try:
+        result = await db.users.update_one(
+            {"_id": ObjectId(user_id)},
+            {
+                "$unset": {
+                    "is_banned": "",
+                    "ban_reason": "",
+                    "banned_at": "",
+                    "banned_by": ""
+                },
+                "$set": {
+                    "unbanned_at": datetime.now(timezone.utc),
+                    "unbanned_by": admin_user.get("email")
+                }
+            }
+        )
+        
+        if result.matched_count == 0:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        return {"message": "User unbanned successfully"}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to unban user: {str(e)}")
+
+# 14. TAX REPORT
+@router.post("/reports/tax")
+async def generate_tax_report(
+    date_range: dict,
+    admin_user: dict = Depends(get_admin_user_with_rate_limit)
+):
+    """Generate tax report for date range"""
+    try:
+        start_date = datetime.fromisoformat(date_range["start_date"])
+        end_date = datetime.fromisoformat(date_range["end_date"])
+        
+        # Get orders in date range
+        orders = await db.orders.find({
+            "created_at": {"$gte": start_date, "$lte": end_date},
+            "status": {"$in": ["shipped", "delivered"]}
+        }).to_list(None)
+        
+        # Generate CSV content
+        csv_content = "Order ID,Date,Customer,Total,Tax Amount,Tax Rate\n"
+        total_tax = 0
+        
+        for order in orders:
+            tax_rate = 0.08  # 8% tax rate (configurable)
+            order_total = order.get("total_amount", 0)
+            tax_amount = order_total * tax_rate
+            total_tax += tax_amount
+            
+            user = await db.users.find_one({"_id": ObjectId(order["user_id"])})
+            customer_name = user.get("full_name", "Unknown") if user else "Unknown"
+            
+            csv_content += f"{order['_id']},{order['created_at'].strftime('%Y-%m-%d')},{customer_name},{order_total:.2f},{tax_amount:.2f},{tax_rate:.2%}\n"
+        
+        # Add summary
+        csv_content += f"\n\nSUMMARY\n"
+        csv_content += f"Total Orders,{len(orders)}\n"
+        csv_content += f"Total Tax Collected,${total_tax:.2f}\n"
+        
+        return {
+            "csv_data": csv_content,
+            "total_tax": total_tax,
+            "order_count": len(orders)
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate tax report: {str(e)}")
+
+# 15. SYSTEM LOGS
+@router.get("/system/logs")
+async def get_system_logs(
+    level: str = "all",
+    admin_user: dict = Depends(get_admin_user)
+):
+    """Get system logs"""
+    try:
+        # Mock logs - in production, integrate with actual logging system
+        mock_logs = [
+            {
+                "timestamp": datetime.now() - timedelta(hours=1),
+                "level": "info",
+                "message": "User login successful"
+            },
+            {
+                "timestamp": datetime.now() - timedelta(hours=2),
+                "level": "warning",
+                "message": "High memory usage detected"
+            },
+            {
+                "timestamp": datetime.now() - timedelta(hours=3),
+                "level": "error",
+                "message": "Database connection timeout"
+            }
+        ]
+        
+        if level != "all":
+            mock_logs = [log for log in mock_logs if log["level"] == level]
+        
+        return {"logs": mock_logs}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to fetch logs: {str(e)}")
+
+# 16. ANALYTICS ENDPOINTS
+@router.get("/analytics/daily")
+async def get_daily_analytics(
+    date: str = None,
+    admin_user: dict = Depends(get_admin_user)
+):
+    """Get daily analytics"""
+    try:
+        if date:
+            target_date = datetime.fromisoformat(date)
+        else:
+            target_date = datetime.now()
+        
+        start_of_day = target_date.replace(hour=0, minute=0, second=0, microsecond=0)
+        end_of_day = start_of_day + timedelta(days=1)
+        
+        # Get analytics for the day
+        orders_count = await db.orders.count_documents({
+            "created_at": {"$gte": start_of_day, "$lt": end_of_day}
+        })
+        
+        revenue_pipeline = [
+            {"$match": {
+                "created_at": {"$gte": start_of_day, "$lt": end_of_day}
+            }},
+            {"$group": {"_id": None, "total": {"$sum": "$total_amount"}}}
+        ]
+        revenue_result = await db.orders.aggregate(revenue_pipeline).to_list(1)
+        revenue = revenue_result[0]["total"] if revenue_result else 0
+        
+        new_users = await db.users.count_documents({
+            "created_at": {"$gte": start_of_day, "$lt": end_of_day}
+        })
+        
+        return {
+            "orders": orders_count,
+            "revenue": revenue,
+            "new_users": new_users,
+            "page_views": 0  # Would integrate with analytics service
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get analytics: {str(e)}")
+
+@router.get("/analytics/products")
+async def get_product_analytics(admin_user: dict = Depends(get_admin_user)):
+    """Get product analytics"""
+    try:
+        # Use existing top products pipeline
+        top_products_pipeline = [
+            {"$unwind": "$items"},
+            {"$group": {
+                "_id": "$items.product.name",
+                "total_sold": {"$sum": "$items.quantity"},
+                "total_revenue": {"$sum": {"$multiply": ["$items.quantity", "$items.product.price"]}}
+            }},
+            {"$sort": {"total_sold": -1}},
+            {"$limit": 10}
+        ]
+        
+        top_products = await db.orders.aggregate(top_products_pipeline).to_list(None)
+        
+        return {"top_products": top_products}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get product analytics: {str(e)}")
+
+# 17. NEWSLETTER
+@router.post("/newsletter/send")
+async def send_newsletter(
+    newsletter_data: dict,
+    admin_user: dict = Depends(get_admin_user_with_rate_limit)
+):
+    """Send newsletter to users"""
+    try:
+        subject = newsletter_data.get("subject")
+        content = newsletter_data.get("content")
+        send_to = newsletter_data.get("send_to", "all")
+        
+        # Get recipients based on send_to parameter
+        if send_to == "customers":
+            recipients = await db.users.find({"is_admin": {"$ne": True}}).to_list(None)
+        elif send_to == "admins":
+            recipients = await db.users.find({"is_admin": True}).to_list(None)
+        else:  # all
+            recipients = await db.users.find({}).to_list(None)
+        
+        sent_count = 0
+        
+        # Send emails asynchronously
+        for user in recipients:
+            if user.get("email"):
+                try:
+                    await email_service.send_email(
+                        user["email"],
+                        subject,
+                        content
+                    )
+                    sent_count += 1
+                except Exception as e:
+                    logger.error(f"Failed to send newsletter to {user['email']}: {e}")
+        
+        return {
+            "message": f"Newsletter sent to {sent_count} recipients",
+            "sent_count": sent_count,
+            "total_recipients": len(recipients)
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to send newsletter: {str(e)}")
+
+# 18. PRODUCT IMPORT ENDPOINT
+@router.post("/products/import")
+async def import_products(
+    request: Request,
+    admin_user: dict = Depends(get_admin_user_with_rate_limit)
+):
+    """Import products from CSV file"""
+    try:
+        form = await request.form()
+        file = form.get("file")
+        
+        if not file:
+            raise HTTPException(status_code=400, detail="No file provided")
+        
+        # Read CSV content
+        content = await file.read()
+        csv_content = content.decode('utf-8')
+        
+        import csv as csv_module
+        import io
+        
+        csv_reader = csv_module.DictReader(io.StringIO(csv_content))
+        
+        success_count = 0
+        errors = []
+        
+        for row_num, row in enumerate(csv_reader, start=2):
+            try:
+                # Validate required fields
+                if not row.get('name') or not row.get('price'):
+                    errors.append({
+                        "row": row_num,
+                        "message": "Missing required fields: name or price"
+                    })
+                    continue
+                
+                # Create product
+                product_data = {
+                    "name": row['name'],
+                    "description": row.get('description', ''),
+                    "price": float(row['price']),
+                    "category": row.get('category', 'Uncategorized'),
+                    "image_url": row.get('image_url', ''),
+                    "stock": int(row.get('stock', 0)),
+                    "brand": row.get('brand', ''),
+                    "sku": row.get('sku', ''),
+                    "created_at": datetime.now(timezone.utc),
+                    "updated_at": datetime.now(timezone.utc)
+                }
+                
+                await db.products.insert_one(product_data)
+                success_count += 1
+                
+            except Exception as e:
+                errors.append({
+                    "row": row_num,
+                    "message": str(e)
+                })
+        
+        return {
+            "success_count": success_count,
+            "errors": errors,
+            "message": f"Import completed: {success_count} products imported"
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to import products: {str(e)}")
+
+# 19. PENDING PAYMENTS
+@router.get("/payments/pending")
+async def get_pending_payments(admin_user: dict = Depends(get_admin_user)):
+    """Get pending payments"""
+    try:
+        # Mock pending payments - in production, integrate with payment processor
+        pending_payments = []
+        
+        return {"payments": pending_payments}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to get pending payments: {str(e)}")
+
 # 8. SYSTEM HEALTH CHECK - PRODUCTION READY (Cloud-native)
 @router.get("/system/health-check")
 async def system_health_check(admin_user: dict = Depends(get_admin_user)):
