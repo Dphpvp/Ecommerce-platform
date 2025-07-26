@@ -6,6 +6,12 @@ class MessageResponse(BaseModel):
     message: str
     success: bool = True
 
+class StandardResponse(BaseModel):
+    success: bool
+    message: str
+    data: Optional[Any] = None
+    error_code: Optional[str] = None
+
 class UserResponse(BaseModel):
     id: str
     username: str
