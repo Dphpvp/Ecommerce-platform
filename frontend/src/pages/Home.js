@@ -28,42 +28,6 @@ const AnimatedProductCard = ({ product, delay = 0 }) => {
     return () => observer.disconnect();
   }, [delay]);
 
-  const handleAddToCart = async () => {
-    if (!user) {
-      showToast('Please login to add items to cart', 'error');
-      return;
-    }
-
-    setIsAdding(true);
-    try {
-      const success = await addToCart(product._id, 1);
-      if (success) {
-        showToast('Product added to cart successfully!', 'success');
-        setIsModalOpen(false);
-      } else {
-        showToast('Failed to add to cart', 'error');
-      }
-    } catch (error) {
-      showToast('Failed to add to cart', 'error');
-    } finally {
-      setIsAdding(false);
-    }
-  };
-
-  const getStockStatus = () => {
-    const stock = product.stock || 0;
-    if (stock > 10) return 'in-stock';
-    if (stock > 0) return 'low-stock';
-    return 'out-of-stock';
-  };
-
-  const getStockText = () => {
-    const stock = product.stock || 0;
-    if (stock > 10) return 'In Stock';
-    if (stock > 0) return `${stock} Left`;
-    return 'Out of Stock';
-  };
-
   return (
     <div
       ref={cardRef}
@@ -223,7 +187,7 @@ const Home = () => {
         <div className="featured-products-grid">
           <div className="product-grid">
             {featuredProducts.slice(0, 6).map((product, index) => (
-              <ProductCardWithModal 
+              <AnimatedProductCard 
                 key={product._id} 
                 product={product}
                 delay={index * 100}

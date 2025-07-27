@@ -62,7 +62,10 @@
       "Bash(head:*)",
       "Bash(done)",
       "Bash(do echo \"Adding import to $file...\")",
-      "Bash(sed:*)"
+      "Bash(sed:*)",
+      "Bash(do echo \"Checking $file...\")",
+      "Bash(echo \"$file: OK\")",
+      "Bash(echo:*)"
     ],
     "deny": [],
     "fileSystem": {
