@@ -14,6 +14,7 @@ import './styles/index.css';              // Complete theme system with all impo
 // Core providers and components (not lazy loaded for better UX)
 import { AuthProvider } from './contexts/AuthContext';
 import { CartProvider } from './contexts/CartContext';
+import { WishlistProvider } from './contexts/WishlistContext';
 import { ToastProvider } from './components/toast';
 import { ParallaxContainer } from './components/Parallax';
 import Navigation from './components/Navigation';
@@ -28,6 +29,7 @@ import { PageSuspense, AdminSuspense, AuthSuspense } from './components/Suspense
 const Home = React.lazy(() => import('./pages/Home'));
 const Products = React.lazy(() => import('./pages/Products'));
 const Cart = React.lazy(() => import('./pages/Cart'));
+const Wishlist = React.lazy(() => import('./pages/Wishlist'));
 const Checkout = React.lazy(() => import('./pages/Checkout'));
 const AuthSlider = React.lazy(() => import('./components/AuthSlider'));
 const ResetPassword = React.lazy(() => import('./pages/ResetPassword'));
@@ -136,7 +138,8 @@ const App = () => {
           <Router>
             <AuthProvider>
               <CartProvider>
-                <ToastProvider>
+                <WishlistProvider>
+                  <ToastProvider>
                   <div className="app">
                     <Navigation />
                     <BackToTop />
@@ -192,6 +195,13 @@ const App = () => {
                           <PrivateRoute>
                             <PageSuspense title="cart">
                               <Cart />
+                            </PageSuspense>
+                          </PrivateRoute>
+                        } />
+                        <Route path="/wishlist" element={
+                          <PrivateRoute>
+                            <PageSuspense title="wishlist">
+                              <Wishlist />
                             </PageSuspense>
                           </PrivateRoute>
                         } />
@@ -370,7 +380,8 @@ const App = () => {
                     <Footer />
                   </ParallaxContainer>
                   </div>
-                </ToastProvider>
+                  </ToastProvider>
+                </WishlistProvider>
               </CartProvider>
             </AuthProvider>
           </Router>

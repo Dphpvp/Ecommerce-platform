@@ -66,14 +66,17 @@ const About = () => {
           <div className="container">
             <div className="hero-text">
               <div className="hero-badge">
-                <span>About Us</span>
+                <svg className="eco-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+                <span>Sustainable Fashion</span>
               </div>
               <h1 className="hero-title">
-                Crafting Excellence,
-                <span className="hero-accent">Building Trust</span>
+                Fashion with Purpose,
+                <span className="hero-accent">Style with Impact</span>
               </h1>
               <p className="hero-description">
-                Discover the story behind our commitment to quality, innovation, and exceptional customer experiences that define who we are.
+                Discover our mission to revolutionize fashion through sustainability, ethical practices, and timeless designs that respect both people and planet.
               </p>
               <div className="hero-actions">
                 <Link to="/products" className="hero-btn-primary">
@@ -98,9 +101,9 @@ const About = () => {
             <div className="section-badge">
               <span>Our Journey</span>
             </div>
-            <h2 className="modern-title">The Story Behind Excellence</h2>
+            <h2 className="modern-title">Pioneering Sustainable Fashion</h2>
             <p className="modern-subtitle">
-              From humble beginnings to becoming a trusted name in quality products
+              From a vision of ethical fashion to becoming a leader in sustainable style and conscious consumption
             </p>
           </div>
           
@@ -110,27 +113,29 @@ const About = () => {
                 <div className="story-card">
                   <div className="story-icon">
                     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                      <path d="M12 2a10 10 0 1 0 10 10 10 10 0 0 0-10-10zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/>
+                      <path d="M8 12l2 2 4-4"/>
                     </svg>
                   </div>
-                  <h3>Founded with Purpose</h3>
+                  <h3>Founded on Sustainability</h3>
                   <p className="story-lead">
-                    Founded in 2020, we started with a simple yet powerful mission: to provide high-quality products 
-                    at fair prices with exceptional customer service that exceeds expectations.
+                    Born from a vision in 2020, EcoFashion emerged to revolutionize the fashion industry through 
+                    sustainable practices, ethical manufacturing, and timeless designs that honor both style and environmental responsibility.
                   </p>
                 </div>
                 
                 <div className="story-card">
                   <div className="story-icon">
                     <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                      <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                      <polyline points="3.27,6.96 12,12.01 20.73,6.96"/>
+                      <line x1="12" y1="22.08" x2="12" y2="12"/>
                     </svg>
                   </div>
-                  <h3>Growth Through Innovation</h3>
+                  <h3>Ethical Supply Chain</h3>
                   <p className="story-paragraph">
-                    What began as a small online store has grown into a trusted destination for customers 
-                    seeking quality products and reliable service. We carefully curate our selection to 
-                    ensure every item meets our rigorous standards.
+                    We've built partnerships with certified sustainable suppliers and fair-trade manufacturers worldwide, 
+                    ensuring every piece in our collection meets the highest standards for environmental and social responsibility.
                   </p>
                 </div>
                 
@@ -143,10 +148,10 @@ const About = () => {
                       <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
                     </svg>
                   </div>
-                  <h3>Serving Thousands</h3>
+                  <h3>Global Community</h3>
                   <p className="story-paragraph">
-                    Today, we proudly serve thousands of satisfied customers worldwide, maintaining our unwavering 
-                    commitment to quality, value, and outstanding customer experience in everything we do.
+                    Today, we're proud to serve a global community of conscious consumers who choose sustainable fashion. 
+                    Together, we're proving that style and sustainability can beautifully coexist.
                   </p>
                 </div>
               </FadeInSection>
@@ -190,9 +195,9 @@ const About = () => {
             <div className="section-badge">
               <span>Our Values</span>
             </div>
-            <h2 className="modern-title">What Drives Us Forward</h2>
+            <h2 className="modern-title">Sustainable Fashion Values</h2>
             <p className="modern-subtitle">
-              The core principles that guide every decision and define our commitment to excellence
+              The core principles that drive our commitment to ethical fashion and environmental responsibility
             </p>
           </div>
           
@@ -207,10 +212,10 @@ const About = () => {
                   </div>
                 </div>
                 <div className="product-info">
-                  <h3 className="product-name">Premium Quality</h3>
-                  <p className="product-category">Core Value</p>
+                  <h3 className="product-name">Eco-Friendly Materials</h3>
+                  <p className="product-category">Environmental Impact</p>
                   <div className="value-description">
-                    We carefully select and test every product to ensure it meets our rigorous standards for quality, durability, and performance.
+                    We exclusively use organic, recycled, and sustainably-sourced materials that minimize environmental impact while maintaining exceptional quality and comfort.
                   </div>
                 </div>
               </div>
@@ -227,10 +232,10 @@ const About = () => {
                   </div>
                 </div>
                 <div className="product-info">
-                  <h3 className="product-name">Customer Focus</h3>
-                  <p className="product-category">Core Value</p>
+                  <h3 className="product-name">Fair Trade Practices</h3>
+                  <p className="product-category">Social Responsibility</p>
                   <div className="value-description">
-                    Our customers are at the center of everything we do. We're dedicated to providing exceptional service and support that exceeds expectations.
+                    We ensure fair wages and safe working conditions throughout our supply chain, supporting communities and empowering artisans worldwide.
                   </div>
                 </div>
               </div>
@@ -246,10 +251,10 @@ const About = () => {
                   </div>
                 </div>
                 <div className="product-info">
-                  <h3 className="product-name">Innovation</h3>
-                  <p className="product-category">Core Value</p>
+                  <h3 className="product-name">Circular Fashion</h3>
+                  <p className="product-category">Innovation</p>
                   <div className="value-description">
-                    We continuously seek new ways to improve our products and services, embracing technology and fresh ideas to better serve our customers.
+                    We design for longevity and embrace circular economy principles, offering repair services, take-back programs, and timeless designs that transcend trends.
                   </div>
                 </div>
               </div>
@@ -265,10 +270,10 @@ const About = () => {
                   </div>
                 </div>
                 <div className="product-info">
-                  <h3 className="product-name">Sustainability</h3>
-                  <p className="product-category">Core Value</p>
+                  <h3 className="product-name">Carbon Neutral</h3>
+                  <p className="product-category">Climate Action</p>
                   <div className="value-description">
-                    We're committed to responsible business practices and reducing our environmental impact through conscious choices and sustainable operations.
+                    We offset 100% of our carbon footprint through verified environmental projects and continuously work to minimize our impact through renewable energy and efficient operations.
                   </div>
                 </div>
               </div>

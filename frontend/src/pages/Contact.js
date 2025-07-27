@@ -116,14 +116,17 @@ const Contact = () => {
           <div className="container">
             <div className="hero-text">
               <div className="hero-badge">
-                <span>Get in Touch</span>
+                <svg className="eco-icon" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+                </svg>
+                <span>Connect with EcoFashion</span>
               </div>
               <h1 className="hero-title">
-                Connect With Us,
-                <span className="hero-accent">Start Your Journey</span>
+                Let's Create Sustainable Fashion,
+                <span className="hero-accent">Together</span>
               </h1>
               <p className="hero-description">
-                Have questions? Need assistance? We're here to help you discover the perfect solutions for your needs.
+                Have questions about sustainable fashion? Need styling advice? Want to learn more about our impact? We're here to help you on your sustainable style journey.
               </p>
               <div className="hero-actions">
                 <a href="#contact-form" className="hero-btn-primary">
@@ -148,9 +151,9 @@ const Contact = () => {
             <div className="section-badge">
               <span>Contact Information</span>
             </div>
-            <h2 className="modern-title">Get in Touch Today</h2>
+            <h2 className="modern-title">We're Here to Help</h2>
             <p className="modern-subtitle">
-              Multiple ways to connect with our team and get the support you need
+              Multiple ways to connect with our sustainable fashion experts and get personalized assistance
             </p>
           </div>
           
@@ -168,11 +171,11 @@ const Contact = () => {
                   </div>
                 </div>
                 <div className="product-info">
-                  <h3 className="product-name">Visit Our Location</h3>
-                  <p className="product-category">Address</p>
+                  <h3 className="product-name">Visit Our Sustainable Studio</h3>
+                  <p className="product-category">Eco-Friendly Space</p>
                   <div className="contact-details">
-                    123 Business Avenue<br />
-                    Suite 100<br />
+                    123 Green Fashion District<br />
+                    Sustainable Hub, Floor 3<br />
                     New York, NY 10001
                   </div>
                 </div>
@@ -187,11 +190,11 @@ const Contact = () => {
                   </div>
                 </div>
                 <div className="product-info">
-                  <h3 className="product-name">Call Us Directly</h3>
-                  <p className="product-category">Phone</p>
+                  <h3 className="product-name">Fashion Consultations</h3>
+                  <p className="product-category">Personal Styling</p>
                   <div className="contact-details">
                     <a href="tel:+12125551234">+1 (212) 555-1234</a><br />
-                    <span className="contact-note">Mon-Fri 9AM-6PM EST</span>
+                    <span className="contact-note">Free styling consultations</span>
                   </div>
                 </div>
               </div>
@@ -206,11 +209,11 @@ const Contact = () => {
                   </div>
                 </div>
                 <div className="product-info">
-                  <h3 className="product-name">Email Support</h3>
+                  <h3 className="product-name">Sustainable Style Support</h3>
                   <p className="product-category">Email</p>
                   <div className="contact-details">
-                    <a href="mailto:support@company.com">support@company.com</a><br />
-                    <span className="contact-note">24-hour response time</span>
+                    <a href="mailto:hello@ecofashion.com">hello@ecofashion.com</a><br />
+                    <span className="contact-note">Eco-conscious customer care</span>
                   </div>
                 </div>
               </div>

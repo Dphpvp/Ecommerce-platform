@@ -1,35 +1,15 @@
 // ASOS-Inspired Home Page - Sustainable Fashion
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { useCart } from '../contexts/CartContext';
-import { useAuth } from '../contexts/AuthContext';
-import { useToastContext } from '../components/toast';
+import ProductCard from '../components/ProductCard';
 import '../styles/index.css';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
 
-// Admin-style Modal Component
-const Modal = ({ isOpen, onClose, children }) => {
-  if (!isOpen) return null;
-
-  return (
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        {children}
-      </div>
-    </div>
-  );
-};
-
-// Product Card with Admin-style Modal
-const ProductCardWithModal = ({ product, delay = 0 }) => {
+// Animated Product Card for Home Page
+const AnimatedProductCard = ({ product, delay = 0 }) => {
   const [isVisible, setIsVisible] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isAdding, setIsAdding] = useState(false);
   const cardRef = useRef(null);
-  const { addToCart } = useCart();
-  const { user } = useAuth();
-  const { showToast } = useToastContext();
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -85,111 +65,13 @@ const ProductCardWithModal = ({ product, delay = 0 }) => {
   };
 
   return (
-    <>
-      <div
-        ref={cardRef}
-        className={`product-card ${isVisible ? 'visible' : ''}`}
-        style={{ animationDelay: `${delay}ms` }}
-        onClick={() => setIsModalOpen(true)}
-      >
-        <div className="product-image-container">
-          <img 
-            src={product.image_url || product.image} 
-            alt={product.name}
-            className="product-image"
-            loading="lazy"
-            onError={(e) => {
-              e.target.src = '/images/placeholder-product.jpg';
-            }}
-          />
-          <div className="product-badges">
-            <span className="product-badge sustainable">Eco</span>
-          </div>
-          <div className="product-actions">
-            <button className="product-action-btn">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        <div className="product-info">
-          <div className="product-brand">{product.category}</div>
-          <h3 className="product-title">{product.name}</h3>
-          <div className="product-price">
-            <span className="price-current">${product.price}</span>
-          </div>
-          <div className="sustainability-rating">
-            <div className="sustainability-leaves">
-              <svg className="sustainability-leaf" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-              </svg>
-              <svg className="sustainability-leaf" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-              </svg>
-              <svg className="sustainability-leaf" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-              </svg>
-            </div>
-            <span className="sustainability-label">Sustainable</span>
-          </div>
-        </div>
-      </div>
-
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
-        <div className="product-modal-content">
-          <h2>{product.name}</h2>
-
-          <section className="modal-section">
-            <h3>📦 Product Details</h3>
-            <div className="product-details-grid">
-              <div className="product-image-section">
-                <img
-                  src={product.image_url || product.image}
-                  alt={product.name}
-                  className="modal-product-image"
-                  onError={(e) => {
-                    e.target.src = '/images/placeholder-product.jpg';
-                  }}
-                />
-              </div>
-              <div className="product-info-section">
-                <p><strong>Category:</strong> {product.category}</p>
-                <p><strong>Price:</strong> ${product.price}</p>
-                <p><strong>Stock:</strong> <span className={getStockStatus()}>{getStockText()}</span></p>
-                {product.description && (
-                  <p><strong>Description:</strong> {product.description}</p>
-                )}
-                {product.brand && (
-                  <p><strong>Brand:</strong> {product.brand}</p>
-                )}
-              </div>
-            </div>
-          </section>
-
-          <section className="modal-section">
-            <h3>🛒 Actions</h3>
-            <div className="modal-actions">
-              <button
-                className={`modal-btn primary ${(product.stock || 0) <= 0 ? 'disabled' : ''}`}
-                onClick={handleAddToCart}
-                disabled={isAdding || (product.stock || 0) <= 0}
-              >
-                {isAdding ? 'Adding...' : 
-                 (product.stock || 0) <= 0 ? 'Out of Stock' : 'Add to Cart'}
-              </button>
-              <button
-                className="modal-btn secondary"
-                onClick={() => setIsModalOpen(false)}
-              >
-                Close
-              </button>
-            </div>
-          </section>
-        </div>
-      </Modal>
-    </>
+    <div
+      ref={cardRef}
+      className={`product-card-wrapper ${isVisible ? 'visible' : ''}`}
+      style={{ animationDelay: `${delay}ms` }}
+    >
+      <ProductCard product={product} />
+    </div>
   );
 };
 
