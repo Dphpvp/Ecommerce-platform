@@ -144,98 +144,59 @@ const Contact = () => {
         </div>
       </section>
 
-      {/* Modern Contact Content */}
-      <section className="modern-products-section">
+      {/* Contact Information */}
+      <section className="contact-info-section">
         <div className="container">
-          <div className="modern-section-header">
-            <div className="section-badge">
-              <span>Contact Information</span>
+          <h2>Contact Information</h2>
+          <div className="contact-info-grid">
+            <div className="contact-info-item">
+              <div className="contact-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+              </div>
+              <div className="contact-details">
+                <h3>Address</h3>
+                <p>123 Fashion Street<br />New York, NY 10001</p>
+              </div>
             </div>
-            <h2 className="modern-title">We're Here to Help</h2>
-            <p className="modern-subtitle">
-              Multiple ways to connect with our sustainable fashion experts and get personalized assistance
-            </p>
-          </div>
-          
-          <div className="contact-grid">
-            
-            {/* Contact Information Cards */}
-            <div className="contact-info-cards">
-              <div className="modern-product-card contact-card">
-                <div className="product-image-container contact-icon-container">
-                  <div className="contact-icon">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-                      <circle cx="12" cy="10" r="3"/>
-                    </svg>
-                  </div>
-                </div>
-                <div className="product-info">
-                  <h3 className="product-name">Visit Our Sustainable Studio</h3>
-                  <p className="product-category">Eco-Friendly Space</p>
-                  <div className="contact-details">
-                    123 Green Fashion District<br />
-                    Sustainable Hub, Floor 3<br />
-                    New York, NY 10001
-                  </div>
-                </div>
-              </div>
 
-              <div className="modern-product-card contact-card">
-                <div className="product-image-container contact-icon-container">
-                  <div className="contact-icon">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
-                    </svg>
-                  </div>
-                </div>
-                <div className="product-info">
-                  <h3 className="product-name">Fashion Consultations</h3>
-                  <p className="product-category">Personal Styling</p>
-                  <div className="contact-details">
-                    <a href="tel:+12125551234">+1 (212) 555-1234</a><br />
-                    <span className="contact-note">Free styling consultations</span>
-                  </div>
-                </div>
+            <div className="contact-info-item">
+              <div className="contact-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>
+                </svg>
               </div>
-
-              <div className="modern-product-card contact-card">
-                <div className="product-image-container contact-icon-container">
-                  <div className="contact-icon">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-                      <polyline points="22,6 12,13 2,6"/>
-                    </svg>
-                  </div>
-                </div>
-                <div className="product-info">
-                  <h3 className="product-name">Sustainable Style Support</h3>
-                  <p className="product-category">Email</p>
-                  <div className="contact-details">
-                    <a href="mailto:hello@ecofashion.com">hello@ecofashion.com</a><br />
-                    <span className="contact-note">Eco-conscious customer care</span>
-                  </div>
-                </div>
+              <div className="contact-details">
+                <h3>Phone</h3>
+                <p><a href="tel:+12125551234">+1 (212) 555-1234</a></p>
               </div>
+            </div>
 
-              <div className="modern-product-card contact-card">
-                <div className="product-image-container contact-icon-container">
-                  <div className="contact-icon">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <circle cx="12" cy="12" r="10"/>
-                      <polyline points="12,6 12,12 16,14"/>
-                    </svg>
-                  </div>
-                </div>
-                <div className="product-info">
-                  <h3 className="product-name">Business Hours</h3>
-                  <p className="product-category">Schedule</p>
-                  <div className="contact-details">
-                    Monday - Friday: 9AM-6PM<br />
-                    Saturday: 10AM-4PM<br />
-                    Sunday: Closed
-                  </div>
-                </div>
+            <div className="contact-info-item">
+              <div className="contact-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                  <polyline points="22,6 12,13 2,6"/>
+                </svg>
+              </div>
+              <div className="contact-details">
+                <h3>Email</h3>
+                <p><a href="mailto:hello@ecofashion.com">hello@ecofashion.com</a></p>
+              </div>
+            </div>
+
+            <div className="contact-info-item">
+              <div className="contact-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <polyline points="12,6 12,12 16,14"/>
+                </svg>
+              </div>
+              <div className="contact-details">
+                <h3>Hours</h3>
+                <p>Mon-Fri: 9AM-6PM<br />Sat: 10AM-4PM<br />Sun: Closed</p>
               </div>
             </div>
           </div>
@@ -243,17 +204,10 @@ const Contact = () => {
       </section>
 
       {/* Contact Form Section */}
-      <section className="modern-products-section contact-form-section" id="contact-form">
+      <section className="contact-form-section" id="contact-form">
         <div className="container">
-          <div className="modern-section-header">
-            <div className="section-badge">
-              <span>Send Message</span>
-            </div>
-            <h2 className="modern-title">Let's Start a Conversation</h2>
-            <p className="modern-subtitle">
-              Fill out the form below and we'll get back to you within 24 hours
-            </p>
-          </div>
+          <h2>Send us a Message</h2>
+          <p>Fill out the form below and we'll get back to you within 24 hours</p>
           
           <div className="contact-form-container">
             <div className="contact-form-card">
@@ -366,21 +320,11 @@ const Contact = () => {
       </section>
 
       {/* Newsletter Section */}
-      <section className="modern-products-section newsletter-section">
+      <section className="newsletter-section">
         <div className="container">
-          <div className="modern-section-header">
-            <div className="section-badge">
-              <span>Stay Updated</span>
-            </div>
-            <h2 className="modern-title">Join Our Newsletter</h2>
-            <p className="modern-subtitle">
-              Get the latest updates, special offers, and industry insights delivered to your inbox
-            </p>
-          </div>
-          
-          <div className="newsletter-container">
-            <NewsletterSubscribe variant="default" />
-          </div>
+          <h2>Stay Updated</h2>
+          <p>Get the latest updates and special offers delivered to your inbox</p>
+          <NewsletterSubscribe variant="default" />
         </div>
       </section>
     </div>

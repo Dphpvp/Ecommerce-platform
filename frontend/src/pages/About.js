@@ -188,145 +188,79 @@ const About = () => {
         </div>
       </section>
 
-      {/* Modern Values Section */}
-      <section className="modern-products-section">
+      {/* Values Section */}
+      <section className="values-section">
         <div className="container">
-          <div className="modern-section-header">
-            <div className="section-badge">
-              <span>Our Values</span>
-            </div>
-            <h2 className="modern-title">Sustainable Fashion Values</h2>
-            <p className="modern-subtitle">
-              The core principles that drive our commitment to ethical fashion and environmental responsibility
-            </p>
-          </div>
+          <h2>Our Values</h2>
+          <p>The core principles that drive our commitment to ethical fashion and environmental responsibility</p>
           
-          <div className="modern-products-grid">
-            <FadeInSection delay={100}>
-              <div className="modern-product-card value-card">
-                <div className="product-image-container value-icon-container">
-                  <div className="value-icon">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                    </svg>
-                  </div>
-                </div>
-                <div className="product-info">
-                  <h3 className="product-name">Eco-Friendly Materials</h3>
-                  <p className="product-category">Environmental Impact</p>
-                  <div className="value-description">
-                    We exclusively use organic, recycled, and sustainably-sourced materials that minimize environmental impact while maintaining exceptional quality and comfort.
-                  </div>
-                </div>
+          <div className="values-grid">
+            <div className="value-item">
+              <div className="value-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
               </div>
-            </FadeInSection>
+              <h3>Eco-Friendly Materials</h3>
+              <p>We exclusively use organic, recycled, and sustainably-sourced materials that minimize environmental impact while maintaining exceptional quality and comfort.</p>
+            </div>
 
-            <FadeInSection delay={200}>
-              <div className="modern-product-card value-card">
-                <div className="product-image-container value-icon-container">
-                  <div className="value-icon">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                      <circle cx="12" cy="7" r="4"/>
-                    </svg>
-                  </div>
-                </div>
-                <div className="product-info">
-                  <h3 className="product-name">Fair Trade Practices</h3>
-                  <p className="product-category">Social Responsibility</p>
-                  <div className="value-description">
-                    We ensure fair wages and safe working conditions throughout our supply chain, supporting communities and empowering artisans worldwide.
-                  </div>
-                </div>
+            <div className="value-item">
+              <div className="value-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
               </div>
-            </FadeInSection>
+              <h3>Fair Trade Practices</h3>
+              <p>We ensure fair wages and safe working conditions throughout our supply chain, supporting communities and empowering artisans worldwide.</p>
+            </div>
 
-            <FadeInSection delay={300}>
-              <div className="modern-product-card value-card">
-                <div className="product-image-container value-icon-container">
-                  <div className="value-icon">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
-                    </svg>
-                  </div>
-                </div>
-                <div className="product-info">
-                  <h3 className="product-name">Circular Fashion</h3>
-                  <p className="product-category">Innovation</p>
-                  <div className="value-description">
-                    We design for longevity and embrace circular economy principles, offering repair services, take-back programs, and timeless designs that transcend trends.
-                  </div>
-                </div>
+            <div className="value-item">
+              <div className="value-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+                </svg>
               </div>
-            </FadeInSection>
+              <h3>Circular Fashion</h3>
+              <p>We design for longevity and embrace circular economy principles, offering repair services, take-back programs, and timeless designs that transcend trends.</p>
+            </div>
 
-            <FadeInSection delay={400}>
-              <div className="modern-product-card value-card">
-                <div className="product-image-container value-icon-container">
-                  <div className="value-icon">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-                    </svg>
-                  </div>
-                </div>
-                <div className="product-info">
-                  <h3 className="product-name">Carbon Neutral</h3>
-                  <p className="product-category">Climate Action</p>
-                  <div className="value-description">
-                    We offset 100% of our carbon footprint through verified environmental projects and continuously work to minimize our impact through renewable energy and efficient operations.
-                  </div>
-                </div>
+            <div className="value-item">
+              <div className="value-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
               </div>
-            </FadeInSection>
+              <h3>Carbon Neutral</h3>
+              <p>We offset 100% of our carbon footprint through verified environmental projects and continuously work to minimize our impact through renewable energy and efficient operations.</p>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Newsletter Section */}
-      <section className="modern-products-section newsletter-section">
+      <section className="newsletter-section">
         <div className="container">
-          <div className="modern-section-header">
-            <div className="section-badge">
-              <span>Stay Connected</span>
-            </div>
-            <h2 className="modern-title">Join Our Community</h2>
-            <p className="modern-subtitle">
-              Subscribe to our newsletter for exclusive updates, special offers, and behind-the-scenes insights
-            </p>
-          </div>
-          
-          <div className="newsletter-container">
-            <FadeInSection>
-              <NewsletterSubscribe variant="default" />
-            </FadeInSection>
-          </div>
+          <h2>Join Our Community</h2>
+          <p>Subscribe to our newsletter for exclusive updates, special offers, and behind-the-scenes insights</p>
+          <NewsletterSubscribe variant="default" />
         </div>
       </section>
 
-      {/* Modern CTA Section */}
-      <section className="modern-cta-section">
+      {/* CTA Section */}
+      <section className="cta-section">
         <div className="container">
-          <FadeInSection>
-            <div className="modern-cta-content">
-              <div className="cta-text">
-                <h2 className="cta-title">Ready to Experience Excellence?</h2>
-                <p className="cta-description">
-                  Discover our collection of premium products and experience the difference that quality and exceptional service make.
-                </p>
-              </div>
-              <div className="cta-actions">
-                <Link to="/products" className="primary-cta-btn">
-                  Explore Products
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M5 12h14M12 5l7 7-7 7"/>
-                  </svg>
-                </Link>
-                <Link to="/contact" className="secondary-cta-btn">
-                  Get in Touch
-                </Link>
-              </div>
-            </div>
-          </FadeInSection>
+          <h2>Ready to Experience Excellence?</h2>
+          <p>Discover our collection of premium products and experience the difference that quality and exceptional service make.</p>
+          <div className="cta-buttons">
+            <Link to="/products" className="btn btn-primary">
+              Explore Products
+            </Link>
+            <Link to="/contact" className="btn btn-secondary">
+              Get in Touch
+            </Link>
+          </div>
         </div>
       </section>
     </div>
