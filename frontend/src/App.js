@@ -8,8 +8,8 @@ import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { registerSW, setCallbacks } from './utils/serviceWorker';
 import { queryClient, prefetchQueries } from './utils/queryClient';
 
-// UPDATED: New comprehensive luxury theme
-import './styles/theme.css';              // Main theme entry point (imports all styles)
+// ASOS-Inspired Sustainable Fashion Theme
+import './styles/index.css';              // Complete theme system with all imports
 
 // Core providers and components (not lazy loaded for better UX)
 import { AuthProvider } from './contexts/AuthContext';

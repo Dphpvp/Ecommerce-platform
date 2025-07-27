@@ -1,10 +1,11 @@
-// Revolutionary Products Page - Spectacular Shopping Experience
+// ASOS-Inspired Products Page - Sustainable Fashion Catalog
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import ProductCard from '../components/ProductCard';
 import { Link } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useToastContext } from '../components/toast';
+import '../styles/index.css';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
 
@@ -227,150 +228,225 @@ const Products = () => {
     .slice(0, 30); // Increased to 30 products
 
   return (
-    <div className="products-page">
-      {/* Modern Products Hero Section */}
-      <section className="modern-products-hero">
-        <div className="container">
-          <div className="products-hero-content">
-            <div className="hero-badge">Our Collection</div>
-            <h1 className="products-hero-title">
-              Premium Products
-            </h1>
-            <p className="products-hero-description">
-              Discover our carefully curated selection of high-quality products designed for exceptional performance and style
-            </p>
-            <div className="products-stats">
-              <div className="stat-item">
-                <span className="stat-number">{allProducts.length}</span>
-                <span className="stat-label">Products</span>
-              </div>
-              <div className="stat-divider"></div>
-              <div className="stat-item">
-                <span className="stat-number">{categories.length}</span>
-                <span className="stat-label">Categories</span>
-              </div>
+    <div className="product-listing">
+      {/* Breadcrumbs */}
+      <div className="breadcrumbs">
+        <Link to="/" className="breadcrumb-link">Home</Link>
+        <span className="breadcrumb-separator">/</span>
+        <span className="breadcrumb-current">Products</span>
+      </div>
+
+      {/* Filters Sidebar */}
+      <div className="filters-sidebar">
+        <div className="filters-header">
+          <h3 className="filters-title">Filters</h3>
+          <button 
+            className="clear-filters"
+            onClick={() => {
+              setSearchTerm('');
+              setSelectedCategory('');
+            }}
+          >
+            Clear All
+          </button>
+        </div>
+
+        {/* Search Filter */}
+        <div className="filter-group">
+          <div className="filter-group-title">
+            <span>Search</span>
+          </div>
+          <div className="filter-options">
+            <div className="search-bar">
+              <svg className="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="m21 21-4.35-4.35"/>
+              </svg>
+              <input
+                type="text"
+                placeholder="Search products..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="search-input"
+              />
             </div>
           </div>
         </div>
-      </section>
 
-      {/* Modern Filters Section */}
-      <section className="modern-filters-section">
-        <div className="container">
-          <div className="filters-container">
-            <div className="search-container">
-              <div className="search-box">
-                <svg className="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="11" cy="11" r="8"/>
-                  <path d="m21 21-4.35-4.35"/>
-                </svg>
-                <input
-                  type="text"
-                  placeholder="Search products..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="search-input"
-                />
-              </div>
+        {/* Category Filter */}
+        <div className="filter-group">
+          <div className="filter-group-title">
+            <span>Category</span>
+          </div>
+          <div className="filter-options">
+            <div className="filter-option">
+              <input
+                type="radio"
+                id="all-categories"
+                name="category"
+                checked={selectedCategory === ''}
+                onChange={() => setSelectedCategory('')}
+                style={{ display: 'none' }}
+              />
+              <div 
+                className={`filter-checkbox ${selectedCategory === '' ? 'checked' : ''}`}
+                onClick={() => setSelectedCategory('')}
+              ></div>
+              <label className="filter-label">All Categories</label>
             </div>
-            
-            <div className="category-container">
-              <select 
-                value={selectedCategory} 
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="category-select"
-              >
-                <option value="">All Categories</option>
-                {categories.map(category => (
-                  <option key={category} value={category}>{category}</option>
-                ))}
-              </select>
+            {categories.map(category => (
+              <div key={category} className="filter-option">
+                <input
+                  type="radio"
+                  id={`cat-${category}`}
+                  name="category"
+                  checked={selectedCategory === category}
+                  onChange={() => setSelectedCategory(category)}
+                  style={{ display: 'none' }}
+                />
+                <div 
+                  className={`filter-checkbox ${selectedCategory === category ? 'checked' : ''}`}
+                  onClick={() => setSelectedCategory(category)}
+                ></div>
+                <label className="filter-label">{category}</label>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Sustainability Filter */}
+        <div className="filter-group">
+          <div className="filter-group-title">
+            <span>Sustainability</span>
+          </div>
+          <div className="filter-options">
+            <div className="filter-option">
+              <div className="filter-checkbox checked"></div>
+              <label className="filter-label">Eco-Friendly</label>
+            </div>
+            <div className="filter-option">
+              <div className="filter-checkbox checked"></div>
+              <label className="filter-label">Organic Materials</label>
+            </div>
+            <div className="filter-option">
+              <div className="filter-checkbox checked"></div>
+              <label className="filter-label">Fair Trade</label>
             </div>
           </div>
-          
-          <div className="results-summary">
-            <span className="results-text">
-              Showing {filteredProducts.length} of {allProducts.length} products
-              {filteredProducts.length === 30 && allProducts.length > 30 && (
-                <span className="limit-note"> (first 30 shown)</span>
-              )}
+        </div>
+      </div>
+
+      {/* Product Listing Main */}
+      <div className="product-listing-main">
+        {/* Listing Header */}
+        <div className="listing-header">
+          <div className="listing-info">
+            <h1 className="listing-title">
+              {selectedCategory ? selectedCategory : 'All Products'}
+            </h1>
+            <span className="results-count">
+              {filteredProducts.length} products
             </span>
           </div>
-        </div>
-      </section>
-
-      {/* Modern Products Grid Section */}
-      <section className="modern-products-grid-section">
-        <div className="container">
-          {loading ? (
-            <div className="loading-section">
-              <div className="loading-spinner"></div>
-              <p className="loading-text">Loading products...</p>
-            </div>
-          ) : filteredProducts.length === 0 ? (
-            <div className="no-products-section">
-              <div className="no-products-icon">
-                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
-                  <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
-                  <line x1="3" y1="6" x2="21" y2="6"/>
-                  <path d="M16 10a4 4 0 01-8 0"/>
+          <div className="listing-controls">
+            <div className="view-toggle">
+              <button className="view-toggle-btn active">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <rect x="3" y="3" width="7" height="7"/>
+                  <rect x="14" y="3" width="7" height="7"/>
+                  <rect x="14" y="14" width="7" height="7"/>
+                  <rect x="3" y="14" width="7" height="7"/>
                 </svg>
-              </div>
-              <h3 className="no-products-title">No Products Found</h3>
-              <p className="no-products-text">
-                {searchTerm || selectedCategory 
-                  ? 'No products match your search criteria. Try adjusting your filters.' 
-                  : 'No products available at the moment.'}
-              </p>
-              {(searchTerm || selectedCategory) && (
-                <button 
-                  onClick={() => {
-                    setSearchTerm('');
-                    setSelectedCategory('');
-                  }}
-                  className="clear-filters-btn"
-                >
-                  Clear Filters
-                </button>
-              )}
+              </button>
+              <button className="view-toggle-btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <line x1="8" y1="6" x2="21" y2="6"/>
+                  <line x1="8" y1="12" x2="21" y2="12"/>
+                  <line x1="8" y1="18" x2="21" y2="18"/>
+                  <line x1="3" y1="6" x2="3.01" y2="6"/>
+                  <line x1="3" y1="12" x2="3.01" y2="12"/>
+                  <line x1="3" y1="18" x2="3.01" y2="18"/>
+                </svg>
+              </button>
             </div>
-          ) : (
-            <div className="products-grid-content">
-              <div className="section-header">
-                <h2 className="section-title">
-                  {selectedCategory ? selectedCategory : 'All Products'}
-                </h2>
-                <p className="section-subtitle">
-                  {selectedCategory 
-                    ? `Discover our ${selectedCategory.toLowerCase()} collection`
-                    : 'Browse our complete product range'}
-                </p>
-              </div>
-              
-              <div className="modern-products-grid">
-                {filteredProducts.map((product, index) => (
-                  <ModernProductCard 
-                    key={product._id} 
-                    product={product}
-                    delay={index * 50}
-                  />
-                ))}
-              </div>
-
-              {filteredProducts.length === 30 && allProducts.length > 30 && (
-                <div className="pagination-note">
-                  <p className="note-text">
-                    Showing first 30 products. Contact us to explore our full collection.
-                  </p>
-                  <Link to="/contact" className="contact-btn">
-                    Contact Us
-                  </Link>
-                </div>
-              )}
+            <div className="sort-dropdown">
+              <button className="sort-button">
+                Sort by: Newest
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polyline points="6,9 12,15 18,9"/>
+                </svg>
+              </button>
             </div>
-          )}
+          </div>
         </div>
-      </section>
+
+        {/* Products Grid */}
+        {loading ? (
+          <div className="loading-container">
+            <div className="loading-spinner"></div>
+            <p className="loading-text">Loading products...</p>
+          </div>
+        ) : filteredProducts.length === 0 ? (
+          <div className="error-container">
+            <div className="error-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+                <line x1="3" y1="6" x2="21" y2="6"/>
+                <path d="M16 10a4 4 0 01-8 0"/>
+              </svg>
+            </div>
+            <h3 className="error-title">No Products Found</h3>
+            <p className="error-message">
+              {searchTerm || selectedCategory 
+                ? 'No products match your search criteria. Try adjusting your filters.' 
+                : 'No products available at the moment.'}
+            </p>
+            {(searchTerm || selectedCategory) && (
+              <button 
+                onClick={() => {
+                  setSearchTerm('');
+                  setSelectedCategory('');
+                }}
+                className="btn btn-primary"
+              >
+                Clear Filters
+              </button>
+            )}
+          </div>
+        ) : (
+          <>
+            <div className="products-grid grid-view">
+              {filteredProducts.map((product, index) => (
+                <ModernProductCard 
+                  key={product._id} 
+                  product={product}
+                  delay={index * 50}
+                />
+              ))}
+            </div>
+
+            {/* Pagination */}
+            {filteredProducts.length === 30 && allProducts.length > 30 && (
+              <div className="pagination">
+                <button className="pagination-btn disabled">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="15,18 9,12 15,6"/>
+                  </svg>
+                </button>
+                <button className="pagination-btn active">1</button>
+                <button className="pagination-btn">2</button>
+                <button className="pagination-btn">3</button>
+                <span>...</span>
+                <button className="pagination-btn">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <polyline points="9,18 15,12 9,6"/>
+                  </svg>
+                </button>
+              </div>
+            )}
+          </>
+        )}
+      </div>
 
     </div>
   );

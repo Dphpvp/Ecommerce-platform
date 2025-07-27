@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-// Styles included in main theme
+import '../../styles/index.css';
 
 export const useToast = () => {
   const [toasts, setToasts] = useState([]);
@@ -24,11 +24,11 @@ export const useToast = () => {
 
 export const ToastContainer = ({ toasts, removeToast }) => {
   return (
-    <div className="modern-toast-container">
+    <div className="toast-container">
       {toasts.map(toast => (
-        <div key={toast.id} className={`modern-toast modern-toast-${toast.type} modern-toast-enter`}>
-          <div className="modern-toast-content">
-            <div className="modern-toast-icon">
+        <div key={toast.id} className={`toast toast-${toast.type} toast-enter`}>
+          <div className="toast-content">
+            <div className="toast-icon">
               {toast.type === 'success' && (
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="m9 12 2 2 4-4"/>
@@ -57,11 +57,11 @@ export const ToastContainer = ({ toasts, removeToast }) => {
                 </svg>
               )}
             </div>
-            <div className="modern-toast-message">
+            <div className="toast-message">
               {toast.message}
             </div>
             <button 
-              className="modern-toast-close" 
+              className="toast-close" 
               onClick={() => removeToast(toast.id)}
               aria-label="Close notification"
             >

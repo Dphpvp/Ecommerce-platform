@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
+import '../styles/index.css';
 
 const Cart = () => {
   const { cartItems, removeFromCart, updateQuantity } = useCart();
@@ -35,18 +36,30 @@ const Cart = () => {
   };
 
   return (
-    <div className="modern-cart-page">
-      <div className="container">
-        {/* Header Section */}
-        <div className="cart-header">
-          <h1 className="cart-main-title">Shopping Cart</h1>
-          <p className="cart-description">
-            {cartItems && cartItems.length > 0 
-              ? `${cartItems.length} item${cartItems.length === 1 ? '' : 's'} in your cart`
-              : 'Your cart is currently empty'
-            }
-          </p>
+    <div className="cart-page">
+      {/* Cart Header */}
+      <div className="cart-header">
+        <div>
+          <h1 className="cart-title">
+            Shopping Cart
+            <span className="cart-count">
+              ({cartItems?.length || 0})
+            </span>
+          </h1>
         </div>
+        {cartItems && cartItems.length > 0 && (
+          <button 
+            className="clear-cart"
+            onClick={() => {
+              if (window.confirm('Are you sure you want to clear your cart?')) {
+                cartItems.forEach(item => removeFromCart(item._id));
+              }
+            }}
+          >
+            Clear Cart
+          </button>
+        )}
+      </div>
 
         {!cartItems || cartItems.length === 0 ? (
           <div className="empty-cart-container">

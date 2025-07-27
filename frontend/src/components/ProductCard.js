@@ -1,9 +1,10 @@
-// frontend/src/components/ProductCard.js - Updated with luxury styling
+// ASOS-Inspired ProductCard Component - Sustainable Fashion
 import React, { useState } from 'react';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useToastContext } from './toast';
 import Modal from './modal/modal';
+import '../styles/index.css';
 
 const ProductCard = ({ product }) => {
   const [showModal, setShowModal] = useState(false);
@@ -54,10 +55,10 @@ const ProductCard = ({ product }) => {
   return (
     <>
       <div 
-        className="luxury-product-card-compact"
+        className="product-card"
         onClick={() => setShowModal(true)}
       >
-        <div className="product-image-container-compact">
+        <div className="product-image-container">
           <img 
             src={product.image_url} 
             alt={product.name}
@@ -66,27 +67,37 @@ const ProductCard = ({ product }) => {
               e.target.src = '/images/placeholder-product.jpg';
             }}
           />
-          <div className="product-overlay-compact">
-            <span>View Details</span>
+          <div className="product-badge eco-badge">
+            <svg className="eco-icon" width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+            Eco
+          </div>
+          <div className="product-overlay">
+            <span>Quick View</span>
           </div>
         </div>
 
-        <div className="luxury-product-info-compact">
-          <h3 className="product-name-compact">{product.name}</h3>
-          <p className="product-category-compact">{product.category}</p>
+        <div className="product-info">
+          <h3 className="product-name">{product.name}</h3>
+          <p className="product-category">{product.category}</p>
           
-          <div className="price-stock-compact">
-            <div className="price-section-compact">
-              <span className="currency">$</span>
-              <span className="price-amount-compact">{product.price}</span>
+          <div className="product-rating">
+            <div className="stars">
+              <span>★★★★☆</span>
             </div>
-            <div className={`stock-dot-compact ${getStockStatus()}`} 
-                 title={getStockText()}>
-            </div>
+            <span className="rating-text">4.2 (127)</span>
+          </div>
+          
+          <div className="product-price">
+            <span className="price">${product.price}</span>
+            <span className={`stock-status ${getStockStatus()}`}>
+              {getStockText()}
+            </span>
           </div>
           
           <button 
-            className={`add-to-cart-btn-compact ${(product.stock || product.stock_quantity || 0) <= 0 ? 'disabled' : ''}`}
+            className={`product-add-btn ${(product.stock || product.stock_quantity || 0) <= 0 ? 'disabled' : ''}`}
             onClick={(e) => {
               e.stopPropagation();
               handleAddToCart(e);
@@ -94,7 +105,7 @@ const ProductCard = ({ product }) => {
             disabled={isAdding || (product.stock || product.stock_quantity || 0) <= 0}
           >
             {isAdding ? 'Adding...' : 
-             (product.stock || product.stock_quantity || 0) <= 0 ? 'Out of Stock' : 'Add to Cart'}
+             (product.stock || product.stock_quantity || 0) <= 0 ? 'Out of Stock' : 'Add to Bag'}
           </button>
         </div>
       </div>

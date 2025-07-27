@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useToastContext } from '../components/toast';
 import SecureForm from '../components/SecureForm';
 import { csrfManager } from '../utils/csrf';
+import '../styles/index.css';
 import NewsletterSubscribe from '../components/NewsletterSubscribe';
 
 const Contact = () => {

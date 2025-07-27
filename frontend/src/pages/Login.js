@@ -1,4 +1,4 @@
-// Modern Login Page - Clean and Professional
+// ASOS-Inspired Login Page - Sustainable Fashion
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -7,6 +7,7 @@ import { useToastContext } from '../components/toast';
 import { secureFetch } from '../utils/csrf';
 import SecureForm from '../components/SecureForm';
 import platformDetection from '../utils/platformDetection';
+import '../styles/index.css';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
 

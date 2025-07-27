@@ -1,9 +1,10 @@
-// Revolutionary Home Page - Spectacular Visual Experience
+// ASOS-Inspired Home Page - Sustainable Fashion
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useToastContext } from '../components/toast';
+import '../styles/index.css';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
 
@@ -87,7 +88,7 @@ const ProductCardWithModal = ({ product, delay = 0 }) => {
     <>
       <div
         ref={cardRef}
-        className={`modern-product-card ${isVisible ? 'visible' : ''}`}
+        className={`product-card ${isVisible ? 'visible' : ''}`}
         style={{ animationDelay: `${delay}ms` }}
         onClick={() => setIsModalOpen(true)}
       >
@@ -95,24 +96,43 @@ const ProductCardWithModal = ({ product, delay = 0 }) => {
           <img 
             src={product.image_url || product.image} 
             alt={product.name}
+            className="product-image"
             loading="lazy"
             onError={(e) => {
               e.target.src = '/images/placeholder-product.jpg';
             }}
           />
-          <div className="product-overlay">
-            <span>View Details</span>
+          <div className="product-badges">
+            <span className="product-badge sustainable">Eco</span>
+          </div>
+          <div className="product-actions">
+            <button className="product-action-btn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+            </button>
           </div>
         </div>
 
         <div className="product-info">
-          <h3 className="product-name">{product.name}</h3>
-          <p className="product-category">{product.category}</p>
-          <div className="price-section">
-            <span className="price">${product.price}</span>
-            <span className={`stock-status ${getStockStatus()}`}>
-              {getStockText()}
-            </span>
+          <div className="product-brand">{product.category}</div>
+          <h3 className="product-title">{product.name}</h3>
+          <div className="product-price">
+            <span className="price-current">${product.price}</span>
+          </div>
+          <div className="sustainability-rating">
+            <div className="sustainability-leaves">
+              <svg className="sustainability-leaf" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              </svg>
+              <svg className="sustainability-leaf" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              </svg>
+              <svg className="sustainability-leaf" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+              </svg>
+            </div>
+            <span className="sustainability-label">Sustainable</span>
           </div>
         </div>
       </div>
@@ -232,59 +252,94 @@ const Home = () => {
   const opacity = Math.max(0, 1 - scrollY / 800);
 
   return (
-    <div className="home-page">
-      {/* Modern Hero Section */}
-      <section className="modern-hero-section">
+    <div className="page-container-full">
+      {/* ASOS-Inspired Hero Section */}
+      <section className="hero">
         <div className="hero-background">
           <img 
             src={heroImages[currentImageIndex]}
-            alt="Premium Collection"
-            className="hero-image"
+            alt="Sustainable Fashion Collection"
             style={{
               transform: parallaxTransform,
               opacity: opacity
             }}
           />
-          <div className="hero-overlay"></div>
         </div>
         <div className="hero-content">
-          <div className="container">
-            <div className="hero-text">
-              <h1 className="hero-title">
-                Premium Quality,
-                <span className="hero-accent">Exceptional Style</span>
-              </h1>
-              <p className="hero-description">
-                Discover our curated collection of premium products designed for those who appreciate quality and elegance
-              </p>
-              <div className="hero-actions">
-                <Link to="/products" className="hero-btn-primary">
-                  Shop Collection
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M5 12h14M12 5l7 7-7 7"/>
-                  </svg>
-                </Link>
-              </div>
-            </div>
+          <div className="hero-badge">
+            <svg className="eco-icon" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+            Sustainable Fashion
+          </div>
+          <h1 className="hero-title">
+            Fashion that feels good,
+            <br />looks amazing
+          </h1>
+          <p className="hero-subtitle">
+            Discover our curated collection of sustainable fashion pieces designed for the conscious consumer who values style and ethics
+          </p>
+          <div className="hero-actions">
+            <Link to="/products" className="hero-cta">
+              Shop Collection
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </Link>
+            <Link to="/about" className="hero-secondary">
+              Our Story
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
+                <polyline points="15,3 21,3 21,9"/>
+                <line x1="10" y1="14" x2="21" y2="3"/>
+              </svg>
+            </Link>
           </div>
         </div>
       </section>
 
 
-      {/* Modern Featured Products Section */}
-      <section className="modern-products-section">
-        <div className="container">
-          <div className="modern-section-header">
-            <div className="section-badge">
-              <span>Featured Collection</span>
+      {/* Featured Categories */}
+      <section className="featured-categories">
+        <div className="section-header">
+          <h2 className="section-title">Shop by Category</h2>
+          <p className="section-subtitle">
+            Explore our sustainable fashion collections designed for every occasion
+          </p>
+        </div>
+        <div className="categories-grid">
+          {[
+            { name: 'Women\'s Wear', subtitle: 'Sustainable & Stylish', image: 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80' },
+            { name: 'Men\'s Collection', subtitle: 'Ethical Fashion', image: 'https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80' },
+            { name: 'Accessories', subtitle: 'Eco-Friendly Materials', image: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80' }
+          ].map((category, index) => (
+            <div key={index} className="category-card">
+              <img src={category.image} alt={category.name} className="category-card-image" />
+              <div className="category-card-overlay">
+                <h3 className="category-title">{category.name}</h3>
+                <p className="category-subtitle">{category.subtitle}</p>
+                <Link to="/products" className="category-button">
+                  Shop Now
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                  </svg>
+                </Link>
+              </div>
             </div>
-            <h2 className="modern-title">Curated Excellence</h2>
-            <p className="modern-subtitle">
-              Discover our handpicked selection of premium products, each chosen for its exceptional quality and design
-            </p>
-          </div>
-          
-          <div className="modern-products-grid">
+          ))}
+        </div>
+      </section>
+
+      {/* Featured Products */}
+      <section className="featured-products">
+        <div className="section-header">
+          <h2 className="section-title">Featured Products</h2>
+          <p className="section-subtitle">
+            Discover our handpicked selection of sustainable fashion pieces
+          </p>
+        </div>
+        <div className="featured-products-grid">
+          <div className="product-grid">
             {featuredProducts.slice(0, 6).map((product, index) => (
               <ProductCardWithModal 
                 key={product._id} 
@@ -293,59 +348,55 @@ const Home = () => {
               />
             ))}
           </div>
-          
-          <div className="modern-cta-section">
-            <Link to="/products" className="modern-view-all-btn">
-              View All Products
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M5 12h14M12 5l7 7-7 7"/>
-              </svg>
-            </Link>
-          </div>
         </div>
       </section>
 
-      {/* Modern CTA Section */}
-      <section className="modern-cta-section">
-        <div className="container">
-          <div className="modern-cta-content">
-            <div className="cta-text">
-              <h2 className="cta-title">Start Your Shopping Journey</h2>
-              <p className="cta-description">
-                Discover premium products with exceptional quality and fast delivery
-              </p>
-            </div>
-            <div className="cta-actions">
-              <Link to="/products" className="primary-cta-btn">
-                Shop Now
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path d="M5 12h14M12 5l7 7-7 7"/>
-                </svg>
-              </Link>
-              <Link to="/contact" className="secondary-cta-btn">
-                Contact Us
-              </Link>
-            </div>
+      {/* Sustainability Promise */}
+      <section className="sustainability-promise">
+        <div className="sustainability-content">
+          <div className="section-header">
+            <h2 className="section-title">Our Sustainability Promise</h2>
+            <p className="section-subtitle">
+              We're committed to creating fashion that doesn't cost the earth
+            </p>
           </div>
-        </div>
-      </section>
-
-      {/* Modern Stats Section */}
-      <section className="modern-stats-section">
-        <div className="container">
-          <div className="stats-grid">
+          <div className="sustainability-features">
             {[
-              { number: '10,000+', label: 'Happy Customers' },
-              { number: '25+', label: 'Years Experience' },
-              { number: '500+', label: 'Premium Products' },
-              { number: '99%', label: 'Satisfaction Rate' }
-            ].map((stat, index) => (
-              <div key={index} className="modern-stat-card">
-                <div className="stat-number">{stat.number}</div>
-                <div className="stat-label">{stat.label}</div>
+              { icon: '🌱', title: 'Organic Materials', description: 'Made from certified organic and recycled materials' },
+              { icon: '♻️', title: 'Circular Fashion', description: 'Designed for longevity and recyclability' },
+              { icon: '🌍', title: 'Carbon Neutral', description: 'Every purchase is carbon neutral through our offset program' },
+              { icon: '👥', title: 'Fair Trade', description: 'Supporting fair wages and working conditions' }
+            ].map((feature, index) => (
+              <div key={index} className="sustainability-feature">
+                <div className="sustainability-icon">
+                  {feature.icon}
+                </div>
+                <h3>{feature.title}</h3>
+                <p>{feature.description}</p>
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* Newsletter */}
+      <section className="newsletter">
+        <div className="newsletter-content">
+          <h2 className="newsletter-title">Stay in the Loop</h2>
+          <p className="newsletter-subtitle">
+            Get the latest on sustainable fashion trends, new arrivals, and exclusive offers
+          </p>
+          <form className="newsletter-form">
+            <input
+              type="email"
+              placeholder="Enter your email address"
+              className="newsletter-input"
+              required
+            />
+            <button type="submit" className="newsletter-button">
+              Subscribe
+            </button>
+          </form>
         </div>
       </section>
     </div>

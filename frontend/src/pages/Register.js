@@ -1,10 +1,11 @@
-// Modern Register Page - Clean and Professional
+// ASOS-Inspired Register Page - Sustainable Fashion
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useToastContext } from '../components/toast';
 import SecureForm from '../components/SecureForm';
 import { secureFetch } from '../utils/csrf';
 import platformDetection from '../utils/platformDetection';
+import '../styles/index.css';
 
 const Register = ({ isSliderMode = false }) => {
   const [loading, setLoading] = useState(false);

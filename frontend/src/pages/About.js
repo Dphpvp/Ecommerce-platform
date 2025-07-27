@@ -1,7 +1,8 @@
-// Modern About Page - Matching Theme Design
+// ASOS-Inspired About Page - Sustainable Fashion Story
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import NewsletterSubscribe from '../components/NewsletterSubscribe';
+import '../styles/index.css';
 
 // Simple Animation Component
 const FadeInSection = ({ children, className = '', delay = 0 }) => {

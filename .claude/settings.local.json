@@ -56,7 +56,13 @@
       "Bash(rg:*)",
       "Bash(cmd /c \"git status\")",
       "Bash(git commit:*)",
-      "WebFetch(domain:websitedemos.net)"
+      "WebFetch(domain:websitedemos.net)",
+      "Bash(for:*)",
+      "Bash(do echo \"=== $file ===\")",
+      "Bash(head:*)",
+      "Bash(done)",
+      "Bash(do echo \"Adding import to $file...\")",
+      "Bash(sed:*)"
     ],
     "deny": [],
     "fileSystem": {
