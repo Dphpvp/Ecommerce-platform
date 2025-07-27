@@ -1,27 +1,35 @@
-/* frontend/src/styles/variables.css - Compact & Stylish */
+/* frontend/src/styles/variables.css - Classic Elegant Fashion Theme */
 
 :root {
-  /* === PRIMARY COLORS === */
-  --primary-navy: #1E2A47;
-  --primary-gold: #C9A876;
-  --primary-cream: #FEFCF8;
-  --primary-charcoal: #2C3E50;
-  --primary-champagne: #F5F1E8;
-  
-  /* === SEMANTIC COLORS === */
-  --color-background: #0A1628;
-  --color-surface: rgba(30, 42, 71, 0.4);
-  --color-surface-elevated: rgba(30, 42, 71, 0.6);
-  --color-surface-glass: rgba(254, 252, 248, 0.05);
-  --color-text-primary: #FEFCF8;
-  --color-text-secondary: #C9A876;
-  --color-text-muted: rgba(254, 252, 248, 0.7);
-  --color-text-inverse: #0A1628;
+  /* === PRIMARY COLORS - Classic Fashion Palette === */
+  --primary-charcoal: #2C2C2C;
+  --primary-ivory: #FDFCF7;
+  --primary-taupe: #B8A082;
+  --primary-sage: #A8B5A0;
+  --primary-blush: #E8D5D1;
   
   /* === ACCENT COLORS === */
-  --color-accent-gold: #C9A876;
-  --color-accent-gold-light: #D4B987;
-  --color-accent-gold-dark: #B8976B;
+  --accent-rose-gold: #E8B4A0;
+  --accent-dusty-rose: #D4A5A5;
+  --accent-warm-beige: #F0EBE3;
+  --accent-deep-brown: #7D5A3F;
+  
+  /* === SEMANTIC COLORS === */
+  --color-background: #FDFCF7;
+  --color-surface: #FFFFFF;
+  --color-surface-elevated: #F9F8F4;
+  --color-surface-glass: rgba(255, 255, 255, 0.8);
+  --color-text-primary: #2C2C2C;
+  --color-text-secondary: #5A5A5A;
+  --color-text-muted: #888888;
+  --color-text-inverse: #FDFCF7;
+  
+  /* === LUXURY ACCENT COLORS === */
+  --color-accent-primary: #B8A082;
+  --color-accent-primary-light: #C9B293;
+  --color-accent-primary-dark: #A08F71;
+  --color-accent-secondary: #E8B4A0;
+  --color-accent-tertiary: #D4A5A5;
   
   /* === STATUS COLORS === */
   --color-success: #10B981;
@@ -42,15 +50,17 @@
   --status-cancelled: #EF4444;
   
   /* === BORDERS === */
-  --color-border: rgba(201, 168, 118, 0.2);
-  --color-border-light: rgba(201, 168, 118, 0.1);
-  --color-border-strong: rgba(201, 168, 118, 0.4);
-  --color-border-glass: rgba(254, 252, 248, 0.1);
-  --color-border-focus: #C9A876;
+  --color-border: rgba(184, 160, 130, 0.2);
+  --color-border-light: rgba(184, 160, 130, 0.1);
+  --color-border-strong: rgba(184, 160, 130, 0.4);
+  --color-border-glass: rgba(255, 255, 255, 0.3);
+  --color-border-focus: #B8A082;
+  --color-border-input: rgba(184, 160, 130, 0.25);
   
-  /* === TYPOGRAPHY === */
-  --font-serif: 'Playfair Display', 'Crimson Text', 'Georgia', serif;
-  --font-sans: 'Inter', 'SF Pro Display', 'Helvetica Neue', sans-serif;
+  /* === TYPOGRAPHY - Classic Fashion Fonts === */
+  --font-serif: 'Playfair Display', 'Cormorant Garamond', 'Times New Roman', serif;
+  --font-sans: 'Poppins', 'Nunito Sans', 'Helvetica Neue', sans-serif;
+  --font-script: 'Dancing Script', 'Great Vibes', cursive;
   --font-mono: 'JetBrains Mono', 'Fira Code', 'Source Code Pro', monospace;
   
   /* === RESPONSIVE FONT SIZES === */
@@ -99,21 +109,26 @@
   --radius-xl: 1rem;
   --radius-full: 9999px;
   
-  /* === SHADOWS === */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-base: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.25);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.4), 0 4px 6px rgba(0, 0, 0, 0.3);
-  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.5), 0 10px 10px rgba(0, 0, 0, 0.2);
-  --shadow-luxury: 0 6px 24px rgba(0, 0, 0, 0.4);
-  --shadow-gold: 0 3px 15px rgba(201, 168, 118, 0.3);
-  --shadow-deep: 0 8px 30px rgba(0, 0, 0, 0.6);
+  /* === SHADOWS - Elegant & Soft === */
+  --shadow-sm: 0 1px 3px rgba(44, 44, 44, 0.08);
+  --shadow-base: 0 2px 8px rgba(44, 44, 44, 0.12);
+  --shadow-md: 0 4px 12px rgba(44, 44, 44, 0.15);
+  --shadow-lg: 0 8px 24px rgba(44, 44, 44, 0.18);
+  --shadow-xl: 0 16px 40px rgba(44, 44, 44, 0.22);
+  --shadow-luxury: 0 12px 32px rgba(184, 160, 130, 0.25);
+  --shadow-rose-gold: 0 6px 20px rgba(232, 180, 160, 0.3);
+  --shadow-deep: 0 20px 60px rgba(44, 44, 44, 0.25);
+  --shadow-card: 0 2px 16px rgba(44, 44, 44, 0.08);
+  --shadow-product: 0 4px 20px rgba(184, 160, 130, 0.15);
   
-  /* === GRADIENTS === */
-  --gradient-primary: linear-gradient(135deg, #0A1628 0%, #1E2A47 100%);
-  --gradient-gold: linear-gradient(135deg, #C9A876 0%, #D4B987 100%);
-  --gradient-surface: linear-gradient(135deg, rgba(30, 42, 71, 0.6) 0%, rgba(44, 62, 80, 0.4) 100%);
-  --gradient-glass: linear-gradient(135deg, rgba(254, 252, 248, 0.1) 0%, rgba(254, 252, 248, 0.05) 100%);
+  /* === GRADIENTS - Classic Fashion === */
+  --gradient-primary: linear-gradient(135deg, #B8A082 0%, #A08F71 100%);
+  --gradient-secondary: linear-gradient(135deg, #E8B4A0 0%, #D4A5A5 100%);
+  --gradient-surface: linear-gradient(135deg, #FDFCF7 0%, #F9F8F4 100%);
+  --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
+  --gradient-hero: linear-gradient(135deg, rgba(253, 252, 247, 0.95) 0%, rgba(249, 248, 244, 0.98) 100%);
+  --gradient-elegant: linear-gradient(45deg, #B8A082 0%, #E8B4A0 50%, #D4A5A5 100%);
+  --gradient-fashion: linear-gradient(to right, #B8A082, #E8B4A0, #A8B5A0);
   
   /* === TRANSITIONS === */
   --transition-fast: 0.1s ease;
@@ -178,27 +193,27 @@
   }
 }
 
-/* === LIGHT THEME OVERRIDE === */
-@media (prefers-color-scheme: light) {
+/* === DARK THEME OVERRIDE === */
+@media (prefers-color-scheme: dark) {
   :root {
-    --color-background: #FEFCF8;
-    --color-surface: #FFFFFF;
-    --color-surface-elevated: rgba(255, 255, 255, 0.98);
-    --color-text-primary: #1E2A47;
-    --color-text-secondary: #2C3E50;
-    --color-text-muted: rgba(44, 62, 80, 0.65);
-    --color-text-inverse: #FEFCF8;
+    --color-background: #1A1A1A;
+    --color-surface: #2A2A2A;
+    --color-surface-elevated: #333333;
+    --color-text-primary: #F5F5F5;
+    --color-text-secondary: #CCCCCC;
+    --color-text-muted: #999999;
+    --color-text-inverse: #1A1A1A;
     
-    --color-border: rgba(201, 168, 118, 0.15);
-    --color-border-light: rgba(201, 168, 118, 0.08);
-    --color-border-strong: rgba(201, 168, 118, 0.3);
+    --color-border: rgba(184, 160, 130, 0.3);
+    --color-border-light: rgba(184, 160, 130, 0.2);
+    --color-border-strong: rgba(184, 160, 130, 0.5);
     
-    /* Lighter shadows for light mode */
-    --shadow-sm: 0 1px 2px rgba(27, 41, 81, 0.05);
-    --shadow-base: 0 1px 3px rgba(27, 41, 81, 0.1), 0 1px 2px rgba(27, 41, 81, 0.06);
-    --shadow-md: 0 4px 6px rgba(27, 41, 81, 0.07), 0 2px 4px rgba(27, 41, 81, 0.06);
-    --shadow-lg: 0 10px 15px rgba(27, 41, 81, 0.1), 0 4px 6px rgba(27, 41, 81, 0.05);
-    --shadow-xl: 0 20px 25px rgba(27, 41, 81, 0.1), 0 10px 10px rgba(27, 41, 81, 0.04);
+    /* Adjusted shadows for dark mode */
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow-base: 0 2px 8px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
+    --shadow-xl: 0 16px 40px rgba(0, 0, 0, 0.7);
   }
 }
 
@@ -206,7 +221,33 @@
 @media (prefers-contrast: high) {
   :root {
     --color-border: var(--color-text-primary);
-    --color-border-focus: var(--color-accent-gold);
+    --color-border-focus: var(--color-accent-primary);
     --color-text-muted: var(--color-text-secondary);
   }
+}
+
+/* === FASHION-SPECIFIC VARIABLES === */
+:root {
+  /* Product card dimensions */
+  --product-card-width: 280px;
+  --product-card-height: 400px;
+  --product-image-height: 320px;
+  
+  /* Collection layout */
+  --collection-gap: var(--space-6);
+  --collection-padding: var(--space-8);
+  
+  /* Fashion-specific animations */
+  --fashion-transition: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --elegant-transition: 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+  
+  /* Typography scale for fashion */
+  --fashion-title: var(--text-4xl);
+  --fashion-subtitle: var(--text-lg);
+  --fashion-caption: var(--text-sm);
+  --fashion-price: var(--text-xl);
+  
+  /* Fashion-specific spacing */
+  --fashion-section-padding: clamp(3rem, 8vw, 6rem);
+  --fashion-content-width: min(1200px, 90vw);
 }
