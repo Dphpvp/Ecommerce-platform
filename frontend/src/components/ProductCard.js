@@ -93,24 +93,18 @@ const ProductCard = ({ product }) => {
               e.target.src = '/images/placeholder-product.jpg';
             }}
           />
-          <div className="product-badge eco-badge">
-            <svg className="eco-icon" width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-            </svg>
-            Eco
-          </div>
           <div className="product-overlay">
             <span>Quick View</span>
           </div>
           
-          {/* Wishlist Button */}
+          {/* Wishlist Heart Button */}
           <button 
             className={`wishlist-btn ${isInWishlist(product._id || product.id) ? 'active' : ''}`}
             onClick={handleWishlistToggle}
             disabled={isAddingToWishlist}
             title={isInWishlist(product._id || product.id) ? 'Remove from Wishlist' : 'Add to Wishlist'}
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill={isInWishlist(product._id || product.id) ? "currentColor" : "none"} stroke="currentColor" strokeWidth="2">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill={isInWishlist(product._id || product.id) ? "#e53e3e" : "none"} stroke={isInWishlist(product._id || product.id) ? "#e53e3e" : "currentColor"} strokeWidth="2">
               <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
             </svg>
           </button>
@@ -134,17 +128,39 @@ const ProductCard = ({ product }) => {
             </span>
           </div>
           
-          <button 
-            className={`product-add-btn ${(product.stock || product.stock_quantity || 0) <= 0 ? 'disabled' : ''}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleAddToCart(e);
-            }}
-            disabled={isAdding || (product.stock || product.stock_quantity || 0) <= 0}
-          >
-            {isAdding ? 'Adding...' : 
-             (product.stock || product.stock_quantity || 0) <= 0 ? 'Out of Stock' : 'Add to Bag'}
-          </button>
+          <div className="product-actions">
+            <button 
+              className={`add-to-cart-btn ${(product.stock || product.stock_quantity || 0) <= 0 ? 'disabled' : ''}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleAddToCart(e);
+              }}
+              disabled={isAdding || (product.stock || product.stock_quantity || 0) <= 0}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M3 3h2l.4 2m0 0L8 16h8l1.4-8.5H5.4z"/>
+                <circle cx="9" cy="21" r="1"/>
+                <circle cx="20" cy="21" r="1"/>
+              </svg>
+              {isAdding ? 'Adding...' : 
+               (product.stock || product.stock_quantity || 0) <= 0 ? 'Out of Stock' : 'Add to Cart'}
+            </button>
+            
+            <button 
+              className={`add-to-wishlist-btn ${isInWishlist(product._id || product.id) ? 'active' : ''}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleWishlistToggle(e);
+              }}
+              disabled={isAddingToWishlist}
+              title={isInWishlist(product._id || product.id) ? 'Remove from Wishlist' : 'Add to Wishlist'}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill={isInWishlist(product._id || product.id) ? "#e53e3e" : "none"} stroke={isInWishlist(product._id || product.id) ? "#e53e3e" : "currentColor"} strokeWidth="2">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+              </svg>
+              {isInWishlist(product._id || product.id) ? 'Wishlist' : 'Wishlist'}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -213,7 +229,7 @@ const ProductCard = ({ product }) => {
                       disabled={isAdding || (product.stock || product.stock_quantity || 0) <= 0}
                     >
                       <span>{isAdding ? 'Adding...' : 
-                       (product.stock || product.stock_quantity || 0) <= 0 ? 'Out of Stock' : 'Add to Bag'}</span>
+                       (product.stock || product.stock_quantity || 0) <= 0 ? 'Out of Stock' : 'Add to Cart'}</span>
                       {!isAdding && (product.stock || product.stock_quantity || 0) > 0 && (
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                           <path d="M3 3h2l.4 2m0 0L8 16h8l1.4-8.5H5.4z"/>
