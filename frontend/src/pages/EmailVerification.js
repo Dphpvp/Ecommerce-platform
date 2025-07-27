@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useToastContext } from '../components/toast';
+import '../styles/index.css';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
-import '../styles/index.css';
 
 const EmailVerification = () => {
   const [searchParams] = useSearchParams();
