@@ -1,78 +1,61 @@
-/* frontend/src/styles/variables.css - Classic Elegant Fashion Theme */
+/* Professional Fashion Design System */
 
 :root {
-  /* === PRIMARY COLORS - Classic Fashion Palette === */
-  --primary-charcoal: #2C2C2C;
-  --primary-ivory: #FDFCF7;
-  --primary-taupe: #B8A082;
-  --primary-sage: #A8B5A0;
-  --primary-blush: #E8D5D1;
+  /* === PROFESSIONAL COLOR PALETTE === */
+  --color-neutral-50: #fafafa;
+  --color-neutral-100: #f5f5f5;
+  --color-neutral-200: #e5e5e5;
+  --color-neutral-300: #d4d4d4;
+  --color-neutral-400: #a3a3a3;
+  --color-neutral-500: #737373;
+  --color-neutral-600: #525252;
+  --color-neutral-700: #404040;
+  --color-neutral-800: #262626;
+  --color-neutral-900: #171717;
   
-  /* === ACCENT COLORS === */
-  --accent-rose-gold: #E8B4A0;
-  --accent-dusty-rose: #D4A5A5;
-  --accent-warm-beige: #F0EBE3;
-  --accent-deep-brown: #7D5A3F;
+  /* === BRAND COLORS === */
+  --color-primary: #000000;
+  --color-secondary: #ffffff;
+  --color-accent: #2563eb;
+  --color-accent-light: #3b82f6;
+  --color-accent-dark: #1d4ed8;
   
   /* === SEMANTIC COLORS === */
-  --color-background: #FDFCF7;
-  --color-surface: #FFFFFF;
-  --color-surface-elevated: #F9F8F4;
-  --color-surface-glass: rgba(255, 255, 255, 0.8);
-  --color-text-primary: #2C2C2C;
-  --color-text-secondary: #5A5A5A;
-  --color-text-muted: #888888;
-  --color-text-inverse: #FDFCF7;
+  --color-background: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-elevated: #fafafa;
+  --color-border: #e5e5e5;
+  --color-border-light: #f5f5f5;
+  --color-border-strong: #d4d4d4;
   
-  /* === LUXURY ACCENT COLORS === */
-  --color-accent-primary: #B8A082;
-  --color-accent-primary-light: #C9B293;
-  --color-accent-primary-dark: #A08F71;
-  --color-accent-secondary: #E8B4A0;
-  --color-accent-tertiary: #D4A5A5;
+  /* === TEXT COLORS === */
+  --color-text-primary: #171717;
+  --color-text-secondary: #404040;
+  --color-text-tertiary: #737373;
+  --color-text-inverse: #ffffff;
   
   /* === STATUS COLORS === */
-  --color-success: #10B981;
-  --color-success-light: #D1FAE5;
-  --color-warning: #F59E0B;
-  --color-warning-light: #FEF3C7;
-  --color-error: #EF4444;
-  --color-error-light: #FEE2E2;
-  --color-info: #3B82F6;
-  --color-info-light: #DBEAFE;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-info: #3b82f6;
   
-  /* === ORDER STATUS === */
-  --status-pending: #F59E0B;
-  --status-accepted: #3B82F6;
-  --status-processing: #8B5CF6;
-  --status-shipped: #6366F1;
-  --status-delivered: #10B981;
-  --status-cancelled: #EF4444;
+  /* === PROFESSIONAL TYPOGRAPHY === */
+  --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-secondary: 'Playfair Display', Georgia, serif;
+  --font-mono: 'JetBrains Mono', Consolas, monospace;
   
-  /* === BORDERS === */
-  --color-border: rgba(184, 160, 130, 0.2);
-  --color-border-light: rgba(184, 160, 130, 0.1);
-  --color-border-strong: rgba(184, 160, 130, 0.4);
-  --color-border-glass: rgba(255, 255, 255, 0.3);
-  --color-border-focus: #B8A082;
-  --color-border-input: rgba(184, 160, 130, 0.25);
-  
-  /* === TYPOGRAPHY - Classic Fashion Fonts === */
-  --font-serif: 'Playfair Display', 'Cormorant Garamond', 'Times New Roman', serif;
-  --font-sans: 'Poppins', 'Nunito Sans', 'Helvetica Neue', sans-serif;
-  --font-script: 'Dancing Script', 'Great Vibes', cursive;
-  --font-mono: 'JetBrains Mono', 'Fira Code', 'Source Code Pro', monospace;
-  
-  /* === RESPONSIVE FONT SIZES === */
-  --text-xs: clamp(0.75rem, 0.5vw + 0.65rem, 0.8rem);
-  --text-sm: clamp(0.875rem, 0.5vw + 0.8rem, 0.9rem);
-  --text-base: clamp(1rem, 0.8vw + 0.9rem, 1.1rem);
-  --text-lg: clamp(1.125rem, 1vw + 1rem, 1.25rem);
-  --text-xl: clamp(1.25rem, 1.2vw + 1.1rem, 1.5rem);
-  --text-2xl: clamp(1.5rem, 1.5vw + 1.3rem, 1.875rem);
-  --text-3xl: clamp(1.875rem, 2vw + 1.5rem, 2.25rem);
-  --text-4xl: clamp(2.25rem, 3vw + 1.8rem, 3rem);
-  --text-5xl: clamp(3rem, 4vw + 2.5rem, 4rem);
+  /* === TYPE SCALE === */
+  --text-xs: 0.75rem;     /* 12px */
+  --text-sm: 0.875rem;    /* 14px */
+  --text-base: 1rem;      /* 16px */
+  --text-lg: 1.125rem;    /* 18px */
+  --text-xl: 1.25rem;     /* 20px */
+  --text-2xl: 1.5rem;     /* 24px */
+  --text-3xl: 1.875rem;   /* 30px */
+  --text-4xl: 2.25rem;    /* 36px */
+  --text-5xl: 3rem;       /* 48px */
+  --text-6xl: 3.75rem;    /* 60px */
   
   /* === FONT WEIGHTS === */
   --font-light: 300;
@@ -82,70 +65,46 @@
   --font-bold: 700;
   
   /* === LINE HEIGHTS === */
-  --leading-tight: 1.2;
-  --leading-normal: 1.4;
-  --leading-relaxed: 1.5;
+  --leading-none: 1;
+  --leading-tight: 1.25;
+  --leading-snug: 1.375;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+  --leading-loose: 2;
   
-  /* === RESPONSIVE SPACING === */
+  /* === SPACING SCALE === */
   --space-0: 0;
-  --space-1: clamp(0.125rem, 0.5vw, 0.25rem);
-  --space-2: clamp(0.25rem, 0.8vw, 0.5rem);
-  --space-3: clamp(0.5rem, 1vw, 0.75rem);
-  --space-4: clamp(0.75rem, 1.5vw, 1rem);
-  --space-5: clamp(1rem, 2vw, 1.5rem);
-  --space-6: clamp(1.25rem, 2.5vw, 2rem);
-  --space-8: clamp(1.5rem, 3vw, 2.5rem);
-  --space-10: clamp(2rem, 4vw, 3rem);
-  --space-12: clamp(2.5rem, 5vw, 4rem);
-  --space-16: clamp(3rem, 6vw, 5rem);
-  --space-20: clamp(4rem, 8vw, 6rem);
-  --space-24: clamp(5rem, 10vw, 8rem);
+  --space-1: 0.25rem;     /* 4px */
+  --space-2: 0.5rem;      /* 8px */
+  --space-3: 0.75rem;     /* 12px */
+  --space-4: 1rem;        /* 16px */
+  --space-5: 1.25rem;     /* 20px */
+  --space-6: 1.5rem;      /* 24px */
+  --space-8: 2rem;        /* 32px */
+  --space-10: 2.5rem;     /* 40px */
+  --space-12: 3rem;       /* 48px */
+  --space-16: 4rem;       /* 64px */
+  --space-20: 5rem;       /* 80px */
+  --space-24: 6rem;       /* 96px */
+  --space-32: 8rem;       /* 128px */
   
   /* === BORDER RADIUS === */
-  --radius-sm: 0.25rem;
-  --radius-base: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
+  --radius-none: 0;
+  --radius-sm: 0.125rem;   /* 2px */
+  --radius-base: 0.25rem;  /* 4px */
+  --radius-md: 0.375rem;   /* 6px */
+  --radius-lg: 0.5rem;     /* 8px */
+  --radius-xl: 0.75rem;    /* 12px */
+  --radius-2xl: 1rem;      /* 16px */
   --radius-full: 9999px;
   
-  /* === SHADOWS - Elegant & Soft === */
-  --shadow-sm: 0 1px 3px rgba(44, 44, 44, 0.08);
-  --shadow-base: 0 2px 8px rgba(44, 44, 44, 0.12);
-  --shadow-md: 0 4px 12px rgba(44, 44, 44, 0.15);
-  --shadow-lg: 0 8px 24px rgba(44, 44, 44, 0.18);
-  --shadow-xl: 0 16px 40px rgba(44, 44, 44, 0.22);
-  --shadow-luxury: 0 12px 32px rgba(184, 160, 130, 0.25);
-  --shadow-rose-gold: 0 6px 20px rgba(232, 180, 160, 0.3);
-  --shadow-deep: 0 20px 60px rgba(44, 44, 44, 0.25);
-  --shadow-card: 0 2px 16px rgba(44, 44, 44, 0.08);
-  --shadow-product: 0 4px 20px rgba(184, 160, 130, 0.15);
-  
-  /* === GRADIENTS - Classic Fashion === */
-  --gradient-primary: linear-gradient(135deg, #B8A082 0%, #A08F71 100%);
-  --gradient-secondary: linear-gradient(135deg, #E8B4A0 0%, #D4A5A5 100%);
-  --gradient-surface: linear-gradient(135deg, #FDFCF7 0%, #F9F8F4 100%);
-  --gradient-glass: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.7) 100%);
-  --gradient-hero: linear-gradient(135deg, rgba(253, 252, 247, 0.95) 0%, rgba(249, 248, 244, 0.98) 100%);
-  --gradient-elegant: linear-gradient(45deg, #B8A082 0%, #E8B4A0 50%, #D4A5A5 100%);
-  --gradient-fashion: linear-gradient(to right, #B8A082, #E8B4A0, #A8B5A0);
-  
-  /* === TRANSITIONS === */
-  --transition-fast: 0.1s ease;
-  --transition-base: 0.15s ease;
-  --transition-smooth: 0.2s ease;
-  --transition-slow: 0.3s ease;
-  --transition-luxury: 0.25s cubic-bezier(0.23, 1, 0.32, 1);
-  
-  /* === Z-INDEX === */
-  --z-dropdown: 1000;
-  --z-sticky: 1020;
-  --z-fixed: 9999;
-  --z-modal-backdrop: 10000;
-  --z-modal: 10010;
-  --z-popover: 10020;
-  --z-tooltip: 10030;
-  --z-toast: 10040;
+  /* === PROFESSIONAL SHADOWS === */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-base: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-2xl: 0 25px 50px -12px rgb(0 0 0 / 0.25);
   
   /* === LAYOUT === */
   --container-sm: 640px;
@@ -154,100 +113,53 @@
   --container-xl: 1280px;
   --container-2xl: 1536px;
   
-  /* === RESPONSIVE FORMS === */
-  --input-height: clamp(2.25rem, 5vw, 2.75rem);
-  --input-padding-x: clamp(0.75rem, 2vw, 1rem);
-  --input-padding-y: clamp(0.5rem, 1.5vw, 0.75rem);
-  --input-border-width: 1px;
+  /* === TRANSITIONS === */
+  --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
   
-  /* === RESPONSIVE BUTTONS === */
-  --btn-padding-x: clamp(1rem, 3vw, 1.5rem);
-  --btn-padding-y: clamp(0.5rem, 1.5vw, 0.75rem);
-  --btn-height: clamp(2.25rem, 5vw, 2.75rem);
-  --btn-border-width: 1px;
+  /* === Z-INDEX === */
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+  --z-toast: 1080;
   
-  /* === BREAKPOINTS === */
-  --breakpoint-sm: 640px;
-  --breakpoint-md: 768px;
-  --breakpoint-lg: 1024px;
-  --breakpoint-xl: 1280px;
-  --breakpoint-2xl: 1536px;
+  /* === COMPONENT SPECIFIC === */
+  --header-height: 80px;
+  --nav-padding-x: var(--space-6);
+  --nav-padding-y: var(--space-4);
+  --button-height: 44px;
+  --input-height: 44px;
+  --card-padding: var(--space-6);
+  --section-padding: var(--space-20);
 }
 
-/* === MOBILE-SPECIFIC OVERRIDES === */
-@media (max-width: 768px) {
-  :root {
-    /* Larger touch targets for mobile */
-    --btn-height: 44px;
-    --input-height: 44px;
-    
-    /* Better mobile spacing */
-    --space-touch: 44px;
-    --space-safe-area-inset-top: env(safe-area-inset-top, 0px);
-    --space-safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
-    --space-safe-area-inset-left: env(safe-area-inset-left, 0px);
-    --space-safe-area-inset-right: env(safe-area-inset-right, 0px);
-    
-    /* Mobile-optimized font sizes */
-    --text-mobile-base: 16px; /* Prevent zoom on iOS */
-  }
-}
-
-/* === DARK THEME OVERRIDE === */
+/* === DARK MODE === */
 @media (prefers-color-scheme: dark) {
   :root {
-    --color-background: #1A1A1A;
-    --color-surface: #2A2A2A;
-    --color-surface-elevated: #333333;
-    --color-text-primary: #F5F5F5;
-    --color-text-secondary: #CCCCCC;
-    --color-text-muted: #999999;
-    --color-text-inverse: #1A1A1A;
+    --color-background: #000000;
+    --color-surface: #171717;
+    --color-surface-elevated: #262626;
+    --color-border: #404040;
+    --color-border-light: #262626;
+    --color-border-strong: #525252;
     
-    --color-border: rgba(184, 160, 130, 0.3);
-    --color-border-light: rgba(184, 160, 130, 0.2);
-    --color-border-strong: rgba(184, 160, 130, 0.5);
-    
-    /* Adjusted shadows for dark mode */
-    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
-    --shadow-base: 0 2px 8px rgba(0, 0, 0, 0.4);
-    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.5);
-    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.6);
-    --shadow-xl: 0 16px 40px rgba(0, 0, 0, 0.7);
+    --color-text-primary: #fafafa;
+    --color-text-secondary: #d4d4d4;
+    --color-text-tertiary: #a3a3a3;
+    --color-text-inverse: #000000;
   }
 }
 
-/* === HIGH CONTRAST MODE === */
-@media (prefers-contrast: high) {
+/* === REDUCED MOTION === */
+@media (prefers-reduced-motion: reduce) {
   :root {
-    --color-border: var(--color-text-primary);
-    --color-border-focus: var(--color-accent-primary);
-    --color-text-muted: var(--color-text-secondary);
+    --transition-fast: 0ms;
+    --transition-base: 0ms;
+    --transition-slow: 0ms;
   }
-}
-
-/* === FASHION-SPECIFIC VARIABLES === */
-:root {
-  /* Product card dimensions */
-  --product-card-width: 280px;
-  --product-card-height: 400px;
-  --product-image-height: 320px;
-  
-  /* Collection layout */
-  --collection-gap: var(--space-6);
-  --collection-padding: var(--space-8);
-  
-  /* Fashion-specific animations */
-  --fashion-transition: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  --elegant-transition: 0.6s cubic-bezier(0.23, 1, 0.32, 1);
-  
-  /* Typography scale for fashion */
-  --fashion-title: var(--text-4xl);
-  --fashion-subtitle: var(--text-lg);
-  --fashion-caption: var(--text-sm);
-  --fashion-price: var(--text-xl);
-  
-  /* Fashion-specific spacing */
-  --fashion-section-padding: clamp(3rem, 8vw, 6rem);
-  --fashion-content-width: min(1200px, 90vw);
 }
