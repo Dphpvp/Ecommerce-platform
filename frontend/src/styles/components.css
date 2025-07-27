@@ -58,7 +58,7 @@
   position: relative;
   font-size: var(--text-sm);
   font-weight: var(--font-medium);
-  color: var(--color-text-primary);
+  color: #000000 !important;
   text-decoration: none;
   padding: var(--space-3) var(--space-4);
   border-radius: var(--radius-md);
@@ -69,7 +69,7 @@
 
 .nav-link:hover,
 .nav-link.active {
-  color: var(--color-text-primary);
+  color: #000000 !important;
 }
 
 .nav-link::after {
