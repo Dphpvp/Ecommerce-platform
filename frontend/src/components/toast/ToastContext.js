@@ -3,7 +3,13 @@ import { useToast, ToastContainer } from './Toast';
 
 const ToastContext = createContext();
 
-export const useToastContext = () => useContext(ToastContext);
+export const useToastContext = () => {
+  const context = useContext(ToastContext);
+  if (!context) {
+    throw new Error('useToastContext must be used within a ToastProvider');
+  }
+  return context;
+};
 
 export const ToastProvider = ({ children }) => {
   const { toasts, showToast, removeToast } = useToast();

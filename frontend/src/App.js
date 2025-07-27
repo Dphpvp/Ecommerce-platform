@@ -137,9 +137,9 @@ const App = () => {
         <ErrorBoundary>
           <Router>
             <AuthProvider>
-              <CartProvider>
-                <WishlistProvider>
-                  <ToastProvider>
+              <ToastProvider>
+                <CartProvider>
+                  <WishlistProvider>
                   <div className="app">
                     <Navigation />
                     <BackToTop />
@@ -380,9 +380,9 @@ const App = () => {
                     <Footer />
                   </ParallaxContainer>
                   </div>
-                  </ToastProvider>
-                </WishlistProvider>
-              </CartProvider>
+                  </WishlistProvider>
+                </CartProvider>
+              </ToastProvider>
             </AuthProvider>
           </Router>
         </ErrorBoundary>
