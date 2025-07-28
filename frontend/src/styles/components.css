@@ -123,6 +123,21 @@
   width: 80%;
 }
 
+/* Dashboard Link Styling */
+.dashboard-link {
+  color: #dc2626 !important;
+  font-weight: var(--font-bold) !important;
+}
+
+.dashboard-link:hover,
+.dashboard-link.active {
+  color: #b91c1c !important;
+}
+
+.dashboard-link::after {
+  background: linear-gradient(90deg, #dc2626 0%, #b91c1c 100%) !important;
+}
+
 /* Header Actions */
 .header-actions {
   display: flex;
