@@ -175,19 +175,14 @@ const App = () => {
                         } />
                         
                         {/* Authentication routes */}
-                        <Route path="/auth" element={
+                        <Route path="/login" element={
                           <AuthSuspense>
                             <AnimatedAuth />
                           </AuthSuspense>
                         } />
-                        <Route path="/login" element={
-                          <AuthSuspense>
-                            <AuthSlider />
-                          </AuthSuspense>
-                        } />
                         <Route path="/register" element={
                           <AuthSuspense>
-                            <AuthSlider />
+                            <AnimatedAuth />
                           </AuthSuspense>
                         } />
                         <Route path="/reset-password" element={

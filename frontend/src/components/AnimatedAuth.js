@@ -1,17 +1,17 @@
-// Animated Login/Register Component - Combined Forms with Sliding Animation
+// Animated Login/Register Component - Clean Implementation
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useToastContext } from './toast';
 import { secureFetch } from '../utils/csrf';
 import SecureForm from './SecureForm';
 import platformDetection from '../utils/platformDetection';
 import TwoFactorVerification from './TwoFactor/TwoFactorVerification';
-import '../styles/index.css';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
 
 const AnimatedAuth = () => {
+  const location = useLocation();
   const [isActive, setIsActive] = useState(false);
   const [loading, setLoading] = useState(false);
   const [countryCode, setCountryCode] = useState('+40');
@@ -24,8 +24,21 @@ const AnimatedAuth = () => {
   const { showToast } = useToastContext();
   const navigate = useNavigate();
 
-  const toggleForm = () => {
-    setIsActive(!isActive);
+  // Set initial form based on current route
+  useEffect(() => {
+    if (location.pathname === '/register') {
+      setIsActive(true); // Show register form
+    } else {
+      setIsActive(false); // Show login form
+    }
+  }, [location.pathname]);
+
+  const toggleToRegister = () => {
+    navigate('/register');
+  };
+
+  const toggleToLogin = () => {
+    navigate('/login');
   };
 
   const handlePhoneNumberChange = (e) => {
@@ -133,7 +146,7 @@ const AnimatedAuth = () => {
           'Registration successful! Please check your email to verify your account.';
         
         showToast(successMessage, 'success');
-        setIsActive(false); // Switch to login form
+        navigate('/login'); // Navigate to login form
       } else {
         const error = await response.json();
         const errorMessage = error.detail || 'Registration failed';
@@ -205,13 +218,13 @@ const AnimatedAuth = () => {
   }
 
   return (
-    <div className="animated-auth-page">
-      <div className={`animated-auth-container ${isActive ? 'active' : ''}`}>
+    <div className="animated-auth-wrapper">
+      <div className={`animated-auth-main ${isActive ? 'active' : ''}`}>
         {/* Login Form */}
-        <div className="form-box login">
-          <SecureForm onSubmit={handleLoginSubmit} validate={validateLogin} className="animated-auth-form">
+        <div className="auth-form-box login-form">
+          <SecureForm onSubmit={handleLoginSubmit} validate={validateLogin}>
             <h1>Login</h1>
-            <div className="input-box">
+            <div className="auth-input-box">
               <input 
                 type="text" 
                 name="identifier"
@@ -220,7 +233,7 @@ const AnimatedAuth = () => {
               />
               <i className="bx bxs-user"></i>
             </div>
-            <div className="input-box">
+            <div className="auth-input-box">
               <input 
                 type="password" 
                 name="password"
@@ -229,14 +242,14 @@ const AnimatedAuth = () => {
               />
               <i className="bx bxs-lock-alt"></i>
             </div>
-            <div className="forgot-link">
+            <div className="auth-forgot-link">
               <Link to="/reset-password">Forgot Password?</Link>
             </div>
-            <button type="submit" className="btn" disabled={loading}>
+            <button type="submit" className="auth-btn" disabled={loading}>
               {loading ? 'Signing in...' : 'Login'}
             </button>
             <p>or login with social platforms</p>
-            <div className="social-icons">
+            <div className="auth-social-icons">
               <a href="#"><i className="bx bxl-google"></i></a>
               <a href="#"><i className="bx bxl-facebook"></i></a>
               <a href="#"><i className="bx bxl-github"></i></a>
@@ -246,10 +259,10 @@ const AnimatedAuth = () => {
         </div>
 
         {/* Register Form */}
-        <div className="form-box register">
-          <SecureForm onSubmit={handleRegisterSubmit} validate={validateRegister} className="animated-auth-form">
+        <div className="auth-form-box register-form">
+          <SecureForm onSubmit={handleRegisterSubmit} validate={validateRegister}>
             <h1>Registration</h1>
-            <div className="input-box">
+            <div className="auth-input-box">
               <input 
                 type="text" 
                 name="username"
@@ -258,7 +271,7 @@ const AnimatedAuth = () => {
               />
               <i className="bx bxs-user"></i>
             </div>
-            <div className="input-box">
+            <div className="auth-input-box">
               <input 
                 type="email" 
                 name="email"
@@ -267,7 +280,7 @@ const AnimatedAuth = () => {
               />
               <i className="bx bxs-envelope"></i>
             </div>
-            <div className="input-box">
+            <div className="auth-input-box">
               <input 
                 type="text" 
                 name="full_name"
@@ -276,7 +289,7 @@ const AnimatedAuth = () => {
               />
               <i className="bx bxs-user-detail"></i>
             </div>
-            <div className="input-box">
+            <div className="auth-input-box">
               <input 
                 type="password" 
                 name="password"
@@ -285,11 +298,11 @@ const AnimatedAuth = () => {
               />
               <i className="bx bxs-lock-alt"></i>
             </div>
-            <div className="input-box phone-input-animated">
+            <div className="auth-input-box auth-phone-input">
               <select
                 value={countryCode}
                 onChange={(e) => setCountryCode(e.target.value)}
-                className="country-select-animated"
+                className="auth-country-select"
               >
                 <option value="+40">🇷🇴 +40</option>
                 <option value="+1">🇺🇸 +1</option>
@@ -309,11 +322,11 @@ const AnimatedAuth = () => {
               />
               <i className="bx bxs-phone"></i>
             </div>
-            <button type="submit" className="btn" disabled={loading}>
+            <button type="submit" className="auth-btn" disabled={loading}>
               {loading ? 'Creating Account...' : 'Register'}
             </button>
             <p>or register with social platforms</p>
-            <div className="social-icons">
+            <div className="auth-social-icons">
               <a href="#"><i className="bx bxl-google"></i></a>
               <a href="#"><i className="bx bxl-facebook"></i></a>
               <a href="#"><i className="bx bxl-github"></i></a>
@@ -323,17 +336,17 @@ const AnimatedAuth = () => {
         </div>
 
         {/* Toggle Panel */}
-        <div className="toggle-box">
-          <div className="toggle-panel toggle-left">
+        <div className="auth-toggle-container">
+          <div className="auth-toggle-panel toggle-left-panel">
             <h1>Hello, Welcome!</h1>
             <p>Don't have an account?</p>
-            <button className="btn register-btn" onClick={toggleForm}>Register</button>
+            <button className="auth-btn auth-toggle-btn" onClick={toggleToRegister}>Register</button>
           </div>
 
-          <div className="toggle-panel toggle-right">
+          <div className="auth-toggle-panel toggle-right-panel">
             <h1>Welcome Back!</h1>
             <p>Already have an account?</p>
-            <button className="btn login-btn" onClick={toggleForm}>Login</button>
+            <button className="auth-btn auth-toggle-btn" onClick={toggleToLogin}>Login</button>
           </div>
         </div>
       </div>
