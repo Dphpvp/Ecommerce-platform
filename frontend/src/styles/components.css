@@ -135,6 +135,30 @@
   gap: var(--space-3);
 }
 
+/* Admin Dashboard Button */
+.admin-dashboard-button {
+  width: 40px;
+  height: 40px;
+  border: 1px solid #dc2626;
+  background-color: #dc2626;
+  border-radius: var(--radius-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  transition: var(--transition-all);
+  text-decoration: none;
+}
+
+.admin-dashboard-button:hover {
+  background-color: #b91c1c;
+  border-color: #b91c1c;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(220, 38, 38, 0.3);
+}
+
 /* Search Button */
 .search-toggle {
   width: 40px;
@@ -361,50 +385,10 @@
   background: linear-gradient(135deg, var(--color-eco-primary) 0%, #059669 100%);
 }
 
-/* Quick Actions */
-.product-actions {
-  position: absolute;
-  top: var(--space-3);
-  right: var(--space-3);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  opacity: 0;
-  transform: translateX(12px);
-  transition: all var(--transition-all);
-  z-index: 2;
-}
-
-.product-card:hover .product-actions {
-  opacity: 1;
-  transform: translateX(0);
-}
-
-.product-action-btn {
-  width: 36px;
-  height: 36px;
-  background: rgba(255, 255, 255, 0.95);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--color-text-primary);
-  text-decoration: none;
-  transition: var(--transition-all);
-  backdrop-filter: blur(12px);
-  cursor: pointer;
-}
-
-.product-action-btn:hover {
-  background-color: var(--color-primary-600);
-  color: var(--color-text-inverse);
-  transform: scale(1.1);
-}
 
 /* Product Info */
 .product-info {
-  padding: var(--space-5);
+  padding: var(--space-4);
   display: flex;
   flex-direction: column;
   flex-grow: 1;
@@ -521,7 +505,8 @@
 .product-actions {
   display: flex;
   gap: var(--space-2);
-  margin-top: var(--space-4);
+  margin-top: auto;
+  padding-top: var(--space-3);
 }
 
 .add-to-cart-btn {
@@ -1013,7 +998,8 @@
   .search-toggle,
   .account-button,
   .cart-button,
-  .mobile-menu-toggle {
+  .mobile-menu-toggle,
+  .admin-dashboard-button {
     width: 36px;
     height: 36px;
   }
