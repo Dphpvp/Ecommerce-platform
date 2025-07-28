@@ -246,7 +246,89 @@ body::before {
 .admin-form textarea::placeholder,
 .checkout-form input::placeholder,
 .checkout-form textarea::placeholder {
-  color: var(--color-text-muted);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Contact Form Specific Styling */
+.contact-form-container .modern-input,
+.contact-form-container .modern-textarea {
+  background: var(--color-surface-glass);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--color-border-glass);
+  color: var(--color-text-primary);
+  border-radius: 8px;
+  padding: 12px 16px;
+  transition: all 0.3s ease;
+  font-family: inherit;
+  width: 100%;
+}
+
+.contact-form-container .modern-input::placeholder,
+.contact-form-container .modern-textarea::placeholder {
+  color: rgba(255, 255, 255, 0.8);
+  font-weight: 300;
+}
+
+.contact-form-container .modern-textarea {
+  resize: none;
+  overflow: hidden;
+  min-height: 120px;
+  transition: height 0.3s ease;
+}
+
+/* Enhanced Checkbox Styling */
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  cursor: pointer;
+  user-select: none;
+  font-size: var(--text-base);
+  color: var(--color-text-primary);
+  line-height: var(--leading-relaxed);
+}
+
+.checkbox-label input[type="checkbox"] {
+  display: none;
+}
+
+.checkbox-label::before {
+  content: '';
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--color-border-glass);
+  border-radius: 4px;
+  background: var(--color-surface-glass);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  position: relative;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.checkbox-label:hover::before {
+  border-color: var(--color-accent-gold);
+  background: var(--color-surface-elevated);
+}
+
+.checkbox-label input[type="checkbox"]:checked + span::before,
+.checkbox-label:has(input[type="checkbox"]:checked)::before {
+  background: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-primary-700) 100%);
+  border-color: var(--color-primary-600);
+}
+
+.checkbox-label input[type="checkbox"]:checked + span::after,
+.checkbox-label:has(input[type="checkbox"]:checked)::after {
+  content: '';
+  position: absolute;
+  left: 7px;
+  top: 3px;
+  width: 6px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
 }
 
 /* === TABLES === */

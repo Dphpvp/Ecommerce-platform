@@ -239,6 +239,22 @@ const About = () => {
         </div>
       </section>
 
+      {/* CTA Section */}
+      <section className="cta-section">
+        <div className="container">
+          <h2>Ready to Experience Excellence?</h2>
+          <p>Discover our collection of premium products and experience the difference that quality and exceptional service make.</p>
+          <div className="cta-buttons">
+            <Link to="/products" className="btn btn-primary">
+              Explore Products
+            </Link>
+            <Link to="/contact" className="btn btn-secondary">
+              Get in Touch
+            </Link>
+          </div>
+        </div>
+      </section>
+
       {/* Newsletter Section */}
       <section className="newsletter">
         <div className="newsletter-content">
@@ -302,22 +318,6 @@ const About = () => {
               <span className="footer-separator">•</span>
               <span className="footer-copyright">© 2025 All rights reserved</span>
             </p>
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="cta-section">
-        <div className="container">
-          <h2>Ready to Experience Excellence?</h2>
-          <p>Discover our collection of premium products and experience the difference that quality and exceptional service make.</p>
-          <div className="cta-buttons">
-            <Link to="/products" className="btn btn-primary">
-              Explore Products
-            </Link>
-            <Link to="/contact" className="btn btn-secondary">
-              Get in Touch
-            </Link>
           </div>
         </div>
       </section>

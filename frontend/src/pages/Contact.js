@@ -10,12 +10,19 @@ const Contact = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [scrollY, setScrollY] = useState(0);
   const { showToast } = useToastContext();
+  const textareaRef = useRef(null);
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const handleTextareaResize = (event) => {
+    const textarea = event.target;
+    textarea.style.height = 'auto';
+    textarea.style.height = textarea.scrollHeight + 'px';
+  };
 
   const handleSubmit = async (sanitizedData, csrfToken) => {
     setIsSubmitting(true);
@@ -269,6 +276,7 @@ const Contact = () => {
                     <span className="required">*</span>
                   </label>
                   <textarea
+                    ref={textareaRef}
                     name="message"
                     className="modern-textarea"
                     rows="5"
@@ -276,6 +284,8 @@ const Contact = () => {
                     maxLength="2000"
                     required
                     placeholder="Tell us how we can help you..."
+                    onInput={handleTextareaResize}
+                    style={{ resize: 'none', overflow: 'hidden' }}
                   ></textarea>
                   <div className="input-help">Minimum 20 characters</div>
                 </div>

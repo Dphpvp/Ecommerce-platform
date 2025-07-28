@@ -327,9 +327,9 @@
   line-height: var(--leading-relaxed);
 }
 
-/* Newsletter Section */
+/* Newsletter Section - Reduced size */
 .newsletter {
-  padding: var(--space-12) 0;
+  padding: var(--space-8) 0;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   text-align: center;
@@ -354,27 +354,27 @@
 }
 
 .newsletter-content {
-  max-width: var(--container-md);
+  max-width: var(--container-sm);
   margin: 0 auto;
   padding: 0 var(--space-6);
 }
 
 .newsletter-title {
-  font-size: var(--text-3xl);
+  font-size: var(--text-2xl);
   font-weight: var(--font-bold);
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-3);
 }
 
 .newsletter-subtitle {
-  font-size: var(--text-lg);
+  font-size: var(--text-base);
   opacity: 0.9;
-  margin-bottom: var(--space-8);
+  margin-bottom: var(--space-6);
   line-height: var(--leading-relaxed);
 }
 
 .newsletter-form {
   display: flex;
-  max-width: 480px;
+  max-width: 400px;
   margin: 0 auto;
   gap: var(--space-3);
   flex-wrap: wrap;
@@ -382,8 +382,8 @@
 
 .newsletter-input {
   flex: 1;
-  min-width: 280px;
-  height: 52px;
+  min-width: 240px;
+  height: 44px;
   padding: 0 var(--space-4);
   border: 2px solid rgba(255, 255, 255, 0.2);
   border-radius: var(--radius-lg);
@@ -405,8 +405,8 @@
 }
 
 .newsletter-button {
-  height: 52px;
-  padding: 0 var(--space-6);
+  height: 44px;
+  padding: 0 var(--space-5);
   background-color: white;
   color: var(--color-primary-600);
   border: 2px solid white;
@@ -428,16 +428,16 @@
 .social-media-links {
   display: flex;
   justify-content: center;
-  gap: var(--space-4);
-  margin-top: var(--space-6);
+  gap: var(--space-3);
+  margin-top: var(--space-4);
 }
 
 .social-link {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   background-color: rgba(255, 255, 255, 0.1);
   backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -457,8 +457,8 @@
 
 /* Footer Content in Newsletter */
 .footer-content {
-  margin-top: var(--space-8);
-  padding-top: var(--space-6);
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
   border-top: 1px solid rgba(255, 255, 255, 0.2);
   text-align: center;
 }
