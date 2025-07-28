@@ -169,6 +169,11 @@
   box-shadow: 0 4px 8px rgba(220, 38, 38, 0.3);
 }
 
+/* Search Container */
+.search-container {
+  position: relative;
+}
+
 /* Search Button */
 .search-toggle {
   width: 40px;
@@ -182,12 +187,76 @@
   color: var(--color-text-secondary);
   cursor: pointer;
   transition: var(--transition-all);
+  text-decoration: none;
 }
 
 .search-toggle:hover {
   background-color: var(--color-surface-elevated);
   border-color: var(--color-border-strong);
   color: var(--color-text-primary);
+}
+
+/* Search Dropdown */
+.search-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  min-width: 300px;
+  z-index: 9999;
+  overflow: hidden;
+  backdrop-filter: blur(20px);
+}
+
+.search-form {
+  display: flex;
+  align-items: center;
+  padding: var(--space-3);
+  gap: var(--space-2);
+}
+
+.search-input-dropdown {
+  flex: 1;
+  height: 40px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface-elevated);
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+  transition: var(--transition-all);
+}
+
+.search-input-dropdown:focus {
+  outline: none;
+  border-color: var(--color-primary-500);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.search-input-dropdown::placeholder {
+  color: var(--color-text-tertiary);
+}
+
+.search-submit-btn {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-primary-700) 100%);
+  color: white;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition-all);
+}
+
+.search-submit-btn:hover {
+  background: linear-gradient(135deg, var(--color-primary-700) 0%, var(--color-primary-800) 100%);
+  transform: translateY(-1px);
 }
 
 /* Account Button */
@@ -203,12 +272,114 @@
   color: var(--color-text-secondary);
   text-decoration: none;
   transition: var(--transition-all);
+  cursor: pointer;
 }
 
 .account-button:hover {
   background-color: var(--color-surface-elevated);
   border-color: var(--color-border-strong);
   color: var(--color-text-primary);
+}
+
+/* User Menu */
+.user-menu {
+  position: relative;
+}
+
+.user-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  min-width: 240px;
+  z-index: 9999;
+  overflow: hidden;
+  backdrop-filter: blur(20px);
+}
+
+.user-dropdown-header {
+  padding: var(--space-4);
+  background: var(--color-surface-elevated);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.user-name {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+}
+
+.user-email {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+}
+
+.user-dropdown-menu {
+  padding: var(--space-2);
+}
+
+.user-menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--color-text-primary);
+  text-decoration: none;
+  border-radius: var(--radius-md);
+  transition: var(--transition-all);
+  cursor: pointer;
+  border: none;
+  background: none;
+  width: 100%;
+  text-align: left;
+}
+
+.user-menu-item:hover {
+  background: var(--color-surface-elevated);
+  color: var(--color-text-primary);
+}
+
+.user-menu-item.logout-btn {
+  color: #dc2626;
+}
+
+.user-menu-item.logout-btn:hover {
+  background: rgba(220, 38, 38, 0.1);
+  color: #b91c1c;
+}
+
+.user-menu-divider {
+  height: 1px;
+  background: var(--color-border);
+  margin: var(--space-2) 0;
+}
+
+.wishlist-count {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 var(--space-1);
+  background: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-primary-500) 100%);
+  color: var(--color-text-inverse);
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow-sm);
 }
 
 /* Cart Button */

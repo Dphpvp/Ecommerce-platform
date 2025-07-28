@@ -9,12 +9,15 @@ const Navigation = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
   const { user, logout } = useAuth();
   const { cartItems } = useCart();
   const { wishlistCount } = useWishlist();
   const location = useLocation();
   const navigate = useNavigate();
   const userMenuRef = useRef(null);
+  const searchRef = useRef(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -32,6 +35,9 @@ const Navigation = () => {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
         setIsUserMenuOpen(false);
       }
+      if (searchRef.current && !searchRef.current.contains(event.target)) {
+        setIsSearchOpen(false);
+      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
@@ -42,6 +48,7 @@ const Navigation = () => {
   useEffect(() => {
     setIsUserMenuOpen(false);
     setIsMobileMenuOpen(false);
+    setIsSearchOpen(false);
   }, [location.pathname]);
 
   const handleLogout = async () => {
@@ -50,6 +57,25 @@ const Navigation = () => {
       navigate('/');
     } catch (error) {
       console.error('Logout failed:', error);
+    }
+  };
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (searchTerm.trim()) {
+      navigate(`/products?search=${encodeURIComponent(searchTerm.trim())}`);
+      setIsSearchOpen(false);
+      setSearchTerm('');
+    }
+  };
+
+  const toggleSearch = () => {
+    setIsSearchOpen(!isSearchOpen);
+    if (!isSearchOpen) {
+      setTimeout(() => {
+        const input = searchRef.current?.querySelector('input');
+        if (input) input.focus();
+      }, 100);
     }
   };
 
@@ -120,12 +146,34 @@ const Navigation = () => {
         {/* Header Actions */}
         <div className="header-actions">
           {/* Search */}
-          <button className="search-toggle">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="11" cy="11" r="8"/>
-              <path d="m21 21-4.35-4.35"/>
-            </svg>
-          </button>
+          <div className="search-container" ref={searchRef}>
+            <button className="search-toggle" onClick={toggleSearch}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="11" cy="11" r="8"/>
+                <path d="m21 21-4.35-4.35"/>
+              </svg>
+            </button>
+            
+            {isSearchOpen && (
+              <div className="search-dropdown">
+                <form onSubmit={handleSearchSubmit} className="search-form">
+                  <input
+                    type="text"
+                    placeholder="Search products..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="search-input-dropdown"
+                  />
+                  <button type="submit" className="search-submit-btn">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="11" cy="11" r="8"/>
+                      <path d="m21 21-4.35-4.35"/>
+                    </svg>
+                  </button>
+                </form>
+              </div>
+            )}
+          </div>
 
           {/* Wishlist */}
           <Link to="/wishlist" className="search-toggle">
@@ -139,12 +187,89 @@ const Navigation = () => {
 
 
           {/* Account */}
-          <Link to={user ? "/profile" : "/login"} className="account-button">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-              <circle cx="12" cy="7" r="4"/>
-            </svg>
-          </Link>
+          {user ? (
+            <div className="user-menu" ref={userMenuRef}>
+              <button 
+                className="account-button"
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+              </button>
+              
+              {isUserMenuOpen && (
+                <div className="user-dropdown">
+                  <div className="user-dropdown-header">
+                    <div className="user-info">
+                      <span className="user-name">{user.name || user.email}</span>
+                      <span className="user-email">{user.email}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="user-dropdown-menu">
+                    <Link 
+                      to="/profile" 
+                      className="user-menu-item"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                        <circle cx="12" cy="7" r="4"/>
+                      </svg>
+                      My Profile
+                    </Link>
+                    
+                    <Link 
+                      to="/orders" 
+                      className="user-menu-item"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M3 3h2l.4 2m0 0L8 16h8l1.4-8.5H5.4z"/>
+                        <circle cx="9" cy="21" r="1"/>
+                        <circle cx="20" cy="21" r="1"/>
+                      </svg>
+                      My Orders
+                    </Link>
+                    
+                    <Link 
+                      to="/wishlist" 
+                      className="user-menu-item"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                      </svg>
+                      Wishlist
+                    </Link>
+                    
+                    <div className="user-menu-divider"></div>
+                    
+                    <button 
+                      className="user-menu-item logout-btn"
+                      onClick={handleLogout}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                        <polyline points="16,17 21,12 16,7"/>
+                        <line x1="21" y1="12" x2="9" y2="12"/>
+                      </svg>
+                      Logout
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link to="/login" className="account-button">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+            </Link>
+          )}
 
           {/* Cart */}
           <Link to="/cart" className="cart-button">
