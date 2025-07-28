@@ -18,7 +18,6 @@ import { WishlistProvider } from './contexts/WishlistContext';
 import { ToastProvider } from './components/toast';
 import { ParallaxContainer } from './components/Parallax';
 import Navigation from './components/Navigation';
-import Footer from './components/Footer';
 import PrivateRoute from './components/PrivateRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import BackToTop from './components/BackToTop';
@@ -377,7 +376,6 @@ const App = () => {
                         } />
                       </Routes>
                     </main>
-                    <Footer />
                   </ParallaxContainer>
                   </div>
                   </WishlistProvider>

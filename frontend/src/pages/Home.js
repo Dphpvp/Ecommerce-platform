@@ -239,6 +239,30 @@ const Home = () => {
               </svg>
             </a>
           </div>
+          <div className="footer-content">
+            <p className="footer-text">
+              Made by{' '}
+              <a 
+                href="https://github.com/pradian" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="footer-link"
+              >
+                Petre Alexandru
+              </a>{' '}
+              and{' '}
+              <a 
+                href="https://github.com/Dphpvp" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="footer-link"
+              >
+                Dph
+              </a>
+              <span className="footer-separator">•</span>
+              <span className="footer-copyright">© 2025 All rights reserved</span>
+            </p>
+          </div>
         </div>
       </section>
     </div>

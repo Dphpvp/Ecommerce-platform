@@ -548,6 +548,40 @@
   padding: var(--space-12) 0;
 }
 
+/* Contact Form Container - Make smaller on large devices */
+.contact-form-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 var(--space-6);
+}
+
+.contact-form-card {
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.modern-contact-form {
+  width: 100%;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
+}
+
+@media (max-width: 768px) {
+  .contact-form-container {
+    max-width: 100%;
+    padding: 0 var(--space-4);
+  }
+  
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+}
+
 .contact-info-grid,
 .values-grid {
   display: grid;
