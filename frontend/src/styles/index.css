@@ -11,6 +11,7 @@
 /* Import all component styles */
 @import './components.css'; /* Header, navigation, product cards, modals */
 @import './pages.css';      /* Homepage, product listing, product detail, cart */
+@import './admin.css';      /* Admin-specific styling and dropdown components */
 
 /* === LAYOUT SYSTEM === */
 /* Global layout and container styles */
