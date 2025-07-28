@@ -2,10 +2,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 
-// CSS imports - Using single theme.css entry point
-import './styles/theme.css';
-
-
+// ASOS-Inspired Sustainable Fashion Theme
+import './styles/index.css';  
 
 import App from './App';
 import reportWebVitals from './reportWebVitals';
