@@ -2463,7 +2463,7 @@
 /* Modern Hero Section for About Page */
 .modern-hero-section {
   position: relative;
-  min-height: 80vh;
+  min-height: 100vh;
   display: flex;
   align-items: center;
   overflow: hidden;
