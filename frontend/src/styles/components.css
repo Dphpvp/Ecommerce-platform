@@ -397,11 +397,12 @@
 
 /* Product Info */
 .product-info {
-  padding: var(--space-2) var(--space-3);
+  padding: var(--space-3) var(--space-3) var(--space-2);
   display: flex;
   flex-direction: column;
   flex-grow: 1;
   background-color: var(--color-surface);
+  gap: var(--space-1);
 }
 
 .product-name {
@@ -530,11 +531,13 @@
   display: flex;
   gap: var(--space-2);
   margin-top: auto;
-  padding-top: var(--space-2);
+  padding-top: var(--space-3);
+  justify-content: space-between;
 }
 
 .add-to-cart-btn {
-  flex: 1;
+  flex: 0 0 auto;
+  min-width: 90px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -574,7 +577,7 @@
   font-weight: var(--font-medium);
   transition: var(--transition-colors);
   cursor: pointer;
-  min-width: 80px;
+  min-width: 70px;
   height: 32px;
 }
 
