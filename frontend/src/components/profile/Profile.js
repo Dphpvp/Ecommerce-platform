@@ -43,6 +43,24 @@ const Profile = () => {
   });
 
   const [passwordErrors, setPasswordErrors] = useState({});
+  
+  // Saved Addresses state
+  const [addresses, setAddresses] = useState([]);
+  const [showAddressModal, setShowAddressModal] = useState(false);
+  const [editingAddress, setEditingAddress] = useState(null);
+  const [addressForm, setAddressForm] = useState({
+    title: '',
+    full_name: '',
+    phone: '',
+    address_line_1: '',
+    address_line_2: '',
+    city: '',
+    state: '',
+    postal_code: '',
+    country: '',
+    is_default: false
+  });
+  const [addressLoading, setAddressLoading] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -53,8 +71,19 @@ const Profile = () => {
         address: user?.address || '',
         profile_image_url: user?.profile_image_url || ''
       });
+      fetchAddresses();
     }
   }, [user]);
+
+  // Fetch saved addresses
+  const fetchAddresses = async () => {
+    try {
+      const data = await makeAuthenticatedRequest(`${API_BASE}/user/addresses`);
+      setAddresses(data.addresses || []);
+    } catch (error) {
+      console.error('Failed to fetch addresses:', error);
+    }
+  };
 
   // reCAPTCHA functionality removed - will be reimplemented fresh for web-only
 
@@ -329,6 +358,104 @@ const Profile = () => {
   };
 
   const canChangePassword = user && !user?.google_id;
+
+  // Address management functions
+  const handleAddressInputChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setAddressForm(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+
+  const resetAddressForm = () => {
+    setAddressForm({
+      title: '',
+      full_name: '',
+      phone: '',
+      address_line_1: '',
+      address_line_2: '',
+      city: '',
+      state: '',
+      postal_code: '',
+      country: '',
+      is_default: false
+    });
+    setEditingAddress(null);
+  };
+
+  const handleAddAddress = () => {
+    resetAddressForm();
+    setShowAddressModal(true);
+  };
+
+  const handleEditAddress = (address) => {
+    setAddressForm(address);
+    setEditingAddress(address._id);
+    setShowAddressModal(true);
+  };
+
+  const handleSaveAddress = async (e) => {
+    e.preventDefault();
+    setAddressLoading(true);
+
+    try {
+      if (editingAddress) {
+        // Update existing address
+        await makeAuthenticatedRequest(`${API_BASE}/user/addresses/${editingAddress}`, {
+          method: 'PUT',
+          body: JSON.stringify(addressForm)
+        });
+        showToast('Address updated successfully!', 'success');
+      } else {
+        // Add new address
+        await makeAuthenticatedRequest(`${API_BASE}/user/addresses`, {
+          method: 'POST',
+          body: JSON.stringify(addressForm)
+        });
+        showToast('Address added successfully!', 'success');
+      }
+      
+      fetchAddresses();
+      setShowAddressModal(false);
+      resetAddressForm();
+    } catch (error) {
+      console.error('Address save error:', error);
+      showToast(error.message || 'Failed to save address', 'error');
+    } finally {
+      setAddressLoading(false);
+    }
+  };
+
+  const handleDeleteAddress = async (addressId) => {
+    if (!window.confirm('Are you sure you want to delete this address?')) {
+      return;
+    }
+
+    try {
+      await makeAuthenticatedRequest(`${API_BASE}/user/addresses/${addressId}`, {
+        method: 'DELETE'
+      });
+      showToast('Address deleted successfully!', 'success');
+      fetchAddresses();
+    } catch (error) {
+      console.error('Address delete error:', error);
+      showToast(error.message || 'Failed to delete address', 'error');
+    }
+  };
+
+  const handleSetDefaultAddress = async (addressId) => {
+    try {
+      await makeAuthenticatedRequest(`${API_BASE}/user/addresses/${addressId}/set-default`, {
+        method: 'PUT'
+      });
+      showToast('Default address updated!', 'success');
+      fetchAddresses();
+    } catch (error) {
+      console.error('Set default error:', error);
+      showToast(error.message || 'Failed to set default address', 'error');
+    }
+  };
 
   const handleSaveProfile = async (e) => {
     e.preventDefault();
@@ -785,6 +912,82 @@ const Profile = () => {
             )}
           </div>
 
+          {/* Saved Addresses Section */}
+          <div className="addresses-section">
+            <div className="addresses-header">
+              <div className="card-title-section">
+                <h2 className="card-title">📍 Saved Addresses</h2>
+                <p className="card-subtitle">Manage your shipping addresses for faster checkout</p>
+              </div>
+              <button 
+                onClick={handleAddAddress}
+                className="btn-primary"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="12" y1="5" x2="12" y2="19"/>
+                  <line x1="5" y1="12" x2="19" y2="12"/>
+                </svg>
+                Add Address
+              </button>
+            </div>
+            
+            <div className="addresses-content">
+              <div className="addresses-grid">
+                {addresses.map((address) => (
+                  <div key={address._id} className={`address-card ${address.is_default ? 'default' : ''}`}>
+                    {address.is_default && <div className="default-badge">Default</div>}
+                    
+                    <div className="address-info">
+                      <h4>{address.title}</h4>
+                      <p><strong>{address.full_name}</strong></p>
+                      <p>{address.phone}</p>
+                      <p>
+                        {address.address_line_1}
+                        {address.address_line_2 && <><br />{address.address_line_2}</>}
+                      </p>
+                      <p>{address.city}, {address.state} {address.postal_code}</p>
+                      <p>{address.country}</p>
+                    </div>
+                    
+                    <div className="address-actions">
+                      {!address.is_default && (
+                        <button 
+                          onClick={() => handleSetDefaultAddress(address._id)}
+                          className="btn btn-sm btn-outline"
+                        >
+                          Set Default
+                        </button>
+                      )}
+                      <button 
+                        onClick={() => handleEditAddress(address)}
+                        className="btn btn-sm btn-outline"
+                      >
+                        Edit
+                      </button>
+                      <button 
+                        onClick={() => handleDeleteAddress(address._id)}
+                        className="btn btn-sm btn-outline"
+                        style={{ color: '#ef4444', borderColor: '#ef4444' }}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                
+                <div className="add-address-card" onClick={handleAddAddress}>
+                  <div className="add-address-icon">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <line x1="12" y1="5" x2="12" y2="19"/>
+                      <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                  </div>
+                  <span>Add New Address</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {user?.is_admin && (
             <div className="admin-section">
               <h2>Admin Panel</h2>
@@ -812,6 +1015,173 @@ const Profile = () => {
             onClose={() => setShowTwoFactorSetup(false)}
             onComplete={() => refetchUser()}
           />
+        )}
+
+        {/* Address Form Modal */}
+        {showAddressModal && (
+          <div className="address-modal-overlay">
+            <div className="address-modal">
+              <div className="address-modal-header">
+                <h3 className="address-modal-title">
+                  {editingAddress ? 'Edit Address' : 'Add New Address'}
+                </h3>
+                <button 
+                  className="close-modal-btn"
+                  onClick={() => setShowAddressModal(false)}
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="address-modal-content">
+                <form onSubmit={handleSaveAddress} className="luxury-form">
+                  <div className="form-group">
+                    <label>Address Title *</label>
+                    <input
+                      type="text"
+                      name="title"
+                      value={addressForm.title}
+                      onChange={handleAddressInputChange}
+                      placeholder="e.g., Home, Office, Work"
+                      required
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label>Full Name *</label>
+                    <input
+                      type="text"
+                      name="full_name"
+                      value={addressForm.full_name}
+                      onChange={handleAddressInputChange}
+                      placeholder="Recipient's full name"
+                      required
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label>Phone Number *</label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={addressForm.phone}
+                      onChange={handleAddressInputChange}
+                      placeholder="Contact phone number"
+                      required
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label>Address Line 1 *</label>
+                    <input
+                      type="text"
+                      name="address_line_1"
+                      value={addressForm.address_line_1}
+                      onChange={handleAddressInputChange}
+                      placeholder="Street address, building name"
+                      required
+                    />
+                  </div>
+                  
+                  <div className="form-group">
+                    <label>Address Line 2</label>
+                    <input
+                      type="text"
+                      name="address_line_2"
+                      value={addressForm.address_line_2}
+                      onChange={handleAddressInputChange}
+                      placeholder="Apartment, suite, unit (optional)"
+                    />
+                  </div>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
+                    <div className="form-group">
+                      <label>City *</label>
+                      <input
+                        type="text"
+                        name="city"
+                        value={addressForm.city}
+                        onChange={handleAddressInputChange}
+                        placeholder="City"
+                        required
+                      />
+                    </div>
+                    
+                    <div className="form-group">
+                      <label>State/Province *</label>
+                      <input
+                        type="text"
+                        name="state"
+                        value={addressForm.state}
+                        onChange={handleAddressInputChange}
+                        placeholder="State or Province"
+                        required
+                      />
+                    </div>
+                  </div>
+                  
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-4)' }}>
+                    <div className="form-group">
+                      <label>Postal Code *</label>
+                      <input
+                        type="text"
+                        name="postal_code"
+                        value={addressForm.postal_code}
+                        onChange={handleAddressInputChange}
+                        placeholder="ZIP/Postal Code"
+                        required
+                      />
+                    </div>
+                    
+                    <div className="form-group">
+                      <label>Country *</label>
+                      <input
+                        type="text"
+                        name="country"
+                        value={addressForm.country}
+                        onChange={handleAddressInputChange}
+                        placeholder="Country"
+                        required
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="form-group">
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+                      <input
+                        type="checkbox"
+                        name="is_default"
+                        checked={addressForm.is_default}
+                        onChange={handleAddressInputChange}
+                      />
+                      Set as default address
+                    </label>
+                  </div>
+
+                  <div className="form-actions">
+                    <button 
+                      type="submit" 
+                      className="btn btn-primary"
+                      disabled={addressLoading}
+                    >
+                      {addressLoading ? 'Saving...' : (editingAddress ? 'Update Address' : 'Save Address')}
+                    </button>
+                    <button 
+                      type="button" 
+                      onClick={() => setShowAddressModal(false)}
+                      className="btn btn-outline"
+                      disabled={addressLoading}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>
