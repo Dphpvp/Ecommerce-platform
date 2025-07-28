@@ -277,49 +277,58 @@ body::before {
   transition: height 0.3s ease;
 }
 
-/* Back to Top Button */
+/* Back to Top Button - Fixed positioning override */
+button.back-to-top,
 .back-to-top {
   position: fixed !important;
-  bottom: 2rem !important;
-  right: 2rem !important;
-  width: 50px;
-  height: 50px;
-  background: var(--color-surface-glass);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid var(--color-border-glass);
-  border-radius: 50%;
-  color: var(--color-text-primary);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 18px;
-  font-weight: bold;
-  transition: all 0.3s ease;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(20px);
-  z-index: 9999 !important;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  bottom: 32px !important;
+  right: 32px !important;
+  top: auto !important;
+  left: auto !important;
+  width: 52px !important;
+  height: 52px !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
+  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  border-radius: 50% !important;
+  color: #374151 !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 18px !important;
+  font-weight: bold !important;
+  transition: all 0.3s ease !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  transform: translateY(20px) !important;
+  z-index: 99999 !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+  margin: 0 !important;
+  padding: 0 !important;
 }
 
+button.back-to-top.visible,
 .back-to-top.visible {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: translateY(0) !important;
 }
 
+button.back-to-top:hover,
 .back-to-top:hover {
-  background: var(--color-surface-elevated);
-  border-color: var(--color-accent-gold);
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  background: rgba(255, 255, 255, 1) !important;
+  border-color: #f59e0b !important;
+  transform: translateY(-3px) !important;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25) !important;
+  color: #1f2937 !important;
 }
 
 .back-to-top-icon {
-  font-size: 18px;
-  line-height: 1;
+  font-size: 18px !important;
+  line-height: 1 !important;
+  display: block !important;
 }
 
 /* Enhanced Checkbox Styling */

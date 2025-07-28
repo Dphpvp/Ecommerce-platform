@@ -6,7 +6,7 @@ const BackToTop = () => {
 
   useEffect(() => {
     const toggleVisibility = () => {
-      setIsVisible(window.pageYOffset > 300);
+      setIsVisible(window.pageYOffset > 500);
     };
 
     window.addEventListener('scroll', toggleVisibility);
@@ -25,6 +25,14 @@ const BackToTop = () => {
       className={`back-to-top ${isVisible ? 'visible' : ''}`}
       onClick={scrollToTop}
       aria-label="Back to top"
+      style={{
+        position: 'fixed',
+        bottom: '32px',
+        right: '32px',
+        zIndex: 99999,
+        opacity: isVisible ? 1 : 0,
+        visibility: isVisible ? 'visible' : 'hidden'
+      }}
     >
       <span className="back-to-top-icon">↑</span>
     </button>
