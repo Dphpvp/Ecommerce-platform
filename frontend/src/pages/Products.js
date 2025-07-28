@@ -46,6 +46,9 @@ const Products = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [scrollY, setScrollY] = useState(0);
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
+  const [sortBy, setSortBy] = useState('newest');
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setScrollY(window.scrollY);
@@ -77,14 +80,47 @@ const Products = () => {
     fetchProducts();
   }, [fetchProducts]);
 
-  // Filter and limit products to 30
-  const filteredProducts = allProducts
-    .filter(product =>
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.category.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-    .slice(0, 30); // Increased to 30 products
+  // Sort products function
+  const sortProducts = (products) => {
+    switch (sortBy) {
+      case 'price-low':
+        return products.sort((a, b) => parseFloat(a.price) - parseFloat(b.price));
+      case 'price-high':
+        return products.sort((a, b) => parseFloat(b.price) - parseFloat(a.price));
+      case 'name-asc':
+        return products.sort((a, b) => a.name.localeCompare(b.name));
+      case 'name-desc':
+        return products.sort((a, b) => b.name.localeCompare(a.name));
+      case 'rating':
+        return products.sort((a, b) => (b.rating || 4.2) - (a.rating || 4.2));
+      case 'newest':
+      default:
+        return products.sort((a, b) => new Date(b.createdAt || Date.now()) - new Date(a.createdAt || Date.now()));
+    }
+  };
+
+  // Get sort label for display
+  const getSortLabel = (sortValue) => {
+    switch (sortValue) {
+      case 'price-low': return 'Price: Low to High';
+      case 'price-high': return 'Price: High to Low';
+      case 'name-asc': return 'Name: A to Z';
+      case 'name-desc': return 'Name: Z to A';
+      case 'rating': return 'Highest Rated';
+      case 'newest':
+      default: return 'Newest First';
+    }
+  };
+
+  // Filter and sort products
+  const filteredProducts = sortProducts(
+    allProducts
+      .filter(product =>
+        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        product.category.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+  ).slice(0, 30); // Increased to 30 products
 
   return (
     <div className="products-page">
@@ -210,7 +246,11 @@ const Products = () => {
           </div>
           <div className="listing-controls">
             <div className="view-toggle">
-              <button className="view-toggle-btn active">
+              <button 
+                className={`view-toggle-btn ${viewMode === 'grid' ? 'active' : ''}`}
+                onClick={() => setViewMode('grid')}
+                title="Grid View"
+              >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                   <rect x="3" y="3" width="7" height="7"/>
                   <rect x="14" y="3" width="7" height="7"/>
@@ -218,7 +258,11 @@ const Products = () => {
                   <rect x="3" y="14" width="7" height="7"/>
                 </svg>
               </button>
-              <button className="view-toggle-btn">
+              <button 
+                className={`view-toggle-btn ${viewMode === 'list' ? 'active' : ''}`}
+                onClick={() => setViewMode('list')}
+                title="List View"
+              >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                   <line x1="8" y1="6" x2="21" y2="6"/>
                   <line x1="8" y1="12" x2="21" y2="12"/>
@@ -230,12 +274,37 @@ const Products = () => {
               </button>
             </div>
             <div className="sort-dropdown">
-              <button className="sort-button">
-                Sort by: Newest
+              <button 
+                className="sort-button"
+                onClick={() => setShowSortDropdown(!showSortDropdown)}
+              >
+                Sort by: {getSortLabel(sortBy)}
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <polyline points="6,9 12,15 18,9"/>
                 </svg>
               </button>
+              {showSortDropdown && (
+                <div className="sort-dropdown-menu">
+                  <button onClick={() => { setSortBy('newest'); setShowSortDropdown(false); }} className={sortBy === 'newest' ? 'active' : ''}>
+                    Newest First
+                  </button>
+                  <button onClick={() => { setSortBy('price-low'); setShowSortDropdown(false); }} className={sortBy === 'price-low' ? 'active' : ''}>
+                    Price: Low to High
+                  </button>
+                  <button onClick={() => { setSortBy('price-high'); setShowSortDropdown(false); }} className={sortBy === 'price-high' ? 'active' : ''}>
+                    Price: High to Low
+                  </button>
+                  <button onClick={() => { setSortBy('name-asc'); setShowSortDropdown(false); }} className={sortBy === 'name-asc' ? 'active' : ''}>
+                    Name: A to Z
+                  </button>
+                  <button onClick={() => { setSortBy('name-desc'); setShowSortDropdown(false); }} className={sortBy === 'name-desc' ? 'active' : ''}>
+                    Name: Z to A
+                  </button>
+                  <button onClick={() => { setSortBy('rating'); setShowSortDropdown(false); }} className={sortBy === 'rating' ? 'active' : ''}>
+                    Highest Rated
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -275,12 +344,13 @@ const Products = () => {
           </div>
         ) : (
           <>
-            <div className="products-grid grid-view">
+            <div className={`products-grid ${viewMode}-view`}>
               {filteredProducts.map((product, index) => (
                 <AnimatedProductCard 
                   key={product._id} 
                   product={product}
                   delay={index * 50}
+                  viewMode={viewMode}
                 />
               ))}
             </div>

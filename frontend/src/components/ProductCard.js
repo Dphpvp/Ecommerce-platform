@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useWishlist } from '../contexts/WishlistContext';
 import { useToastContext } from './toast';
 import Modal from './modal/modal';
+import StarRating from './StarRating';
 import '../styles/index.css';
 
 const ProductCard = ({ product }) => {
@@ -19,11 +20,6 @@ const ProductCard = ({ product }) => {
 
   const handleAddToCart = async (e) => {
     e.stopPropagation();
-    
-    if (!user) {
-      showToast('Please login to add items to cart', 'error');
-      return;
-    }
 
     setIsAdding(true);
     try {
@@ -43,11 +39,6 @@ const ProductCard = ({ product }) => {
 
   const handleWishlistToggle = async (e) => {
     e.stopPropagation();
-    
-    if (!user) {
-      showToast('Please login to manage wishlist', 'error');
-      return;
-    }
 
     setIsAddingToWishlist(true);
     try {
@@ -96,21 +87,21 @@ const ProductCard = ({ product }) => {
         </div>
 
         <div className="product-info">
-          <h3 className="product-name">{product.name}</h3>
-          <p className="product-category">{product.category}</p>
-          
-          <div className="product-rating">
-            <div className="stars">
-              <span>★★★★☆</span>
+          <div className="product-details">
+            <h3 className="product-name">{product.name}</h3>
+            <p className="product-category">{product.category}</p>
+            
+            <div className="product-rating">
+              <StarRating rating={4.2} readonly={true} />
+              <span className="rating-text">4.2 (127)</span>
             </div>
-            <span className="rating-text">4.2 (127)</span>
-          </div>
-          
-          <div className="product-price">
-            <span className="price">${product.price}</span>
-            <span className={`stock-status ${getStockStatus()}`}>
-              {getStockText()}
-            </span>
+            
+            <div className="product-price">
+              <span className="price">${product.price}</span>
+              <span className={`stock-status ${getStockStatus()}`}>
+                {getStockText()}
+              </span>
+            </div>
           </div>
           
           <div className="product-actions">

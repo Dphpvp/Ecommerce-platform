@@ -1,41 +1,53 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useWishlist } from '../contexts/WishlistContext';
 import { useAuth } from '../contexts/AuthContext';
+import { useToastContext } from '../components/toast';
 import ProductCard from '../components/ProductCard';
 import '../styles/index.css';
 
 const Wishlist = () => {
   const { wishlistItems, loading, clearWishlist } = useWishlist();
   const { user } = useAuth();
+  const { showToast } = useToastContext();
+  const [isGeneratingLink, setIsGeneratingLink] = useState(false);
 
-  if (!user) {
-    return (
-      <div className="page-container">
-        <div className="wishlist-page">
-          <div className="wishlist-empty">
-            <div className="empty-state">
-              <div className="empty-icon">
-                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                </svg>
-              </div>
-              <h2>Sign in to view your wishlist</h2>
-              <p>Create an account or sign in to save items to your wishlist</p>
-              <div className="empty-actions">
-                <Link to="/login" className="btn btn-primary">
-                  Sign In
-                </Link>
-                <Link to="/register" className="btn btn-secondary">
-                  Create Account
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const generateShareableLink = async () => {
+    if (wishlistItems.length === 0) {
+      showToast('Your wishlist is empty! Add some items first.', 'info');
+      return;
+    }
+
+    setIsGeneratingLink(true);
+    try {
+      // Create a shareable link with wishlist items
+      const shareData = {
+        items: wishlistItems.map(item => ({
+          id: item._id || item.id,
+          name: item.name,
+          price: item.price,
+          image_url: item.image_url
+        })),
+        createdAt: new Date().toISOString(),
+        createdBy: user?.username || 'Anonymous'
+      };
+
+      // Generate a unique ID for the shared wishlist
+      const shareId = btoa(JSON.stringify(shareData)).replace(/[+/=]/g, (m) => ({'+': '-', '/': '_', '=': ''})[m]);
+      const shareableUrl = `${window.location.origin}/shared-wishlist/${shareId}`;
+
+      // Copy to clipboard
+      await navigator.clipboard.writeText(shareableUrl);
+      showToast('Wishlist link copied to clipboard! Share it with friends.', 'success');
+    } catch (error) {
+      console.error('Error generating shareable link:', error);
+      showToast('Failed to generate shareable link. Please try again.', 'error');
+    } finally {
+      setIsGeneratingLink(false);
+    }
+  };
+
+  // Allow wishlist access without authentication for guest users
 
   if (loading) {
     return (
@@ -68,19 +80,33 @@ const Wishlist = () => {
             </p>
           </div>
           {wishlistItems.length > 0 && (
-            <button 
-              className="btn btn-ghost clear-wishlist-btn"
-              onClick={() => {
-                if (window.confirm('Are you sure you want to clear your entire wishlist?')) {
-                  clearWishlist();
-                }
-              }}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/>
-              </svg>
-              Clear All
-            </button>
+            <div className="wishlist-actions">
+              <button 
+                className="btn btn-secondary share-wishlist-btn"
+                onClick={generateShareableLink}
+                disabled={isGeneratingLink}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+                  <polyline points="16,6 12,2 8,6"/>
+                  <line x1="12" y1="2" x2="12" y2="15"/>
+                </svg>
+                {isGeneratingLink ? 'Generating...' : 'Share Wishlist'}
+              </button>
+              <button 
+                className="btn btn-ghost clear-wishlist-btn"
+                onClick={() => {
+                  if (window.confirm('Are you sure you want to clear your entire wishlist?')) {
+                    clearWishlist();
+                  }
+                }}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6"/>
+                </svg>
+                Clear All
+              </button>
+            </div>
           )}
         </div>
 

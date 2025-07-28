@@ -36,6 +36,7 @@ const Orders = React.lazy(() => import('./pages/Orders'));
 const EmailVerification = React.lazy(() => import('./pages/EmailVerification'));
 const About = React.lazy(() => import('./pages/About'));
 const Contact = React.lazy(() => import('./pages/Contact'));
+const SharedWishlist = React.lazy(() => import('./pages/SharedWishlist'));
 
 // Lazy loaded profile component
 const Profile = React.lazy(() => import('./components/profile'));
@@ -164,6 +165,11 @@ const App = () => {
                         <Route path="/contact" element={
                           <PageSuspense title="contact">
                             <Contact />
+                          </PageSuspense>
+                        } />
+                        <Route path="/shared-wishlist/:shareId" element={
+                          <PageSuspense title="shared-wishlist">
+                            <SharedWishlist />
                           </PageSuspense>
                         } />
                         
