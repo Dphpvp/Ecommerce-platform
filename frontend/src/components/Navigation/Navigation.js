@@ -62,7 +62,8 @@ const Navigation = () => {
       <div className="header-container">
         {/* Brand */}
         <Link to="/" className="header-brand">
-          Vergi Shop
+          <img src="/images/logo.png" alt="Vergi Shop" className="header-logo" />
+          <span className="brand-text">Vergi Shop</span>
         </Link>
 
         {/* Main Navigation */}

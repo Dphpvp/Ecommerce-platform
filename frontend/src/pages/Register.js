@@ -112,9 +112,6 @@ const Register = ({ isSliderMode = false }) => {
     return (
       <div className="modern-auth-form">
         <div className="auth-header">
-          <div className="auth-logo">
-            <img src="/images/logo.png" alt="Logo" className="logo-image" />
-          </div>
           <h2 className="auth-title">Join Us</h2>
           <p className="auth-subtitle">Create your account</p>
         </div>
@@ -238,9 +235,6 @@ const Register = ({ isSliderMode = false }) => {
       <div className="auth-container">
         <div className="auth-card register-card">
           <div className="auth-header">
-            <div className="auth-logo">
-              <img src="/images/logo.png" alt="Logo" className="logo-image" />
-            </div>
             <h1 className="auth-title">Create Account</h1>
             <p className="auth-subtitle">Join us today</p>
           </div>
