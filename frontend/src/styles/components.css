@@ -3394,3 +3394,129 @@
     max-width: 100vw;
   }
 }
+
+/* === GOOGLE-ONLY AUTH STYLES === */
+/* Primary Google button for Google-only authentication */
+
+.google-btn-primary {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-6);
+  margin-bottom: var(--space-6);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%);
+  color: var(--color-text-primary);
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  font-family: var(--font-family-sans);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  position: relative;
+  overflow: hidden;
+}
+
+.google-btn-primary:hover {
+  border-color: var(--color-primary-300);
+  background: linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(248, 250, 252, 1) 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.google-btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.google-btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.google-btn-primary svg {
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+
+.google-btn-primary:hover svg {
+  transform: scale(1.1);
+}
+
+/* Auth note styling */
+.auth-note {
+  margin-top: var(--space-4);
+  text-align: center;
+}
+
+.auth-note-text {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.auth-note-text a {
+  color: var(--color-primary-600);
+  text-decoration: none;
+  font-weight: var(--font-medium);
+  transition: color 0.3s ease;
+}
+
+.auth-note-text a:hover {
+  color: var(--color-primary-700);
+  text-decoration: underline;
+}
+
+/* Update existing auth form styles for Google-only layout */
+.modern-auth-form .auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-top: var(--space-6);
+}
+
+.modern-auth-form .auth-header {
+  text-align: center;
+  margin-bottom: var(--space-4);
+}
+
+.modern-auth-form .auth-title {
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-2);
+  background: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-primary-700) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.modern-auth-form .auth-subtitle {
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Responsive adjustments for Google-only auth */
+@media (max-width: 768px) {
+  .google-btn-primary {
+    padding: var(--space-3) var(--space-4);
+    font-size: var(--text-sm);
+  }
+  
+  .modern-auth-form .auth-title {
+    font-size: var(--text-2xl);
+  }
+  
+  .modern-auth-form .auth-subtitle {
+    font-size: var(--text-sm);
+  }
+}
