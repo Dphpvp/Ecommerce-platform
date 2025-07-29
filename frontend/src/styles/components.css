@@ -3393,40 +3393,40 @@
 
 .floating-menu-container {
   position: fixed;
-  top: var(--space-6);
+  top: var(--space-4);
   right: var(--space-4);
   z-index: 9999;
-  /* Ensure it doesn't interfere with phone's system navigation */
+  /* Ensure proper positioning and safe area support */
   padding-top: env(safe-area-inset-top, 0px);
-  padding-right: env(safe-area-inset-right, 0px);
 }
 
 .floating-menu-btn {
-  width: 56px;
-  height: 56px;
-  background: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-primary-700) 100%);
-  border: none;
+  width: 48px;
+  height: 48px;
+  /* Match navbar icon colors - same as header actions */
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--color-border);
   border-radius: 50%;
-  color: white;
+  color: var(--color-text-primary);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
   box-shadow: 
-    0 4px 16px rgba(0, 0, 0, 0.15),
-    0 8px 32px rgba(var(--color-primary-600-rgb), 0.2);
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 2px solid rgba(255, 255, 255, 0.2);
+    0 2px 8px rgba(0, 0, 0, 0.1),
+    0 4px 16px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
 }
 
 .floating-menu-btn:hover {
-  transform: scale(1.1) translateY(-2px);
+  transform: scale(1.05) translateY(-1px);
   box-shadow: 
-    0 6px 24px rgba(0, 0, 0, 0.2),
-    0 12px 48px rgba(var(--color-primary-600-rgb), 0.3);
-  background: linear-gradient(135deg, var(--color-primary-500) 0%, var(--color-primary-600) 100%);
+    0 4px 12px rgba(0, 0, 0, 0.15),
+    0 8px 24px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 1);
+  border-color: var(--color-primary-200);
 }
 
 .floating-menu-btn:active {
@@ -3487,25 +3487,52 @@
   padding: var(--space-4) var(--space-6);
   margin: var(--space-1) var(--space-3);
   border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.8);
   border: 1px solid rgba(255, 255, 255, 0.3);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   transition: all 0.3s ease;
+  /* Make text black */
+  color: var(--color-text-primary) !important;
+  text-decoration: none;
 }
 
 .mobile-apk-overlay .mobile-menu-item:hover {
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.9);
   border-color: var(--color-primary-200);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   transform: translateX(4px);
+  color: var(--color-text-primary) !important;
 }
 
-/* Make sure floating menu respects safe areas on different devices */
+/* Ensure menu title is also black */
+.mobile-apk-overlay .mobile-menu-title {
+  color: var(--color-text-primary) !important;
+}
+
+/* Make sure floating menu respects safe areas and doesn't go off-screen */
+.floating-menu-container {
+  /* Ensure it never goes off-screen */
+  max-width: calc(100vw - 60px); /* Account for button width + padding */
+}
+
 @supports (padding: max(0px)) {
   .floating-menu-container {
-    top: max(var(--space-6), env(safe-area-inset-top, 0px) + var(--space-2));
+    top: max(var(--space-4), env(safe-area-inset-top, 0px) + var(--space-2));
     right: max(var(--space-4), env(safe-area-inset-right, 0px) + var(--space-2));
+  }
+}
+
+/* Fallback for devices without safe-area support */
+@media (max-width: 480px) {
+  .floating-menu-container {
+    right: var(--space-3); /* Slightly closer to edge on small screens */
+    top: var(--space-3);
+  }
+  
+  .floating-menu-btn {
+    width: 44px;
+    height: 44px;
   }
 }
 

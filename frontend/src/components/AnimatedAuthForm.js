@@ -15,13 +15,22 @@ const AnimatedAuthForm = () => {
   const [loading, setLoading] = useState(false);
   const [loginData, setLoginData] = useState({ username: '', password: '' });
   const [registerData, setRegisterData] = useState({ username: '', email: '', password: '' });
+  const [isMobileAPK, setIsMobileAPK] = useState(false);
   
   const { login } = useAuth();
   const { showToast } = useToastContext();
   const navigate = useNavigate();
 
-  // Set initial form based on current route
+  // Detect mobile APK and set initial form based on current route
   useEffect(() => {
+    // Detect if running on mobile APK
+    const detectMobileAPK = () => {
+      const isCapacitor = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
+      setIsMobileAPK(isCapacitor);
+    };
+
+    detectMobileAPK();
+    
     if (location.pathname === '/register') {
       setIsActive(true); // Show register form
     } else {
@@ -271,7 +280,7 @@ const AnimatedAuthForm = () => {
 
   return (
     <div className="animated-auth-page">
-      <div className={`animated-container ${isActive ? 'active' : ''}`}>
+      <div className={`animated-container ${isActive ? 'active' : ''} ${isMobileAPK ? 'mobile-apk' : ''}`}>
         {/* Login Form */}
         <div className="form-box login">
           <form onSubmit={handleLoginSubmit}>

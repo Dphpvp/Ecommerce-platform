@@ -29,14 +29,6 @@
 			"style": "default",
 			"backgroundColor": "#ffffff"
 		},
-		"CapacitorHttp": {
-			"enabled": true,
-			"default": {
-				"timeout": 30000,
-				"retries": 2,
-				"rejectUnauthorized": true
-			}
-		},
 		"CapacitorCookies": {
 			"enabled": true,
 			"sameSite": "none",

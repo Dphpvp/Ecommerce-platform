@@ -398,3 +398,72 @@ form {
   0% { transform: translate(-50%, -50%) rotate(0deg); }
   100% { transform: translate(-50%, -50%) rotate(360deg); }
 }
+
+/* === MOBILE APK STYLES - DISABLE ANIMATIONS === */
+/* Disable all animations and transformations for mobile APK */
+.animated-container.mobile-apk {
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+  margin: 0;
+  border-radius: 16px;
+}
+
+.animated-container.mobile-apk .toggle-box {
+  display: none !important; /* Hide the animated toggle panel */
+}
+
+.animated-container.mobile-apk .form-box {
+  position: static !important;
+  width: 100% !important;
+  height: auto !important;
+  transform: none !important;
+  transition: none !important;
+  animation: none !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+.animated-container.mobile-apk .form-box.register {
+  display: none; /* Hide register form initially */
+}
+
+.animated-container.mobile-apk.active .form-box.login {
+  display: none; /* Hide login form when register is active */
+}
+
+.animated-container.mobile-apk.active .form-box.register {
+  display: block !important; /* Show register form when active */
+}
+
+/* Simplify form styling for mobile APK */
+.animated-container.mobile-apk h1 {
+  font-size: 28px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.animated-container.mobile-apk .input-box {
+  margin-bottom: 16px;
+}
+
+.animated-container.mobile-apk .btn {
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+.animated-container.mobile-apk .google-btn-primary {
+  margin-top: 16px;
+}
+
+.animated-container.mobile-apk .login-register {
+  text-align: center;
+  margin-top: 20px;
+}
+
+/* Remove all transitions and animations for mobile APK */
+.animated-container.mobile-apk * {
+  transition: none !important;
+  animation: none !important;
+  transform: none !important;
+}
