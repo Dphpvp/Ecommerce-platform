@@ -49,26 +49,10 @@ const AnimatedAuthContainer = ({ children, mode = 'login' }) => {
           
           {/* Forms Container */}
           <div className={`forms-container ${isLoginMode ? 'login-mode' : 'register-mode'}`}>
-            <div className="form-wrapper login-form">
-              {isLoginMode && (
-                <div className="form-content">
-                  {React.cloneElement(children, { 
-                    isSliderMode: true, 
-                    onModeSwitch: handleModeSwitch 
-                  })}
-                </div>
-              )}
-            </div>
-            
-            <div className="form-wrapper register-form">
-              {!isLoginMode && (
-                <div className="form-content">
-                  {React.cloneElement(children, { 
-                    isSliderMode: true, 
-                    onModeSwitch: handleModeSwitch 
-                  })}
-                </div>
-              )}
+            <div className="form-wrapper">
+              <div className="form-content">
+                {children}
+              </div>
             </div>
           </div>
 
