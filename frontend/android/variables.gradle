@@ -1,7 +1,7 @@
 ext {
     minSdkVersion = 26         // Android 8 (Oreo)
-    compileSdkVersion = 34     // Android 14 (API 34) - Fixed from invalid 36
-    targetSdkVersion = 34      // Target Android 14 (API 34) - Updated for latest
+    compileSdkVersion = 35     // Android 14 (API 34) - Fixed from invalid 36
+    targetSdkVersion = 35    // Target Android 14 (API 34) - Updated for latest
 
     // Library versions can stay as is or be updated as needed
     androidxActivityVersion = '1.9.2'

@@ -1,5 +1,5 @@
 // ASOS-Inspired Products Page - Sustainable Fashion Catalog
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import ProductCard from '../components/ProductCard';
 import { Link } from 'react-router-dom';
 import '../styles/index.css';
@@ -7,7 +7,7 @@ import '../styles/index.css';
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
 
 // Animated Product Card for Products Page
-const AnimatedProductCard = ({ product, delay = 0 }) => {
+const AnimatedProductCard = ({ product, delay = 0, viewMode = 'grid' }) => {
   const [isVisible, setIsVisible] = useState(false);
   const cardRef = useRef(null);
 
@@ -31,10 +31,10 @@ const AnimatedProductCard = ({ product, delay = 0 }) => {
   return (
     <div
       ref={cardRef}
-      className={`product-card-wrapper ${isVisible ? 'visible' : ''}`}
+      className={`product-card-wrapper ${viewMode}-view ${isVisible ? 'visible' : ''}`}
       style={{ animationDelay: `${delay}ms` }}
     >
-      <ProductCard product={product} />
+      <ProductCard product={product} viewMode={viewMode} />
     </div>
   );
 };
@@ -121,15 +121,17 @@ const Products = () => {
     }
   };
 
-  // Filter and sort products
-  const filteredProducts = sortProducts(
-    allProducts
-      .filter(product =>
-        product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.category.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-  ).slice(0, 30); // Increased to 30 products
+  // Filter and sort products - Fix: Create new array to avoid mutating original
+  const filteredProducts = useMemo(() => {
+    const filtered = allProducts.filter(product =>
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.category.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    
+    // Create a copy before sorting to avoid mutating the original array
+    return sortProducts([...filtered]).slice(0, 30);
+  }, [allProducts, searchTerm, sortBy]);
 
   return (
     <div className="products-page">

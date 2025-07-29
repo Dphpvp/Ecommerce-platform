@@ -103,7 +103,7 @@ const Checkout = () => {
           
         } catch (orderError) {
           console.error('Order creation failed:', orderError);
-          setError(`Order creation failed: ${orderError.message}`);
+          setError(`Order creation failed: ${orderError.message || orderError.toString() || 'Unknown error'}`);
           
           // Payment succeeded but order failed - show specific error
           showToast('Payment processed but order creation failed. Please contact support.', 'error');
@@ -114,8 +114,8 @@ const Checkout = () => {
       
     } catch (error) {
       console.error('Checkout error:', error);
-      setError(error.message || 'Checkout failed. Please try again.');
-      showToast(error.message || 'Checkout failed', 'error');
+      setError(error.message || error.toString() || 'Checkout failed. Please try again.');
+      showToast(error.message || error.toString() || 'Checkout failed', 'error');
     } finally {
       setProcessing(false);
     }

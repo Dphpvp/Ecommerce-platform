@@ -19,11 +19,33 @@ export const WishlistProvider = ({ children }) => {
   const [loading, setLoading] = useState(false);
   const { user } = useAuth();
   const { showToast } = useToastContext();
+  
+  // Load wishlist from localStorage for guest users
+  const loadGuestWishlist = () => {
+    try {
+      const guestWishlist = localStorage.getItem('guest_wishlist');
+      return guestWishlist ? JSON.parse(guestWishlist) : [];
+    } catch (error) {
+      console.error('Failed to load guest wishlist:', error);
+      return [];
+    }
+  };
+  
+  // Save wishlist to localStorage for guest users
+  const saveGuestWishlist = (items) => {
+    try {
+      localStorage.setItem('guest_wishlist', JSON.stringify(items));
+    } catch (error) {
+      console.error('Failed to save guest wishlist:', error);
+    }
+  };
 
   // Fetch wishlist items
   const fetchWishlist = async () => {
     if (!user) {
-      setWishlistItems([]);
+      // Load guest wishlist from localStorage
+      const guestWishlist = loadGuestWishlist();
+      setWishlistItems(guestWishlist);
       return;
     }
 
@@ -42,11 +64,15 @@ export const WishlistProvider = ({ children }) => {
         setWishlistItems(data.items || []);
       } else {
         console.error('Failed to fetch wishlist');
-        setWishlistItems([]);
+        // Fall back to guest wishlist
+        const guestWishlist = loadGuestWishlist();
+        setWishlistItems(guestWishlist);
       }
     } catch (error) {
       console.error('Error fetching wishlist:', error);
-      setWishlistItems([]);
+      // Fall back to guest wishlist
+      const guestWishlist = loadGuestWishlist();
+      setWishlistItems(guestWishlist);
     } finally {
       setLoading(false);
     }
@@ -54,31 +80,65 @@ export const WishlistProvider = ({ children }) => {
 
   // Add item to wishlist
   const addToWishlist = async (productId) => {
-    if (!user) {
-      showToast('Please login to add items to wishlist', 'error');
-      return false;
-    }
-
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE}/wishlist/add`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ productId }),
-      });
+      if (user) {
+        // Authenticated user - save to server
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_BASE}/wishlist/add`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ productId }),
+        });
 
-      if (response.ok) {
-        const data = await response.json();
-        setWishlistItems(data.items || []);
-        showToast('Item added to wishlist', 'success');
-        return true;
+        if (response.ok) {
+          const data = await response.json();
+          setWishlistItems(data.items || []);
+          showToast('Item added to wishlist', 'success');
+          return true;
+        } else {
+          const errorData = await response.json();
+          showToast(errorData.message || 'Failed to add to wishlist', 'error');
+          return false;
+        }
       } else {
-        const errorData = await response.json();
-        showToast(errorData.message || 'Failed to add to wishlist', 'error');
-        return false;
+        // Guest user - save to localStorage
+        const currentWishlist = loadGuestWishlist();
+        const existingItem = currentWishlist.find(item => 
+          (item.product?._id || item.productId) === productId
+        );
+        
+        if (!existingItem) {
+          // Fetch product details
+          try {
+            const productResponse = await fetch(`${API_BASE}/products/${productId}`);
+            const productData = await productResponse.json();
+            const newItem = {
+              _id: `guest_${Date.now()}`,
+              product: productData,
+              productId: productId
+            };
+            currentWishlist.push(newItem);
+          } catch (productError) {
+            console.error('Failed to fetch product details:', productError);
+            // Add minimal item if product fetch fails
+            const newItem = {
+              _id: `guest_${Date.now()}`,
+              product: { _id: productId, name: 'Unknown Product', price: 0 },
+              productId: productId
+            };
+            currentWishlist.push(newItem);
+          }
+          
+          saveGuestWishlist(currentWishlist);
+          setWishlistItems(currentWishlist);
+          showToast('Item added to wishlist', 'success');
+        } else {
+          showToast('Item already in wishlist', 'info');
+        }
+        return true;
       }
     } catch (error) {
       console.error('Error adding to wishlist:', error);
@@ -89,30 +149,39 @@ export const WishlistProvider = ({ children }) => {
 
   // Remove item from wishlist
   const removeFromWishlist = async (productId) => {
-    if (!user) {
-      return false;
-    }
-
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE}/wishlist/remove`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ productId }),
-      });
+      if (user) {
+        // Authenticated user
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_BASE}/wishlist/remove`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ productId }),
+        });
 
-      if (response.ok) {
-        const data = await response.json();
-        setWishlistItems(data.items || []);
+        if (response.ok) {
+          const data = await response.json();
+          setWishlistItems(data.items || []);
+          showToast('Item removed from wishlist', 'success');
+          return true;
+        } else {
+          const errorData = await response.json();
+          showToast(errorData.message || 'Failed to remove from wishlist', 'error');
+          return false;
+        }
+      } else {
+        // Guest user
+        const currentWishlist = loadGuestWishlist();
+        const updatedWishlist = currentWishlist.filter(item => 
+          (item.product?._id || item.productId) !== productId
+        );
+        saveGuestWishlist(updatedWishlist);
+        setWishlistItems(updatedWishlist);
         showToast('Item removed from wishlist', 'success');
         return true;
-      } else {
-        const errorData = await response.json();
-        showToast(errorData.message || 'Failed to remove from wishlist', 'error');
-        return false;
       }
     } catch (error) {
       console.error('Error removing from wishlist:', error);
@@ -158,12 +227,40 @@ export const WishlistProvider = ({ children }) => {
     }
   };
 
-  // Fetch wishlist when user changes
+  // Handle wishlist when user authentication changes
   useEffect(() => {
     if (user) {
-      fetchWishlist();
+      // User logged in - fetch server wishlist and potentially merge with guest wishlist
+      const mergeGuestWishlist = async () => {
+        const guestWishlist = loadGuestWishlist();
+        if (guestWishlist.length > 0) {
+          // Add guest items to server wishlist
+          for (const item of guestWishlist) {
+            try {
+              const token = localStorage.getItem('token');
+              await fetch(`${API_BASE}/wishlist/add`, {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ productId: item.product?._id || item.productId }),
+              });
+            } catch (error) {
+              console.error('Failed to merge guest wishlist item:', error);
+            }
+          }
+          // Clear guest wishlist after merging
+          localStorage.removeItem('guest_wishlist');
+        }
+        // Fetch updated wishlist from server
+        fetchWishlist();
+      };
+      mergeGuestWishlist();
     } else {
-      setWishlistItems([]);
+      // User logged out - load guest wishlist
+      const guestWishlist = loadGuestWishlist();
+      setWishlistItems(guestWishlist);
     }
   }, [user]);
 

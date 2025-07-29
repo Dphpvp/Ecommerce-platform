@@ -48,7 +48,7 @@ const AdminCategories = () => {
       setCategories(data.categories || []);
     } catch (error) {
       console.error('Failed to fetch categories:', error);
-      setError(error.message);
+      setError(error.message || error.toString() || 'Failed to fetch categories');
       setCategories([]);
     } finally {
       setLoading(false);

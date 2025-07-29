@@ -8,51 +8,106 @@ const CartContext = createContext();
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(false);
-  const { user, makeAuthenticatedRequest } = useAuth(); // FIXED: Use user and makeAuthenticatedRequest
+  const { user, makeAuthenticatedRequest } = useAuth();
+  
+  // Load cart from localStorage for guest users
+  const loadGuestCart = useCallback(() => {
+    try {
+      const guestCart = localStorage.getItem('guest_cart');
+      return guestCart ? JSON.parse(guestCart) : [];
+    } catch (error) {
+      console.error('Failed to load guest cart:', error);
+      return [];
+    }
+  }, []);
+  
+  // Save cart to localStorage for guest users
+  const saveGuestCart = useCallback((items) => {
+    try {
+      localStorage.setItem('guest_cart', JSON.stringify(items));
+    } catch (error) {
+      console.error('Failed to save guest cart:', error);
+    }
+  }, []);
 
   const fetchCart = useCallback(async () => {
     if (!user) {
-      setCartItems([]);
+      // Load guest cart from localStorage
+      const guestCart = loadGuestCart();
+      setCartItems(guestCart);
       return;
     }
     
     setLoading(true);
     try {
-      // FIXED: Use makeAuthenticatedRequest instead of manual fetch
+      // For authenticated users, fetch from server
       const data = await makeAuthenticatedRequest(`${API_BASE}/cart`);
       setCartItems(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error('Failed to fetch cart:', error);
       if (error.message === 'Authentication required') {
-        setCartItems([]);
+        // Fall back to guest cart
+        const guestCart = loadGuestCart();
+        setCartItems(guestCart);
       }
     } finally {
       setLoading(false);
     }
-  }, [user, makeAuthenticatedRequest]);
+  }, [user, makeAuthenticatedRequest, loadGuestCart]);
 
   const addToCart = async (productId, quantity = 1) => {
-    if (!user) {
-      console.warn('User not authenticated');
-      return false;
-    }
-
     if (!productId || quantity < 1) {
       console.error('Invalid product ID or quantity');
       return false;
     }
 
     try {
-      // FIXED: Use makeAuthenticatedRequest
-      await makeAuthenticatedRequest(`${API_BASE}/cart/add`, {
-        method: 'POST',
-        body: JSON.stringify({ 
-          product_id: productId, 
-          quantity: parseInt(quantity) 
-        })
-      });
-
-      await fetchCart(); // Refresh cart after adding
+      if (user) {
+        // Authenticated user - save to server
+        await makeAuthenticatedRequest(`${API_BASE}/cart/add`, {
+          method: 'POST',
+          body: JSON.stringify({ 
+            product_id: productId, 
+            quantity: parseInt(quantity) 
+          })
+        });
+        await fetchCart();
+      } else {
+        // Guest user - save to localStorage
+        const currentCart = loadGuestCart();
+        const existingItemIndex = currentCart.findIndex(item => 
+          (item.product?._id || item.product_id) === productId
+        );
+        
+        if (existingItemIndex > -1) {
+          // Update existing item quantity
+          currentCart[existingItemIndex].quantity += parseInt(quantity);
+        } else {
+          // Add new item - we'll need to fetch product details
+          try {
+            const productResponse = await fetch(`${API_BASE}/products/${productId}`);
+            const productData = await productResponse.json();
+            currentCart.push({
+              _id: `guest_${Date.now()}`,
+              product: productData,
+              product_id: productId,
+              quantity: parseInt(quantity)
+            });
+          } catch (productError) {
+            console.error('Failed to fetch product details:', productError);
+            // Add minimal item if product fetch fails
+            currentCart.push({
+              _id: `guest_${Date.now()}`,
+              product: { _id: productId, name: 'Unknown Product', price: 0 },
+              product_id: productId,
+              quantity: parseInt(quantity)
+            });
+          }
+        }
+        
+        saveGuestCart(currentCart);
+        setCartItems(currentCart);
+      }
       return true;
     } catch (error) {
       console.error('Failed to add to cart:', error);
@@ -61,18 +116,25 @@ export const CartProvider = ({ children }) => {
   };
 
   const removeFromCart = async (itemId) => {
-    if (!user || !itemId) {
-      console.warn('User not authenticated or invalid item ID');
+    if (!itemId) {
+      console.warn('Invalid item ID');
       return false;
     }
 
     try {
-      // FIXED: Use makeAuthenticatedRequest
-      await makeAuthenticatedRequest(`${API_BASE}/cart/${itemId}`, {
-        method: 'DELETE'
-      });
-
-      await fetchCart(); // Refresh cart after removing
+      if (user) {
+        // Authenticated user
+        await makeAuthenticatedRequest(`${API_BASE}/cart/${itemId}`, {
+          method: 'DELETE'
+        });
+        await fetchCart();
+      } else {
+        // Guest user
+        const currentCart = loadGuestCart();
+        const updatedCart = currentCart.filter(item => item._id !== itemId);
+        saveGuestCart(updatedCart);
+        setCartItems(updatedCart);
+      }
       return true;
     } catch (error) {
       console.error('Failed to remove from cart:', error);
@@ -81,18 +143,28 @@ export const CartProvider = ({ children }) => {
   };
 
   const updateCartItemQuantity = async (itemId, newQuantity) => {
-    if (!user || !itemId || newQuantity < 1) {
+    if (!itemId || newQuantity < 1) {
       return false;
     }
 
     try {
-      // FIXED: Use makeAuthenticatedRequest
-      await makeAuthenticatedRequest(`${API_BASE}/cart/${itemId}`, {
-        method: 'PUT',
-        body: JSON.stringify({ quantity: parseInt(newQuantity) })
-      });
-
-      await fetchCart();
+      if (user) {
+        // Authenticated user
+        await makeAuthenticatedRequest(`${API_BASE}/cart/${itemId}`, {
+          method: 'PUT',
+          body: JSON.stringify({ quantity: parseInt(newQuantity) })
+        });
+        await fetchCart();
+      } else {
+        // Guest user
+        const currentCart = loadGuestCart();
+        const itemIndex = currentCart.findIndex(item => item._id === itemId);
+        if (itemIndex > -1) {
+          currentCart[itemIndex].quantity = parseInt(newQuantity);
+          saveGuestCart(currentCart);
+          setCartItems(currentCart);
+        }
+      }
       return true;
     } catch (error) {
       console.error('Failed to update cart item:', error);
@@ -121,12 +193,40 @@ export const CartProvider = ({ children }) => {
     fetchCart();
   }, [fetchCart]);
 
-  // Clear cart when user logs out
+  // Handle cart when user authentication changes
   useEffect(() => {
     if (!user) {
-      setCartItems([]);
+      // User logged out - load guest cart
+      const guestCart = loadGuestCart();
+      setCartItems(guestCart);
+    } else {
+      // User logged in - fetch server cart and potentially merge with guest cart
+      const mergeGuestCart = async () => {
+        const guestCart = loadGuestCart();
+        if (guestCart.length > 0) {
+          // Add guest items to server cart
+          for (const item of guestCart) {
+            try {
+              await makeAuthenticatedRequest(`${API_BASE}/cart/add`, {
+                method: 'POST',
+                body: JSON.stringify({ 
+                  product_id: item.product?._id || item.product_id, 
+                  quantity: parseInt(item.quantity) 
+                })
+              });
+            } catch (error) {
+              console.error('Failed to merge guest cart item:', error);
+            }
+          }
+          // Clear guest cart after merging
+          localStorage.removeItem('guest_cart');
+        }
+        // Fetch updated cart from server
+        fetchCart();
+      };
+      mergeGuestCart();
     }
-  }, [user]);
+  }, [user, loadGuestCart, fetchCart, makeAuthenticatedRequest]);
 
   const contextValue = {
     cartItems,

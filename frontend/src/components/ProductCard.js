@@ -8,7 +8,7 @@ import Modal from './modal/modal';
 import StarRating from './StarRating';
 import '../styles/index.css';
 
-const ProductCard = ({ product }) => {
+const ProductCard = ({ product, viewMode = 'grid' }) => {
   const [showModal, setShowModal] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
   const [isAddingToWishlist, setIsAddingToWishlist] = useState(false);
@@ -68,6 +68,86 @@ const ProductCard = ({ product }) => {
     if (stock > 0) return `${stock} Left`;
     return 'Out of Stock';
   };
+
+  if (viewMode === 'list') {
+    return (
+      <>
+        <div 
+          className="product-list-item"
+          onClick={() => setShowModal(true)}
+        >
+          <div className="product-list-image">
+            <img 
+              src={product.image_url} 
+              alt={product.name}
+              loading="lazy"
+              onError={(e) => {
+                e.target.src = '/images/placeholder-product.jpg';
+              }}
+            />
+          </div>
+
+          <div className="product-list-content">
+            <div className="product-list-main">
+              <h3 className="product-name">{product.name}</h3>
+              <p className="product-category">{product.category}</p>
+              
+              <div className="product-rating">
+                <StarRating rating={product.rating || 0} readonly={true} />
+                <span className="rating-text">
+                  {(product.rating || 0).toFixed(1)} ({product.review_count || 0})
+                </span>
+              </div>
+              
+              {product.description && (
+                <p className="product-description">{product.description.substring(0, 120)}...</p>
+              )}
+            </div>
+            
+            <div className="product-list-price">
+              <span className="price">${product.price}</span>
+              <span className={`stock-status ${getStockStatus()}`}>
+                {getStockText()}
+              </span>
+            </div>
+            
+            <div className="product-list-actions">
+              <button 
+                className={`add-to-cart-btn ${(product.stock || product.stock_quantity || 0) <= 0 ? 'disabled' : ''}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAddToCart(e);
+                }}
+                disabled={isAdding || (product.stock || product.stock_quantity || 0) <= 0}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M3 3h2l.4 2m0 0L8 16h8l1.4-8.5H5.4z"/>
+                  <circle cx="9" cy="21" r="1"/>
+                  <circle cx="20" cy="21" r="1"/>
+                </svg>
+                {isAdding ? 'Adding...' : 
+                 (product.stock || product.stock_quantity || 0) <= 0 ? 'Out of Stock' : 'Add to Cart'}
+              </button>
+              
+              <button 
+                className={`add-to-wishlist-btn ${isInWishlist(product._id || product.id) ? 'active' : ''}`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleWishlistToggle(e);
+                }}
+                disabled={isAddingToWishlist}
+                title={isInWishlist(product._id || product.id) ? 'Remove from Wishlist' : 'Add to Wishlist'}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill={isInWishlist(product._id || product.id) ? "#e53e3e" : "none"} stroke={isInWishlist(product._id || product.id) ? "#e53e3e" : "currentColor"} strokeWidth="2">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
