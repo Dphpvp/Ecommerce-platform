@@ -79,8 +79,33 @@ const Home = () => {
 
   const fetchFeaturedProducts = async () => {
     try {
-      const response = await fetch(`${API_BASE}/products?limit=6`);
-      const data = await response.json();
+      let data;
+      
+      // Use Capacitor HTTP for mobile to avoid CORS issues
+      if (window.Capacitor?.Plugins?.CapacitorHttp) {
+        console.log('📱 Using Capacitor HTTP for featured products request');
+        
+        const httpResponse = await window.Capacitor.Plugins.CapacitorHttp.request({
+          url: `${API_BASE}/products?limit=6`,
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          }
+        });
+        
+        if (httpResponse.status >= 200 && httpResponse.status < 300) {
+          data = httpResponse.data;
+        } else {
+          throw new Error(`HTTP Error: ${httpResponse.status}`);
+        }
+      } else {
+        // Use regular fetch for web
+        console.log('🌐 Using regular fetch for featured products request');
+        const response = await fetch(`${API_BASE}/products?limit=6`);
+        data = await response.json();
+      }
+      
       setFeaturedProducts(data);
     } catch (error) {
       console.error('Failed to fetch products:', error);

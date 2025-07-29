@@ -85,8 +85,32 @@ export const CartProvider = ({ children }) => {
         } else {
           // Add new item - we'll need to fetch product details
           try {
-            const productResponse = await fetch(`${API_BASE}/products/${productId}`);
-            const productData = await productResponse.json();
+            let productData;
+            
+            // Use Capacitor HTTP for mobile to avoid CORS issues
+            if (window.Capacitor?.Plugins?.CapacitorHttp) {
+              console.log('📱 Using Capacitor HTTP for product details request');
+              
+              const httpResponse = await window.Capacitor.Plugins.CapacitorHttp.request({
+                url: `${API_BASE}/products/${productId}`,
+                method: 'GET',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Accept': 'application/json',
+                }
+              });
+              
+              if (httpResponse.status >= 200 && httpResponse.status < 300) {
+                productData = httpResponse.data;
+              } else {
+                throw new Error(`HTTP Error: ${httpResponse.status}`);
+              }
+            } else {
+              // Use regular fetch for web
+              console.log('🌐 Using regular fetch for product details request');
+              const productResponse = await fetch(`${API_BASE}/products/${productId}`);
+              productData = await productResponse.json();
+            }
             currentCart.push({
               _id: `guest_${Date.now()}`,
               product: productData,

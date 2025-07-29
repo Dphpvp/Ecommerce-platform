@@ -15,6 +15,9 @@
   --color-primary-700: #1d4ed8;    /* Dark blue - headers, buttons */
   --color-primary-800: #1e40af;    /* Very dark blue */
   --color-primary-900: #1e3a8a;    /* Darkest blue - text */
+  
+  /* RGB values for primary colors (for rgba usage) */
+  --color-primary-600-rgb: 37, 99, 235;  /* RGB of #2563eb */
 
   /* === NEUTRAL GRAYS === */
   /* Clean, modern grays inspired by ASOS minimal design */

@@ -72,14 +72,42 @@ const Products = () => {
         ? `${API_BASE}/products?category=${selectedCategory}`
         : `${API_BASE}/products`;
       
-      const response = await fetch(url);
-      const data = await response.json();
-      setAllProducts(data);
+      let response;
+      
+      // Use Capacitor HTTP for mobile to avoid CORS issues
+      if (window.Capacitor?.Plugins?.CapacitorHttp) {
+        console.log('📱 Using Capacitor HTTP for products request');
+        
+        const httpResponse = await window.Capacitor.Plugins.CapacitorHttp.request({
+          url: url,
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          }
+        });
+        
+        if (httpResponse.status >= 200 && httpResponse.status < 300) {
+          setAllProducts(httpResponse.data);
+          const uniqueCategories = [...new Set(httpResponse.data.map(p => p.category))];
+          setCategories(uniqueCategories);
+        } else {
+          throw new Error(`HTTP Error: ${httpResponse.status}`);
+        }
+      } else {
+        // Use regular fetch for web
+        console.log('🌐 Using regular fetch for products request');
+        response = await fetch(url);
+        const data = await response.json();
+        setAllProducts(data);
 
-      const uniqueCategories = [...new Set(data.map(p => p.category))];
-      setCategories(uniqueCategories);
+        const uniqueCategories = [...new Set(data.map(p => p.category))];
+        setCategories(uniqueCategories);
+      }
     } catch (error) {
       console.error('Failed to fetch products:', error);
+      console.error('API_BASE:', API_BASE);
+      console.error('Full URL:', selectedCategory ? `${API_BASE}/products?category=${selectedCategory}` : `${API_BASE}/products`);
     } finally {
       setLoading(false);
     }

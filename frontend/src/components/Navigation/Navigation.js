@@ -12,6 +12,7 @@ const Navigation = () => {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [isMobileAPK, setIsMobileAPK] = useState(false);
   const { user, logout } = useAuth();
   const { cartItems } = useCart();
   const { wishlistCount } = useWishlist();
@@ -26,6 +27,17 @@ const Navigation = () => {
       setIsScrolled(scrollTop > 50);
     };
 
+    // Detect if running on mobile APK (Capacitor)
+    const detectMobileAPK = () => {
+      const isCapacitor = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
+      setIsMobileAPK(isCapacitor);
+      
+      if (process.env.NODE_ENV === 'development') {
+        console.log('📱 Mobile APK detected:', isCapacitor);
+      }
+    };
+
+    detectMobileAPK();
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
@@ -84,47 +96,27 @@ const Navigation = () => {
 
   const cartItemCount = cartItems?.reduce((total, item) => total + (item.quantity || 0), 0) || 0;
 
-  // Mobile-optimized navigation for Capacitor apps
-  if (platformDetection.isMobile) {
+  // Mobile APK: Show floating menu only, no navbar
+  if (isMobileAPK) {
     return (
-      <header className={`header mobile-header ${isScrolled ? 'scrolled' : ''}`}>
-        <div className="mobile-header-container">
-          {/* Mobile Brand - Logo Only */}
-          <Link to="/" className="mobile-header-brand">
-            <img src="/images/logo.png" alt="Vergi Designs" className="mobile-header-logo" />
-          </Link>
-          
-          {/* Mobile Actions - Only essential buttons */}
-          <div className="mobile-header-actions">
-            {/* Cart */}
-            <Link to="/cart" className="mobile-action-btn">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M3 3h2l.4 2m0 0L8 16h8l1.4-8.5H5.4z"/>
-                <circle cx="9" cy="21" r="1"/>
-                <circle cx="20" cy="21" r="1"/>
-              </svg>
-              {cartItemCount > 0 && (
-                <span className="mobile-cart-count">{cartItemCount}</span>
-              )}
-            </Link>
-
-            {/* Mobile Menu Toggle */}
-            <button 
-              className="mobile-menu-btn"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <line x1="3" y1="6" x2="21" y2="6"/>
-                <line x1="3" y1="12" x2="21" y2="12"/>
-                <line x1="3" y1="18" x2="21" y2="18"/>
-              </svg>
-            </button>
-          </div>
+      <>
+        {/* Floating Menu Button for Mobile APK */}
+        <div className="floating-menu-container">
+          <button 
+            className="floating-menu-btn"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <line x1="3" y1="12" x2="21" y2="12"/>
+              <line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+          </button>
         </div>
         
-        {/* Mobile Menu Overlay */}
+        {/* Mobile Menu Overlay for APK */}
         {isMobileMenuOpen && (
-          <div className="mobile-menu-overlay">
+          <div className="mobile-menu-overlay mobile-apk-overlay">
             <div className="mobile-menu-content">
               <div className="mobile-menu-header">
                 <span className="mobile-menu-title">Menu</span>
@@ -155,6 +147,16 @@ const Navigation = () => {
                     <circle cx="20" cy="21" r="1"/>
                   </svg>
                   Products
+                </Link>
+                
+                <Link to="/cart" className="mobile-menu-item" onClick={() => setIsMobileMenuOpen(false)}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M3 3h2l.4 2m0 0L8 16h8l1.4-8.5H5.4z"/>
+                    <circle cx="9" cy="21" r="1"/>
+                    <circle cx="20" cy="21" r="1"/>
+                  </svg>
+                  Cart
+                  {cartItemCount > 0 && <span className="mobile-menu-badge">{cartItemCount}</span>}
                 </Link>
                 
                 <Link to="/wishlist" className="mobile-menu-item" onClick={() => setIsMobileMenuOpen(false)}>
@@ -235,14 +237,15 @@ const Navigation = () => {
             </div>
           </div>
         )}
-      </header>
+      </>
     );
   }
 
-  // Desktop navigation (original layout)
+  // Regular navigation for web and mobile web browsers
   return (
     <header className={`header ${isScrolled ? 'scrolled' : ''}`}>
-      <div className="header-container">
+      {/* Desktop Navigation */}
+      <div className="header-container desktop-nav">
         {/* Brand */}
         <Link to="/" className="header-brand">
           <img src="/images/logo.png" alt="Vergi Designs" className="header-logo-large" />
@@ -453,6 +456,155 @@ const Navigation = () => {
           </button>
         </div>
       </div>
+
+      {/* Mobile Navigation */}
+      <div className="mobile-header-container">
+        {/* Mobile Brand - Logo Only */}
+        <Link to="/" className="mobile-header-brand">
+          <img src="/images/logo.png" alt="Vergi Designs" className="mobile-header-logo" />
+        </Link>
+        
+        {/* Mobile Actions - Only essential buttons */}
+        <div className="mobile-header-actions">
+          {/* Cart */}
+          <Link to="/cart" className="mobile-action-btn">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M3 3h2l.4 2m0 0L8 16h8l1.4-8.5H5.4z"/>
+              <circle cx="9" cy="21" r="1"/>
+              <circle cx="20" cy="21" r="1"/>
+            </svg>
+            {cartItemCount > 0 && (
+              <span className="mobile-cart-count">{cartItemCount}</span>
+            )}
+          </Link>
+
+          {/* Mobile Menu Toggle */}
+          <button 
+            className="mobile-menu-btn"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <line x1="3" y1="12" x2="21" y2="12"/>
+              <line x1="3" y1="18" x2="21" y2="18"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+      
+      {/* Mobile Menu Overlay */}
+      {isMobileMenuOpen && (
+        <div className="mobile-menu-overlay">
+          <div className="mobile-menu-content">
+            <div className="mobile-menu-header">
+              <span className="mobile-menu-title">Menu</span>
+              <button 
+                className="mobile-menu-close"
+                onClick={() => setIsMobileMenuOpen(false)}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18"/>
+                  <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+            
+            <nav className="mobile-menu-nav">
+              <Link to="/" className="mobile-menu-item" onClick={() => setIsMobileMenuOpen(false)}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                  <polyline points="9,22 9,12 15,12 15,22"/>
+                </svg>
+                Home
+              </Link>
+              
+              <Link to="/products" className="mobile-menu-item" onClick={() => setIsMobileMenuOpen(false)}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M3 3h2l.4 2m0 0L8 16h8l1.4-8.5H5.4z"/>
+                  <circle cx="9" cy="21" r="1"/>
+                  <circle cx="20" cy="21" r="1"/>
+                </svg>
+                Products
+              </Link>
+              
+              <Link to="/wishlist" className="mobile-menu-item" onClick={() => setIsMobileMenuOpen(false)}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                </svg>
+                Wishlist
+                {wishlistCount > 0 && <span className="mobile-menu-badge">{wishlistCount}</span>}
+              </Link>
+
+              {user ? (
+                <>
+                  <Link to="/profile" className="mobile-menu-item" onClick={() => setIsMobileMenuOpen(false)}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                      <circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    Profile
+                  </Link>
+                  
+                  <Link to="/orders" className="mobile-menu-item" onClick={() => setIsMobileMenuOpen(false)}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M3 3h2l.4 2m0 0L8 16h8l1.4-8.5H5.4z"/>
+                      <circle cx="9" cy="21" r="1"/>
+                      <circle cx="20" cy="21" r="1"/>
+                    </svg>
+                    My Orders
+                  </Link>
+                  
+                  {user.is_admin && (
+                    <Link to="/admin/dashboard" className="mobile-menu-item admin-item" onClick={() => setIsMobileMenuOpen(false)}>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                        <line x1="9" y1="9" x2="15" y2="9"/>
+                        <line x1="9" y1="15" x2="15" y2="15"/>
+                      </svg>
+                      Dashboard
+                    </Link>
+                  )}
+                  
+                  <button className="mobile-menu-item logout-item" onClick={handleLogout}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+                      <polyline points="16,17 21,12 16,7"/>
+                      <line x1="21" y1="12" x2="9" y2="12"/>
+                    </svg>
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <Link to="/login" className="mobile-menu-item" onClick={() => setIsMobileMenuOpen(false)}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
+                    <polyline points="10,17 15,12 10,7"/>
+                    <line x1="15" y1="12" x2="3" y2="12"/>
+                  </svg>
+                  Login
+                </Link>
+              )}
+              
+              <Link to="/about" className="mobile-menu-item" onClick={() => setIsMobileMenuOpen(false)}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M9,9h0a3,3,0,0,1,3-3h0a3,3,0,0,1,3,3v1a2,2,0,0,1-1,1.73L12,14"/>
+                  <circle cx="12" cy="17" r="1"/>
+                </svg>
+                About
+              </Link>
+              
+              <Link to="/contact" className="mobile-menu-item" onClick={() => setIsMobileMenuOpen(false)}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                  <polyline points="22,6 12,13 2,6"/>
+                </svg>
+                Contact
+              </Link>
+            </nav>
+          </div>
+        </div>
+      )}
     </header>
   );
 };
