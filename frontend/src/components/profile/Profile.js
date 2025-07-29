@@ -512,7 +512,7 @@ const Profile = () => {
               <p className="user-role">{user?.is_admin ? 'Administrator' : 'Premium Member'}</p>
               <button 
                 onClick={handleChangeAvatar}
-                className="btn-luxury-outline btn-change-avatar"
+                className="btn-change-avatar"
                 disabled={loading}
               >
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -528,55 +528,47 @@ const Profile = () => {
         {isChangingAvatar && (
           <div className="avatar-modal-overlay">
             <div className="avatar-modal">
-              <h3>Choose Your Avatar</h3>
+              <div className="avatar-modal-header">
+                <h3>Choose Your Avatar</h3>
+                <button 
+                  onClick={() => setIsChangingAvatar(false)}
+                  className="close-modal-btn"
+                  disabled={loading || uploadingAvatar}
+                >
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </div>
               
-              <div className="upload-section" style={{ marginBottom: '2rem' }}>
+              <div className="upload-section">
                 <input
                   type="file"
                   ref={fileInputRef}
                   onChange={handleFileUpload}
-                  accept="image/*"
+                  accept="image/jpeg,image/png,image/gif,image/webp"
                   style={{ display: 'none' }}
                 />
                 <button
                   onClick={triggerFileUpload}
                   disabled={uploadingAvatar}
-                  className="btn btn-primary"
-                  style={{
-                    width: '100%',
-                    padding: '1rem',
-                    marginBottom: '1rem',
-                    backgroundColor: '#28a745',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '0.5rem'
-                  }}
+                  className="btn btn-primary upload-btn"
                 >
-                  {uploadingAvatar ? (
-                    <>⏳ Uploading...</>
-                  ) : (
-                    <>📁 Upload Custom Avatar</>
-                  )}
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="7,10 12,15 17,10"/>
+                    <line x1="12" y1="15" x2="12" y2="3"/>
+                  </svg>
+                  {uploadingAvatar ? 'Uploading...' : 'Upload Custom Avatar'}
                 </button>
-                <p style={{ fontSize: '0.9rem', color: '#666', textAlign: 'center' }}>
-                  Max 5MB • JPG, PNG, GIF, WebP
+                <p className="upload-help">
+                  Max 5MB • JPG, PNG, GIF, WebP supported
                 </p>
               </div>
 
-              <div style={{ 
-                textAlign: 'center', 
-                margin: '1rem 0',
-                borderBottom: '1px solid #ddd',
-                paddingBottom: '1rem'
-              }}>
-                <span style={{ 
-                  backgroundColor: 'white', 
-                  padding: '0 1rem', 
-                  color: '#666' 
-                }}>
-                  or choose from samples
-                </span>
+              <div className="section-divider">
+                <span>or choose from sample avatars</span>
               </div>
               
               <div className="avatar-grid">
@@ -587,19 +579,23 @@ const Profile = () => {
                     alt={`Avatar option ${index + 1}`}
                     className="avatar-option"
                     onClick={() => handleSelectAvatar(avatar)}
-                    style={{ cursor: loading ? 'not-allowed' : 'pointer' }}
+                    style={{ 
+                      cursor: loading ? 'not-allowed' : 'pointer',
+                      opacity: loading ? 0.5 : 1
+                    }}
                   />
                 ))}
               </div>
               
-              <button 
-                onClick={() => setIsChangingAvatar(false)}
-                className="btn btn-outline"
-                disabled={loading || uploadingAvatar}
-                style={{ marginTop: '1rem' }}
-              >
-                Cancel
-              </button>
+              <div className="modal-footer">
+                <button 
+                  onClick={() => setIsChangingAvatar(false)}
+                  className="btn btn-outline"
+                  disabled={loading || uploadingAvatar}
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         )}

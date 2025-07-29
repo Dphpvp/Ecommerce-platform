@@ -206,13 +206,9 @@
 .admin-dashboard h1 {
   font-size: var(--text-4xl);
   font-weight: var(--font-bold);
-  color: var(--color-text-primary);
+  color: #000000;
   margin-bottom: var(--space-8);
   text-align: center;
-  background: linear-gradient(135deg, #dc2626, #b91c1c);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 /* Dashboard Sections */
@@ -234,7 +230,7 @@
 .dashboard-section h2 {
   font-size: var(--text-2xl);
   font-weight: var(--font-semibold);
-  color: var(--color-text-primary);
+  color: #000000;
   margin-bottom: var(--space-6);
   padding-bottom: var(--space-3);
   border-bottom: 2px solid var(--color-border);
@@ -287,7 +283,7 @@
 .stat-card h3 {
   font-size: var(--text-sm);
   font-weight: var(--font-medium);
-  color: var(--color-text-secondary);
+  color: #000000;
   margin-bottom: var(--space-2);
   text-transform: uppercase;
   letter-spacing: 0.5px;
@@ -296,7 +292,7 @@
 .stat-number {
   font-size: var(--text-3xl);
   font-weight: var(--font-bold);
-  color: #dc2626;
+  color: #000000;
   margin: 0;
   line-height: 1;
 }
@@ -324,7 +320,7 @@
 .quick-actions-widget h3 {
   font-size: var(--text-lg);
   font-weight: var(--font-semibold);
-  color: var(--color-text-primary);
+  color: #000000;
   margin-bottom: var(--space-4);
   padding-bottom: var(--space-2);
   border-bottom: 1px solid var(--color-border);
@@ -343,7 +339,7 @@
   gap: var(--space-2);
   padding: var(--space-3) var(--space-4);
   background: var(--color-surface-elevated);
-  color: var(--color-text-primary);
+  color: #000000;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-md);
   font-size: var(--text-sm);
@@ -1172,6 +1168,120 @@
   padding: var(--space-6);
 }
 
+/* Avatar Modal Styles */
+.avatar-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+}
+
+.avatar-modal {
+  background: var(--color-surface);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: var(--space-6);
+}
+
+.avatar-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  margin-bottom: var(--space-4);
+}
+
+.avatar-modal h3 {
+  font-size: var(--text-xl);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.avatar-option {
+  width: 80px;
+  height: 80px;
+  border-radius: var(--radius-full);
+  border: 2px solid var(--color-border);
+  cursor: pointer;
+  transition: var(--transition-all);
+  object-fit: cover;
+}
+
+.avatar-option:hover {
+  border-color: #dc2626;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+}
+
+.upload-section {
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  text-align: center;
+  transition: var(--transition-all);
+}
+
+.upload-section:hover {
+  border-color: #dc2626;
+  background: rgba(220, 38, 38, 0.05);
+}
+
+.upload-btn {
+  width: 100%;
+  margin-bottom: var(--space-3);
+}
+
+.upload-help {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin: 0;
+  text-align: center;
+}
+
+.section-divider {
+  position: relative;
+  text-align: center;
+  margin: var(--space-6) 0;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: var(--space-4);
+}
+
+.section-divider span {
+  background: var(--color-surface);
+  padding: 0 var(--space-3);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: center;
+  padding-top: var(--space-4);
+  margin-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .avatar-container-luxury {
@@ -1182,6 +1292,21 @@
   
   .avatar-info {
     text-align: center;
+  }
+  
+  .avatar-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-2);
+  }
+  
+  .avatar-option {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .avatar-modal {
+    margin: var(--space-4);
+    max-height: calc(100vh - var(--space-8));
   }
   
   .card-header {

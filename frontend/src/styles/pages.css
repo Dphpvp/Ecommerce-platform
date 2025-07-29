@@ -2666,56 +2666,102 @@
 }
 
 .story-card {
-  background-color: white;
+  background-color: #ffffff;
   border-radius: var(--radius-xl);
   padding: var(--space-8);
-  box-shadow: var(--shadow-md);
-  border: 1px solid var(--color-border);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.1);
   transition: var(--transition-all);
+  margin-bottom: var(--space-6);
 }
 
 .story-card:hover {
   transform: translateY(-4px);
-  box-shadow: var(--shadow-xl);
-  border-color: var(--color-primary-200);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border-color: rgba(0, 0, 0, 0.15);
 }
 
 .story-icon {
   width: 64px;
   height: 64px;
-  background: linear-gradient(135deg, var(--color-primary-100) 0%, var(--color-primary-50) 100%);
+  background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%);
   border-radius: var(--radius-full);
   display: flex;
   align-items: center;
   justify-content: center;
   margin-bottom: var(--space-6);
-  color: var(--color-primary-600);
+  color: #000000;
+  border: 2px solid rgba(0, 0, 0, 0.1);
 }
 
 .story-card h3 {
   font-size: var(--text-2xl);
   font-weight: var(--font-bold);
-  color: var(--color-text-primary);
+  color: #000000;
   margin-bottom: var(--space-4);
   line-height: var(--leading-tight);
 }
 
 .story-lead {
   font-size: var(--text-lg);
-  color: var(--color-text-secondary);
+  color: #000000;
   line-height: var(--leading-relaxed);
-  font-weight: var(--font-medium);
+  font-weight: var(--font-semibold);
 }
 
 .story-paragraph {
   font-size: var(--text-base);
-  color: var(--color-text-secondary);
+  color: #000000;
   line-height: var(--leading-relaxed);
+  font-weight: var(--font-medium);
 }
 
 /* Story Image */
 .story-image {
   position: relative;
+}
+
+/* Responsive Story Cards */
+@media (max-width: 768px) {
+  .story-card {
+    padding: var(--space-6);
+    margin-bottom: var(--space-4);
+  }
+  
+  .story-card h3 {
+    font-size: var(--text-xl);
+    margin-bottom: var(--space-3);
+  }
+  
+  .story-lead {
+    font-size: var(--text-base);
+  }
+  
+  .story-paragraph {
+    font-size: var(--text-sm);
+  }
+  
+  .story-icon {
+    width: 48px;
+    height: 48px;
+    margin-bottom: var(--space-4);
+  }
+}
+
+@media (max-width: 480px) {
+  .story-card {
+    padding: var(--space-4);
+    margin-bottom: var(--space-3);
+  }
+  
+  .story-card h3 {
+    font-size: var(--text-lg);
+  }
+  
+  .story-lead,
+  .story-paragraph {
+    font-size: var(--text-sm);
+  }
 }
 
 .story-image-container {

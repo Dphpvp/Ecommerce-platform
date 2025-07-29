@@ -92,8 +92,10 @@ const ProductCard = ({ product }) => {
           <p className="product-category">{product.category}</p>
           
           <div className="product-rating">
-            <StarRating rating={4.2} readonly={true} />
-            <span className="rating-text">4.2 (127)</span>
+            <StarRating rating={product.rating || 0} readonly={true} />
+            <span className="rating-text">
+              {(product.rating || 0).toFixed(1)} ({product.review_count || 0})
+            </span>
           </div>
           
           <div className="product-price">

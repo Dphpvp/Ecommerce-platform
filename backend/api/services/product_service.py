@@ -27,6 +27,8 @@ class ProductService:
         product_data["created_at"] = datetime.utcnow()
         product_data["created_by"] = str(admin_user["_id"])
         product_data["updated_at"] = datetime.utcnow()
+        product_data["rating"] = 0.0
+        product_data["review_count"] = 0
         
         result = await self.db.products.insert_one(product_data)
         return {"message": "Product created", "id": str(result.inserted_id)}
@@ -51,6 +53,13 @@ class ProductService:
             product["_id"] = str(product["_id"])
             if "created_by" in product:
                 product["created_by"] = str(product["created_by"])
+            
+            # Add default rating fields if missing
+            if "rating" not in product:
+                product["rating"] = 0.0
+            if "review_count" not in product:
+                product["review_count"] = 0
+                
             products.append(product)
         
         return products
@@ -72,6 +81,13 @@ class ProductService:
         product["_id"] = str(product["_id"])
         if "created_by" in product:
             product["created_by"] = str(product["created_by"])
+        
+        # Add default rating fields if missing
+        if "rating" not in product:
+            product["rating"] = 0.0
+        if "review_count" not in product:
+            product["review_count"] = 0
+            
         return product
     
     async def update_product(self, product_id: str, request: ProductRequest, admin_user: dict) -> dict:
@@ -151,6 +167,13 @@ class ProductService:
                 product["image_url"] = "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop&q=80"
             
             product["_id"] = str(product["_id"])
+            
+            # Add default rating fields if missing
+            if "rating" not in product:
+                product["rating"] = 0.0
+            if "review_count" not in product:
+                product["review_count"] = 0
+                
             products.append(product)
         
         # Get total count for pagination
@@ -200,6 +223,13 @@ class ProductService:
                 product["image_url"] = "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=400&h=300&fit=crop&q=80"
             
             product["_id"] = str(product["_id"])
+            
+            # Add default rating fields if missing
+            if "rating" not in product:
+                product["rating"] = 0.0
+            if "review_count" not in product:
+                product["review_count"] = 0
+                
             products.append(product)
         
         return products
