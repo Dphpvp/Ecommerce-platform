@@ -32,15 +32,7 @@ const config: CapacitorConfig = {
       style: 'default',
       backgroundColor: '#ffffff'
     },
-    CapacitorHttp: {
-      enabled: true,
-      // Enable better HTTP handling for production APK builds
-      default: {
-        timeout: 30000,
-        retries: 2,
-        rejectUnauthorized: true
-      }
-    },
+    // CapacitorHttp is built into @capacitor/core in v6+, no separate config needed
     CapacitorCookies: {
       enabled: true,
       // Improve cookie handling for cross-origin requests

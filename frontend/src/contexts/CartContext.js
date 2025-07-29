@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
+import { CapacitorHttp } from '@capacitor/core';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
 
@@ -90,8 +91,6 @@ export const CartProvider = ({ children }) => {
             // Use Capacitor HTTP for mobile to avoid CORS issues
             if (window.Capacitor?.isNativePlatform?.()) {
               console.log('📱 Using Capacitor HTTP for product details request');
-              
-              const { CapacitorHttp } = window.Capacitor;
               
               const httpResponse = await CapacitorHttp.request({
                 url: `${API_BASE}/products/${productId}`,

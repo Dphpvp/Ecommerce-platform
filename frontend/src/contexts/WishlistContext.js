@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { useToastContext } from '../components/toast';
+import { CapacitorHttp } from '@capacitor/core';
 
 const WishlistContext = createContext();
 
@@ -118,8 +119,6 @@ export const WishlistProvider = ({ children }) => {
             // Use Capacitor HTTP for mobile to avoid CORS issues
             if (window.Capacitor?.isNativePlatform?.()) {
               console.log('📱 Using Capacitor HTTP for wishlist product details request');
-              
-              const { CapacitorHttp } = window.Capacitor;
               
               const httpResponse = await CapacitorHttp.request({
                 url: `${API_BASE}/products/${productId}`,

@@ -65,7 +65,8 @@
       "Bash(sed:*)",
       "Bash(do echo \"Checking $file...\")",
       "Bash(echo \"$file: OK\")",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "fileSystem": {

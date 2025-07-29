@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import ProductCard from '../components/ProductCard';
 import { Link } from 'react-router-dom';
+import { CapacitorHttp } from '@capacitor/core';
 import '../styles/index.css';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
@@ -77,9 +78,6 @@ const Products = () => {
       // Use Capacitor HTTP for mobile to avoid CORS issues
       if (window.Capacitor?.isNativePlatform?.()) {
         console.log('📱 Using Capacitor HTTP for products request');
-        
-        // Import and use CapacitorHttp from @capacitor/core
-        const { CapacitorHttp } = window.Capacitor;
         
         const httpResponse = await CapacitorHttp.request({
           url: url,
