@@ -31,7 +31,8 @@ const Cart = React.lazy(() => import('./pages/Cart'));
 const Wishlist = React.lazy(() => import('./pages/Wishlist'));
 const Checkout = React.lazy(() => import('./pages/Checkout'));
 const AuthSlider = React.lazy(() => import('./components/AuthSlider'));
-const AnimatedAuth = React.lazy(() => import('./components/AnimatedAuth'));
+const Login = React.lazy(() => import('./pages/Login'));
+const Register = React.lazy(() => import('./pages/Register'));
 const ResetPassword = React.lazy(() => import('./pages/ResetPassword'));
 const Orders = React.lazy(() => import('./pages/Orders'));
 const EmailVerification = React.lazy(() => import('./pages/EmailVerification'));
@@ -177,12 +178,12 @@ const App = () => {
                         {/* Authentication routes */}
                         <Route path="/login" element={
                           <AuthSuspense>
-                            <AnimatedAuth />
+                            <Login />
                           </AuthSuspense>
                         } />
                         <Route path="/register" element={
                           <AuthSuspense>
-                            <AnimatedAuth />
+                            <Register />
                           </AuthSuspense>
                         } />
                         <Route path="/reset-password" element={
