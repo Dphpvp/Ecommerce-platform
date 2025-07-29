@@ -457,8 +457,8 @@ button.back-to-top:hover,
 }
 
 .header-logo {
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   object-fit: contain;
   border-radius: var(--radius-md);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -482,8 +482,13 @@ button.back-to-top:hover,
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: var(--color-background);
+  background: var(--color-background);
+  background-image: 
+    radial-gradient(circle at 20% 80%, rgba(201, 168, 118, 0.06) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(30, 42, 71, 0.08) 0%, transparent 50%),
+    radial-gradient(circle at 40% 40%, rgba(201, 168, 118, 0.04) 0%, transparent 50%);
   padding: var(--space-6);
+  position: relative;
 }
 
 .auth-container {
@@ -493,10 +498,16 @@ button.back-to-top:hover,
 
 .auth-card {
   background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background-image: var(--gradient-glass);
+  border: 1px solid var(--color-border-glass);
   border-radius: var(--radius-xl);
   padding: var(--space-8);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  box-shadow: 
+    0 8px 32px rgba(0, 0, 0, 0.25), 
+    inset 0 1px 0 rgba(254, 252, 248, 0.1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  position: relative;
 }
 
 .auth-header {
@@ -505,12 +516,17 @@ button.back-to-top:hover,
 }
 
 .auth-title {
-  font-size: var(--text-2xl);
-  font-weight: var(--font-semibold);
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
   color: var(--color-text-primary);
   margin-bottom: var(--space-3);
   font-family: var(--font-family-sans);
   letter-spacing: -0.025em;
+  background: linear-gradient(135deg, var(--color-text-primary) 0%, var(--color-accent-gold) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-align: center;
 }
 
 .auth-subtitle {
@@ -583,8 +599,8 @@ button.back-to-top:hover,
 .submit-btn {
   width: 100%;
   padding: var(--space-4);
-  background: var(--color-primary-600);
-  color: white;
+  background: var(--gradient-gold);
+  color: var(--color-text-inverse);
   border: none;
   border-radius: var(--radius-lg);
   font-size: var(--text-base);
@@ -592,12 +608,37 @@ button.back-to-top:hover,
   cursor: pointer;
   transition: all 0.3s ease;
   margin-bottom: var(--space-4);
+  box-shadow: 
+    0 4px 16px rgba(0, 0, 0, 0.2),
+    0 0 0 1px rgba(201, 168, 118, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
 }
 
 .submit-btn:hover:not(:disabled) {
-  background: var(--color-primary-700);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 8px 24px rgba(0, 0, 0, 0.3),
+    0 0 0 1px rgba(201, 168, 118, 0.5),
+    0 4px 16px rgba(201, 168, 118, 0.2);
+  filter: brightness(1.1);
+}
+
+.submit-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.6s;
+}
+
+.submit-btn:hover::before {
+  left: 100%;
 }
 
 .submit-btn:disabled {
@@ -636,21 +677,45 @@ button.back-to-top:hover,
   justify-content: center;
   gap: var(--space-2);
   padding: var(--space-4);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
+  background: var(--color-surface-glass);
+  border: 1px solid var(--color-border-glass);
   border-radius: var(--radius-lg);
   color: var(--color-text-primary);
   font-size: var(--text-base);
   font-weight: var(--font-medium);
   cursor: pointer;
   transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(254, 252, 248, 0.05);
+  position: relative;
+  overflow: hidden;
 }
 
 .google-btn:hover {
   background: var(--color-surface-elevated);
   border-color: var(--color-border-strong);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 
+    0 6px 16px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(254, 252, 248, 0.1);
+}
+
+.google-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.6s;
+}
+
+.google-btn:hover::before {
+  left: 100%;
 }
 
 .auth-footer {

@@ -57,8 +57,8 @@
 
 /* Header Logo Styles */
 .header-logo {
-  width: 160px;
-  height: 160px;
+  width: 48px;
+  height: 48px;
   object-fit: contain;
   transition: all 0.3s ease;
 }
