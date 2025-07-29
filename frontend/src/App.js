@@ -31,8 +31,7 @@ const Cart = React.lazy(() => import('./pages/Cart'));
 const Wishlist = React.lazy(() => import('./pages/Wishlist'));
 const Checkout = React.lazy(() => import('./pages/Checkout'));
 const AuthSlider = React.lazy(() => import('./components/AuthSlider'));
-const Login = React.lazy(() => import('./pages/Login'));
-const Register = React.lazy(() => import('./pages/Register'));
+const AnimatedAuthForm = React.lazy(() => import('./components/AnimatedAuthForm'));
 const ResetPassword = React.lazy(() => import('./pages/ResetPassword'));
 const Orders = React.lazy(() => import('./pages/Orders'));
 const EmailVerification = React.lazy(() => import('./pages/EmailVerification'));
@@ -178,12 +177,12 @@ const App = () => {
                         {/* Authentication routes */}
                         <Route path="/login" element={
                           <AuthSuspense>
-                            <Login />
+                            <AnimatedAuthForm />
                           </AuthSuspense>
                         } />
                         <Route path="/register" element={
                           <AuthSuspense>
-                            <Register />
+                            <AnimatedAuthForm />
                           </AuthSuspense>
                         } />
                         <Route path="/reset-password" element={
@@ -197,21 +196,19 @@ const App = () => {
                           </AuthSuspense>
                         } />
 
-                        {/* Protected user routes */}
+                        {/* Public cart and wishlist routes */}
                         <Route path="/cart" element={
-                          <PrivateRoute>
-                            <PageSuspense title="cart">
-                              <Cart />
-                            </PageSuspense>
-                          </PrivateRoute>
+                          <PageSuspense title="cart">
+                            <Cart />
+                          </PageSuspense>
                         } />
                         <Route path="/wishlist" element={
-                          <PrivateRoute>
-                            <PageSuspense title="wishlist">
-                              <Wishlist />
-                            </PageSuspense>
-                          </PrivateRoute>
+                          <PageSuspense title="wishlist">
+                            <Wishlist />
+                          </PageSuspense>
                         } />
+                        
+                        {/* Protected user routes */}
                         <Route path="/checkout" element={
                           <PrivateRoute>
                             <PageSuspense title="checkout">

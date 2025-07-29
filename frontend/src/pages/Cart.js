@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../contexts/CartContext';
+import { useAuth } from '../contexts/AuthContext';
+import { useToastContext } from '../components/toast';
 import '../styles/index.css';
 
 const Cart = () => {
   const { cartItems, removeFromCart, updateCartItemQuantity } = useCart();
+  const { user } = useAuth();
+  const { showToast } = useToastContext();
   const navigate = useNavigate();
   const [isRemoving, setIsRemoving] = useState(null);
+  const [showAuthPopup, setShowAuthPopup] = useState(false);
 
   const total = cartItems?.reduce((sum, item) => 
     sum + ((item.product?.price || 0) * (item.quantity || 0)), 0
@@ -16,6 +21,13 @@ const Cart = () => {
     if (!cartItems || cartItems.length === 0) {
       return;
     }
+    
+    // Check if user is logged in
+    if (!user) {
+      setShowAuthPopup(true);
+      return;
+    }
+    
     navigate('/checkout');
   };
 
@@ -194,6 +206,54 @@ const Cart = () => {
                   </svg>
                   <span>Easy returns</span>
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Authentication Required Popup */}
+        {showAuthPopup && (
+          <div className="auth-popup-overlay" onClick={() => setShowAuthPopup(false)}>
+            <div className="auth-popup-content" onClick={(e) => e.stopPropagation()}>
+              <div className="auth-popup-header">
+                <h3>Login Required</h3>
+                <button 
+                  className="auth-popup-close"
+                  onClick={() => setShowAuthPopup(false)}
+                >
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="auth-popup-body">
+                <div className="auth-popup-icon">
+                  <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M9 12l2 2 4-4"/>
+                    <path d="M21 12c0 1.66-.04 3.31-.14 4.94l-.3 2.7A2 2 0 0118.67 21H5.33a2 2 0 01-1.89-1.36l-.3-2.7C3.04 15.31 3 13.66 3 12c0-1.66.04-3.31.14-4.94l.3-2.7A2 2 0 015.33 3h13.34c.93 0 1.74.64 1.89 1.36l.3 2.7c.1 1.63.14 3.28.14 4.94z"/>
+                  </svg>
+                </div>
+                <p>Please login or register to checkout</p>
+                <p className="auth-popup-subtitle">You need an account to proceed with your purchase</p>
+              </div>
+              
+              <div className="auth-popup-actions">
+                <Link 
+                  to="/login" 
+                  className="auth-popup-btn primary"
+                  onClick={() => setShowAuthPopup(false)}
+                >
+                  Login
+                </Link>
+                <Link 
+                  to="/register" 
+                  className="auth-popup-btn secondary"
+                  onClick={() => setShowAuthPopup(false)}
+                >
+                  Register
+                </Link>
               </div>
             </div>
           </div>

@@ -89,10 +89,9 @@ const Navigation = () => {
     return (
       <header className={`header mobile-header ${isScrolled ? 'scrolled' : ''}`}>
         <div className="mobile-header-container">
-          {/* Mobile Brand - Logo Only with Gradient Text */}
+          {/* Mobile Brand - Logo Only */}
           <Link to="/" className="mobile-header-brand">
             <img src="/images/logo.png" alt="Vergi Designs" className="mobile-header-logo" />
-            <span className="mobile-brand-text">VergiShop</span>
           </Link>
           
           {/* Mobile Actions - Only essential buttons */}
