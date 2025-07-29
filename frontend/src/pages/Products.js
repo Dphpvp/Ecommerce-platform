@@ -75,10 +75,13 @@ const Products = () => {
       let response;
       
       // Use Capacitor HTTP for mobile to avoid CORS issues
-      if (window.Capacitor?.Plugins?.CapacitorHttp) {
+      if (window.Capacitor?.isNativePlatform?.()) {
         console.log('📱 Using Capacitor HTTP for products request');
         
-        const httpResponse = await window.Capacitor.Plugins.CapacitorHttp.request({
+        // Import and use CapacitorHttp from @capacitor/core
+        const { CapacitorHttp } = window.Capacitor;
+        
+        const httpResponse = await CapacitorHttp.request({
           url: url,
           method: 'GET',
           headers: {

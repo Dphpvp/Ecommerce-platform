@@ -116,10 +116,12 @@ export const WishlistProvider = ({ children }) => {
             let productData;
             
             // Use Capacitor HTTP for mobile to avoid CORS issues
-            if (window.Capacitor?.Plugins?.CapacitorHttp) {
+            if (window.Capacitor?.isNativePlatform?.()) {
               console.log('📱 Using Capacitor HTTP for wishlist product details request');
               
-              const httpResponse = await window.Capacitor.Plugins.CapacitorHttp.request({
+              const { CapacitorHttp } = window.Capacitor;
+              
+              const httpResponse = await CapacitorHttp.request({
                 url: `${API_BASE}/products/${productId}`,
                 method: 'GET',
                 headers: {
