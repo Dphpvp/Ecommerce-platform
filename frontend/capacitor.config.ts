@@ -5,7 +5,8 @@ const config: CapacitorConfig = {
   appName: 'VergiShop',
   webDir: 'build',
   server: {
-    url: "https://vergishop.vercel.app",
+    // Production server configuration for APK builds
+    url: process.env.NODE_ENV === 'production' ? undefined : "https://vergishop.vercel.app",
     cleartext: false,
     allowNavigation: [
       "*.google.com",
@@ -15,7 +16,8 @@ const config: CapacitorConfig = {
       "vergishop.vercel.app",
       "vs1.vercel.app",
       "*.vercel.app",
-      "*.onrender.com"
+      "*.onrender.com",
+      "ecommerce-platform-nizy.onrender.com"
     ],
     androidScheme: "https"
   },
@@ -31,10 +33,19 @@ const config: CapacitorConfig = {
       backgroundColor: '#ffffff'
     },
     CapacitorHttp: {
-      enabled: true
+      enabled: true,
+      // Enable better HTTP handling for production APK builds
+      default: {
+        timeout: 30000,
+        retries: 2,
+        rejectUnauthorized: true
+      }
     },
     CapacitorCookies: {
-      enabled: true
+      enabled: true,
+      // Improve cookie handling for cross-origin requests
+      sameSite: 'none',
+      secure: true
     },
     Toast: {
       duration: 'short'
@@ -54,7 +65,15 @@ const config: CapacitorConfig = {
     minWebViewVersion: 60,
     backgroundColor: "#ffffff",
     captureInput: false,
-    initialFocus: true
+    initialFocus: true,
+    // Enhanced network configuration for production APK builds
+    networkSecurityConfig: {
+      cleartextTrafficPermitted: false
+    },
+    // Ensure proper database and API connectivity
+    usesCleartextTraffic: false,
+    // Enable hardware acceleration for better performance
+    hardwareAccelerated: true
   },
   ios: {
     scheme: 'VergiShop',
