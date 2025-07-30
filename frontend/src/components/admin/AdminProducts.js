@@ -22,10 +22,21 @@ const AdminProducts = () => {
 
   const fetchProducts = async () => {
     try {
+      console.log('🔄 Fetching admin products...');
       const data = await makeAuthenticatedRequest(`${API_BASE}/admin/products`);
+      console.log('✅ Products data received:', data);
       setProducts(data.products || []);
     } catch (error) {
-      console.error('Failed to fetch products:', error);
+      console.error('❌ Failed to fetch products:', error);
+      
+      let errorMessage = 'Failed to fetch products';
+      if (error.message.includes('Authentication required')) {
+        errorMessage = 'Authentication required. Please login again.';
+      } else if (error.message.includes('Network') || error.name === 'TypeError') {
+        errorMessage = 'Network error. Please check your connection.';
+      }
+      
+      showToast(errorMessage, 'error');
     } finally {
       setLoading(false);
     }
@@ -33,11 +44,14 @@ const AdminProducts = () => {
 
   const fetchCategories = async () => {
     try {
+      console.log('🔄 Fetching admin categories...');
       const data = await makeAuthenticatedRequest(`${API_BASE}/admin/categories`);
+      console.log('✅ Categories data received:', data);
       const categoryNames = data.categories?.map(cat => cat.name).sort() || [];
       setCategories(categoryNames);
     } catch (error) {
-      console.error('Failed to fetch categories:', error);
+      console.error('❌ Failed to fetch categories:', error);
+      showToast('Failed to fetch categories', 'error');
     }
   };
 

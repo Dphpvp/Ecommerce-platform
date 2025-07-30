@@ -281,32 +281,36 @@ body::before {
 button.back-to-top,
 .back-to-top {
   position: fixed !important;
-  bottom: 32px !important;
-  right: 32px !important;
+  bottom: 80px !important; /* Higher position */
+  right: 24px !important; /* Closer to edge for mobile */
   top: auto !important;
   left: auto !important;
-  width: 60px !important;
-  height: 60px !important;
-  background: rgba(255, 255, 255, 0.9) !important;
+  width: 56px !important; /* Slightly bigger */
+  height: 56px !important; /* Slightly bigger */
+  background: rgba(255, 255, 255, 0.95) !important; /* More opaque */
   backdrop-filter: blur(12px) !important;
   -webkit-backdrop-filter: blur(12px) !important;
-  border: 1px solid rgba(0, 0, 0, 0.1) !important;
+  border: 2px solid rgba(37, 99, 235, 0.3) !important; /* Blue border */
   border-radius: 50% !important;
-  color: #374151 !important;
+  color: var(--color-primary-600) !important; /* Primary color */
   cursor: pointer !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  font-size: 22px !important;
+  font-size: 24px !important; /* Bigger icon */
   font-weight: bold !important;
   transition: all 0.3s ease !important;
   opacity: 0 !important;
   visibility: hidden !important;
   transform: translateY(20px) !important;
   z-index: 99999 !important;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.2) !important; /* Stronger shadow */
   margin: 0 !important;
   padding: 0 !important;
+  /* Better mobile touch targets */
+  touch-action: manipulation !important;
+  -webkit-tap-highlight-color: transparent !important;
+  user-select: none !important;
 }
 
 button.back-to-top.visible,
@@ -319,16 +323,53 @@ button.back-to-top.visible,
 button.back-to-top:hover,
 .back-to-top:hover {
   background: rgba(255, 255, 255, 1) !important;
-  border-color: #f59e0b !important;
-  transform: translateY(-3px) !important;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.25) !important;
-  color: #1f2937 !important;
+  border-color: var(--color-primary-500) !important;
+  transform: translateY(-2px) scale(1.05) !important;
+  box-shadow: 0 8px 32px rgba(37, 99, 235, 0.3) !important;
+  color: var(--color-primary-700) !important;
+}
+
+button.back-to-top:active,
+.back-to-top:active {
+  transform: translateY(0) scale(0.95) !important;
+  transition: all 0.1s ease !important;
 }
 
 .back-to-top-icon {
-  font-size: 18px !important;
+  font-size: 20px !important;
   line-height: 1 !important;
   display: block !important;
+}
+
+/* Mobile-specific optimizations for back to top button */
+@media (max-width: 768px) {
+  button.back-to-top,
+  .back-to-top {
+    width: 48px !important;
+    height: 48px !important;
+    bottom: 100px !important; /* Higher on mobile to avoid conflicts with mobile navigation */
+    right: 20px !important;
+    font-size: 20px !important;
+  }
+  
+  .back-to-top-icon {
+    font-size: 18px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  button.back-to-top,
+  .back-to-top {
+    width: 44px !important;
+    height: 44px !important;
+    bottom: 120px !important; /* Even higher on small screens */
+    right: 16px !important;
+    font-size: 18px !important;
+  }
+  
+  .back-to-top-icon {
+    font-size: 16px !important;
+  }
 }
 
 /* Enhanced Checkbox Styling */

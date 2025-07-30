@@ -209,8 +209,8 @@ const Products = () => {
           </div>
         </div>
 
-        {/* Category Filter */}
-        <div className="filter-group">
+        {/* Category Filter - Desktop version */}
+        <div className="filter-group desktop-filter">
           <div className="filter-group-title">
             <span>Category</span>
           </div>
@@ -247,6 +247,32 @@ const Products = () => {
                 <label className="filter-label">{category}</label>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* Category Filter - Mobile dropdown version */}
+        <div className="filter-group mobile-filter">
+          <div className="filter-group-title">
+            <span>Category</span>
+          </div>
+          <div className="mobile-dropdown-wrapper">
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="mobile-category-dropdown"
+            >
+              <option value="">All Categories</option>
+              {categories.map(category => (
+                <option key={category} value={category}>
+                  {category}
+                </option>
+              ))}
+            </select>
+            <div className="dropdown-arrow">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="6,9 12,15 18,9"></polyline>
+              </svg>
+            </div>
           </div>
         </div>
 

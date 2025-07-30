@@ -9,28 +9,116 @@ const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platfo
 const AdminDashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const { makeAuthenticatedRequest } = useAuth();
+  const [authStatus, setAuthStatus] = useState(null);
+  const { makeAuthenticatedRequest, user } = useAuth();
   const { showToast } = useToastContext();
   const navigate = useNavigate();
 
   const fetchDashboardData = useCallback(async () => {
     try {
+      console.log('🔄 Fetching admin dashboard data...');
+      console.log('👤 Current user:', user);
+      console.log('🔐 User is admin:', user?.is_admin);
+      
+      // First check if we can authenticate with a simpler endpoint
+      try {
+        const authTest = await makeAuthenticatedRequest(`${API_BASE}/auth/me`);
+        console.log('✅ Auth test successful:', authTest);
+        setAuthStatus('authenticated');
+      } catch (authError) {
+        console.error('❌ Auth test failed:', authError);
+        setAuthStatus('failed');
+        throw new Error('Authentication failed: ' + authError.message);
+      }
+      
       const data = await makeAuthenticatedRequest(`${API_BASE}/admin/dashboard`);
+      console.log('✅ Dashboard data received:', data);
       setDashboardData(data);
     } catch (error) {
-      console.error('Failed to fetch dashboard:', error);
-      showToast('Failed to fetch dashboard data', 'error');
+      console.error('❌ Failed to fetch dashboard:', error);
+      
+      // More detailed error handling
+      let errorMessage = 'Failed to fetch dashboard data';
+      if (error.message.includes('Authentication required') || error.message.includes('Authentication failed')) {
+        errorMessage = 'Authentication required. Please login again.';
+        setAuthStatus('authentication_required');
+      } else if (error.message.includes('Network') || error.name === 'TypeError') {
+        errorMessage = 'Network error. Please check your connection.';
+      } else if (error.message.includes('404')) {
+        errorMessage = 'Admin dashboard endpoint not found.';
+      } else if (error.message.includes('403')) {
+        errorMessage = 'Access denied. Admin privileges required.';
+      }
+      
+      showToast(errorMessage, 'error');
     } finally {
       setLoading(false);
     }
-  }, [makeAuthenticatedRequest]);
+  }, [makeAuthenticatedRequest, showToast, user]);
 
   useEffect(() => {
     fetchDashboardData();
   }, [fetchDashboardData]);
 
-  if (loading) return <div className="container"><p>Loading dashboard...</p></div>;
-  if (!dashboardData) return <div className="container"><p>Failed to load dashboard</p></div>;
+  if (loading) {
+    return (
+      <div className="admin-dashboard">
+        <div className="container">
+          <div style={{ textAlign: 'center', padding: '3rem' }}>
+            <div className="loading-spinner"></div>
+            <p>Loading admin dashboard...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!dashboardData) {
+    return (
+      <div className="admin-dashboard">
+        <div className="container">
+          <div style={{ textAlign: 'center', padding: '3rem' }}>
+            <h2>⚠️ Dashboard Error</h2>
+            <p>Failed to load dashboard data.</p>
+            
+            {/* Debug information */}
+            <div style={{ background: '#f5f5f5', padding: '1rem', margin: '1rem 0', borderRadius: '8px', fontSize: '0.9em' }}>
+              <strong>Debug Info:</strong><br/>
+              User: {user?.email || 'Not logged in'}<br/>
+              Admin: {user?.is_admin ? 'Yes' : 'No'}<br/>
+              Auth Status: {authStatus || 'Unknown'}<br/>
+              API Base: {API_BASE}
+            </div>
+            
+            <p>This could be due to:</p>
+            <ul style={{ textAlign: 'left', maxWidth: '400px', margin: '0 auto' }}>
+              <li>Authentication issues</li>
+              <li>Network connectivity problems</li>
+              <li>Server maintenance</li>
+              <li>Missing admin permissions</li>
+              <li>CORS or session cookie issues</li>
+            </ul>
+            
+            <div style={{ marginTop: '1rem' }}>
+              <button 
+                onClick={fetchDashboardData} 
+                className="btn btn-primary" 
+                style={{ marginRight: '1rem' }}
+              >
+                🔄 Retry
+              </button>
+              <button 
+                onClick={() => navigate('/login')} 
+                className="btn btn-outline"
+              >
+                🔐 Re-login
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const { statistics, recent_orders, low_stock_products } = dashboardData;
 
