@@ -88,8 +88,9 @@ class AuthService:
         if not user or not self._verify_password(request.password, user["password"]):
             raise AuthenticationError("Invalid credentials")
         
-        if not user.get("email_verified", False):
-            raise AuthenticationError("Email not verified")
+        # Email verification check disabled - users can login without verified email
+        # if not user.get("email_verified", False):
+        #     raise AuthenticationError("Email not verified")
         
         if user.get("two_factor_enabled"):
             temp_token = self._create_jwt_token(str(user["_id"]), timedelta(minutes=10))
