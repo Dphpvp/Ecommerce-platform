@@ -750,15 +750,17 @@ const Login = ({ isSliderMode = false }) => {
             Continue with Google
           </button>
           
-          {/* Register Link - Enhanced for Mobile */}
-          <div className="auth-register-link mobile-register-link">
-            <p className="register-prompt">
-              Don't have an account?{' '}
-              <Link to="/register" className="register-link">
-                Register here
-              </Link>
-            </p>
-          </div>
+          {/* Register Link - Mobile Only */}
+          {platformDetection.isMobile && (
+            <div className="auth-register-link mobile-register-link">
+              <p className="register-prompt">
+                Don't have an account?{' '}
+                <Link to="/register" className="register-link">
+                  Register here
+                </Link>
+              </p>
+            </div>
+          )}
           
           <div className="auth-note">
             <p className="auth-note-text">
@@ -849,15 +851,17 @@ const Login = ({ isSliderMode = false }) => {
             Continue with Google
           </button>
           
-          {/* Register Link - Enhanced for Mobile */}
-          <div className="auth-register-link mobile-register-link">
-            <p className="register-prompt">
-              Don't have an account?{' '}
-              <Link to="/register" className="register-link">
-                Register here
-              </Link>
-            </p>
-          </div>
+          {/* Register Link - Mobile Only */}
+          {platformDetection.isMobile && (
+            <div className="auth-register-link mobile-register-link">
+              <p className="register-prompt">
+                Don't have an account?{' '}
+                <Link to="/register" className="register-link">
+                  Register here
+                </Link>
+              </p>
+            </div>
+          )}
           
           <div className="auth-note">
             <p className="auth-note-text">

@@ -3758,6 +3758,129 @@
   }
 }
 
+/* Registration Form Styles */
+.register-form {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+@media (max-width: 640px) {
+  .form-row {
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+  }
+}
+
+.phone-group {
+  grid-column: span 2;
+}
+
+@media (max-width: 640px) {
+  .phone-group {
+    grid-column: span 1;
+  }
+}
+
+.phone-input-container {
+  display: flex;
+  gap: var(--space-2);
+  align-items: stretch;
+}
+
+.country-select {
+  flex: 0 0 120px;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+}
+
+.phone-input-container input[type="tel"] {
+  flex: 1;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  font-size: var(--text-base);
+}
+
+.phone-preview {
+  margin-top: var(--space-1);
+  padding-left: var(--space-1);
+}
+
+.phone-preview small {
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+}
+
+.password-requirements {
+  margin-top: var(--space-2);
+}
+
+.password-requirements small {
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+  line-height: var(--leading-relaxed);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+  font-family: inherit;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  width: 100%;
+  font-size: var(--text-base);
+  transition: border-color 0.2s ease;
+}
+
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--color-primary-500);
+  box-shadow: 0 0 0 3px var(--color-primary-100);
+}
+
+/* Login link for registration page */
+.auth-login-link {
+  margin-top: var(--space-6);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.login-prompt {
+  font-size: var(--text-base);
+  color: var(--color-text-primary);
+  margin: 0;
+  text-align: center;
+}
+
+.login-link {
+  color: var(--color-primary-600) !important;
+  text-decoration: none;
+  font-weight: var(--font-semibold);
+  transition: all 0.3s ease;
+  border-bottom: 2px solid transparent;
+}
+
+.login-link:hover {
+  color: var(--color-primary-700) !important;
+  border-bottom-color: var(--color-primary-700);
+  text-decoration: none;
+}
+
 /* Update existing auth form styles for Google-only layout */
 .modern-auth-form .auth-form {
   display: flex;

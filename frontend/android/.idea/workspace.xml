@@ -18,10 +18,8 @@
   <component name="ChangeListManager">
     <list default="true" id="6f24bd5f-c9f7-438a-b820-b3d6f5c93ad0" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/asset-manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/public/asset-manifest.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/public/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/vergishop/app/MainActivity.java" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/vergishop/app/MainActivity.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -31,7 +29,7 @@
   <component name="ClangdSettings">
     <option name="formatViaClangd" value="false" />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[DeviceId(pluginId=LocalEmulator, isTemplate=false, identifier=path=C:\Users\razva\.android\avd\Pixel_3a_API_36_extension_level_17_x86_64.avd)]" />
+  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[DeviceId(pluginId=LocalEmulator, isTemplate=false, identifier=path=C:\Users\razva\.android\avd\Medium_Phone.avd)]" />
   <component name="ExternalProjectsData">
     <projectState path="$PROJECT_DIR$">
       <ProjectState />
@@ -158,12 +156,12 @@
     &quot;assignee&quot;: &quot;Dphpvp&quot;
   }
 }</component>
-  <component name="GithubPullRequestsUISettings">{
-  &quot;selectedUrlAndAccountId&quot;: {
-    &quot;url&quot;: &quot;https://github.com/Dphpvp/Ecommerce-platform.git&quot;,
-    &quot;accountId&quot;: &quot;def1ff5d-3101-4809-828d-f06f3c81e5e1&quot;
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/Dphpvp/Ecommerce-platform.git",
+    "accountId": "aa968ff8-3e64-4c98-84ed-1375f003e3e9"
   }
-}</component>
+}]]></component>
   <component name="ProjectColorInfo">{
   &quot;customColor&quot;: &quot;&quot;,
   &quot;associatedIndex&quot;: 3
@@ -285,12 +283,12 @@
       <map>
         <entry key="com.vergishop.app">
           <value>
-            <CheckInfo lastCheckTimestamp="1753695613507" />
+            <CheckInfo lastCheckTimestamp="1753884066939" />
           </value>
         </entry>
         <entry key="com.vergishop.app.test">
           <value>
-            <CheckInfo lastCheckTimestamp="1753695613507" />
+            <CheckInfo lastCheckTimestamp="1753884066938" />
           </value>
         </entry>
       </map>
