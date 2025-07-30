@@ -194,9 +194,13 @@ const Login = ({ isSliderMode = false }) => {
       console.log('🔍 Google login attempt starting...');
       console.log('Environment check:', {
         googleClientId: process.env.REACT_APP_GOOGLE_CLIENT_ID ? 'Set' : 'Not set',
+        googleServerClientId: process.env.REACT_APP_GOOGLE_SERVER_CLIENT_ID ? 'Set' : 'Not set',
+        nodeEnv: process.env.NODE_ENV,
         isMobile: platformDetection.isMobile,
         hasCapacitor: !!window.Capacitor,
-        hasGoogleScript: !!(window.google && window.google.accounts)
+        hasGoogleScript: !!(window.google && window.google.accounts),
+        currentUrl: window.location.href,
+        currentDomain: window.location.hostname
       });
 
       // Check if running on mobile (Capacitor)
@@ -219,23 +223,33 @@ const Login = ({ isSliderMode = false }) => {
         }
       }
 
-      if (!process.env.REACT_APP_GOOGLE_CLIENT_ID) {
+      const googleClientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
+      if (!googleClientId) {
         console.error('❌ Google Client ID not configured');
-        showToast('Google login not configured. Please contact support.', 'error');
+        console.error('Environment variables:', {
+          NODE_ENV: process.env.NODE_ENV,
+          hasGoogleClientId: !!process.env.REACT_APP_GOOGLE_CLIENT_ID,
+          hasGoogleServerClientId: !!process.env.REACT_APP_GOOGLE_SERVER_CLIENT_ID
+        });
+        showToast('Google login not configured. Environment variables missing.', 'error');
         return;
       }
+      
+      console.log('🔧 Google Client ID found:', googleClientId.substring(0, 20) + '...');
 
       console.log('🌐 Initializing web Google login');
 
       // Initialize Google OAuth for web with error handling
       try {
         window.google.accounts.id.initialize({
-          client_id: process.env.REACT_APP_GOOGLE_CLIENT_ID,
+          client_id: googleClientId,
           callback: handleGoogleResponse,
           auto_select: false,
           cancel_on_tap_outside: true,
           use_fedcm_for_prompt: false
         });
+        
+        console.log('✅ Google OAuth initialized successfully');
 
         // Prompt for Google account selection
         window.google.accounts.id.prompt((notification) => {
@@ -283,6 +297,7 @@ const Login = ({ isSliderMode = false }) => {
       // Enhanced initialization with better error handling
       try {
         const clientId = process.env.REACT_APP_GOOGLE_CLIENT_ID;
+        console.log('🔧 Mobile Google Client ID:', clientId ? (clientId.substring(0, 20) + '...') : 'NOT SET');
         if (!clientId) {
           throw new Error('Google Client ID not configured');
         }

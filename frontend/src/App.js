@@ -21,7 +21,6 @@ import Navigation from './components/Navigation';
 import PrivateRoute from './components/PrivateRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import BackToTop from './components/BackToTop';
-import MobileZoomControls from './components/MobileZoomControls';
 import LoadingSpinner, { PageSkeleton } from './components/LoadingSpinner';
 import { PageSuspense, AdminSuspense, AuthSuspense } from './components/SuspenseBoundary';
 
@@ -145,7 +144,6 @@ const App = () => {
                   <div className="app">
                     <Navigation />
                     <BackToTop />
-                    <MobileZoomControls />
                     <ParallaxContainer>
                     <main className="main">
                       <Routes>

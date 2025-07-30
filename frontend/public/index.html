@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=yes, minimum-scale=0.5, maximum-scale=3.0" />
     <meta name="theme-color" content="#007bff" />
     <meta
       name="description"
@@ -46,8 +46,8 @@
     <meta property="og:image:type" content="image/jpeg" />
     <meta property="article:author" content="VergiShop" />
 
-    <script src="https://accounts.google.com/gsi/client"></script>
-    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <script src="https://accounts.google.com/gsi/client" async defer onload="console.log('✅ Google GSI client loaded')" onerror="console.error('❌ Failed to load Google GSI client')"></script>
+    <script src="https://apis.google.com/js/platform.js" async defer onload="console.log('✅ Google Platform API loaded')" onerror="console.error('❌ Failed to load Google Platform API')"></script>
     <script src="https://www.paypal.com/sdk/js?client-id=sb&currency=USD"></script>
     <title>Best place to shop - Amazing Products at Great Prices</title>
   </head>
