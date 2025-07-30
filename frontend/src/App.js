@@ -7,6 +7,7 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { registerSW, setCallbacks } from './utils/serviceWorker';
 import { queryClient, prefetchQueries } from './utils/queryClient';
+import notificationService from './utils/notificationService';
 
 // ASOS-Inspired Sustainable Fashion Theme
 import './styles/index.css';              // Complete theme system with all imports
@@ -127,6 +128,17 @@ const App = () => {
     if (process.env.NODE_ENV === 'production') {
       initServiceWorker();
     }
+    
+    // Initialize push notifications
+    const initNotifications = async () => {
+      try {
+        await notificationService.initialize();
+      } catch (error) {
+        console.error('Failed to initialize notifications:', error);
+      }
+    };
+    
+    initNotifications();
     
     // Prefetch important data
     prefetchQueries.categories();

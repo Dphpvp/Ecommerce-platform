@@ -113,7 +113,15 @@ const Login = ({ isSliderMode = false }) => {
           url: response.url
         });
         
-        let errorMessage = data.detail || data.message || `Login failed (${response.status})`;
+        // Safely extract error message and ensure it's a string
+        let errorMessage = '';
+        if (data.detail) {
+          errorMessage = typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail);
+        } else if (data.message) {
+          errorMessage = typeof data.message === 'string' ? data.message : JSON.stringify(data.message);
+        } else {
+          errorMessage = `Login failed (${response.status})`;
+        }
         
         // Handle specific error codes
         if (response.status === 500) {
@@ -124,7 +132,7 @@ const Login = ({ isSliderMode = false }) => {
           errorMessage = 'Invalid username or password.';
         }
         
-        if (data.detail && data.detail.includes('Email not verified')) {
+        if (errorMessage.includes('Email not verified')) {
           showToast('Please verify your email address', 'error');
         } else {
           showToast(errorMessage, 'error');
@@ -602,7 +610,13 @@ const Login = ({ isSliderMode = false }) => {
         
         let errorMessage = 'Google login failed';
         if (data && typeof data === 'object') {
-          errorMessage = data.detail || data.message || data.error || errorMessage;
+          if (data.detail) {
+            errorMessage = typeof data.detail === 'string' ? data.detail : JSON.stringify(data.detail);
+          } else if (data.message) {
+            errorMessage = typeof data.message === 'string' ? data.message : JSON.stringify(data.message);
+          } else if (data.error) {
+            errorMessage = typeof data.error === 'string' ? data.error : JSON.stringify(data.error);
+          }
         } else if (typeof data === 'string') {
           errorMessage = data;
         }

@@ -6,7 +6,12 @@ export const useToast = () => {
 
   const showToast = (message, type = 'success') => {
     const id = Date.now();
-    const toast = { id, message, type };
+    // Ensure message is always a string
+    let safeMessage = message;
+    if (typeof message !== 'string') {
+      safeMessage = message ? JSON.stringify(message) : 'An error occurred';
+    }
+    const toast = { id, message: safeMessage, type };
     setToasts(prev => [...prev, toast]);
 
     // Auto remove after 3 seconds
@@ -58,7 +63,7 @@ export const ToastContainer = ({ toasts, removeToast }) => {
               )}
             </div>
             <div className="toast-message">
-              {toast.message}
+              {typeof toast.message === 'string' ? toast.message : JSON.stringify(toast.message)}
             </div>
             <button 
               className="toast-close" 

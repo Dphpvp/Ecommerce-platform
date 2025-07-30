@@ -49,6 +49,9 @@ const config: CapacitorConfig = {
       scopes: ['profile', 'email'],
       serverClientId: process.env.REACT_APP_GOOGLE_SERVER_CLIENT_ID || '',
       forceCodeForRefreshToken: true
+    },
+    PushNotifications: {
+      presentationOptions: ['badge', 'sound', 'alert']
     }
   },
   android: {

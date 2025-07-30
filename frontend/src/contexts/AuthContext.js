@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { secureFetch } from '../utils/csrf';
 import platformDetection from '../utils/platformDetection';
+import notificationService from '../utils/notificationService';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
 
@@ -159,6 +160,14 @@ export const AuthProvider = ({ children }) => {
     
     setRequires2FA(false);
     setTempToken(null);
+    
+    // Try to save FCM token if we have one stored locally
+    try {
+      await notificationService.retryTokenSave();
+    } catch (error) {
+      console.error('Failed to save FCM token on login:', error);
+    }
+    
     return true;
   }, [fetchUser]);
 

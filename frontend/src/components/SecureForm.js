@@ -139,10 +139,14 @@ const SecureForm = ({
       await onSubmit(sanitizedData, csrfToken);
     } catch (error) {
       console.error('Form submission error:', error);
-      if (error.message.includes('CSRF')) {
+      
+      // Ensure error message is a string
+      const errorMessage = error.message || error.toString() || 'Form submission failed. Please try again.';
+      
+      if (errorMessage.includes('CSRF')) {
         showToast('Security token expired. Please refresh the page.', 'error');
       } else {
-        setErrors({ general: error.message || 'Form submission failed. Please try again.' });
+        setErrors({ general: errorMessage });
       }
     } finally {
       setIsSubmitting(false);
@@ -153,7 +157,7 @@ const SecureForm = ({
     <form onSubmit={handleSubmit} className={className} {...props}>
       {errors.general && (
         <div className="error-message" style={{ marginBottom: '1rem', color: '#dc3545' }}>
-          {errors.general}
+          {typeof errors.general === 'string' ? errors.general : JSON.stringify(errors.general)}
         </div>
       )}
       
@@ -183,7 +187,7 @@ const SecureForm = ({
       {Object.entries(errors).map(([field, message]) => 
         field !== 'general' && (
           <div key={field} id={`${field}-error`} className="error-text" style={{ color: '#dc3545', fontSize: '0.9rem', marginTop: '0.25rem' }}>
-            {message}
+            {typeof message === 'string' ? message : JSON.stringify(message)}
           </div>
         )
       )}

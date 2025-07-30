@@ -1,6 +1,10 @@
 package com.vergishop.app;
 
+import android.Manifest;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -16,6 +20,9 @@ import android.net.http.SslError;
 import android.webkit.SslErrorHandler;
 import android.widget.Toast;
 
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
 import androidx.webkit.WebViewFeature;
 import androidx.webkit.WebSettingsCompat;
 
@@ -27,10 +34,17 @@ public class MainActivity extends BridgeActivity {
     private static final String TAG = "VergiShop";
     private boolean doubleBackToExitPressedOnce = false;
     private static final int DOUBLE_TAP_INTERVAL = 2000; // 2 seconds
+    private static final int NOTIFICATION_PERMISSION_REQUEST = 1001;
+    private static final String NOTIFICATION_CHANNEL_ID = "vergishop_notifications";
+    private static final String NOTIFICATION_CHANNEL_NAME = "VergiShop Notifications";
+    private static final String NOTIFICATION_CHANNEL_DESCRIPTION = "Notifications for orders, promotions, and updates";
     
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        
+        // Setup notification channels and request permissions
+        setupNotifications();
         
         // Check Google Play Services availability
         checkGooglePlayServices();
@@ -247,5 +261,81 @@ public class MainActivity extends BridgeActivity {
                 doubleBackToExitPressedOnce = false;
             }
         }, DOUBLE_TAP_INTERVAL);
+    }
+    
+    private void setupNotifications() {
+        Log.i(TAG, "Setting up notifications");
+        
+        // Create notification channel for Android 8.0 and above
+        createNotificationChannel();
+        
+        // Request notification permission for Android 13 and above
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            requestNotificationPermission();
+        } else {
+            Log.i(TAG, "Notification permission not required for this Android version");
+        }
+    }
+    
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            
+            // Check if channel already exists
+            if (notificationManager.getNotificationChannel(NOTIFICATION_CHANNEL_ID) != null) {
+                Log.i(TAG, "Notification channel already exists");
+                return;
+            }
+            
+            NotificationChannel channel = new NotificationChannel(
+                NOTIFICATION_CHANNEL_ID,
+                NOTIFICATION_CHANNEL_NAME,
+                NotificationManager.IMPORTANCE_DEFAULT
+            );
+            
+            channel.setDescription(NOTIFICATION_CHANNEL_DESCRIPTION);
+            channel.enableLights(true);
+            channel.setLightColor(getResources().getColor(R.color.notification_primary));
+            channel.enableVibration(true);
+            channel.setVibrationPattern(new long[]{0, 250, 250, 250});
+            channel.setShowBadge(true);
+            
+            notificationManager.createNotificationChannel(channel);
+            Log.i(TAG, "Notification channel created successfully");
+        }
+    }
+    
+    private void requestNotificationPermission() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) 
+            != PackageManager.PERMISSION_GRANTED) {
+            
+            Log.i(TAG, "Requesting notification permission");
+            
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.POST_NOTIFICATIONS)) {
+                // Show explanation to user
+                Toast.makeText(this, "Enable notifications to receive order updates and promotions", Toast.LENGTH_LONG).show();
+            }
+            
+            ActivityCompat.requestPermissions(this, 
+                new String[]{Manifest.permission.POST_NOTIFICATIONS}, 
+                NOTIFICATION_PERMISSION_REQUEST);
+        } else {
+            Log.i(TAG, "Notification permission already granted");
+        }
+    }
+    
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        
+        if (requestCode == NOTIFICATION_PERMISSION_REQUEST) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Log.i(TAG, "Notification permission granted");
+                Toast.makeText(this, "Notifications enabled! You'll receive order updates and promotions.", Toast.LENGTH_SHORT).show();
+            } else {
+                Log.w(TAG, "Notification permission denied");
+                Toast.makeText(this, "Notifications disabled. You can enable them later in Settings.", Toast.LENGTH_LONG).show();
+            }
+        }
     }
 }
