@@ -8,6 +8,7 @@ import { secureFetch } from '../utils/csrf';
 import SecureForm from '../components/SecureForm';
 import AnimatedAuthContainer from '../components/AnimatedAuthContainer';
 import platformDetection from '../utils/platformDetection';
+import mobileEmailVerificationHelper from '../utils/mobileEmailVerification';
 import '../styles/index.css';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
@@ -44,8 +45,11 @@ const Login = ({ isSliderMode = false }) => {
         identifier: formDataWithAuth.identifier,
         passwordLength: formDataWithAuth.password?.length,
         isMobile: platformDetection.isMobile,
+        platform: platformDetection.platform,
         hasCaptcha: !!formDataWithAuth.recaptcha_response,
-        apiBase: API_BASE
+        apiBase: API_BASE,
+        userAgent: navigator.userAgent.substring(0, 100),
+        hasCapacitor: !!window.Capacitor
       });
 
       // Use Capacitor HTTP for mobile to avoid CORS issues
@@ -110,7 +114,11 @@ const Login = ({ isSliderMode = false }) => {
           status: response.status,
           statusText: response.statusText,
           data: data,
-          url: response.url
+          url: response.url,
+          isMobile: platformDetection.isMobile,
+          platform: platformDetection.platform,
+          identifier: formDataWithAuth.identifier,
+          isAdmin: formDataWithAuth.identifier?.includes('admin') || false
         });
         
         // Safely extract error message and ensure it's a string
@@ -125,17 +133,38 @@ const Login = ({ isSliderMode = false }) => {
         
         // Handle specific error codes
         if (response.status === 500) {
-          errorMessage = 'Server error. Please check admin credentials or try again later.';
+          errorMessage = 'Server error. Please try again later.';
         } else if (response.status === 422) {
           errorMessage = 'Invalid input data. Please check your credentials.';
         } else if (response.status === 401) {
-          errorMessage = 'Invalid username or password.';
+          // Check if it's specifically an email verification issue
+          if (errorMessage.toLowerCase().includes('email') && errorMessage.toLowerCase().includes('verified')) {
+            errorMessage = 'Email not verified. Please check your email for the verification link.';
+          } else {
+            errorMessage = 'Invalid username or password.';
+          }
+        } else if (response.status === 403) {
+          // Additional check for forbidden access (might be email verification)
+          if (errorMessage.toLowerCase().includes('email') || errorMessage.toLowerCase().includes('verify')) {
+            errorMessage = 'Email not verified. Please verify your email address to continue.';
+          } else {
+            errorMessage = 'Access denied. Please check your credentials.';
+          }
         }
         
-        if (errorMessage.includes('Email not verified')) {
-          showToast('Please verify your email address', 'error');
+        // Use mobile helper for enhanced error handling
+        if (platformDetection.isMobile) {
+          const handled = mobileEmailVerificationHelper.showEmailVerificationGuidance(errorMessage, showToast);
+          if (!handled) {
+            const mobileMessage = mobileEmailVerificationHelper.getMobileErrorMessage({ message: errorMessage }, response);
+            showToast(mobileMessage, 'error');
+          }
         } else {
-          showToast(errorMessage, 'error');
+          if (errorMessage.includes('Email not verified')) {
+            showToast('Please verify your email address before logging in. Check your email for the verification link.', 'error');
+          } else {
+            showToast(errorMessage, 'error');
+          }
         }
         
         // No captcha reset needed
@@ -144,6 +173,11 @@ const Login = ({ isSliderMode = false }) => {
       }
     } catch (error) {
       console.error('Login error:', error);
+      
+      // Enhanced mobile debugging
+      if (platformDetection.isMobile) {
+        mobileEmailVerificationHelper.logMobileLoginAttempt(formDataWithAuth.identifier, error, null);
+      }
       
       let errorMessage = 'Network error. Please try again.';
       
@@ -158,6 +192,11 @@ const Login = ({ isSliderMode = false }) => {
         errorMessage = 'Too many login attempts. Please try again later.';
       } else if (error.status >= 500) {
         errorMessage = 'Server error. Please try again later.';
+      }
+      
+      // Use mobile helper for better error messages
+      if (platformDetection.isMobile) {
+        errorMessage = mobileEmailVerificationHelper.getMobileErrorMessage(error, null);
       }
       
       showToast(errorMessage, 'error');
