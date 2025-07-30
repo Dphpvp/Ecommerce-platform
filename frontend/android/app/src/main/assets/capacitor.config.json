@@ -47,6 +47,13 @@
 			],
 			"serverClientId": "",
 			"forceCodeForRefreshToken": true
+		},
+		"PushNotifications": {
+			"presentationOptions": [
+				"badge",
+				"sound",
+				"alert"
+			]
 		}
 	},
 	"android": {
