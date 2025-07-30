@@ -3458,16 +3458,20 @@
 
 .mobile-apk-overlay .mobile-menu-content {
   position: relative;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%);
+  /* Dark blue background as requested */
+  background: linear-gradient(135deg, var(--color-primary-700) 0%, var(--color-primary-800) 100%);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-radius: var(--radius-2xl);
-  margin: var(--space-8);
-  margin-top: calc(80px + var(--space-8)); /* Account for floating button */
+  border-radius: var(--radius-xl); /* Made smaller by reducing border radius */
+  margin: var(--space-6); /* Made smaller by reducing margin */
+  margin-top: calc(60px + var(--space-6)); /* Account for smaller floating button */
+  max-width: 280px; /* Made smaller by adding max-width */
+  margin-left: auto;
+  margin-right: var(--space-4); /* Position it closer to the right edge */
   box-shadow: 
     0 8px 32px rgba(0, 0, 0, 0.15),
-    0 0 0 1px rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+    0 0 0 1px rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   animation: slideInFromTop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
@@ -3484,36 +3488,75 @@
 
 /* Enhanced mobile menu items for APK */
 .mobile-apk-overlay .mobile-menu-item {
-  padding: var(--space-4) var(--space-6);
-  margin: var(--space-1) var(--space-3);
-  border-radius: var(--radius-lg);
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: var(--space-3) var(--space-4); /* Made smaller padding */
+  margin: var(--space-1) var(--space-2); /* Made smaller margin */
+  border-radius: var(--radius-md); /* Made smaller border radius */
+  background: rgba(255, 255, 255, 0.9); /* More opaque for better readability */
+  border: 1px solid rgba(255, 255, 255, 0.4);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   transition: all 0.3s ease;
-  /* Make text black */
-  color: var(--color-text-primary) !important;
+  /* Make text black as requested */
+  color: #000000 !important;
   text-decoration: none;
+  font-size: var(--text-sm); /* Made font smaller */
+  font-weight: var(--font-medium);
 }
 
 .mobile-apk-overlay .mobile-menu-item:hover {
-  background: rgba(255, 255, 255, 0.9);
-  border-color: var(--color-primary-200);
+  background: rgba(255, 255, 255, 1);
+  border-color: var(--color-primary-300);
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-  transform: translateX(4px);
-  color: var(--color-text-primary) !important;
+  transform: translateX(2px); /* Reduced transform for smaller menu */
+  color: #000000 !important; /* Ensure black text on hover */
 }
 
-/* Ensure menu title is also black */
+/* Ensure menu title is also black as requested */
 .mobile-apk-overlay .mobile-menu-title {
-  color: var(--color-text-primary) !important;
+  color: #000000 !important;
+  font-size: var(--text-lg); /* Made smaller */
+  font-weight: var(--font-semibold);
+}
+
+/* Make menu header smaller too */
+.mobile-apk-overlay .mobile-menu-header {
+  padding: var(--space-4) var(--space-5); /* Reduced padding */
+}
+
+/* Make close button smaller */
+.mobile-apk-overlay .mobile-menu-close {
+  width: 32px; /* Smaller close button */
+  height: 32px;
+  color: #000000 !important;
 }
 
 /* Make sure floating menu respects safe areas and doesn't go off-screen */
 .floating-menu-container {
   /* Ensure it never goes off-screen */
   max-width: calc(100vw - 60px); /* Account for button width + padding */
+  /* Improve touch responsiveness */
+  touch-action: manipulation;
+}
+
+/* Ensure menu items have good touch targets */
+.mobile-apk-overlay .mobile-menu-item {
+  min-height: 44px; /* iOS recommended touch target size */
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Improve floating button touch responsiveness */
+.floating-menu-btn {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  cursor: pointer;
+  user-select: none;
+  /* Prevent context menu on long press */
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
 }
 
 @supports (padding: max(0px)) {
@@ -3531,8 +3574,20 @@
   }
   
   .floating-menu-btn {
-    width: 44px;
-    height: 44px;
+    width: 40px; /* Made even smaller for better mobile experience */
+    height: 40px;
+  }
+  
+  /* Make APK menu even smaller on small screens */
+  .mobile-apk-overlay .mobile-menu-content {
+    max-width: 260px;
+    margin: var(--space-4);
+    margin-right: var(--space-3);
+  }
+  
+  .mobile-apk-overlay .mobile-menu-item {
+    padding: var(--space-2-5) var(--space-3);
+    font-size: var(--text-xs);
   }
 }
 

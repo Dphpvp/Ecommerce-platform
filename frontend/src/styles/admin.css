@@ -1282,16 +1282,84 @@
   border-top: 1px solid var(--color-border);
 }
 
-/* Responsive Design */
+/* Responsive Design - Make profile page smaller and centered on mobile */
 @media (max-width: 768px) {
+  /* Make profile page smaller and more centered on mobile */
+  .luxury-profile-page {
+    padding: var(--space-4) 0;
+  }
+  
+  .luxury-profile-page .container {
+    max-width: 600px; /* Smaller max-width for mobile */
+    padding: 0 var(--space-4);
+  }
+  
+  .luxury-profile-header {
+    margin-bottom: var(--space-6);
+    padding: var(--space-6) 0;
+  }
+  
+  .profile-title {
+    font-size: var(--text-2xl); /* Smaller title */
+  }
+  
+  .profile-subtitle {
+    font-size: var(--text-sm); /* Smaller subtitle */
+  }
+  
+  .luxury-avatar-section {
+    margin-bottom: var(--space-6);
+  }
+  
   .avatar-container-luxury {
     flex-direction: column;
     text-align: center;
     gap: var(--space-4);
   }
   
+  .avatar-frame {
+    width: 80px; /* Smaller avatar */
+    height: 80px;
+    margin: 0 auto;
+  }
+  
   .avatar-info {
     text-align: center;
+  }
+  
+  .user-name {
+    font-size: var(--text-lg); /* Smaller name */
+  }
+  
+  .user-role {
+    font-size: var(--text-sm); /* Smaller role */
+  }
+  
+  .luxury-profile-content {
+    gap: var(--space-6); /* Smaller gaps */
+  }
+  
+  .profile-main-card {
+    margin: 0; /* Remove any extra margins */
+  }
+  
+  .card-header {
+    padding: var(--space-4) var(--space-5); /* Smaller header padding */
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-4);
+  }
+  
+  .card-content {
+    padding: var(--space-4) var(--space-5); /* Smaller content padding */
+  }
+  
+  .card-title {
+    font-size: var(--text-lg); /* Smaller card title */
+  }
+  
+  .card-subtitle {
+    font-size: var(--text-sm); /* Smaller card subtitle */
   }
   
   .avatar-grid {
@@ -1302,6 +1370,20 @@
   .avatar-option {
     width: 60px;
     height: 60px;
+  }
+  
+  /* Smaller sections */
+  .security-section,
+  .addresses-section,
+  .admin-section {
+    padding: var(--space-5); /* Smaller section padding */
+    margin-bottom: var(--space-5);
+  }
+  
+  .security-section h2,
+  .addresses-section h2,
+  .admin-section h2 {
+    font-size: var(--text-lg); /* Smaller section titles */
   }
   
   .avatar-modal {
@@ -1327,6 +1409,73 @@
     flex-direction: column;
     align-items: flex-start;
     gap: var(--space-3);
+  }
+}
+
+/* Extra small mobile screens - Further optimize profile page */
+@media (max-width: 480px) {
+  .luxury-profile-page .container {
+    max-width: 100%; /* Full width on very small screens */
+    padding: 0 var(--space-3);
+  }
+  
+  .luxury-profile-header {
+    padding: var(--space-4) 0;
+    margin-bottom: var(--space-4);
+  }
+  
+  .profile-title {
+    font-size: var(--text-xl); /* Even smaller title */
+  }
+  
+  .profile-subtitle {
+    font-size: var(--text-xs); /* Even smaller subtitle */
+  }
+  
+  .avatar-frame {
+    width: 60px; /* Even smaller avatar */
+    height: 60px;
+  }
+  
+  .card-header,
+  .card-content {
+    padding: var(--space-3) var(--space-4); /* Even smaller padding */
+  }
+  
+  .card-title {
+    font-size: var(--text-base); /* Even smaller card title */
+  }
+  
+  .luxury-profile-content {
+    gap: var(--space-4); /* Even smaller gaps */
+  }
+  
+  .security-section,
+  .addresses-section,
+  .admin-section {
+    padding: var(--space-4); /* Even smaller section padding */
+    margin-bottom: var(--space-4);
+  }
+  
+  .btn-change-avatar {
+    font-size: var(--text-sm); /* Smaller button text */
+    padding: var(--space-2) var(--space-3);
+  }
+  
+  /* Make form elements more compact */
+  .luxury-form .form-group {
+    margin-bottom: var(--space-4);
+  }
+  
+  .luxury-form input,
+  .luxury-form textarea {
+    font-size: var(--text-sm);
+    padding: var(--space-3);
+  }
+  
+  .luxury-form label {
+    font-size: var(--text-sm);
+    margin-bottom: var(--space-2);
   }
 }
 

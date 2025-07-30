@@ -14,6 +14,7 @@ import android.webkit.WebViewClient;
 import android.webkit.JavascriptInterface;
 import android.net.http.SslError;
 import android.webkit.SslErrorHandler;
+import android.widget.Toast;
 
 import androidx.webkit.WebViewFeature;
 import androidx.webkit.WebSettingsCompat;
@@ -24,6 +25,8 @@ import com.google.android.gms.common.GoogleApiAvailability;
 
 public class MainActivity extends BridgeActivity {
     private static final String TAG = "VergiShop";
+    private boolean doubleBackToExitPressedOnce = false;
+    private static final int DOUBLE_TAP_INTERVAL = 2000; // 2 seconds
     
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -210,5 +213,33 @@ public class MainActivity extends BridgeActivity {
     public void onResume() {
         super.onResume();
         checkGooglePlayServices();
+    }
+    
+    @Override
+    public void onBackPressed() {
+        WebView webView = getBridge().getWebView();
+        
+        // First check if web view can go back
+        if (webView != null && webView.canGoBack()) {
+            webView.goBack();
+            return;
+        }
+        
+        // If we're at the root, implement double tap to exit
+        if (doubleBackToExitPressedOnce) {
+            super.onBackPressed();
+            return;
+        }
+        
+        this.doubleBackToExitPressedOnce = true;
+        Toast.makeText(this, "Press back again to exit", Toast.LENGTH_SHORT).show();
+        
+        // Reset the double tap flag after interval
+        new android.os.Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                doubleBackToExitPressedOnce = false;
+            }
+        }, DOUBLE_TAP_INTERVAL);
     }
 }

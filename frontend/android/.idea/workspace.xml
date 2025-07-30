@@ -17,8 +17,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6f24bd5f-c9f7-438a-b820-b3d6f5c93ad0" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/asset-manifest.json" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/public/asset-manifest.json" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/assets/public/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/assets/public/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -28,7 +27,7 @@
   <component name="ClangdSettings">
     <option name="formatViaClangd" value="false" />
   </component>
-  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[DeviceId(pluginId=PhysicalDevice, isTemplate=false, identifier=serial=R5CWA2AFWXR)]" />
+  <component name="ExecutionTargetManager" SELECTED_TARGET="device_and_snapshot_combo_box_target[]" />
   <component name="ExternalProjectsData">
     <projectState path="$PROJECT_DIR$">
       <ProjectState />
@@ -94,7 +93,7 @@
   </component>
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
-    &quot;Android App.app.executor&quot;: &quot;Run&quot;,
+    &quot;Android App.app.executor&quot;: &quot;Debug&quot;,
     &quot;ApkExportedModule&quot;: &quot;android.app&quot;,
     &quot;DEBUGGABLE_DEVICE&quot;: &quot;samsung-sm_s918b-R5CWA2AFWXR&quot;,
     &quot;DEBUGGABLE_PROCESS&quot;: &quot;com.vergishop.app&quot;,
