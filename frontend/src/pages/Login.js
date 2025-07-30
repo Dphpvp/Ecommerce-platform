@@ -191,31 +191,67 @@ const Login = ({ isSliderMode = false }) => {
 
   const handleGoogleLogin = async () => {
     try {
+      console.log('🔍 Google login attempt starting...');
+      console.log('Environment check:', {
+        googleClientId: process.env.REACT_APP_GOOGLE_CLIENT_ID ? 'Set' : 'Not set',
+        isMobile: platformDetection.isMobile,
+        hasCapacitor: !!window.Capacitor,
+        hasGoogleScript: !!(window.google && window.google.accounts)
+      });
+
       // Check if running on mobile (Capacitor)
       if (platformDetection.isMobile && window.Capacitor) {
+        console.log('📱 Using mobile Google login');
         await handleMobileGoogleLogin();
         return;
       }
 
-      // Web Google Login
+      // Web Google Login - Wait for script to load if needed
       if (!window.google || !window.google.accounts) {
-        showToast('Google services not available. Please try again later.', 'error');
+        console.log('⏳ Waiting for Google services to load...');
+        // Wait a bit for the script to load
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        if (!window.google || !window.google.accounts) {
+          console.error('❌ Google services not available after waiting');
+          showToast('Google services not available. Please refresh the page and try again.', 'error');
+          return;
+        }
+      }
+
+      if (!process.env.REACT_APP_GOOGLE_CLIENT_ID) {
+        console.error('❌ Google Client ID not configured');
+        showToast('Google login not configured. Please contact support.', 'error');
         return;
       }
 
-      // Initialize Google OAuth for web
-      window.google.accounts.id.initialize({
-        client_id: process.env.REACT_APP_GOOGLE_CLIENT_ID,
-        callback: handleGoogleResponse,
-        auto_select: false,
-        cancel_on_tap_outside: true
-      });
+      console.log('🌐 Initializing web Google login');
 
-      // Prompt for Google account selection
-      window.google.accounts.id.prompt();
+      // Initialize Google OAuth for web with error handling
+      try {
+        window.google.accounts.id.initialize({
+          client_id: process.env.REACT_APP_GOOGLE_CLIENT_ID,
+          callback: handleGoogleResponse,
+          auto_select: false,
+          cancel_on_tap_outside: true,
+          use_fedcm_for_prompt: false
+        });
+
+        // Prompt for Google account selection
+        window.google.accounts.id.prompt((notification) => {
+          console.log('Google prompt notification:', notification);
+          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+            console.log('Google prompt was not displayed or skipped');
+            showToast('Google login prompt not available. Please try again.', 'warning');
+          }
+        });
+      } catch (initError) {
+        console.error('Google initialization error:', initError);
+        showToast('Failed to initialize Google login. Please try again.', 'error');
+      }
     } catch (error) {
-      console.error('Google login initialization error:', error);
-      showToast('Failed to initialize Google login', 'error');
+      console.error('❌ Google login initialization error:', error);
+      showToast('Failed to initialize Google login: ' + error.message, 'error');
     }
   };
 
@@ -495,31 +531,45 @@ const Login = ({ isSliderMode = false }) => {
           json: async () => httpResponse.data
         };
       } else {
-        console.log('🌐 Using regular fetch for Google auth');
+        console.log('🌐 Using secureFetch for Google auth');
         console.log('📦 Body being sent:', JSON.stringify(requestBody));
         
-        // Try direct fetch instead of secureFetch to isolate the issue
-        result = await fetch(`${API_BASE}/auth/google`, {
+        // Use secureFetch for proper CSRF handling
+        result = await secureFetch(`${API_BASE}/auth/google`, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
             'X-Platform': response.platform || 'web'
           },
-          body: JSON.stringify(requestBody),
-          credentials: 'include'
+          body: JSON.stringify(requestBody)
         });
       }
 
       const data = await result.json();
+      
+      console.log('🔍 Google auth response:', {
+        status: result.status,
+        ok: result.ok,
+        dataType: typeof data,
+        hasToken: !!(data && data.token),
+        hasUser: !!(data && data.user),
+        dataKeys: data ? Object.keys(data) : []
+      });
 
       if (result.ok) {
         console.log('✅ Google authentication successful');
         
         if (data.token) {
           localStorage.setItem('auth_token', data.token);
+          console.log('🔑 Token stored in localStorage');
         }
         
-        login(data.user);
+        if (data.user) {
+          login(data.user);
+          console.log('👤 User logged in:', data.user.email || data.user.username || 'no identifier');
+        } else {
+          console.warn('⚠️ No user data in response');
+        }
+        
         showToast('Google login successful!', 'success');
         
         // Add haptic feedback for mobile
@@ -529,8 +579,28 @@ const Login = ({ isSliderMode = false }) => {
         
         navigate('/');
       } else {
-        console.error('❌ Google authentication failed:', typeof data === 'object' ? JSON.stringify(data) : data);
-        const errorMessage = (typeof data === 'object' ? data.detail || data.message : data) || 'Google login failed';
+        console.error('❌ Google authentication failed:', {
+          status: result.status,
+          statusText: result.statusText || 'Unknown',
+          data: typeof data === 'object' ? JSON.stringify(data, null, 2) : data
+        });
+        
+        let errorMessage = 'Google login failed';
+        if (data && typeof data === 'object') {
+          errorMessage = data.detail || data.message || data.error || errorMessage;
+        } else if (typeof data === 'string') {
+          errorMessage = data;
+        }
+        
+        // Add status-specific error messages
+        if (result.status === 401) {
+          errorMessage = 'Invalid Google token. Please try again.';
+        } else if (result.status === 403) {
+          errorMessage = 'Google login not authorized. Please contact support.';
+        } else if (result.status >= 500) {
+          errorMessage = 'Server error during Google login. Please try again later.';
+        }
+        
         showToast(errorMessage, 'error');
       }
     } catch (error) {
@@ -638,6 +708,18 @@ const Login = ({ isSliderMode = false }) => {
             <p className="auth-note-text">
               By continuing, you agree to our Terms of Service and Privacy Policy
             </p>
+            
+            {/* Mobile App Only - Register Link */}
+            {platformDetection.isMobile && window.Capacitor?.isNativePlatform && (
+              <div className="mobile-register-link">
+                <p className="register-prompt">
+                  Don't have an account?{' '}
+                  <Link to="/register" className="register-link">
+                    Register here
+                  </Link>
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>

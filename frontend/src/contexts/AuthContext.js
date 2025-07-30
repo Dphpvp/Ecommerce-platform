@@ -80,23 +80,43 @@ export const AuthProvider = ({ children }) => {
   // Better session fetching with proper state management
   const fetchUser = useCallback(async () => {
     try {
+      // Check both localStorage token and session cookies
+      const authToken = localStorage.getItem('auth_token');
+      const headers = {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      };
+      
+      if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
+      }
+      
       const response = await fetch(`${API_BASE}/auth/me`, {
         method: 'GET',
         credentials: 'include',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
+        headers: headers,
         cache: 'no-cache'
       });
       
       if (response.ok) {
         const userData = await response.json();
-        console.log('User session found:', userData.username);
+        console.log('✅ User session found:', {
+          username: userData.username,
+          email: userData.email,
+          isAdmin: userData.is_admin
+        });
+        
+        // Store token if provided in response
+        if (userData.token) {
+          localStorage.setItem('auth_token', userData.token);
+        }
+        
         setUser(userData);
         return userData;
       } else if (response.status === 401) {
-        // 401 is expected when not logged in - no need to log as error
+        // 401 is expected when not logged in - clear any stale tokens
+        console.log('🔐 No valid session found, clearing auth data');
+        localStorage.removeItem('auth_token');
         setUser(null);
         return null;
       } else {
@@ -201,37 +221,89 @@ export const AuthProvider = ({ children }) => {
   // Enhanced authenticated request using secureFetch with platform support
   const makeAuthenticatedRequest = useCallback(async (url, options = {}) => {
     try {
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`🌐 Making authenticated request to ${url}`);
+      console.log(`🌐 Making authenticated request to ${url}`);
+      console.log('🔍 Current auth state:', {
+        hasUser: !!user,
+        userEmail: user?.email,
+        isAdmin: user?.is_admin,
+        hasToken: !!localStorage.getItem('auth_token')
+      });
+      
+      // First, try with auth token if available
+      let requestOptions = { ...options };
+      const authToken = localStorage.getItem('auth_token');
+      if (authToken) {
+        requestOptions.headers = {
+          ...requestOptions.headers,
+          'Authorization': `Bearer ${authToken}`
+        };
       }
       
-      const response = await secureFetch(url, options);
+      const response = await secureFetch(url, requestOptions);
       
       if (response.status === 401) {
-        console.log('🔄 Got 401, checking session...');
+        console.log('🔄 Got 401, checking session and token...');
         
-        // Check if we still have a valid session
-        const sessionCheck = await secureFetch(`${API_BASE}/auth/me`, {
-          method: 'GET'
-        });
+        // Clear potentially expired token
+        localStorage.removeItem('auth_token');
+        
+        // Check if we still have a valid session with cookies
+        let sessionCheck;
+        try {
+          sessionCheck = await fetch(`${API_BASE}/auth/me`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            }
+          });
+        } catch (sessionError) {
+          console.error('Session check failed:', sessionError);
+          setUser(null);
+          throw new Error('Network error during authentication check');
+        }
         
         if (sessionCheck.ok) {
-          console.log('✅ Session still valid, retrying request');
+          console.log('✅ Session still valid, updating user and retrying request');
           const userData = await sessionCheck.json();
           setUser(userData);
           
-          // Retry original request
-          const retryResponse = await secureFetch(url, options);
+          // Update token if provided in response
+          if (userData.token) {
+            localStorage.setItem('auth_token', userData.token);
+            requestOptions.headers = {
+              ...requestOptions.headers,
+              'Authorization': `Bearer ${userData.token}`
+            };
+          }
+          
+          // Retry original request with updated credentials
+          const retryResponse = await secureFetch(url, requestOptions);
           
           if (!retryResponse.ok) {
             const errorData = await retryResponse.json().catch(() => ({}));
+            console.error('❌ Retry request failed:', { status: retryResponse.status, error: errorData });
+            
+            if (retryResponse.status === 401) {
+              setUser(null);
+              localStorage.removeItem('auth_token');
+              throw new Error('Authentication required');
+            }
+            
             throw new Error(errorData.detail || `HTTP error! status: ${retryResponse.status}`);
           }
           
           return await retryResponse.json();
         } else {
           console.log('❌ Session invalid, logging out');
+          console.log('Session check response:', {
+            status: sessionCheck.status,
+            statusText: sessionCheck.statusText
+          });
+          
           setUser(null);
+          localStorage.removeItem('auth_token');
           await platformDetection.showToast('Session expired. Please login again.', 3000);
           throw new Error('Authentication required');
         }
@@ -239,12 +311,18 @@ export const AuthProvider = ({ children }) => {
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        console.error('❌ Request failed:', { status: response.status, error: errorData });
         throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
       }
       
       return await response.json();
     } catch (error) {
-      console.error('🚨 Authenticated request failed:', error);
+      console.error('🚨 Authenticated request failed:', {
+        message: error.message,
+        url: url,
+        hasUser: !!user,
+        hasToken: !!localStorage.getItem('auth_token')
+      });
       
       // Enhanced mobile error handling
       if (error.name === 'TypeError' && error.message.includes('fetch')) {
@@ -253,7 +331,7 @@ export const AuthProvider = ({ children }) => {
       
       throw error;
     }
-  }, []);
+  }, [user]);
 
   const checkAuthStatus = useCallback(async () => {
     try {
