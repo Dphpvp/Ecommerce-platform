@@ -3726,6 +3726,38 @@
   text-decoration: none;
 }
 
+/* Enhanced mobile styling for registration link */
+@media (max-width: 768px) {
+  .mobile-register-link {
+    margin-top: var(--space-8);
+    padding: var(--space-6) var(--space-4);
+    background-color: var(--color-surface-secondary);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--color-border);
+    border-top: 1px solid var(--color-border);
+  }
+  
+  .mobile-register-link .register-prompt {
+    font-size: var(--text-lg);
+    font-weight: var(--font-medium);
+  }
+  
+  .mobile-register-link .register-link {
+    font-size: var(--text-lg);
+    font-weight: var(--font-bold);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-md);
+    display: inline-block;
+    margin-left: var(--space-2);
+  }
+  
+  .mobile-register-link .register-link:hover,
+  .mobile-register-link .register-link:active {
+    background-color: var(--color-primary-50);
+    transform: translateY(-1px);
+  }
+}
+
 /* Update existing auth form styles for Google-only layout */
 .modern-auth-form .auth-form {
   display: flex;

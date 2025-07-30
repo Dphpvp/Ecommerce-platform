@@ -750,12 +750,12 @@ const Login = ({ isSliderMode = false }) => {
             Continue with Google
           </button>
           
-          {/* Register Link */}
-          <div className="auth-register-link">
+          {/* Register Link - Enhanced for Mobile */}
+          <div className="auth-register-link mobile-register-link">
             <p className="register-prompt">
               Don't have an account?{' '}
               <Link to="/register" className="register-link">
-                Sign up here
+                Register here
               </Link>
             </p>
           </div>
@@ -849,12 +849,12 @@ const Login = ({ isSliderMode = false }) => {
             Continue with Google
           </button>
           
-          {/* Register Link - Show on all platforms */}
-          <div className="auth-register-link">
+          {/* Register Link - Enhanced for Mobile */}
+          <div className="auth-register-link mobile-register-link">
             <p className="register-prompt">
               Don't have an account?{' '}
               <Link to="/register" className="register-link">
-                Sign up here
+                Register here
               </Link>
             </p>
           </div>
