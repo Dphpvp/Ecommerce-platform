@@ -24,6 +24,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import BackToTop from './components/BackToTop';
 import LoadingSpinner, { PageSkeleton } from './components/LoadingSpinner';
 import { PageSuspense, AdminSuspense, AuthSuspense } from './components/SuspenseBoundary';
+import SessionStatus from './components/SessionStatus';
 
 // Lazy loaded page components for code splitting
 const Home = React.lazy(() => import('./pages/Home'));
@@ -156,6 +157,7 @@ const App = () => {
                   <div className="app">
                     <Navigation />
                     <BackToTop />
+                    <SessionStatus />
                     <ParallaxContainer>
                     <main className="main">
                       <Routes>
