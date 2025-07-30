@@ -648,14 +648,67 @@ const Login = ({ isSliderMode = false }) => {
       <div className="modern-auth-form">
         <div className="auth-header">
           <h2 className="auth-title">Welcome Back</h2>
-          <p className="auth-subtitle">Sign in with your Google account</p>
+          <p className="auth-subtitle">Sign in to your account</p>
         </div>
         
         <div className="auth-form">
-          {/* Google Login - Primary Action */}
+          {/* Email/Password Login Form */}
+          <SecureForm
+            onSubmit={handleSubmit}
+            validate={validateForm}
+            className="login-form"
+          >
+            <div className="form-group">
+              <label htmlFor="identifier">Email or Username</label>
+              <input
+                type="text"
+                id="identifier"
+                name="identifier"
+                placeholder="Enter your email or username"
+                required
+                autoComplete="username"
+              />
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="password">Password</label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                placeholder="Enter your password"
+                required
+                autoComplete="current-password"
+              />
+            </div>
+            
+            <button 
+              type="submit" 
+              className="auth-btn primary"
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="animate-spin">
+                    <path d="M21 12a9 9 0 11-6.219-8.56"/>
+                  </svg>
+                  Signing in...
+                </>
+              ) : (
+                'Sign In'
+              )}
+            </button>
+          </SecureForm>
+          
+          {/* Divider */}
+          <div className="auth-divider">
+            <span>or</span>
+          </div>
+          
+          {/* Google Login - Secondary Action */}
           <button 
             type="button"
-            className="google-btn-primary"
+            className="google-btn-secondary"
             onClick={handleGoogleLogin}
             disabled={loading}
           >
@@ -665,8 +718,18 @@ const Login = ({ isSliderMode = false }) => {
               <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
               <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
             </svg>
-            {loading ? 'Signing in...' : 'Continue with Google'}
+            Continue with Google
           </button>
+          
+          {/* Register Link */}
+          <div className="auth-register-link">
+            <p className="register-prompt">
+              Don't have an account?{' '}
+              <Link to="/register" className="register-link">
+                Sign up here
+              </Link>
+            </p>
+          </div>
           
           <div className="auth-note">
             <p className="auth-note-text">
@@ -684,14 +747,67 @@ const Login = ({ isSliderMode = false }) => {
       <div className="modern-auth-form">
         <div className="auth-header">
           <h2 className="auth-title">Welcome Back</h2>
-          <p className="auth-subtitle">Sign in with your Google account</p>
+          <p className="auth-subtitle">Sign in to your account</p>
         </div>
         
         <div className="auth-form">
-          {/* Google Login - Primary Action */}
+          {/* Email/Password Login Form */}
+          <SecureForm
+            onSubmit={handleSubmit}
+            validate={validateForm}
+            className="login-form"
+          >
+            <div className="form-group">
+              <label htmlFor="identifier">Email or Username</label>
+              <input
+                type="text"
+                id="identifier"
+                name="identifier"
+                placeholder="Enter your email or username"
+                required
+                autoComplete="username"
+              />
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="password">Password</label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                placeholder="Enter your password"
+                required
+                autoComplete="current-password"
+              />
+            </div>
+            
+            <button 
+              type="submit" 
+              className="auth-btn primary"
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="animate-spin">
+                    <path d="M21 12a9 9 0 11-6.219-8.56"/>
+                  </svg>
+                  Signing in...
+                </>
+              ) : (
+                'Sign In'
+              )}
+            </button>
+          </SecureForm>
+          
+          {/* Divider */}
+          <div className="auth-divider">
+            <span>or</span>
+          </div>
+          
+          {/* Google Login - Secondary Action */}
           <button 
             type="button"
-            className="google-btn-primary"
+            className="google-btn-secondary"
             onClick={handleGoogleLogin}
             disabled={loading}
           >
@@ -701,25 +817,23 @@ const Login = ({ isSliderMode = false }) => {
               <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
               <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
             </svg>
-            {loading ? 'Signing in...' : 'Continue with Google'}
+            Continue with Google
           </button>
+          
+          {/* Register Link - Show on all platforms */}
+          <div className="auth-register-link">
+            <p className="register-prompt">
+              Don't have an account?{' '}
+              <Link to="/register" className="register-link">
+                Sign up here
+              </Link>
+            </p>
+          </div>
           
           <div className="auth-note">
             <p className="auth-note-text">
               By continuing, you agree to our Terms of Service and Privacy Policy
             </p>
-            
-            {/* Mobile App Only - Register Link */}
-            {platformDetection.isMobile && window.Capacitor?.isNativePlatform && (
-              <div className="mobile-register-link">
-                <p className="register-prompt">
-                  Don't have an account?{' '}
-                  <Link to="/register" className="register-link">
-                    Register here
-                  </Link>
-                </p>
-              </div>
-            )}
           </div>
         </div>
       </div>

@@ -73,14 +73,14 @@ public class MainActivity extends BridgeActivity {
             settings.setMixedContentMode(WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE);
         }
         
-        // Enhanced settings for reCAPTCHA compatibility
+        // Enhanced settings for reCAPTCHA compatibility and user zoom controls
         settings.setAllowContentAccess(true);
         settings.setAllowFileAccess(true);
         settings.setLoadWithOverviewMode(true);
         settings.setUseWideViewPort(true);
-        settings.setBuiltInZoomControls(false);
-        settings.setSupportZoom(false);
-        settings.setDisplayZoomControls(false);
+        settings.setBuiltInZoomControls(true);
+        settings.setSupportZoom(true);
+        settings.setDisplayZoomControls(false); // Hide default zoom controls, use custom ones
         
         // Security settings
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
