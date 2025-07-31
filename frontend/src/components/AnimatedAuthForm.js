@@ -82,8 +82,12 @@ const AnimatedAuthForm = () => {
           json: async () => httpResponse.data
         };
       } else {
-        response = await secureFetch(`${API_BASE}/auth/login`, {
+        response = await fetch(`${API_BASE}/auth/login`, {
           method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
           body: JSON.stringify(formDataWithAuth),
         });
       }

@@ -40,58 +40,14 @@ const Login = ({ isSliderMode = false }) => {
     formDataWithAuth.recaptcha_response = 'NO_CAPTCHA_YET';
     
     try {
-      console.log('🔐 Sending login request:', {
-        identifier: formDataWithAuth.identifier,
-        passwordLength: formDataWithAuth.password?.length,
-        isMobile: platformDetection.isMobile,
-        hasCaptcha: !!formDataWithAuth.recaptcha_response,
-        apiBase: API_BASE
+      const response = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(formDataWithAuth),
       });
-
-      // Use Capacitor HTTP for mobile to avoid CORS issues
-      let response;
-      if (platformDetection.isMobile && (window.Capacitor?.Plugins?.CapacitorHttp || window.CapacitorHttp)) {
-        console.log('📱 Using Capacitor HTTP for mobile request');
-        
-        // Try modern import first, then fallback to legacy
-        const CapacitorHttpPlugin = window.Capacitor?.Plugins?.CapacitorHttp || 
-                                   window.CapacitorHttp || 
-                                   window.Capacitor?.Plugins?.Http;
-        
-        if (!CapacitorHttpPlugin) {
-          console.warn('⚠️ Capacitor HTTP not available, falling back to regular fetch');
-          response = await secureFetch(`${API_BASE}/auth/login`, {
-            method: 'POST',
-            body: JSON.stringify(formDataWithAuth),
-          });
-        } else {
-          const httpResponse = await CapacitorHttpPlugin.request({
-            url: `${API_BASE}/auth/login`,
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              ...platformDetection.getPlatformHeaders()
-            },
-            data: formDataWithAuth
-          });
-          
-          
-          // Convert Capacitor HTTP response to fetch-like response
-          response = {
-            ok: httpResponse.status >= 200 && httpResponse.status < 300,
-            status: httpResponse.status,
-            statusText: httpResponse.status >= 200 && httpResponse.status < 300 ? 'OK' : 'Error',
-            json: async () => httpResponse.data,
-            url: httpResponse.url
-          };
-        }
-      } else {
-        // Use regular fetch for web
-        response = await secureFetch(`${API_BASE}/auth/login`, {
-          method: 'POST',
-          body: JSON.stringify(formDataWithAuth),
-        });
-      }
 
       const data = await response.json();
 

@@ -42,13 +42,14 @@ const Register = ({ isSliderMode = false }) => {
     };
     
     try {
-      const response = await secureFetch(
-        `${process.env.REACT_APP_API_BASE_URL}/auth/register`,
-        {
-          method: 'POST',
-          body: JSON.stringify(formDataWithPhone),
-        }
-      );
+      const response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/auth/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(formDataWithPhone),
+      });
 
       if (response.ok) {
         const result = await response.json();
