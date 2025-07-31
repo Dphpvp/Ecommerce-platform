@@ -42,13 +42,33 @@ const Register = ({ isSliderMode = false }) => {
     };
     
     try {
-      const response = await secureFetch(
-        `${process.env.REACT_APP_API_BASE_URL}/auth/register`,
-        {
+      console.log('🌐 Using web fetch for register request');
+      
+      // Try simple fetch first for debugging
+      console.log('🔍 Attempting simple fetch first...');
+      let response;
+      try {
+        response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/auth/register`, {
           method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
           body: JSON.stringify(formDataWithPhone),
-        }
-      );
+        });
+        console.log('✅ Simple fetch succeeded:', response.status);
+      } catch (simpleError) {
+        console.error('🚨 Simple fetch failed, trying secureFetch:', simpleError);
+        
+        response = await secureFetch(
+          `${process.env.REACT_APP_API_BASE_URL}/auth/register`,
+          {
+            method: 'POST',
+            body: JSON.stringify(formDataWithPhone),
+          }
+        );
+        console.log('✅ SecureFetch succeeded:', response.status);
+      }
 
       if (response.ok) {
         const result = await response.json();
@@ -274,6 +294,16 @@ const Register = ({ isSliderMode = false }) => {
             {loading ? 'Creating Account...' : 'Continue with Google'}
           </button>
           
+          {/* Login Link */}
+          <div className="auth-register-link">
+            <p className="register-prompt">
+              Already have an account?{' '}
+              <Link to="/login" className="register-link">
+                Sign in here
+              </Link>
+            </p>
+          </div>
+          
           <div className="auth-note">
             <p className="auth-note-text">
               By continuing, you agree to our Terms of Service and Privacy Policy
@@ -309,6 +339,16 @@ const Register = ({ isSliderMode = false }) => {
             </svg>
             {loading ? 'Creating Account...' : 'Continue with Google'}
           </button>
+          
+          {/* Login Link */}
+          <div className="auth-register-link">
+            <p className="register-prompt">
+              Already have an account?{' '}
+              <Link to="/login" className="register-link">
+                Sign in here
+              </Link>
+            </p>
+          </div>
           
           <div className="auth-note">
             <p className="auth-note-text">
