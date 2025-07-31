@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
-import { secureFetch } from '../utils/csrf';
 import platformDetection from '../utils/platformDetection';
 import notificationService from '../utils/notificationService';
 import sessionManager from '../utils/sessionManager';
@@ -26,8 +25,9 @@ export const AuthProvider = ({ children }) => {
     
     try {
       // Call backend logout endpoint
-      await secureFetch(`${API_BASE}/auth/logout`, {
-        method: 'POST'
+      await fetch(`${API_BASE}/auth/logout`, {
+        method: 'POST',
+        credentials: 'include'
       });
     } catch (error) {
       console.error('Backend logout error:', error);
@@ -408,7 +408,10 @@ export const AuthProvider = ({ children }) => {
         };
       }
       
-      const response = await secureFetch(url, requestOptions);
+      const response = await fetch(url, {
+        ...requestOptions,
+        credentials: 'include'
+      });
       
       if (response.status === 401) {
         console.log('🔄 Got 401, checking session and token...');
@@ -448,7 +451,10 @@ export const AuthProvider = ({ children }) => {
           }
           
           // Retry original request with updated credentials
-          const retryResponse = await secureFetch(url, requestOptions);
+          const retryResponse = await fetch(url, {
+            ...requestOptions,
+            credentials: 'include'
+          });
           
           if (!retryResponse.ok) {
             const errorData = await retryResponse.json().catch(() => ({}));

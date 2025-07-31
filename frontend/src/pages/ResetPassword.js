@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useToastContext } from '../components/toast';
-import { secureFetch } from '../utils/csrf';
 import platformDetection from '../utils/platformDetection';
 import '../styles/index.css';
 // Styles included in main theme
@@ -80,8 +79,12 @@ const ResetPassword = () => {
       loadingIndicator = await platformDetection.showLoading('Sending reset email...');
       if (loadingIndicator?.present) await loadingIndicator.present();
 
-      const response = await secureFetch(`${API_BASE}/auth/request-password-reset`, {
+      const response = await fetch(`${API_BASE}/auth/request-password-reset`, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
         body: JSON.stringify({
           email: requestForm.email,
           recaptcha_response: 'NO_CAPTCHA_YET'

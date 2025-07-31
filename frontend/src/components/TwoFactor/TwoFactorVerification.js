@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToastContext } from '../toast';
-import { secureFetch } from '../../utils/csrf';
 import platformDetection from '../../utils/platformDetection';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
@@ -22,8 +21,12 @@ const TwoFactorVerification = ({ tempToken, onSuccess, onCancel }) => {
       loadingIndicator = await platformDetection.showLoading('Sending verification code...');
       if (loadingIndicator?.present) await loadingIndicator.present();
 
-      const response = await secureFetch(`${API_BASE}/auth/send-2fa-email`, {
+      const response = await fetch(`${API_BASE}/auth/send-2fa-email`, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
         body: JSON.stringify({ temp_token: tempToken })
       });
 
@@ -63,8 +66,12 @@ const TwoFactorVerification = ({ tempToken, onSuccess, onCancel }) => {
       loadingIndicator = await platformDetection.showLoading('Verifying code...');
       if (loadingIndicator?.present) await loadingIndicator.present();
 
-      const response = await secureFetch(`${API_BASE}/auth/verify-2fa`, {
+      const response = await fetch(`${API_BASE}/auth/verify-2fa`, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
         body: JSON.stringify({ temp_token: tempToken, code })
       });
 
