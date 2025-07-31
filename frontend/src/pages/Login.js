@@ -45,32 +45,53 @@ const Login = ({ isSliderMode = false }) => {
         passwordLength: formDataWithAuth.password?.length,
         isMobile: platformDetection.isMobile,
         hasCaptcha: !!formDataWithAuth.recaptcha_response,
-        apiBase: API_BASE
+        apiBase: API_BASE,
+        platform: platformDetection.platform,
+        userAgent: navigator.userAgent.substring(0, 50)
       });
 
       // Use Capacitor HTTP for mobile to avoid CORS issues
       let response;
-      if (platformDetection.isMobile && window.Capacitor?.Plugins?.CapacitorHttp) {
+      if (platformDetection.isMobile && (window.Capacitor?.Plugins?.CapacitorHttp || window.CapacitorHttp)) {
         console.log('📱 Using Capacitor HTTP for mobile request');
         
-        const httpResponse = await window.Capacitor.Plugins.CapacitorHttp.request({
-          url: `${API_BASE}/auth/login`,
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...platformDetection.getPlatformHeaders()
-          },
-          data: formDataWithAuth
-        });
+        // Try modern import first, then fallback to legacy
+        const CapacitorHttpPlugin = window.Capacitor?.Plugins?.CapacitorHttp || 
+                                   window.CapacitorHttp || 
+                                   window.Capacitor?.Plugins?.Http;
         
-        // Convert Capacitor HTTP response to fetch-like response
-        response = {
-          ok: httpResponse.status >= 200 && httpResponse.status < 300,
-          status: httpResponse.status,
-          statusText: httpResponse.status >= 200 && httpResponse.status < 300 ? 'OK' : 'Error',
-          json: async () => httpResponse.data,
-          url: httpResponse.url
-        };
+        if (!CapacitorHttpPlugin) {
+          console.warn('⚠️ Capacitor HTTP not available, falling back to regular fetch');
+          response = await secureFetch(`${API_BASE}/auth/login`, {
+            method: 'POST',
+            body: JSON.stringify(formDataWithAuth),
+          });
+        } else {
+          const httpResponse = await CapacitorHttpPlugin.request({
+            url: `${API_BASE}/auth/login`,
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...platformDetection.getPlatformHeaders()
+            },
+            data: formDataWithAuth
+          });
+          
+          console.log('📱 Capacitor HTTP response:', {
+            status: httpResponse.status,
+            dataKeys: httpResponse.data ? Object.keys(httpResponse.data) : [],
+            hasData: !!httpResponse.data
+          });
+          
+          // Convert Capacitor HTTP response to fetch-like response
+          response = {
+            ok: httpResponse.status >= 200 && httpResponse.status < 300,
+            status: httpResponse.status,
+            statusText: httpResponse.status >= 200 && httpResponse.status < 300 ? 'OK' : 'Error',
+            json: async () => httpResponse.data,
+            url: httpResponse.url
+          };
+        }
       } else {
         // Use regular fetch for web
         response = await secureFetch(`${API_BASE}/auth/login`, {
@@ -81,8 +102,22 @@ const Login = ({ isSliderMode = false }) => {
 
       const data = await response.json();
 
+      console.log('📊 Login response details:', {
+        status: response.status,
+        ok: response.ok,
+        dataKeys: data ? Object.keys(data) : [],
+        hasToken: !!(data && data.token),
+        hasUser: !!(data && data.user),
+        userRole: data && data.user ? (data.user.is_admin ? 'admin' : 'user') : 'unknown',
+        requires2FA: data && data.requires_2fa
+      });
+
       if (response.ok) {
-        console.log('Login successful:', data);
+        console.log('✅ Login successful:', {
+          userEmail: data.user?.email,
+          userRole: data.user?.is_admin ? 'admin' : 'user',
+          hasToken: !!data.token
+        });
         if (data.requires_2fa) {
           setTempToken(data.temp_token);
           setTwoFactorMethod(data.method || 'app');
@@ -110,7 +145,10 @@ const Login = ({ isSliderMode = false }) => {
           status: response.status,
           statusText: response.statusText,
           data: data,
-          url: response.url
+          url: response.url,
+          requestBody: formDataWithAuth,
+          platform: platformDetection.platform,
+          isMobile: platformDetection.isMobile
         });
         
         // Safely extract error message and ensure it's a string
@@ -122,6 +160,12 @@ const Login = ({ isSliderMode = false }) => {
         } else {
           errorMessage = `Login failed (${response.status})`;
         }
+        
+        console.error('🚨 Login error details:', {
+          extractedMessage: errorMessage,
+          originalData: data,
+          statusCode: response.status
+        });
         
         // Handle specific error codes
         if (response.status === 500) {
