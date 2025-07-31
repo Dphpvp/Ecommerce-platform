@@ -45,9 +45,7 @@ const Login = ({ isSliderMode = false }) => {
         passwordLength: formDataWithAuth.password?.length,
         isMobile: platformDetection.isMobile,
         hasCaptcha: !!formDataWithAuth.recaptcha_response,
-        apiBase: API_BASE,
-        platform: platformDetection.platform,
-        userAgent: navigator.userAgent.substring(0, 50)
+        apiBase: API_BASE
       });
 
       // Use Capacitor HTTP for mobile to avoid CORS issues
@@ -77,11 +75,6 @@ const Login = ({ isSliderMode = false }) => {
             data: formDataWithAuth
           });
           
-          console.log('📱 Capacitor HTTP response:', {
-            status: httpResponse.status,
-            dataKeys: httpResponse.data ? Object.keys(httpResponse.data) : [],
-            hasData: !!httpResponse.data
-          });
           
           // Convert Capacitor HTTP response to fetch-like response
           response = {
@@ -94,49 +87,16 @@ const Login = ({ isSliderMode = false }) => {
         }
       } else {
         // Use regular fetch for web
-        console.log('🌐 Using web fetch for login request');
-        
-        // Try simple fetch first for debugging
-        console.log('🔍 Attempting simple fetch first...');
-        try {
-          response = await fetch(`${API_BASE}/auth/login`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify(formDataWithAuth),
-          });
-          console.log('✅ Simple fetch succeeded:', response.status);
-        } catch (simpleError) {
-          console.error('🚨 Simple fetch failed, trying secureFetch:', simpleError);
-          
-          response = await secureFetch(`${API_BASE}/auth/login`, {
-            method: 'POST',
-            body: JSON.stringify(formDataWithAuth),
-          });
-          console.log('✅ SecureFetch succeeded:', response.status);
-        }
+        response = await secureFetch(`${API_BASE}/auth/login`, {
+          method: 'POST',
+          body: JSON.stringify(formDataWithAuth),
+        });
       }
 
       const data = await response.json();
 
-      console.log('📊 Login response details:', {
-        status: response.status,
-        ok: response.ok,
-        dataKeys: data ? Object.keys(data) : [],
-        hasToken: !!(data && data.token),
-        hasUser: !!(data && data.user),
-        userRole: data && data.user ? (data.user.is_admin ? 'admin' : 'user') : 'unknown',
-        requires2FA: data && data.requires_2fa
-      });
-
       if (response.ok) {
-        console.log('✅ Login successful:', {
-          userEmail: data.user?.email,
-          userRole: data.user?.is_admin ? 'admin' : 'user',
-          hasToken: !!data.token
-        });
+        console.log('Login successful:', data);
         if (data.requires_2fa) {
           setTempToken(data.temp_token);
           setTwoFactorMethod(data.method || 'app');
@@ -164,10 +124,7 @@ const Login = ({ isSliderMode = false }) => {
           status: response.status,
           statusText: response.statusText,
           data: data,
-          url: response.url,
-          requestBody: formDataWithAuth,
-          platform: platformDetection.platform,
-          isMobile: platformDetection.isMobile
+          url: response.url
         });
         
         // Safely extract error message and ensure it's a string
@@ -179,12 +136,6 @@ const Login = ({ isSliderMode = false }) => {
         } else {
           errorMessage = `Login failed (${response.status})`;
         }
-        
-        console.error('🚨 Login error details:', {
-          extractedMessage: errorMessage,
-          originalData: data,
-          statusCode: response.status
-        });
         
         // Handle specific error codes
         if (response.status === 500) {

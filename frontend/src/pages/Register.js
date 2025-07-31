@@ -42,33 +42,13 @@ const Register = ({ isSliderMode = false }) => {
     };
     
     try {
-      console.log('🌐 Using web fetch for register request');
-      
-      // Try simple fetch first for debugging
-      console.log('🔍 Attempting simple fetch first...');
-      let response;
-      try {
-        response = await fetch(`${process.env.REACT_APP_API_BASE_URL}/auth/register`, {
+      const response = await secureFetch(
+        `${process.env.REACT_APP_API_BASE_URL}/auth/register`,
+        {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
           body: JSON.stringify(formDataWithPhone),
-        });
-        console.log('✅ Simple fetch succeeded:', response.status);
-      } catch (simpleError) {
-        console.error('🚨 Simple fetch failed, trying secureFetch:', simpleError);
-        
-        response = await secureFetch(
-          `${process.env.REACT_APP_API_BASE_URL}/auth/register`,
-          {
-            method: 'POST',
-            body: JSON.stringify(formDataWithPhone),
-          }
-        );
-        console.log('✅ SecureFetch succeeded:', response.status);
-      }
+        }
+      );
 
       if (response.ok) {
         const result = await response.json();
