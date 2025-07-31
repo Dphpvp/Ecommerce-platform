@@ -3,8 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useToastContext } from './toast';
-import { secureFetch } from '../utils/csrf';
 import platformDetection from '../utils/platformDetection';
+import secureAuth from '../utils/secureAuth';
 import './AnimatedAuthForm.css';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
@@ -48,16 +48,30 @@ const AnimatedAuthForm = () => {
     navigate('/login');
   };
 
-  // Handle login form submission
+  // Handle login form submission with secure JWT authentication
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate input
     if (!loginData.username || !loginData.password) {
       showToast('Please fill in all fields', 'error');
       return;
     }
 
+    // Password validation
+    if (loginData.password.length < 8) {
+      showToast('Password must be at least 8 characters', 'error');
+      return;
+    }
+
     setLoading(true);
+    let loadingIndicator = null;
+    
     try {
+      // Show platform-appropriate loading
+      loadingIndicator = await platformDetection.showLoading('Signing in...');
+      if (loadingIndicator?.present) await loadingIndicator.present();
+
       const formDataWithAuth = {
         identifier: loginData.username,
         password: loginData.password,
@@ -65,14 +79,17 @@ const AnimatedAuthForm = () => {
       };
 
       let response;
+      const requestHeaders = {
+        'Content-Type': 'application/json',
+        ...secureAuth.getSecurityHeaders()
+      };
+
       if (platformDetection.isMobile && window.Capacitor?.Plugins?.CapacitorHttp) {
+        console.log('📱 Using Capacitor HTTP for login');
         const httpResponse = await window.Capacitor.Plugins.CapacitorHttp.request({
           url: `${API_BASE}/auth/login`,
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            ...platformDetection.getPlatformHeaders()
-          },
+          headers: requestHeaders,
           data: formDataWithAuth
         });
         
@@ -82,11 +99,10 @@ const AnimatedAuthForm = () => {
           json: async () => httpResponse.data
         };
       } else {
+        console.log('🌐 Using fetch for web login');
         response = await fetch(`${API_BASE}/auth/login`, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
+          headers: requestHeaders,
           credentials: 'include',
           body: JSON.stringify(formDataWithAuth),
         });
@@ -95,54 +111,148 @@ const AnimatedAuthForm = () => {
       const data = await response.json();
 
       if (response.ok) {
-        if (data.token) {
-          localStorage.setItem('auth_token', data.token);
+        console.log('✅ Login response received:', {
+          hasUser: !!data.user,
+          hasToken: !!(data.access_token || data.token),
+          hasRefreshToken: !!data.refresh_token
+        });
+
+        // Store tokens securely using the new JWT system
+        if (data.access_token || data.token) {
+          const loginData = {
+            access_token: data.access_token || data.token,
+            refresh_token: data.refresh_token,
+            expires_in: data.expires_in || 3600,
+            user: data.user
+          };
+          
+          const success = await login(loginData);
+          if (success) {
+            showToast('Login successful!', 'success');
+            await platformDetection.showToast('Welcome back!', 2000);
+            navigate('/');
+          } else {
+            throw new Error('Failed to store authentication tokens');
+          }
+        } else {
+          // Fallback for user data without explicit tokens
+          await login({ user: data.user });
+          showToast('Login successful!', 'success');
+          navigate('/');
         }
-        login(data.user);
-        showToast('Login successful!', 'success');
-        navigate('/');
       } else {
         const errorMessage = data.detail || data.message || 'Login failed';
         showToast(errorMessage, 'error');
+        await platformDetection.showToast(errorMessage, 3000);
       }
     } catch (error) {
       console.error('Login error:', error);
-      showToast('Network error. Please try again.', 'error');
+      
+      let errorMessage = 'Network error. Please try again.';
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        errorMessage = 'Connection failed. Please check your internet connection.';
+      } else if (error.message.includes('Authentication')) {
+        errorMessage = 'Invalid credentials. Please try again.';
+      }
+      
+      showToast(errorMessage, 'error');
+      await platformDetection.showToast(errorMessage, 4000);
     } finally {
       setLoading(false);
+      if (loadingIndicator?.dismiss) await loadingIndicator.dismiss();
     }
   };
 
-  // Handle register form submission
+  // Handle register form submission with secure authentication
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
+    
+    // Validate input
     if (!registerData.username || !registerData.email || !registerData.password) {
       showToast('Please fill in all fields', 'error');
       return;
     }
 
+    // Password validation
+    if (registerData.password.length < 8) {
+      showToast('Password must be at least 8 characters', 'error');
+      return;
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(registerData.email)) {
+      showToast('Please enter a valid email address', 'error');
+      return;
+    }
+
     setLoading(true);
+    let loadingIndicator = null;
+    
     try {
-      const response = await secureFetch(`${API_BASE}/auth/register`, {
-        method: 'POST',
-        body: JSON.stringify(registerData),
-      });
+      loadingIndicator = await platformDetection.showLoading('Creating account...');
+      if (loadingIndicator?.present) await loadingIndicator.present();
+
+      const requestHeaders = {
+        'Content-Type': 'application/json',
+        ...secureAuth.getSecurityHeaders()
+      };
+
+      let response;
+      if (platformDetection.isMobile && window.Capacitor?.Plugins?.CapacitorHttp) {
+        console.log('📱 Using Capacitor HTTP for registration');
+        const httpResponse = await window.Capacitor.Plugins.CapacitorHttp.request({
+          url: `${API_BASE}/auth/register`,
+          method: 'POST',
+          headers: requestHeaders,
+          data: registerData
+        });
+        
+        response = {
+          ok: httpResponse.status >= 200 && httpResponse.status < 300,
+          status: httpResponse.status,
+          json: async () => httpResponse.data
+        };
+      } else {
+        console.log('🌐 Using fetch for web registration');
+        response = await fetch(`${API_BASE}/auth/register`, {
+          method: 'POST',
+          headers: requestHeaders,
+          credentials: 'include',
+          body: JSON.stringify(registerData),
+        });
+      }
 
       const data = await response.json();
 
       if (response.ok) {
         showToast('Registration successful! Please check your email.', 'success');
-        setIsActive(false); // Switch to login form
+        await platformDetection.showToast('Please verify your email to complete registration', 4000);
+        
+        // Clear registration form
+        setRegisterData({ username: '', email: '', password: '' });
+        
+        // Switch to login form
+        setIsActive(false);
         navigate('/login');
       } else {
         const errorMessage = data.detail || data.message || 'Registration failed';
         showToast(errorMessage, 'error');
+        await platformDetection.showToast(errorMessage, 3000);
       }
     } catch (error) {
       console.error('Registration error:', error);
-      showToast('Network error. Please try again.', 'error');
+      
+      let errorMessage = 'Network error. Please try again.';
+      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+        errorMessage = 'Connection failed. Please check your internet connection.';
+      }
+      
+      showToast(errorMessage, 'error');
+      await platformDetection.showToast(errorMessage, 4000);
     } finally {
       setLoading(false);
+      if (loadingIndicator?.dismiss) await loadingIndicator.dismiss();
     }
   };
 

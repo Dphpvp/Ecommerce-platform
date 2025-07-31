@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import platformDetection from '../utils/platformDetection';
 import notificationService from '../utils/notificationService';
 import sessionManager from '../utils/sessionManager';
+import secureAuth from '../utils/secureAuth';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
 
@@ -24,31 +25,14 @@ export const AuthProvider = ({ children }) => {
     console.log('🚪 Logging out user...');
     
     try {
-      // Call backend logout endpoint
-      await fetch(`${API_BASE}/auth/logout`, {
-        method: 'POST',
-        credentials: 'include'
-      });
+      // Use secure auth logout which handles backend call and cleanup
+      await secureAuth.logout();
     } catch (error) {
-      console.error('Backend logout error:', error);
-      // Continue with local cleanup even if backend call fails
+      console.error('Secure logout error:', error);
     }
     
     // Use session manager to clear all session data
     sessionManager.forceLogoutAllTabs();
-    
-    // Clear any cached auth data
-    try {
-      // Clear service worker cache if available
-      if ('caches' in window) {
-        const cacheNames = await caches.keys();
-        await Promise.all(
-          cacheNames.map(cacheName => caches.delete(cacheName))
-        );
-      }
-    } catch (error) {
-      console.warn('Cache clearing failed:', error);
-    }
     
     // Clear state
     setUser(null);
@@ -66,7 +50,7 @@ export const AuthProvider = ({ children }) => {
       warningTimeoutRef.current = null;
     }
     
-    // Show logout message
+    // Show logout message if not already shown by secureAuth
     if (showMessage) {
       try {
         await platformDetection.showToast('Logged out successfully', 2000);
@@ -167,57 +151,65 @@ export const AuthProvider = ({ children }) => {
     };
   }, [user, handleActivity, resetTimeout]);
 
-  // Better session fetching with proper state management
+  // Secure session fetching using JWT tokens
   const fetchUser = useCallback(async () => {
     try {
-      // Check both localStorage token and session cookies
-      const authToken = localStorage.getItem('auth_token');
-      const headers = {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      };
-      
-      if (authToken) {
-        headers['Authorization'] = `Bearer ${authToken}`;
+      // Check if we have a valid token
+      if (!secureAuth.isAuthenticated()) {
+        console.log('🔐 No valid authentication found');
+        setUser(null);
+        if (!initialized) {
+          setLoading(false);
+          setInitialized(true);
+        }
+        return null;
       }
+
+      // Get user data from secure storage first
+      const cachedUserData = secureAuth.getUserData();
+      if (cachedUserData && !user) {
+        console.log('📋 Loading cached user data');
+        setUser(cachedUserData);
+      }
+
+      // Verify token with backend
+      const response = await secureAuth.makeSecureRequest(`${API_BASE}/auth/me`);
       
-      const response = await fetch(`${API_BASE}/auth/me`, {
-        method: 'GET',
-        credentials: 'include',
-        headers: headers,
-        cache: 'no-cache'
-      });
-      
-      if (response.ok) {
-        const userData = await response.json();
-        console.log('✅ User session found:', {
-          username: userData.username,
-          email: userData.email,
-          isAdmin: userData.is_admin
+      if (response) {
+        console.log('✅ User session verified:', {
+          username: response.username,
+          email: response.email,
+          isAdmin: response.is_admin
         });
         
-        // Store token if provided in response
-        if (userData.token) {
-          localStorage.setItem('auth_token', userData.token);
-        }
+        // Update stored user data
+        secureAuth.setTokens(
+          await secureAuth.getValidToken(),
+          localStorage.getItem('refresh_token'),
+          3600, // Default 1 hour expiry
+          response
+        );
         
-        setUser(userData);
-        return userData;
-      } else if (response.status === 401) {
-        // 401 is expected when not logged in - clear any stale tokens
-        console.log('🔐 No valid session found, clearing auth data');
-        localStorage.removeItem('auth_token');
+        setUser(response);
+        return response;
+      } else {
+        console.log('❌ Session verification failed');
+        secureAuth.clearAllTokens();
         setUser(null);
         return null;
-      } else {
-        console.warn('Unexpected auth response:', response.status);
-        // Don't change user state on unexpected errors
-        return user;
       }
     } catch (error) {
       console.warn('Auth fetch error:', error.message);
-      // Don't change user state on network errors
-      return user;
+      
+      if (error.message.includes('Authentication') || error.message.includes('401')) {
+        console.log('🔐 Authentication failed, clearing tokens');
+        secureAuth.clearAllTokens();
+        setUser(null);
+        return null;
+      }
+      
+      // Don't change user state on network errors, return cached data
+      return user || secureAuth.getUserData();
     } finally {
       if (!initialized) {
         setLoading(false);
@@ -296,39 +288,57 @@ export const AuthProvider = ({ children }) => {
     }
   }, [fetchUser, initialized]);
 
-  const login = useCallback(async (userData) => {
-    
-    if (userData) {
-      setUser(userData);
-      setLoading(false);
-      
-      // Store session data
-      const authToken = localStorage.getItem('auth_token');
-      sessionManager.setSessionData(userData, authToken);
-    } else {
-      // Fetch from session
-      const freshUser = await fetchUser();
-      if (!freshUser) {
+  const login = useCallback(async (loginData) => {
+    try {
+      if (loginData && loginData.access_token) {
+        // Store tokens securely
+        const success = secureAuth.setTokens(
+          loginData.access_token,
+          loginData.refresh_token,
+          loginData.expires_in || 3600,
+          loginData.user
+        );
+        
+        if (success) {
+          setUser(loginData.user);
+          setLoading(false);
+          
+          // Store session data for backward compatibility
+          sessionManager.setSessionData(loginData.user, loginData.access_token);
+          
+          console.log('✅ Login successful with JWT tokens');
+        } else {
+          throw new Error('Failed to store authentication tokens');
+        }
+      } else if (loginData && loginData.user) {
+        // Fallback for user data without explicit tokens
+        setUser(loginData.user);
         setLoading(false);
-        return false;
+      } else {
+        // Fetch from session
+        const freshUser = await fetchUser();
+        if (!freshUser) {
+          setLoading(false);
+          return false;
+        }
       }
       
-      // Store session data
-      const authToken = localStorage.getItem('auth_token');
-      sessionManager.setSessionData(freshUser, authToken);
-    }
-    
-    setRequires2FA(false);
-    setTempToken(null);
-    
-    // Try to save FCM token if we have one stored locally
-    try {
-      await notificationService.retryTokenSave();
+      setRequires2FA(false);
+      setTempToken(null);
+      
+      // Try to save FCM token if we have one stored locally
+      try {
+        await notificationService.retryTokenSave();
+      } catch (error) {
+        console.error('Failed to save FCM token on login:', error);
+      }
+      
+      return true;
     } catch (error) {
-      console.error('Failed to save FCM token on login:', error);
+      console.error('Login error:', error);
+      setLoading(false);
+      return false;
     }
-    
-    return true;
   }, [fetchUser]);
 
   const complete2FA = useCallback(async () => {
@@ -387,121 +397,42 @@ export const AuthProvider = ({ children }) => {
     return null;
   }, []);
 
-  // Enhanced authenticated request using secureFetch with platform support
+  // Secure authenticated request using JWT tokens
   const makeAuthenticatedRequest = useCallback(async (url, options = {}) => {
     try {
-      console.log(`🌐 Making authenticated request to ${url}`);
+      console.log(`🌐 Making secure authenticated request to ${url}`);
       console.log('🔍 Current auth state:', {
         hasUser: !!user,
         userEmail: user?.email,
         isAdmin: user?.is_admin,
-        hasToken: !!localStorage.getItem('auth_token')
+        isAuthenticated: secureAuth.isAuthenticated(),
+        tokenInfo: secureAuth.getTokenInfo()
       });
       
-      // First, try with auth token if available
-      let requestOptions = { ...options };
-      const authToken = localStorage.getItem('auth_token');
-      if (authToken) {
-        requestOptions.headers = {
-          ...requestOptions.headers,
-          'Authorization': `Bearer ${authToken}`
-        };
-      }
+      // Use secure auth for the request
+      const response = await secureAuth.makeSecureRequest(url, options);
       
-      const response = await fetch(url, {
-        ...requestOptions,
-        credentials: 'include'
-      });
+      console.log('✅ Secure request completed successfully');
+      return response;
       
-      if (response.status === 401) {
-        console.log('🔄 Got 401, checking session and token...');
-        
-        // Clear potentially expired token
-        localStorage.removeItem('auth_token');
-        
-        // Check if we still have a valid session with cookies
-        let sessionCheck;
-        try {
-          sessionCheck = await fetch(`${API_BASE}/auth/me`, {
-            method: 'GET',
-            credentials: 'include',
-            headers: {
-              'Accept': 'application/json',
-              'Content-Type': 'application/json'
-            }
-          });
-        } catch (sessionError) {
-          console.error('Session check failed:', sessionError);
-          setUser(null);
-          throw new Error('Network error during authentication check');
-        }
-        
-        if (sessionCheck.ok) {
-          console.log('✅ Session still valid, updating user and retrying request');
-          const userData = await sessionCheck.json();
-          setUser(userData);
-          
-          // Update token if provided in response
-          if (userData.token) {
-            localStorage.setItem('auth_token', userData.token);
-            requestOptions.headers = {
-              ...requestOptions.headers,
-              'Authorization': `Bearer ${userData.token}`
-            };
-          }
-          
-          // Retry original request with updated credentials
-          const retryResponse = await fetch(url, {
-            ...requestOptions,
-            credentials: 'include'
-          });
-          
-          if (!retryResponse.ok) {
-            const errorData = await retryResponse.json().catch(() => ({}));
-            console.error('❌ Retry request failed:', { status: retryResponse.status, error: errorData });
-            
-            if (retryResponse.status === 401) {
-              setUser(null);
-              localStorage.removeItem('auth_token');
-              throw new Error('Authentication required');
-            }
-            
-            throw new Error(errorData.detail || `HTTP error! status: ${retryResponse.status}`);
-          }
-          
-          return await retryResponse.json();
-        } else {
-          console.log('❌ Session invalid, logging out');
-          console.log('Session check response:', {
-            status: sessionCheck.status,
-            statusText: sessionCheck.statusText
-          });
-          
-          setUser(null);
-          localStorage.removeItem('auth_token');
-          await platformDetection.showToast('Session expired. Please login again.', 3000);
-          throw new Error('Authentication required');
-        }
-      }
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('❌ Request failed:', { status: response.status, error: errorData });
-        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
-      }
-      
-      return await response.json();
     } catch (error) {
-      console.error('🚨 Authenticated request failed:', {
+      console.error('🚨 Secure authenticated request failed:', {
         message: error.message,
         url: url,
         hasUser: !!user,
-        hasToken: !!localStorage.getItem('auth_token')
+        isAuthenticated: secureAuth.isAuthenticated()
       });
       
-      // Enhanced mobile error handling
-      if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      // Handle authentication errors
+      if (error.message.includes('Authentication') || error.message.includes('401')) {
+        console.log('🔐 Authentication failed, clearing user state');
+        secureAuth.clearAllTokens();
+        setUser(null);
+        await platformDetection.showToast('Session expired. Please login again.', 3000);
+      } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
         await platformDetection.showToast('Connection failed. Please check your internet connection.', 4000);
+      } else if (error.message.includes('Rate limit')) {
+        await platformDetection.showToast('Too many requests. Please slow down.', 3000);
       }
       
       throw error;
@@ -510,12 +441,8 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuthStatus = useCallback(async () => {
     try {
-      const response = await fetch(`${API_BASE}/auth/me`, {
-        method: 'GET',
-        credentials: 'include',
-        headers: { 'Accept': 'application/json' }
-      });
-      return response.ok;
+      // Use secure auth to check status
+      return secureAuth.isAuthenticated();
     } catch (error) {
       console.error('Auth status check failed:', error);
       return false;
@@ -527,20 +454,11 @@ export const AuthProvider = ({ children }) => {
   const refetchUser = useCallback(async () => {
     console.log('🔄 Refetching user...');
     try {
-      const response = await fetch(`${API_BASE}/auth/me`, {
-        method: 'GET',
-        credentials: 'include',
-        headers: { 'Accept': 'application/json' }
-      });
+      // Use fetchUser which handles secure authentication
+      const userData = await fetchUser();
       
-      if (response.ok) {
-        const userData = await response.json();
-        setUser(userData);
-        
-        // Update session data
-        const authToken = localStorage.getItem('auth_token');
-        sessionManager.setSessionData(userData, authToken);
-        
+      if (userData) {
+        console.log('✅ User refetch successful');
         return userData;
       } else {
         console.log('❌ Refetch failed, clearing user');
@@ -552,7 +470,7 @@ export const AuthProvider = ({ children }) => {
       console.error('Failed to refresh user:', error);
       return null;
     }
-  }, []);
+  }, [fetchUser]);
 
   // Session management helpers
   const extendSession = useCallback(() => {

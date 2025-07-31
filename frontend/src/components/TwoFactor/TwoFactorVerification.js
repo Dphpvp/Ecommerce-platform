@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useToastContext } from '../toast';
 import platformDetection from '../../utils/platformDetection';
+import secureAuth from '../../utils/secureAuth';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
 
@@ -21,14 +22,35 @@ const TwoFactorVerification = ({ tempToken, onSuccess, onCancel }) => {
       loadingIndicator = await platformDetection.showLoading('Sending verification code...');
       if (loadingIndicator?.present) await loadingIndicator.present();
 
-      const response = await fetch(`${API_BASE}/auth/send-2fa-email`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ temp_token: tempToken })
-      });
+      const requestHeaders = {
+        'Content-Type': 'application/json',
+        ...secureAuth.getSecurityHeaders()
+      };
+
+      let response;
+      if (platformDetection.isMobile && window.Capacitor?.Plugins?.CapacitorHttp) {
+        console.log('📱 Using Capacitor HTTP for 2FA email send');
+        const httpResponse = await window.Capacitor.Plugins.CapacitorHttp.request({
+          url: `${API_BASE}/auth/send-2fa-email`,
+          method: 'POST',
+          headers: requestHeaders,
+          data: { temp_token: tempToken }
+        });
+        
+        response = {
+          ok: httpResponse.status >= 200 && httpResponse.status < 300,
+          status: httpResponse.status,
+          json: async () => httpResponse.data
+        };
+      } else {
+        console.log('🌐 Using fetch for web 2FA email send');
+        response = await fetch(`${API_BASE}/auth/send-2fa-email`, {
+          method: 'POST',
+          headers: requestHeaders,
+          credentials: 'include',
+          body: JSON.stringify({ temp_token: tempToken })
+        });
+      }
 
       if (response.ok) {
         setEmailSent(true);
@@ -66,24 +88,58 @@ const TwoFactorVerification = ({ tempToken, onSuccess, onCancel }) => {
       loadingIndicator = await platformDetection.showLoading('Verifying code...');
       if (loadingIndicator?.present) await loadingIndicator.present();
 
-      const response = await fetch(`${API_BASE}/auth/verify-2fa`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
-        body: JSON.stringify({ temp_token: tempToken, code })
-      });
+      const requestHeaders = {
+        'Content-Type': 'application/json',
+        ...secureAuth.getSecurityHeaders()
+      };
+
+      let response;
+      if (platformDetection.isMobile && window.Capacitor?.Plugins?.CapacitorHttp) {
+        console.log('📱 Using Capacitor HTTP for 2FA verification');
+        const httpResponse = await window.Capacitor.Plugins.CapacitorHttp.request({
+          url: `${API_BASE}/auth/verify-2fa`,
+          method: 'POST',
+          headers: requestHeaders,
+          data: { temp_token: tempToken, code }
+        });
+        
+        response = {
+          ok: httpResponse.status >= 200 && httpResponse.status < 300,
+          status: httpResponse.status,
+          json: async () => httpResponse.data
+        };
+      } else {
+        console.log('🌐 Using fetch for web 2FA verification');
+        response = await fetch(`${API_BASE}/auth/verify-2fa`, {
+          method: 'POST',
+          headers: requestHeaders,
+          credentials: 'include',
+          body: JSON.stringify({ temp_token: tempToken, code })
+        });
+      }
 
       const data = await response.json();
 
       if (response.ok) {
-        // Store token in localStorage for fallback
-        if (data.token) {
-          localStorage.setItem('auth_token', data.token);
-        }
+        console.log('✅ 2FA verification successful');
         
-        login(data.user);
+        // Store tokens securely using the new JWT system
+        if (data.access_token || data.token) {
+          const loginData = {
+            access_token: data.access_token || data.token,
+            refresh_token: data.refresh_token,
+            expires_in: data.expires_in || 3600,
+            user: data.user
+          };
+          
+          const success = await login(loginData);
+          if (!success) {
+            throw new Error('Failed to store authentication tokens');
+          }
+        } else {
+          // Fallback for user data without explicit tokens
+          await login({ user: data.user });
+        }
         
         if (data.backup_code_used) {
           showToast('Backup code used. Consider regenerating backup codes.', 'info');
