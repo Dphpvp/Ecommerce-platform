@@ -3697,34 +3697,6 @@
   text-decoration: underline;
 }
 
-/* Register Link Styles */
-.mobile-register-link,
-.auth-register-link {
-  margin-top: var(--space-6);
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--color-border);
-}
-
-.register-prompt {
-  font-size: var(--text-base);
-  color: var(--color-text-primary);
-  margin: 0;
-  text-align: center;
-}
-
-.register-link {
-  color: var(--color-primary-600) !important;
-  text-decoration: none;
-  font-weight: var(--font-semibold);
-  transition: all 0.3s ease;
-  border-bottom: 2px solid transparent;
-}
-
-.register-link:hover {
-  color: var(--color-primary-700) !important;
-  border-bottom-color: var(--color-primary-700);
-  text-decoration: none;
-}
 
 
 

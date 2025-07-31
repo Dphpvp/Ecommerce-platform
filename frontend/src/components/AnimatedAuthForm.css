@@ -1,4 +1,3 @@
-/* Exact replica of animated login/signup form with app colors */
 @import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
 
 /* Import Boxicons for icons */
@@ -9,8 +8,7 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: linear-gradient(135deg, var(--color-primary-50), var(--color-primary-100));
-  padding: 20px;
+  background: linear-gradient(90deg, #e2e2e2, #c9d6ff);
   font-family: "Poppins", sans-serif;
 }
 
@@ -28,13 +26,11 @@
 .animated-container h1 {
   font-size: 36px;
   margin: -10px 0;
-  color: var(--color-text-primary);
 }
 
 .animated-container p {
   font-size: 14.5px;
   margin: 15px 0;
-  color: var(--color-text-secondary);
 }
 
 form {
@@ -49,7 +45,7 @@ form {
   background: #fff;
   display: flex;
   align-items: center;
-  color: var(--color-text-primary);
+  color: #333;
   text-align: center;
   padding: 40px;
   z-index: 1;
@@ -77,23 +73,17 @@ form {
 .input-box input {
   width: 100%;
   padding: 13px 50px 13px 20px;
-  background: var(--color-surface);
+  background: #eee;
   border-radius: 8px;
-  border: 1px solid var(--color-border);
+  border: none;
   outline: none;
   font-size: 16px;
-  color: var(--color-text-primary);
+  color: #333;
   font-weight: 500;
-  transition: all 0.3s ease;
-}
-
-.input-box input:focus {
-  border-color: var(--color-primary-500);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
 }
 
 .input-box input::placeholder {
-  color: var(--color-text-tertiary);
+  color: #888;
   font-weight: 400;
 }
 
@@ -103,7 +93,6 @@ form {
   top: 50%;
   transform: translateY(-50%);
   font-size: 20px;
-  color: var(--color-text-secondary);
 }
 
 .forgot-link {
@@ -111,44 +100,20 @@ form {
 }
 .forgot-link a {
   font-size: 14.5px;
-  color: var(--color-primary-600);
-  text-decoration: none;
-  transition: color 0.3s ease;
-}
-
-.forgot-link a:hover {
-  color: var(--color-primary-700);
-  text-decoration: underline;
+  color: #333;
 }
 
 .btn {
   width: 100%;
   height: 48px;
-  background: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-primary-700) 100%);
+  background: #7494ec;
   border-radius: 8px;
-  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   border: none;
   cursor: pointer;
   font-size: 16px;
   color: #fff;
   font-weight: 600;
-  transition: all 0.3s ease;
-  font-family: "Poppins", sans-serif;
-}
-
-.btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
-}
-
-.btn:active {
-  transform: translateY(0);
-}
-
-.btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
 }
 
 .social-icons {
@@ -156,32 +121,14 @@ form {
   justify-content: center;
 }
 
-.google-icon-btn {
+.social-icons a {
   display: inline-flex;
-  align-items: center;
-  justify-content: center;
   padding: 10px;
-  border: 2px solid var(--color-border);
+  border: 2px solid #ccc;
   border-radius: 8px;
   font-size: 24px;
-  color: var(--color-text-primary);
-  background: var(--color-surface);
-  cursor: pointer;
-  transition: all 0.3s ease;
+  color: #333;
   margin: 0 8px;
-}
-
-.google-icon-btn:hover {
-  border-color: var(--color-primary-300);
-  background: var(--color-surface-elevated);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.google-icon-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
 }
 
 .toggle-box {
@@ -196,7 +143,7 @@ form {
   left: -250%;
   width: 300%;
   height: 100%;
-  background: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-primary-700) 100%);
+  background: #7494ec;
   border-radius: 150px;
   z-index: 2;
   transition: 1.8s ease-in-out;
@@ -219,15 +166,6 @@ form {
   transition: 0.6s ease-in-out;
 }
 
-.toggle-panel h1 {
-  color: #fff;
-}
-
-.toggle-panel p {
-  color: rgba(255, 255, 255, 0.9);
-  margin-bottom: 20px;
-}
-
 .toggle-panel.toggle-left {
   left: 0;
   transition-delay: 1.2s;
@@ -246,6 +184,10 @@ form {
   transition-delay: 1.2s;
 }
 
+.toggle-panel p {
+  margin-bottom: 20px;
+}
+
 .toggle-panel .btn {
   width: 160px;
   height: 46px;
@@ -254,25 +196,15 @@ form {
   box-shadow: none;
 }
 
-.toggle-panel .btn:hover {
-  background: rgba(255, 255, 255, 0.1);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2);
-}
-
-/* Mobile responsiveness */
 @media screen and (max-width: 650px) {
   .animated-container {
     height: calc(100vh - 40px);
-    width: calc(100vw - 40px);
-    max-width: 400px;
   }
 
   .form-box {
     bottom: 0;
     width: 100%;
     height: 70%;
-    padding: 30px;
   }
 
   .animated-container.active .form-box {
@@ -323,147 +255,4 @@ form {
   .toggle-panel h1 {
     font-size: 30px;
   }
-
-  .animated-container h1 {
-    font-size: 30px;
-  }
-
-  .input-box {
-    margin: 20px 0;
-  }
-
-  .btn {
-    height: 44px;
-    font-size: 14px;
-  }
-}
-
-/* Additional animations for enhanced experience */
-.input-box input {
-  transform: translateX(0);
-  transition: all 0.3s ease;
-}
-
-.form-box.login {
-  animation: slideInRight 0.6s ease-out;
-}
-
-.form-box.register {
-  animation: slideInLeft 0.6s ease-out;
-}
-
-@keyframes slideInRight {
-  from {
-    transform: translateX(100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-@keyframes slideInLeft {
-  from {
-    transform: translateX(-100%);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
-}
-
-/* Loading state for buttons */
-.btn.loading {
-  position: relative;
-  color: transparent;
-}
-
-.btn.loading::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 20px;
-  height: 20px;
-  border: 2px solid transparent;
-  border-top: 2px solid #fff;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: translate(-50%, -50%) rotate(0deg); }
-  100% { transform: translate(-50%, -50%) rotate(360deg); }
-}
-
-/* === MOBILE APK STYLES - DISABLE ANIMATIONS === */
-/* Disable all animations and transformations for mobile APK */
-.animated-container.mobile-apk {
-  width: 100%;
-  max-width: 400px;
-  height: auto;
-  margin: 0;
-  border-radius: 16px;
-}
-
-.animated-container.mobile-apk .toggle-box {
-  display: none !important; /* Hide the animated toggle panel */
-}
-
-.animated-container.mobile-apk .form-box {
-  position: static !important;
-  width: 100% !important;
-  height: auto !important;
-  transform: none !important;
-  transition: none !important;
-  animation: none !important;
-  opacity: 1 !important;
-  pointer-events: auto !important;
-}
-
-.animated-container.mobile-apk .form-box.register {
-  display: none; /* Hide register form initially */
-}
-
-.animated-container.mobile-apk.active .form-box.login {
-  display: none; /* Hide login form when register is active */
-}
-
-.animated-container.mobile-apk.active .form-box.register {
-  display: block !important; /* Show register form when active */
-}
-
-/* Simplify form styling for mobile APK */
-.animated-container.mobile-apk h1 {
-  font-size: 28px;
-  margin-bottom: 20px;
-  text-align: center;
-}
-
-.animated-container.mobile-apk .input-box {
-  margin-bottom: 16px;
-}
-
-.animated-container.mobile-apk .btn {
-  width: 100%;
-  margin-bottom: 12px;
-}
-
-.animated-container.mobile-apk .google-btn-primary {
-  margin-top: 16px;
-}
-
-.animated-container.mobile-apk .login-register {
-  text-align: center;
-  margin-top: 20px;
-}
-
-/* Remove all transitions and animations for mobile APK */
-.animated-container.mobile-apk * {
-  transition: none !important;
-  animation: none !important;
-  transform: none !important;
 }
