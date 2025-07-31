@@ -47,8 +47,8 @@ const ResetPassword = () => {
     
     if (!resetForm.password) {
       newErrors.password = 'Password is required';
-    } else if (resetForm.password.length < 6) {
-      newErrors.password = 'Password must be at least 6 characters';
+    } else if (resetForm.password.length < 8) {
+      newErrors.password = 'Password must be at least 8 characters';
     }
     
     if (!resetForm.confirmPassword) {

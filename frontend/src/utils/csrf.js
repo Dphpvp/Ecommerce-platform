@@ -314,7 +314,7 @@ export const validateInput = {
   },
 
   password: (password) => {
-    if (password.length < 6) return { valid: false, message: 'Password must be at least 6 characters' };
+    if (password.length < 8) return { valid: false, message: 'Password must be at least 8 characters' };
     if (password.length > 128) return { valid: false, message: 'Password too long' };
     
     const weakPasswords = ['password', '123456', 'qwerty', 'admin', 'letmein'];
