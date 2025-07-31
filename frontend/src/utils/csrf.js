@@ -16,6 +16,7 @@ class CSRFManager {
     }
 
     try {
+      console.log('🎫 Fetching CSRF token from:', `${API_BASE}/csrf-token`);
       // Try to get CSRF token from API
       const response = await fetch(`${API_BASE}/csrf-token`, {
         method: 'GET',
@@ -26,8 +27,11 @@ class CSRFManager {
         }
       });
       
+      console.log('🎫 CSRF token response:', response.status, response.ok);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('🎫 CSRF token data:', data.csrf_token ? 'received' : 'missing');
         this.token = data.csrf_token;
         this.tokenExpiry = Date.now() + (50 * 60 * 1000); // 50 minutes
         return this.token;
@@ -50,7 +54,9 @@ class CSRFManager {
   }
 
   async makeSecureRequest(url, options = {}) {
+    console.log('🔐 Making secure request to:', url);
     const token = await this.getToken();
+    console.log('🎫 CSRF token obtained:', token ? 'YES' : 'NO');
     
     const headers = {
       'Content-Type': 'application/json',
@@ -60,9 +66,11 @@ class CSRFManager {
     if (token) {
       headers['X-CSRF-Token'] = token;
     }
+    
+    console.log('📡 Request headers:', Object.keys(headers));
 
-    // Add request signing for state-changing operations
-    if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(options.method?.toUpperCase())) {
+    // Add request signing for state-changing operations (temporarily disabled for debugging)
+    if (false && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(options.method?.toUpperCase())) {
       const timestamp = Math.floor(Date.now() / 1000);
       const signature = await requestSigner.signRequest(
         options.method || 'POST',

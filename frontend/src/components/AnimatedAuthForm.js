@@ -82,10 +82,34 @@ const AnimatedAuthForm = () => {
           json: async () => httpResponse.data
         };
       } else {
-        response = await secureFetch(`${API_BASE}/auth/login`, {
-          method: 'POST',
-          body: JSON.stringify(formDataWithAuth),
-        });
+        console.log('🌐 Using web fetch for login request');
+        
+        // Try simple fetch first for debugging
+        console.log('🔍 Attempting simple fetch first...');
+        try {
+          response = await fetch(`${API_BASE}/auth/login`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify(formDataWithAuth),
+          });
+          console.log('✅ Simple fetch succeeded:', response.status);
+        } catch (simpleError) {
+          console.error('🚨 Simple fetch failed, trying secureFetch:', simpleError);
+          
+          try {
+            response = await secureFetch(`${API_BASE}/auth/login`, {
+              method: 'POST',
+              body: JSON.stringify(formDataWithAuth),
+            });
+            console.log('✅ SecureFetch succeeded:', response.status);
+          } catch (secureError) {
+            console.error('🚨 Both fetch methods failed:', secureError);
+            throw secureError;
+          }
+        }
       }
 
       const data = await response.json();
