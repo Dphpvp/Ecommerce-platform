@@ -8,7 +8,6 @@ import stripe
 import os
 import asyncio
 
-# Try importing the API router (main suspect)
 from api.main import router as api_router
 
 # Configuration
@@ -17,37 +16,24 @@ FRONTEND_URL = os.getenv("FRONTEND_URL", "https://vergishop.vercel.app")
 ALLOWED_HOSTS_STR = os.getenv("ALLOWED_HOSTS", "vergishop.vercel.app,vs1.vercel.app,ecommerce-platform-nizy.onrender.com")
 ALLOWED_HOSTS = [host.strip() for host in ALLOWED_HOSTS_STR.split(",") if host.strip()]
 
-# Complex CORS configuration (suspect for memory issues)
+# ✅ Strict production CORS
 origins = [
     "https://vergishop.vercel.app",
     "https://vs1.vercel.app"
 ]
 
-if FRONTEND_URL and FRONTEND_URL not in origins:
-    origins.append(FRONTEND_URL)
-
-# Always include production frontend URL
-origins.extend(["https://vergishop.vercel.app"])
-
-# Add mobile origins for Capacitor (production only)
-mobile_origins = [
-    "https://vergishop.vercel.app"
-]
-origins.extend(mobile_origins)
-
-# Debug CORS configuration (suspect for memory issues)
+# Debug
 print("CORS Origins:", origins)
 
-# Create FastAPI app
 app = FastAPI(
-    title="E-commerce API", 
+    title="E-commerce API",
     version="1.0.0",
     description="E-commerce Platform API",
     docs_url=None,
     redoc_url=None,
 )
 
-# Add CORS middleware with complex origins
+# ✅ CORS Middleware (must be first)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -55,7 +41,7 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=[
         "Accept",
-        "Accept-Language", 
+        "Accept-Language",
         "Content-Language",
         "Content-Type",
         "Authorization",
@@ -70,40 +56,35 @@ app.add_middleware(
     max_age=600,
 )
 
-# Timeout middleware (suspect for memory corruption)
+# ⏱️ Timeout Middleware
 class TimeoutMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         try:
-            # Different timeouts for different endpoints
-            timeout = 30.0  # Default 30 seconds
-            
+            timeout = 30.0
             if request.url.path.startswith(('/api/uploads', '/api/admin/dashboard')):
-                timeout = 60.0  # 60 seconds for uploads and dashboard
+                timeout = 60.0
             elif request.url.path.startswith('/api/auth'):
-                timeout = 15.0  # 15 seconds for auth endpoints
-            
+                timeout = 15.0
             return await asyncio.wait_for(call_next(request), timeout=timeout)
         except asyncio.TimeoutError:
             return JSONResponse(
-                {"error": "Request timeout", "message": "Request took too long to process"}, 
+                {"error": "Request timeout", "message": "Request took too long to process"},
                 status_code=408
             )
 
 app.add_middleware(TimeoutMiddleware)
 
-# COOP middleware for checkout authentication
+# 🧾 COOP Middleware for Checkout
 class COOPMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         response = await call_next(request)
-        
         if request.url.path == '/checkout':
             response.headers["Cross-Origin-Opener-Policy"] = "same-origin-allow-popups"
-        
         return response
 
 app.add_middleware(COOPMiddleware)
 
-# Debug middleware to log requests (suspect for memory corruption)
+# 📜 Debugging Requests
 @app.middleware("http")
 async def debug_middleware(request: Request, call_next):
     print(f"Request: {request.method} {request.url} from {request.headers.get('origin', 'no-origin')}")
@@ -115,7 +96,7 @@ async def debug_middleware(request: Request, call_next):
         print(f"Error in request processing: {e}")
         raise
 
-# Simple security headers middleware
+# 🔐 Security Headers
 @app.middleware("http")
 async def security_headers_middleware(request: Request, call_next):
     response = await call_next(request)
@@ -124,13 +105,14 @@ async def security_headers_middleware(request: Request, call_next):
     response.headers["X-XSS-Protection"] = "1; mode=block"
     return response
 
-# Add TrustedHostMiddleware
+# ✅ Trusted Host Middleware
 if ALLOWED_HOSTS:
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS)
 
-# Include the API router (major suspect for memory corruption)
+# 📦 API Router
 app.include_router(api_router)
 
+# ✅ Root + Health
 @app.get("/")
 async def root():
     return {"message": "API is running"}
@@ -146,25 +128,26 @@ async def status():
         "version": "1.0.0",
         "environment": "production",
         "timestamp": datetime.now().isoformat(),
-        "cors_origins": len(origins) if 'origins' in globals() else 0,
+        "cors_origins": origins,
         "middleware_count": len(app.user_middleware),
         "timeout_enabled": True,
-        "timestamp": datetime.now().isoformat()
     }
 
-# CSRF Token endpoint for anonymous users
+# ✅ Handle CORS preflight for CSRF endpoint
+@app.options("/api/csrf-token")
+async def options_csrf_token():
+    return JSONResponse(status_code=200)
+
+# 🔑 CSRF Token endpoint
 @app.get("/api/csrf-token")
 @app.post("/api/csrf-token")
 async def get_csrf_token_compat(request: Request):
-    """CSRF token endpoint supporting anonymous users"""
     from api.middleware.csrf import csrf_protection
     from jose import jwt
     from api.core.config import get_settings
-    
+
     settings = get_settings()
     session_id = "anonymous"
-    
-    # Try to get session if available
     session_token = request.cookies.get("session_token")
     if session_token:
         try:
@@ -172,11 +155,19 @@ async def get_csrf_token_compat(request: Request):
             session_id = payload.get("user_id", "anonymous")
         except:
             pass
-    
+
     csrf_token = csrf_protection.generate_token(session_id)
     return {"csrf_token": csrf_token}
 
-# Global exception handlers
+# 🧪 Test-only register endpoint
+@app.post("/api/auth/register")
+async def register(request: Request):
+    return {
+        "message": "Registration endpoint working",
+        "origin": request.headers.get("origin"),
+    }
+
+# 🧯 Error Handlers
 @app.exception_handler(500)
 async def internal_server_error(request: Request, exc: Exception):
     print(f"Internal Server Error: {exc}")
@@ -200,8 +191,3 @@ async def timeout_handler(request: Request, exc: HTTPException):
         {"error": "Request timeout", "message": "Request took too long to process"},
         status_code=408
     )
-
-# Basic register endpoint for testing (will be overridden by API router)
-@app.post("/api/auth/register")
-async def register(request: Request):
-    return {"message": "Registration endpoint working", "origin": request.headers.get("origin")}
