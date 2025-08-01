@@ -247,12 +247,103 @@ form {
   }
 }
 
+/* Enhanced Registration Form Styles */
+.input-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.input-box.half {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.checkbox-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 20px 0;
+  text-align: left;
+}
+
+.checkbox-box input[type="checkbox"] {
+  margin-top: 3px;
+  accent-color: #7494ec;
+}
+
+.checkbox-box label {
+  font-size: 12px;
+  line-height: 1.4;
+  color: #666;
+}
+
+.checkbox-box label a {
+  color: #7494ec;
+  text-decoration: none;
+}
+
+.checkbox-box label a:hover {
+  text-decoration: underline;
+}
+
+/* Form container adjustments for more fields */
+.form-box.register {
+  padding: 25px 40px;
+  overflow-y: auto;
+}
+
+.form-box.register h1 {
+  font-size: 28px;
+  margin: 0 0 15px 0;
+}
+
+.form-box.register .input-box {
+  margin-bottom: 15px;
+}
+
+.form-box.register .btn {
+  margin-top: 15px;
+}
+
+/* Responsive adjustments for registration form */
+@media screen and (max-width: 768px) {
+  .input-row {
+    flex-direction: column;
+    gap: 0;
+  }
+  
+  .input-box.half {
+    margin-bottom: 15px;
+  }
+  
+  .form-box.register {
+    padding: 20px 30px;
+  }
+  
+  .checkbox-box {
+    margin: 15px 0;
+  }
+  
+  .checkbox-box label {
+    font-size: 11px;
+  }
+}
+
 @media screen and (max-width: 400px) {
   .form-box {
     padding: 20px;
   }
+  
+  .form-box.register {
+    padding: 15px 20px;
+  }
 
   .toggle-panel h1 {
     font-size: 30px;
+  }
+  
+  .input-row {
+    gap: 0;
   }
 }

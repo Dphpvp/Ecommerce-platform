@@ -11,11 +11,11 @@ class SecureAuth {
     this.TOKEN_EXPIRY_KEY = 'token_expiry';
     this.USER_KEY = 'user_data';
     
-    // Security settings
+    // Production security settings
     this.TOKEN_REFRESH_THRESHOLD = 5 * 60 * 1000; // Refresh 5 minutes before expiry
     this.MAX_RETRY_ATTEMPTS = 3;
-    this.RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
-    this.MAX_REQUESTS_PER_WINDOW = 10;
+    this.RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute  
+    this.MAX_REQUESTS_PER_WINDOW = 20; // Increased for production use
     
     // Rate limiting storage
     this.requestCounts = new Map();

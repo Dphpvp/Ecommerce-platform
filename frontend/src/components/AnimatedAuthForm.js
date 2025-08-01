@@ -16,7 +16,16 @@ const AnimatedAuthForm = () => {
   const [isActive, setIsActive] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loginData, setLoginData] = useState({ username: '', password: '' });
-  const [registerData, setRegisterData] = useState({ username: '', email: '', password: '' });
+  const [registerData, setRegisterData] = useState({ 
+    username: '', 
+    email: '', 
+    password: '', 
+    confirmPassword: '',
+    firstName: '',
+    lastName: '',
+    phone: '',
+    acceptTerms: false
+  });
   const [isMobileAPK, setIsMobileAPK] = useState(false);
   
   const { login } = useAuth();
@@ -222,9 +231,43 @@ const AnimatedAuthForm = () => {
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     
-    // Validate input
-    if (!registerData.username || !registerData.email || !registerData.password) {
-      showToast('Please fill in all fields', 'error');
+    // Validate required fields
+    if (!registerData.username || !registerData.email || !registerData.password || 
+        !registerData.confirmPassword || !registerData.firstName || !registerData.lastName) {
+      showToast('Please fill in all required fields', 'error');
+      return;
+    }
+
+    // Username validation
+    if (registerData.username.length < 3 || registerData.username.length > 50) {
+      showToast('Username must be 3-50 characters', 'error');
+      return;
+    }
+    if (!/^[a-zA-Z0-9_-]+$/.test(registerData.username)) {
+      showToast('Username can only contain letters, numbers, underscore, and hyphen', 'error');
+      return;
+    }
+
+    // Name validation
+    if (registerData.firstName.length < 2 || registerData.lastName.length < 2) {
+      showToast('First and last name must be at least 2 characters', 'error');
+      return;
+    }
+    if (!/^[a-zA-Z\s'-]+$/.test(registerData.firstName) || !/^[a-zA-Z\s'-]+$/.test(registerData.lastName)) {
+      showToast('Names can only contain letters, spaces, hyphens, and apostrophes', 'error');
+      return;
+    }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(registerData.email)) {
+      showToast('Please enter a valid email address', 'error');
+      return;
+    }
+
+    // Phone validation (if provided)
+    if (registerData.phone && !/^[\+]?[\d\s\-\(\)]{7,20}$/.test(registerData.phone)) {
+      showToast('Please enter a valid phone number', 'error');
       return;
     }
 
@@ -233,11 +276,25 @@ const AnimatedAuthForm = () => {
       showToast('Password must be at least 8 characters', 'error');
       return;
     }
+    if (registerData.password !== registerData.confirmPassword) {
+      showToast('Passwords do not match', 'error');
+      return;
+    }
 
-    // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(registerData.email)) {
-      showToast('Please enter a valid email address', 'error');
+    // Password strength validation
+    const hasUppercase = /[A-Z]/.test(registerData.password);
+    const hasLowercase = /[a-z]/.test(registerData.password);
+    const hasNumbers = /\d/.test(registerData.password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(registerData.password);
+    
+    if (!hasUppercase || !hasLowercase || !hasNumbers) {
+      showToast('Password must contain uppercase, lowercase, and numbers', 'error');
+      return;
+    }
+
+    // Terms acceptance validation
+    if (!registerData.acceptTerms) {
+      showToast('Please accept the Terms of Service and Privacy Policy', 'error');
       return;
     }
 
@@ -298,7 +355,16 @@ const AnimatedAuthForm = () => {
         await platformDetection.showToast('Please verify your email to complete registration', 4000);
         
         // Clear registration form
-        setRegisterData({ username: '', email: '', password: '' });
+        setRegisterData({ 
+          username: '', 
+          email: '', 
+          password: '', 
+          confirmPassword: '',
+          firstName: '',
+          lastName: '',
+          phone: '',
+          acceptTerms: false
+        });
         
         // Switch to login form
         setIsActive(false);
@@ -510,39 +576,111 @@ const AnimatedAuthForm = () => {
         {/* Register Form */}
         <div className="form-box register">
           <form onSubmit={handleRegisterSubmit}>
-            <h1>Registration</h1>
+            <h1>Create Account</h1>
+            
+            {/* Name Fields */}
+            <div className="input-row">
+              <div className="input-box half">
+                <input
+                  type="text"
+                  placeholder="First Name *"
+                  value={registerData.firstName}
+                  onChange={(e) => setRegisterData({ ...registerData, firstName: e.target.value })}
+                  required
+                />
+                <i className="bx bxs-user"></i>
+              </div>
+              <div className="input-box half">
+                <input
+                  type="text"
+                  placeholder="Last Name *"
+                  value={registerData.lastName}
+                  onChange={(e) => setRegisterData({ ...registerData, lastName: e.target.value })}
+                  required
+                />
+                <i className="bx bxs-user"></i>
+              </div>
+            </div>
+
+            {/* Username */}
             <div className="input-box">
               <input
                 type="text"
-                placeholder="Username"
+                placeholder="Username *"
                 value={registerData.username}
                 onChange={(e) => setRegisterData({ ...registerData, username: e.target.value })}
                 required
+                minLength="3"
+                maxLength="50"
               />
-              <i className="bx bxs-user"></i>
+              <i className="bx bxs-user-circle"></i>
             </div>
+
+            {/* Email */}
             <div className="input-box">
               <input
                 type="email"
-                placeholder="Email"
+                placeholder="Email Address *"
                 value={registerData.email}
                 onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
                 required
               />
               <i className="bx bxs-envelope"></i>
             </div>
+
+            {/* Phone */}
+            <div className="input-box">
+              <input
+                type="tel"
+                placeholder="Phone Number (optional)"
+                value={registerData.phone}
+                onChange={(e) => setRegisterData({ ...registerData, phone: e.target.value })}
+              />
+              <i className="bx bxs-phone"></i>
+            </div>
+
+            {/* Password */}
             <div className="input-box">
               <input
                 type="password"
-                placeholder="Password"
+                placeholder="Password *"
                 value={registerData.password}
                 onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
                 required
+                minLength="8"
               />
               <i className="bx bxs-lock-alt"></i>
             </div>
+
+            {/* Confirm Password */}
+            <div className="input-box">
+              <input
+                type="password"
+                placeholder="Confirm Password *"
+                value={registerData.confirmPassword}
+                onChange={(e) => setRegisterData({ ...registerData, confirmPassword: e.target.value })}
+                required
+                minLength="8"
+              />
+              <i className="bx bxs-lock"></i>
+            </div>
+
+            {/* Terms and Conditions */}
+            <div className="checkbox-box">
+              <input
+                type="checkbox"
+                id="acceptTerms"
+                checked={registerData.acceptTerms}
+                onChange={(e) => setRegisterData({ ...registerData, acceptTerms: e.target.checked })}
+                required
+              />
+              <label htmlFor="acceptTerms">
+                I agree to the <a href="/terms" target="_blank" rel="noopener noreferrer">Terms of Service</a> and <a href="/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a> *
+              </label>
+            </div>
+
             <button type="submit" className="btn" disabled={loading}>
-              {loading ? 'Creating Account...' : 'Register'}
+              {loading ? 'Creating Account...' : 'Create Account'}
             </button>
             <p>or register with social platforms</p>
             <div className="social-icons">

@@ -35,9 +35,43 @@ def login():
                 'id': user.id,
                 'username': user.username,
                 'email': user.email,
-                'is_admin': user.is_admin
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'phone': user.phone,
+                'is_admin': user.is_admin,
+                'is_verified': user.is_verified,
+                'created_at': user.created_at.isoformat()
             }
         })
+
+@app.route('/api/auth/register', methods=['POST'])
+def register():
+    data = request.get_json()
+    
+    # Expected registration fields from frontend:
+    required_fields = ['username', 'email', 'password', 'first_name', 'last_name']
+    optional_fields = ['phone', 'csrf_token']
+    
+    # Validate required fields
+    for field in required_fields:
+        if not data.get(field):
+            return jsonify({'detail': f'{field} is required'}), 400
+    
+    # Create new user
+    user = User(
+        username=data['username'],
+        email=data['email'],
+        first_name=data['first_name'], 
+        last_name=data['last_name'],
+        phone=data.get('phone', ''),
+        password_hash=generate_password_hash(data['password'])
+    )
+    
+    # Save to database and send verification email
+    db.session.add(user)
+    db.session.commit()
+    
+    return jsonify({'message': 'Registration successful! Please check your email.'}), 201
 ```
 
 ### 2. Token Refresh Endpoint

@@ -3,6 +3,8 @@
  * Uses only basic headers that don't trigger preflight requests
  */
 
+import simpleCSRF from './simpleCSRF';
+
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
 
 export const simpleFetch = async (endpoint, options = {}) => {
@@ -28,9 +30,28 @@ export const simpleFetch = async (endpoint, options = {}) => {
     cleanHeaders['Authorization'] = `Bearer ${token}`;
   }
 
+  let requestBody = options.body;
+
+  // For POST requests, include CSRF token in the body instead of headers
+  if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(defaultOptions.method?.toUpperCase())) {
+    try {
+      const csrfToken = await simpleCSRF.getToken();
+      if (csrfToken && requestBody) {
+        // Parse existing body and add CSRF token
+        const bodyData = JSON.parse(requestBody);
+        bodyData.csrf_token = csrfToken;
+        requestBody = JSON.stringify(bodyData);
+        console.log('🔒 Added CSRF token to request body');
+      }
+    } catch (error) {
+      console.warn('Could not add CSRF token to body:', error);
+    }
+  }
+
   const finalOptions = {
     ...defaultOptions,
-    headers: cleanHeaders
+    headers: cleanHeaders,
+    body: requestBody
   };
 
   console.log('🌐 Making simple fetch request:', {
