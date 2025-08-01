@@ -74,27 +74,12 @@ origins.extend(mobile_origins)
 # Debug CORS configuration
 print("CORS Origins:", origins)
 
-# Temporarily allow all origins for debugging
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Temporarily allow all origins
-    allow_credentials=False,  # Must be False when allow_origins is "*"
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-    allow_headers=[
-        "Accept",
-        "Accept-Language", 
-        "Content-Language",
-        "Content-Type",
-        "Authorization",
-        "X-CSRF-Token",
-        "X-Request-Signature",
-        "X-Request-Timestamp",
-        "Cache-Control",
-        "X-Platform",
-        "X-Device-Type"
-    ],
-    expose_headers=["Set-Cookie"],
-    max_age=600,
+    allow_origins=["https://vergishop.vercel.app"],  # Exact domain required for credentials
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # COOP middleware for checkout authentication
