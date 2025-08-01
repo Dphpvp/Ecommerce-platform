@@ -11,6 +11,7 @@ import { debugLogin, debugLoginResponse } from '../utils/authDebug';
 import { testCSRFEndpoint } from '../utils/testCSRF';
 import registerWithoutCSRF from '../utils/bypassCSRF';
 import { testEndpoints, testRegisterEndpoint } from '../utils/endpointTest';
+import { testRegistrationFormats } from '../utils/registrationFormats';
 import './AnimatedAuthForm.css';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
@@ -311,12 +312,13 @@ const AnimatedAuthForm = () => {
 
       // Prepare clean registration data for backend
       const cleanRegistrationData = {
-        username: registerData.username,
-        email: registerData.email,
+        username: registerData.username.trim(),
+        email: registerData.email.trim().toLowerCase(),
         password: registerData.password,
-        first_name: registerData.firstName,
-        last_name: registerData.lastName,
-        phone: registerData.phone || ''
+        password_confirmation: registerData.confirmPassword, // Some backends expect this field
+        first_name: registerData.firstName.trim(),
+        last_name: registerData.lastName.trim(),
+        phone: registerData.phone ? registerData.phone.trim() : null
       };
 
       console.log('🔍 Registration data being sent:', {
@@ -436,8 +438,29 @@ const AnimatedAuthForm = () => {
         } catch (error) {
           console.warn('Strategy 1 failed:', error.message);
           
-          // Strategy 2: Try with CSRF handling if available
-          if (csrfToken) {
+          // If Strategy 1 failed with 422, try different data formats
+          if (error.message.includes('422') || error.message.includes('validation')) {
+            console.log('🔍 Strategy 1 failed with validation error, testing different formats...');
+            try {
+              const successfulFormat = await testRegistrationFormats(registerData);
+              if (successfulFormat) {
+                console.log('✅ Found working registration format!');
+                response = {
+                  ok: true,
+                  status: 200,
+                  json: async () => ({ message: 'Registration successful with format testing' })
+                };
+              } else {
+                throw new Error('All registration formats failed');
+              }
+            } catch (formatError) {
+              console.error('Format testing failed:', formatError.message);
+              // Continue to Strategy 2
+            }
+          }
+          
+          // Strategy 2: Try with CSRF handling if available (if not already successful)
+          if (!response && csrfToken) {
             try {
               console.log('📤 Strategy 2: Registration with CSRF handling');
               const data = await directFetch('/auth/register', {
@@ -452,13 +475,19 @@ const AnimatedAuthForm = () => {
               };
             } catch (error2) {
               console.error('Strategy 2 also failed:', error2.message);
+              
+              // If Strategy 2 failed with 422, try different formats with CSRF
+              if (error2.message.includes('422') || error2.message.includes('validation')) {
+                console.log('🔍 Strategy 2 failed with validation error, will provide detailed error info');
+              }
+              
               response = {
                 ok: false,
                 status: 403,
                 json: async () => ({ detail: 'Registration failed: ' + error2.message })
               };
             }
-          } else {
+          } else if (!response) {
             console.error('No CSRF token available and simple registration failed');
             response = {
               ok: false,

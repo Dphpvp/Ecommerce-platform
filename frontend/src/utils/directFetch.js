@@ -90,8 +90,31 @@ const fetchWithCSRFInHeader = async (url, options) => {
   });
   
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ detail: `HTTP ${response.status}` }));
-    throw new Error(errorData.detail || `HTTP ${response.status}`);
+    let errorData;
+    try {
+      errorData = await response.json();
+    } catch (e) {
+      errorData = { detail: `HTTP ${response.status}` };
+    }
+    
+    console.log('📋 Strategy 2 detailed error:', {
+      status: response.status,
+      statusText: response.statusText,
+      errorData: errorData,
+      requestUrl: url,
+      requestHeaders: headers,
+      requestBody: options.body
+    });
+    
+    // If 422, it's a validation error - log more details
+    if (response.status === 422) {
+      console.log('🔍 422 Validation Error Details:', {
+        errors: errorData.errors || errorData.detail || errorData.message,
+        fullErrorResponse: errorData
+      });
+    }
+    
+    throw new Error(errorData.detail || errorData.message || `HTTP ${response.status}`);
   }
   
   return await response.json();
