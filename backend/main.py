@@ -71,10 +71,14 @@ mobile_origins = [
 ]
 origins.extend(mobile_origins)
 
+# Debug CORS configuration
+print("CORS Origins:", origins)
+
+# Temporarily allow all origins for debugging
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
+    allow_origins=["*"],  # Temporarily allow all origins
+    allow_credentials=False,  # Must be False when allow_origins is "*"
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allow_headers=[
         "Accept",
@@ -107,7 +111,25 @@ class COOPMiddleware(BaseHTTPMiddleware):
 
 app.add_middleware(COOPMiddleware)
 
+# Basic health check endpoint (no middleware dependencies)
+@app.get("/health")
+async def health_check():
+    """Simple health check endpoint"""
+    return {"status": "ok", "message": "Server is running"}
+
 # Let CORSMiddleware handle OPTIONS requests automatically
+
+# Debug middleware to log requests
+@app.middleware("http")
+async def debug_middleware(request: Request, call_next):
+    print(f"Request: {request.method} {request.url} from {request.headers.get('origin', 'no-origin')}")
+    try:
+        response = await call_next(request)
+        print(f"Response: {response.status_code}")
+        return response
+    except Exception as e:
+        print(f"Error in request processing: {e}")
+        raise
 
 # Security headers middleware
 @app.middleware("http")

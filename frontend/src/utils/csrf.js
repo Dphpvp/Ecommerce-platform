@@ -19,7 +19,7 @@ class CSRFManager {
       // Try to get CSRF token from API
       const response = await fetch(`${API_BASE}/csrf-token`, {
         method: 'GET',
-        credentials: 'include',
+        // credentials: 'include', // Temporarily disabled for CORS debugging
         headers: {
           'Accept': 'application/json',
           ...platformDetection.getPlatformHeaders()
@@ -78,7 +78,7 @@ class CSRFManager {
     return fetch(url, {
       ...options,
       headers,
-      credentials: 'include', // Always include cookies for session
+      // credentials: 'include', // Temporarily disabled for CORS debugging
     });
   }
 
@@ -168,7 +168,10 @@ export const secureFetch = async (url, options = {}) => {
     defaultOptions.headers['X-Request-Timestamp'] = timestamp.toString();
   }
 
-  return fetch(url, { ...defaultOptions, ...options });
+  const finalOptions = { ...defaultOptions, ...options };
+  // Temporarily remove credentials for CORS debugging
+  delete finalOptions.credentials;
+  return fetch(url, finalOptions);
 };
 
 // Input sanitization utilities
