@@ -1,8 +1,17 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+import os
 
-# Create minimal FastAPI app
-app = FastAPI(title="E-commerce API", version="1.0.0")
+# Configuration
+FRONTEND_URL = os.getenv("FRONTEND_URL", "https://vergishop.vercel.app")
+
+# Create FastAPI app
+app = FastAPI(
+    title="E-commerce API", 
+    version="1.0.0",
+    description="E-commerce Platform API"
+)
 
 # Add CORS middleware
 app.add_middleware(
@@ -28,5 +37,5 @@ async def get_csrf_token():
 
 # Basic register endpoint for testing
 @app.post("/api/auth/register")
-async def register():
-    return {"message": "Registration endpoint working"}
+async def register(request: Request):
+    return {"message": "Registration endpoint working", "origin": request.headers.get("origin")}

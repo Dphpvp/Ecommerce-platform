@@ -26,6 +26,7 @@
   "scripts": {
     "start": "craco start",
     "build": "craco build && node scripts/clean-build.js",
+    "build:fresh": "rm -rf build && npm run build",
     "build:android": "node scripts/cap-sync.js",
     "build:web": "craco build",
     "build:original": "craco build",
