@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useToastContext } from './toast';
 import platformDetection from '../utils/platformDetection';
 import secureAuth from '../utils/secureAuth';
+import simpleFetch from '../utils/simpleFetch';
 import './AnimatedAuthForm.css';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
@@ -80,8 +81,8 @@ const AnimatedAuthForm = () => {
 
       let response;
       const requestHeaders = {
-        'Content-Type': 'application/json',
-        ...secureAuth.getSecurityHeaders()
+        'Content-Type': 'application/json'
+        // Remove security headers to avoid CORS preflight issues
       };
 
       if (platformDetection.isMobile && window.Capacitor?.Plugins?.CapacitorHttp) {
@@ -99,13 +100,26 @@ const AnimatedAuthForm = () => {
           json: async () => httpResponse.data
         };
       } else {
-        console.log('🌐 Using fetch for web login');
-        response = await fetch(`${API_BASE}/auth/login`, {
-          method: 'POST',
-          headers: requestHeaders,
-          credentials: 'include',
-          body: JSON.stringify(formDataWithAuth),
-        });
+        console.log('🌐 Using simple fetch for web login');
+        try {
+          const data = await simpleFetch('/auth/login', {
+            method: 'POST',
+            body: JSON.stringify(formDataWithAuth)
+          });
+          
+          response = {
+            ok: true,
+            status: 200,
+            json: async () => data
+          };
+        } catch (error) {
+          console.error('Simple fetch login error:', error);
+          response = {
+            ok: false,
+            status: error.message.includes('401') ? 401 : 500,
+            json: async () => ({ detail: error.message })
+          };
+        }
       }
 
       const data = await response.json();
@@ -194,8 +208,8 @@ const AnimatedAuthForm = () => {
       if (loadingIndicator?.present) await loadingIndicator.present();
 
       const requestHeaders = {
-        'Content-Type': 'application/json',
-        ...secureAuth.getSecurityHeaders()
+        'Content-Type': 'application/json'
+        // Remove security headers to avoid CORS preflight issues
       };
 
       let response;
@@ -214,13 +228,26 @@ const AnimatedAuthForm = () => {
           json: async () => httpResponse.data
         };
       } else {
-        console.log('🌐 Using fetch for web registration');
-        response = await fetch(`${API_BASE}/auth/register`, {
-          method: 'POST',
-          headers: requestHeaders,
-          credentials: 'include',
-          body: JSON.stringify(registerData),
-        });
+        console.log('🌐 Using simple fetch for web registration');
+        try {
+          const data = await simpleFetch('/auth/register', {
+            method: 'POST',
+            body: JSON.stringify(registerData)
+          });
+          
+          response = {
+            ok: true,
+            status: 200,
+            json: async () => data
+          };
+        } catch (error) {
+          console.error('Simple fetch registration error:', error);
+          response = {
+            ok: false,
+            status: error.message.includes('401') ? 401 : 500,
+            json: async () => ({ detail: error.message })
+          };
+        }
       }
 
       const data = await response.json();

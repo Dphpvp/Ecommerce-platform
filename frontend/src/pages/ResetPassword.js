@@ -82,9 +82,8 @@ const ResetPassword = () => {
       const response = await fetch(`${API_BASE}/auth/request-password-reset`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
-        credentials: 'include',
         body: JSON.stringify({
           email: requestForm.email,
           recaptcha_response: 'NO_CAPTCHA_YET'

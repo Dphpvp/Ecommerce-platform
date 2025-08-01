@@ -23,8 +23,8 @@ const TwoFactorVerification = ({ tempToken, onSuccess, onCancel }) => {
       if (loadingIndicator?.present) await loadingIndicator.present();
 
       const requestHeaders = {
-        'Content-Type': 'application/json',
-        ...secureAuth.getSecurityHeaders()
+        'Content-Type': 'application/json'
+        // Remove security headers to avoid CORS preflight issues
       };
 
       let response;
@@ -89,8 +89,8 @@ const TwoFactorVerification = ({ tempToken, onSuccess, onCancel }) => {
       if (loadingIndicator?.present) await loadingIndicator.present();
 
       const requestHeaders = {
-        'Content-Type': 'application/json',
-        ...secureAuth.getSecurityHeaders()
+        'Content-Type': 'application/json'
+        // Remove security headers to avoid CORS preflight issues
       };
 
       let response;

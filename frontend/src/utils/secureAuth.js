@@ -187,10 +187,8 @@ class SecureAuth {
           }
         };
 
-        // Add CSRF protection for state-changing requests
-        if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(requestOptions.method?.toUpperCase())) {
-          requestOptions.headers['X-Requested-With'] = 'XMLHttpRequest';
-        }
+        // Skip additional headers to avoid CORS preflight issues
+        // The backend should handle CSRF protection
 
         const response = await fetch(url, requestOptions);
         
@@ -366,14 +364,12 @@ class SecureAuth {
   }
 
   /**
-   * Security headers for requests
+   * Security headers for requests (minimal to avoid CORS preflight issues)
    */
   getSecurityHeaders() {
     return {
-      'X-Requested-With': 'XMLHttpRequest',
-      'X-Content-Type-Options': 'nosniff',
-      'X-Frame-Options': 'DENY',
-      'X-XSS-Protection': '1; mode=block'
+      // Only include essential headers that don't trigger CORS preflight
+      'X-Requested-With': 'XMLHttpRequest'
     };
   }
 
