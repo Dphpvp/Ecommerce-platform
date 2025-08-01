@@ -33,6 +33,27 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Timeout middleware (suspect for memory corruption)
+class TimeoutMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        try:
+            # Different timeouts for different endpoints
+            timeout = 30.0  # Default 30 seconds
+            
+            if request.url.path.startswith(('/api/uploads', '/api/admin/dashboard')):
+                timeout = 60.0  # 60 seconds for uploads and dashboard
+            elif request.url.path.startswith('/api/auth'):
+                timeout = 15.0  # 15 seconds for auth endpoints
+            
+            return await asyncio.wait_for(call_next(request), timeout=timeout)
+        except asyncio.TimeoutError:
+            return JSONResponse(
+                {"error": "Request timeout", "message": "Request took too long to process"}, 
+                status_code=408
+            )
+
+app.add_middleware(TimeoutMiddleware)
+
 # Simple security headers middleware
 @app.middleware("http")
 async def security_headers_middleware(request: Request, call_next):
