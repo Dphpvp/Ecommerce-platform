@@ -33,30 +33,7 @@ app = FastAPI(
     redoc_url=None,
 )
 
-# ✅ CORS Middleware (must be first)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
-    allow_headers=[
-        "Accept",
-        "Accept-Language",
-        "Content-Language",
-        "Content-Type",
-        "Authorization",
-        "X-CSRF-Token",
-        "X-Request-Signature",
-        "X-Request-Timestamp",
-        "Cache-Control",
-        "X-Platform",
-        "X-Device-Type"
-    ],
-    expose_headers=["Set-Cookie"],
-    max_age=600,
-)
-
-# ⏱️ Timeout Middleware
+# ⏱️ Timeout Middleware (add first, executes last)
 class TimeoutMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         try:
@@ -109,6 +86,29 @@ async def security_headers_middleware(request: Request, call_next):
 if ALLOWED_HOSTS:
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS)
 
+# ✅ CORS Middleware (add LAST so it executes FIRST)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allow_headers=[
+        "Accept",
+        "Accept-Language",
+        "Content-Language",
+        "Content-Type",
+        "Authorization",
+        "X-CSRF-Token",
+        "X-Request-Signature",
+        "X-Request-Timestamp",
+        "Cache-Control",
+        "X-Platform",
+        "X-Device-Type"
+    ],
+    expose_headers=["Set-Cookie"],
+    max_age=600,
+)
+
 # 📦 API Router
 app.include_router(api_router)
 
@@ -136,7 +136,16 @@ async def status():
 # ✅ Handle CORS preflight for CSRF endpoint
 @app.options("/api/csrf-token")
 async def options_csrf_token():
-    return JSONResponse(status_code=200)
+    return JSONResponse(
+        content={"message": "CORS preflight OK"},
+        status_code=200,
+        headers={
+            "Access-Control-Allow-Origin": "https://vergishop.vercel.app",
+            "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization, X-CSRF-Token",
+            "Access-Control-Allow-Credentials": "true",
+        }
+    )
 
 # 🔑 CSRF Token endpoint
 @app.get("/api/csrf-token")
@@ -158,6 +167,20 @@ async def get_csrf_token_compat(request: Request):
 
     csrf_token = csrf_protection.generate_token(session_id)
     return {"csrf_token": csrf_token}
+
+# ✅ Handle CORS preflight for register endpoint
+@app.options("/api/auth/register")
+async def options_register():
+    return JSONResponse(
+        content={"message": "CORS preflight OK"},
+        status_code=200,
+        headers={
+            "Access-Control-Allow-Origin": "https://vergishop.vercel.app",
+            "Access-Control-Allow-Methods": "POST, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization, X-CSRF-Token",
+            "Access-Control-Allow-Credentials": "true",
+        }
+    )
 
 # 🧪 Test-only register endpoint
 @app.post("/api/auth/register")
