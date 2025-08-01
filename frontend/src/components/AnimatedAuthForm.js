@@ -6,6 +6,7 @@ import { useToastContext } from './toast';
 import platformDetection from '../utils/platformDetection';
 import secureAuth from '../utils/secureAuth';
 import simpleFetch from '../utils/simpleFetch';
+import { debugLogin, debugLoginResponse } from '../utils/authDebug';
 import './AnimatedAuthForm.css';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
@@ -79,6 +80,9 @@ const AnimatedAuthForm = () => {
         recaptcha_response: 'NO_CAPTCHA_YET'
       };
 
+      // Debug login attempt
+      debugLogin(loginData);
+
       let response;
       const requestHeaders = {
         'Content-Type': 'application/json'
@@ -116,13 +120,20 @@ const AnimatedAuthForm = () => {
           console.error('Simple fetch login error:', error);
           response = {
             ok: false,
-            status: error.message.includes('401') ? 401 : 500,
-            json: async () => ({ detail: error.message })
+            status: error.status || (error.message.includes('401') ? 401 : 500),
+            json: async () => ({ 
+              detail: error.data?.detail || error.message,
+              message: error.data?.message || error.message,
+              errors: error.data?.errors
+            })
           };
         }
       }
 
       const data = await response.json();
+
+      // Debug login response
+      debugLoginResponse(response, data);
 
       if (response.ok) {
         console.log('✅ Login response received:', {
@@ -131,16 +142,36 @@ const AnimatedAuthForm = () => {
           hasRefreshToken: !!data.refresh_token
         });
 
+        // Handle different backend response formats
+        console.log('🔍 Processing login response:', {
+          hasAccessToken: !!data.access_token,
+          hasToken: !!data.token,
+          hasUser: !!data.user,
+          hasRefreshToken: !!data.refresh_token,
+          userType: data.user?.is_admin ? 'admin' : 'regular',
+          requires2FA: !!data.requires_2fa
+        });
+
+        // Check if 2FA is required
+        if (data.requires_2fa || data.temp_token) {
+          console.log('🔐 2FA required for user');
+          // Handle 2FA flow - you might need to implement this
+          showToast('2FA verification required', 'info');
+          // TODO: Implement 2FA flow here
+          return;
+        }
+
         // Store tokens securely using the new JWT system
         if (data.access_token || data.token) {
-          const loginData = {
+          const loginResponseData = {
             access_token: data.access_token || data.token,
             refresh_token: data.refresh_token,
             expires_in: data.expires_in || 3600,
             user: data.user
           };
           
-          const success = await login(loginData);
+          console.log('💾 Storing JWT tokens for user:', data.user?.username);
+          const success = await login(loginResponseData);
           if (success) {
             showToast('Login successful!', 'success');
             await platformDetection.showToast('Welcome back!', 2000);
@@ -148,14 +179,24 @@ const AnimatedAuthForm = () => {
           } else {
             throw new Error('Failed to store authentication tokens');
           }
-        } else {
-          // Fallback for user data without explicit tokens
+        } else if (data.user) {
+          // Fallback for user data without explicit tokens (legacy support)
+          console.log('📋 Using legacy login format for user:', data.user?.username);
           await login({ user: data.user });
           showToast('Login successful!', 'success');
           navigate('/');
+        } else {
+          console.error('❌ Invalid login response format:', data);
+          throw new Error('Invalid response format from server');
         }
       } else {
         const errorMessage = data.detail || data.message || 'Login failed';
+        console.error('🚨 Login failed:', {
+          status: response.status,
+          data: data,
+          errorMessage
+        });
+        
         showToast(errorMessage, 'error');
         await platformDetection.showToast(errorMessage, 3000);
       }

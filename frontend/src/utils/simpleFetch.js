@@ -43,18 +43,42 @@ export const simpleFetch = async (endpoint, options = {}) => {
     const response = await fetch(url, finalOptions);
     
     if (!response.ok) {
-      const errorText = await response.text();
+      let errorData;
+      try {
+        errorData = await response.json();
+      } catch (jsonError) {
+        errorData = { detail: await response.text() };
+      }
+      
       console.error('Simple fetch error:', {
+        url,
         status: response.status,
         statusText: response.statusText,
-        errorText
+        errorData
       });
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      
+      // Throw error with detailed information
+      const error = new Error(errorData.detail || errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+      error.status = response.status;
+      error.data = errorData;
+      throw error;
     }
 
-    return await response.json();
+    const responseData = await response.json();
+    console.log('✅ Simple fetch success:', {
+      url,
+      method: finalOptions.method,
+      hasData: !!responseData
+    });
+    
+    return responseData;
   } catch (error) {
-    console.error('Simple fetch failed:', error);
+    console.error('🚨 Simple fetch failed:', {
+      url,
+      method: finalOptions.method,
+      error: error.message,
+      status: error.status
+    });
     throw error;
   }
 };

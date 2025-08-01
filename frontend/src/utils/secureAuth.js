@@ -381,7 +381,7 @@ class SecureAuth {
       const token = localStorage.getItem(this.TOKEN_KEY);
       
       if (token) {
-        // Notify backend of logout
+        // Notify backend of logout using simple fetch to avoid CORS preflight
         const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
         
         try {
@@ -389,12 +389,13 @@ class SecureAuth {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`,
-              ...this.getSecurityHeaders()
+              'Authorization': `Bearer ${token}`
             }
           });
+          console.log('✅ Backend logout successful');
         } catch (error) {
           console.warn('Backend logout failed:', error);
+          // Continue with local cleanup even if backend call fails
         }
       }
       
