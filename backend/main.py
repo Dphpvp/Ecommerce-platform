@@ -189,6 +189,17 @@ async def health_check():
         "timestamp": datetime.now().isoformat()
     }
 
+# CORS Test endpoint
+@app.get("/api/cors-test")
+async def cors_test():
+    """Simple CORS test endpoint"""
+    return {"status": "ok", "message": "CORS is working", "timestamp": datetime.now().isoformat()}
+
+@app.options("/api/cors-test")
+async def cors_test_options():
+    """Handle preflight OPTIONS request"""
+    return {"status": "ok"}
+
 # CSRF Token endpoint for anonymous users
 @app.get("/api/csrf-token")
 @app.post("/api/csrf-token")
