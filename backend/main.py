@@ -28,51 +28,32 @@ app = FastAPI(
 # Include only the main API router (admin routes are already included in api_router)
 app.include_router(api_router)
 
-# Timeout middleware
-class TimeoutMiddleware(BaseHTTPMiddleware):
-    async def dispatch(self, request: Request, call_next):
-        try:
-            # Different timeouts for different endpoints
-            timeout = 30.0  # Default 30 seconds
-            
-            if request.url.path.startswith(('/api/uploads', '/api/admin/dashboard')):
-                timeout = 60.0  # 60 seconds for uploads and dashboard
-            elif request.url.path.startswith('/api/auth'):
-                timeout = 15.0  # 15 seconds for auth endpoints
-            
-            return await asyncio.wait_for(call_next(request), timeout=timeout)
-        except asyncio.TimeoutError:
-            return JSONResponse(
-                {"error": "Request timeout", "message": "Request took too long to process"}, 
-                status_code=408
-            )
+# Temporarily disable timeout middleware to fix memory issues
+# Timeout middleware can cause memory corruption in some cases
+# class TimeoutMiddleware(BaseHTTPMiddleware):
+#     async def dispatch(self, request: Request, call_next):
+#         try:
+#             timeout = 30.0
+#             if request.url.path.startswith(('/api/uploads', '/api/admin/dashboard')):
+#                 timeout = 60.0
+#             elif request.url.path.startswith('/api/auth'):
+#                 timeout = 15.0
+#             return await asyncio.wait_for(call_next(request), timeout=timeout)
+#         except asyncio.TimeoutError:
+#             return JSONResponse(
+#                 {"error": "Request timeout", "message": "Request took too long to process"}, 
+#                 status_code=408
+#             )
 
-app.add_middleware(TimeoutMiddleware)
+# app.add_middleware(TimeoutMiddleware)
 
 # Security middleware (disabled for local development)
 if ALLOWED_HOSTS:
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS)
 
-# CORS configuration
-origins = [
-    "https://vergishop.vercel.app",
-    "https://vs1.vercel.app"
-]
-
-if FRONTEND_URL and FRONTEND_URL not in origins:
-    origins.append(FRONTEND_URL)
-
-# Always include production frontend URL
-origins.extend(["https://vergishop.vercel.app"])
-
-# Add mobile origins for Capacitor (production only)
-mobile_origins = [
-    "https://vergishop.vercel.app"
-]
-origins.extend(mobile_origins)
-
-# Debug CORS configuration
-print("CORS Origins:", origins)
+# Simplified CORS configuration to avoid memory issues
+# Just use the single required origin
+origins = ["https://vergishop.vercel.app"]
 
 app.add_middleware(
     CORSMiddleware,
@@ -96,25 +77,7 @@ class COOPMiddleware(BaseHTTPMiddleware):
 
 app.add_middleware(COOPMiddleware)
 
-# Basic health check endpoint (no middleware dependencies)
-@app.get("/health")
-async def health_check():
-    """Simple health check endpoint"""
-    return {"status": "ok", "message": "Server is running"}
-
 # Let CORSMiddleware handle OPTIONS requests automatically
-
-# Debug middleware to log requests
-@app.middleware("http")
-async def debug_middleware(request: Request, call_next):
-    print(f"Request: {request.method} {request.url} from {request.headers.get('origin', 'no-origin')}")
-    try:
-        response = await call_next(request)
-        print(f"Response: {response.status_code}")
-        return response
-    except Exception as e:
-        print(f"Error in request processing: {e}")
-        raise
 
 # Security headers middleware
 @app.middleware("http")
