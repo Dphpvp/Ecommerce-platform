@@ -250,31 +250,33 @@ form {
 /* Enhanced Registration Form Styles */
 .input-row {
   display: flex;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 
 .input-box.half {
   flex: 1;
   margin-bottom: 0;
+  height: 45px;
 }
 
 .checkbox-box {
   display: flex;
   align-items: flex-start;
-  gap: 10px;
-  margin: 20px 0;
+  gap: 8px;
+  margin: 12px 0;
   text-align: left;
 }
 
 .checkbox-box input[type="checkbox"] {
-  margin-top: 3px;
+  margin-top: 2px;
   accent-color: #7494ec;
+  transform: scale(0.9);
 }
 
 .checkbox-box label {
-  font-size: 12px;
-  line-height: 1.4;
+  font-size: 11px;
+  line-height: 1.3;
   color: #666;
 }
 
@@ -289,21 +291,43 @@ form {
 
 /* Form container adjustments for more fields */
 .form-box.register {
-  padding: 25px 40px;
+  padding: 20px 30px;
   overflow-y: auto;
+  max-height: 100%;
 }
 
 .form-box.register h1 {
-  font-size: 28px;
-  margin: 0 0 15px 0;
+  font-size: 24px;
+  margin: 0 0 10px 0;
 }
 
 .form-box.register .input-box {
-  margin-bottom: 15px;
+  margin-bottom: 8px;
+  height: 45px;
+}
+
+.form-box.register .input-box input {
+  height: 45px;
+  font-size: 14px;
+  padding: 0 45px 0 15px;
+}
+
+.form-box.register .input-box i {
+  font-size: 18px;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
 }
 
 .form-box.register .btn {
-  margin-top: 15px;
+  margin-top: 10px;
+  height: 45px;
+  font-size: 16px;
+}
+
+.form-box.register p {
+  margin: 8px 0;
+  font-size: 13px;
 }
 
 /* Responsive adjustments for registration form */
@@ -314,19 +338,33 @@ form {
   }
   
   .input-box.half {
-    margin-bottom: 15px;
+    margin-bottom: 8px;
   }
   
   .form-box.register {
-    padding: 20px 30px;
+    padding: 15px 25px;
+  }
+  
+  .form-box.register h1 {
+    font-size: 22px;
+  }
+  
+  .form-box.register .input-box {
+    height: 42px;
+    margin-bottom: 7px;
+  }
+  
+  .form-box.register .input-box input {
+    height: 42px;
+    font-size: 13px;
   }
   
   .checkbox-box {
-    margin: 15px 0;
+    margin: 10px 0;
   }
   
   .checkbox-box label {
-    font-size: 11px;
+    font-size: 10px;
   }
 }
 
@@ -336,7 +374,34 @@ form {
   }
   
   .form-box.register {
-    padding: 15px 20px;
+    padding: 12px 18px;
+  }
+  
+  .form-box.register h1 {
+    font-size: 20px;
+    margin-bottom: 8px;
+  }
+  
+  .form-box.register .input-box {
+    height: 40px;
+    margin-bottom: 6px;
+  }
+  
+  .form-box.register .input-box input {
+    height: 40px;
+    font-size: 12px;
+    padding: 0 40px 0 12px;
+  }
+  
+  .form-box.register .input-box i {
+    font-size: 16px;
+    right: 12px;
+  }
+  
+  .form-box.register .btn {
+    height: 42px;
+    font-size: 14px;
+    margin-top: 8px;
   }
 
   .toggle-panel h1 {
@@ -345,5 +410,13 @@ form {
   
   .input-row {
     gap: 0;
+  }
+  
+  .checkbox-box {
+    margin: 8px 0;
+  }
+  
+  .checkbox-box label {
+    font-size: 9px;
   }
 }

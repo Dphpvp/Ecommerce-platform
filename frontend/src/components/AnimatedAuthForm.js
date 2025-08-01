@@ -306,6 +306,22 @@ const AnimatedAuthForm = () => {
       loadingIndicator = await platformDetection.showLoading('Creating account...');
       if (loadingIndicator?.present) await loadingIndicator.present();
 
+      // Prepare clean registration data for backend
+      const cleanRegistrationData = {
+        username: registerData.username,
+        email: registerData.email,
+        password: registerData.password,
+        first_name: registerData.firstName,
+        last_name: registerData.lastName,
+        phone: registerData.phone || ''
+      };
+
+      console.log('🔍 Registration data being sent:', {
+        ...cleanRegistrationData,
+        password: '[HIDDEN]',
+        passwordLength: registerData.password.length
+      });
+
       const requestHeaders = {
         'Content-Type': 'application/json'
         // Remove security headers to avoid CORS preflight issues
@@ -318,7 +334,7 @@ const AnimatedAuthForm = () => {
           url: `${API_BASE}/auth/register`,
           method: 'POST',
           headers: requestHeaders,
-          data: registerData
+          data: cleanRegistrationData
         });
         
         response = {
@@ -328,10 +344,11 @@ const AnimatedAuthForm = () => {
         };
       } else {
         console.log('🌐 Using direct fetch for web registration with CSRF handling');
+        console.log('📤 About to send registration request with data:', JSON.stringify(cleanRegistrationData, null, 2));
         try {
           const data = await directFetch('/auth/register', {
             method: 'POST',
-            body: JSON.stringify(registerData)
+            body: JSON.stringify(cleanRegistrationData)
           });
           
           response = {
