@@ -8,6 +8,9 @@ import stripe
 import os
 import asyncio
 
+# Try importing the API router (main suspect)
+from api.main import router as api_router
+
 # Configuration
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
 FRONTEND_URL = os.getenv("FRONTEND_URL", "https://vergishop.vercel.app")
@@ -41,6 +44,9 @@ async def security_headers_middleware(request: Request, call_next):
 # Add TrustedHostMiddleware
 if ALLOWED_HOSTS:
     app.add_middleware(TrustedHostMiddleware, allowed_hosts=ALLOWED_HOSTS)
+
+# Include the API router (major suspect for memory corruption)
+app.include_router(api_router)
 
 @app.get("/")
 async def root():
