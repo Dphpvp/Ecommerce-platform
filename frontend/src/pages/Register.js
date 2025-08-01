@@ -109,13 +109,8 @@ const Register = () => {
         address: sanitizeInput.text(formData.address, 200)
       };
 
-      // Temporarily use direct fetch instead of secureFetch to test CORS
-      const response = await fetch(`${API_BASE}/auth/register`, {
+      const response = await secureFetch(`${API_BASE}/auth/register`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
         body: JSON.stringify(sanitizedData)
       });
 

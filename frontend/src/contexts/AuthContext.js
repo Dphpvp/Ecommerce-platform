@@ -240,12 +240,24 @@ export const AuthProvider = ({ children }) => {
           break;
           
         case 'logout_other_tab':
-        case 'session_invalid':
-          console.log('🚪 Session invalidated, logging out');
+          console.log('🚪 Session invalidated in other tab, logging out');
           setUser(null);
           setRequires2FA(false);
           setTempToken(null);
           setLoading(false);
+          break;
+          
+        case 'session_invalid':
+          // Only logout if we actually had a user before
+          if (user) {
+            console.log('🚪 Session invalidated, logging out');
+            setUser(null);
+            setRequires2FA(false);
+            setTempToken(null);
+            setLoading(false);
+          } else {
+            console.log('👁️ No session found, but user was not logged in anyway');
+          }
           break;
           
         case 'no_session':

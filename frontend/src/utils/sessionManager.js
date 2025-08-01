@@ -196,12 +196,15 @@ class SessionManager {
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden) {
         // Page became visible, check session validity
-        if (!this.isSessionValid()) {
+        const sessionData = this.getSessionData();
+        if (sessionData && !this.isSessionValid()) {
+          // Only fire session_invalid if we had a session that became invalid
           console.log('👁️ Page visible but session invalid');
           this.notifyListeners('session_invalid');
-        } else {
+        } else if (sessionData) {
           this.updateLastActivity();
         }
+        // Don't fire events if there was never a session to begin with
       }
     });
 

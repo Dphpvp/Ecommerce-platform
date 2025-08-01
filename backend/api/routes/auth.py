@@ -52,7 +52,8 @@ async def register_options():
 @rate_limit(max_attempts=3, window_minutes=60, endpoint_name="register")
 async def register(
     request: UserRegisterRequest,
-    http_request: Request
+    http_request: Request,
+    csrf_valid: bool = Depends(require_csrf_token)
 ) -> MessageResponse:
     try:
         await auth_service.register_user(request, http_request)
