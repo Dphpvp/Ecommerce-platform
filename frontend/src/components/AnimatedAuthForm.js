@@ -8,10 +8,6 @@ import secureAuth from '../utils/secureAuth';
 import simpleFetch from '../utils/simpleFetch';
 import directFetch from '../utils/directFetch';
 import { debugLogin, debugLoginResponse } from '../utils/authDebug';
-import { testCSRFEndpoint } from '../utils/testCSRF';
-import registerWithoutCSRF from '../utils/bypassCSRF';
-import { testEndpoints, testRegisterEndpoint } from '../utils/endpointTest';
-import { testRegistrationFormats } from '../utils/registrationFormats';
 import './AnimatedAuthForm.css';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
@@ -26,9 +22,9 @@ const AnimatedAuthForm = () => {
     email: '', 
     password: '', 
     confirmPassword: '',
-    firstName: '',
-    lastName: '',
+    full_name: '',
     phone: '',
+    address: '',
     acceptTerms: false
   });
   const [isMobileAPK, setIsMobileAPK] = useState(false);
@@ -236,14 +232,14 @@ const AnimatedAuthForm = () => {
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     
-    // Validate required fields
+    // Validate required fields (matching backend requirements)
     if (!registerData.username || !registerData.email || !registerData.password || 
-        !registerData.confirmPassword || !registerData.firstName || !registerData.lastName) {
+        !registerData.confirmPassword || !registerData.full_name || !registerData.phone) {
       showToast('Please fill in all required fields', 'error');
       return;
     }
 
-    // Username validation
+    // Username validation (backend requirements)
     if (registerData.username.length < 3 || registerData.username.length > 50) {
       showToast('Username must be 3-50 characters', 'error');
       return;
@@ -252,33 +248,46 @@ const AnimatedAuthForm = () => {
       showToast('Username can only contain letters, numbers, underscore, and hyphen', 'error');
       return;
     }
-
-    // Name validation
-    if (registerData.firstName.length < 2 || registerData.lastName.length < 2) {
-      showToast('First and last name must be at least 2 characters', 'error');
-      return;
-    }
-    if (!/^[a-zA-Z\s'-]+$/.test(registerData.firstName) || !/^[a-zA-Z\s'-]+$/.test(registerData.lastName)) {
-      showToast('Names can only contain letters, spaces, hyphens, and apostrophes', 'error');
+    
+    // Check for reserved usernames
+    const reservedUsernames = ['admin', 'api', 'www', 'mail', 'ftp', 'localhost', 'root', 'support'];
+    if (reservedUsernames.includes(registerData.username.toLowerCase())) {
+      showToast('This username is reserved. Please choose another.', 'error');
       return;
     }
 
-    // Email validation
+    // Full name validation (backend uses single field)
+    if (registerData.full_name.length < 2 || registerData.full_name.length > 100) {
+      showToast('Full name must be 2-100 characters', 'error');
+      return;
+    }
+
+    // Email validation (backend requirements)
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(registerData.email)) {
-      showToast('Please enter a valid email address', 'error');
+    if (!emailRegex.test(registerData.email) || registerData.email.length > 254) {
+      showToast('Please enter a valid email address (max 254 characters)', 'error');
       return;
     }
 
-    // Phone validation (if provided)
-    if (registerData.phone && !/^[\+]?[\d\s\-\(\)]{7,20}$/.test(registerData.phone)) {
-      showToast('Please enter a valid phone number', 'error');
+    // Phone validation (required by backend)
+    if (registerData.phone.length < 10 || registerData.phone.length > 20) {
+      showToast('Phone number must be 10-20 characters', 'error');
+      return;
+    }
+    if (!/^[\+]?[\d\s\-\(\)]{10,20}$/.test(registerData.phone)) {
+      showToast('Please enter a valid phone number (international format supported)', 'error');
       return;
     }
 
-    // Password validation
-    if (registerData.password.length < 8) {
-      showToast('Password must be at least 8 characters', 'error');
+    // Address validation (optional field)
+    if (registerData.address && registerData.address.length > 500) {
+      showToast('Address must be less than 500 characters', 'error');
+      return;
+    }
+
+    // Password validation (backend requirements)
+    if (registerData.password.length < 8 || registerData.password.length > 128) {
+      showToast('Password must be 8-128 characters', 'error');
       return;
     }
     if (registerData.password !== registerData.confirmPassword) {
@@ -286,14 +295,21 @@ const AnimatedAuthForm = () => {
       return;
     }
 
-    // Password strength validation
+    // Password strength validation (backend requirements)
     const hasUppercase = /[A-Z]/.test(registerData.password);
     const hasLowercase = /[a-z]/.test(registerData.password);
     const hasNumbers = /\d/.test(registerData.password);
     const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(registerData.password);
     
-    if (!hasUppercase || !hasLowercase || !hasNumbers) {
-      showToast('Password must contain uppercase, lowercase, and numbers', 'error');
+    if (!hasUppercase || !hasLowercase || !hasNumbers || !hasSpecialChar) {
+      showToast('Password must contain uppercase, lowercase, number, and special character', 'error');
+      return;
+    }
+
+    // Check for weak passwords
+    const weakPasswords = ['password', '123456', 'password123', 'admin', 'qwerty'];
+    if (weakPasswords.some(weak => registerData.password.toLowerCase().includes(weak))) {
+      showToast('Password is too weak. Please choose a stronger password.', 'error');
       return;
     }
 
@@ -310,15 +326,14 @@ const AnimatedAuthForm = () => {
       loadingIndicator = await platformDetection.showLoading('Creating account...');
       if (loadingIndicator?.present) await loadingIndicator.present();
 
-      // Prepare clean registration data for backend
+      // Prepare clean registration data for backend (exact match to backend schema)
       const cleanRegistrationData = {
-        username: registerData.username.trim(),
+        username: registerData.username.trim().toLowerCase(),
         email: registerData.email.trim().toLowerCase(),
         password: registerData.password,
-        password_confirmation: registerData.confirmPassword, // Some backends expect this field
-        first_name: registerData.firstName.trim(),
-        last_name: registerData.lastName.trim(),
-        phone: registerData.phone ? registerData.phone.trim() : null
+        full_name: registerData.full_name.trim(),
+        phone: registerData.phone.trim(),
+        address: registerData.address ? registerData.address.trim() : ""
       };
 
       console.log('🔍 Registration data being sent:', {
@@ -335,32 +350,16 @@ const AnimatedAuthForm = () => {
         userAgent: navigator.userAgent.substring(0, 100)
       });
 
-      // Comprehensive endpoint testing
-      console.log('🧪 Running comprehensive endpoint tests...');
-      await testEndpoints();
-      await testRegisterEndpoint();
-      
-      // Quick CSRF endpoint check
-      console.log('🔍 Checking if CSRF endpoint exists...');
-      const csrfToken = await testCSRFEndpoint();
-      console.log('📋 CSRF token result:', csrfToken ? 'Found' : 'Not found');
-
-      const requestHeaders = {
-        'Content-Type': 'application/json'
-        // Remove security headers to avoid CORS preflight issues
-      };
+      console.log('🚀 Starting registration process...');
 
       let response;
-      
-      // Temporary: Force web registration for testing
-      const forceWebRegistration = true;
-      
-      if (!forceWebRegistration && platformDetection.isMobile && window.Capacitor?.Plugins?.CapacitorHttp) {
-        console.log('📱 Attempting mobile registration with CSRF handling...');
-        
-        // Strategy 1: Try without CSRF first for mobile
+      const requestHeaders = {
+        'Content-Type': 'application/json'
+      };
+      // Use simplified registration with proper CSRF handling
+      if (platformDetection.isMobile && window.Capacitor?.Plugins?.CapacitorHttp) {
+        console.log('📱 Mobile registration');
         try {
-          console.log('📤 Mobile Strategy 1: Registration without CSRF');
           const httpResponse = await window.Capacitor.Plugins.CapacitorHttp.request({
             url: `${API_BASE}/auth/register`,
             method: 'POST',
@@ -368,67 +367,27 @@ const AnimatedAuthForm = () => {
             data: cleanRegistrationData
           });
           
-          if (httpResponse.status >= 200 && httpResponse.status < 300) {
-            response = {
-              ok: true,
-              status: httpResponse.status,
-              json: async () => httpResponse.data
-            };
-          } else {
-            throw new Error(`HTTP ${httpResponse.status}: ${httpResponse.data?.detail || 'Registration failed'}`);
-          }
+          response = {
+            ok: httpResponse.status >= 200 && httpResponse.status < 300,
+            status: httpResponse.status,
+            json: async () => httpResponse.data || {}
+          };
         } catch (error) {
-          console.warn('Mobile Strategy 1 failed:', error.message);
-          
-          // Strategy 2: Try with CSRF token if available
-          if (csrfToken) {
-            try {
-              console.log('📤 Mobile Strategy 2: Registration with CSRF in data');
-              const dataWithCSRF = {
-                ...cleanRegistrationData,
-                csrf_token: csrfToken
-              };
-              
-              const httpResponse = await window.Capacitor.Plugins.CapacitorHttp.request({
-                url: `${API_BASE}/auth/register`,
-                method: 'POST',
-                headers: requestHeaders,
-                data: dataWithCSRF
-              });
-              
-              if (httpResponse.status >= 200 && httpResponse.status < 300) {
-                response = {
-                  ok: true,
-                  status: httpResponse.status,
-                  json: async () => httpResponse.data
-                };
-              } else {
-                throw new Error(`HTTP ${httpResponse.status}: ${httpResponse.data?.detail || 'Registration failed'}`);
-              }
-            } catch (error2) {
-              console.error('Mobile Strategy 2 also failed:', error2.message);
-              response = {
-                ok: false,
-                status: 403,
-                json: async () => ({ detail: 'Mobile registration failed: ' + error2.message })
-              };
-            }
-          } else {
-            console.error('No CSRF token available for mobile registration');
-            response = {
-              ok: false,
-              status: 403,
-              json: async () => ({ detail: 'Mobile registration failed: ' + error.message })
-            };
-          }
+          console.error('Mobile registration failed:', error);
+          response = {
+            ok: false,
+            status: 500,
+            json: async () => ({ detail: 'Mobile registration failed: ' + error.message })
+          };
         }
       } else {
-        console.log('🌐 Attempting web registration...');
-        
-        // Strategy 1: Try without CSRF first (backend might not require it)
+        console.log('🌐 Web registration with CSRF handling');
         try {
-          console.log('📤 Strategy 1: Registration without CSRF');
-          const data = await registerWithoutCSRF(cleanRegistrationData);
+          // Use directFetch which handles CSRF tokens properly
+          const data = await directFetch('/auth/register', {
+            method: 'POST',
+            body: JSON.stringify(cleanRegistrationData)
+          });
           
           response = {
             ok: true,
@@ -436,65 +395,14 @@ const AnimatedAuthForm = () => {
             json: async () => data
           };
         } catch (error) {
-          console.warn('Strategy 1 failed:', error.message);
-          
-          // If Strategy 1 failed with 422, try different data formats
-          if (error.message.includes('422') || error.message.includes('validation')) {
-            console.log('🔍 Strategy 1 failed with validation error, testing different formats...');
-            try {
-              const successfulFormat = await testRegistrationFormats(registerData);
-              if (successfulFormat) {
-                console.log('✅ Found working registration format!');
-                response = {
-                  ok: true,
-                  status: 200,
-                  json: async () => ({ message: 'Registration successful with format testing' })
-                };
-              } else {
-                throw new Error('All registration formats failed');
-              }
-            } catch (formatError) {
-              console.error('Format testing failed:', formatError.message);
-              // Continue to Strategy 2
-            }
-          }
-          
-          // Strategy 2: Try with CSRF handling if available (if not already successful)
-          if (!response && csrfToken) {
-            try {
-              console.log('📤 Strategy 2: Registration with CSRF handling');
-              const data = await directFetch('/auth/register', {
-                method: 'POST',
-                body: JSON.stringify(cleanRegistrationData)
-              });
-              
-              response = {
-                ok: true,
-                status: 200,
-                json: async () => data
-              };
-            } catch (error2) {
-              console.error('Strategy 2 also failed:', error2.message);
-              
-              // If Strategy 2 failed with 422, try different formats with CSRF
-              if (error2.message.includes('422') || error2.message.includes('validation')) {
-                console.log('🔍 Strategy 2 failed with validation error, will provide detailed error info');
-              }
-              
-              response = {
-                ok: false,
-                status: 403,
-                json: async () => ({ detail: 'Registration failed: ' + error2.message })
-              };
-            }
-          } else if (!response) {
-            console.error('No CSRF token available and simple registration failed');
-            response = {
-              ok: false,
-              status: 403,
-              json: async () => ({ detail: 'Registration failed: ' + error.message })
-            };
-          }
+          console.error('Web registration failed:', error.message);
+          response = {
+            ok: false,
+            status: error.status || 500,
+            json: async () => ({ 
+              detail: error.message || 'Registration failed'
+            })
+          };
         }
       }
 
@@ -510,9 +418,9 @@ const AnimatedAuthForm = () => {
           email: '', 
           password: '', 
           confirmPassword: '',
-          firstName: '',
-          lastName: '',
+          full_name: '',
           phone: '',
+          address: '',
           acceptTerms: false
         });
         
@@ -622,19 +530,22 @@ const AnimatedAuthForm = () => {
 
   const handleGoogleResponse = async (response) => {
     try {
+      setLoading(true);
+      console.log('🔍 Processing Google authentication response');
+      
       const requestBody = {
         token: response.credential
       };
 
       let result;
       if (platformDetection.isMobile && window.Capacitor?.Plugins?.CapacitorHttp) {
+        console.log('📱 Mobile Google authentication');
         const httpResponse = await window.Capacitor.Plugins.CapacitorHttp.request({
           url: `${API_BASE}/auth/google`,
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'X-Platform': 'mobile',
-            ...platformDetection.getPlatformHeaders()
+            'X-Platform': 'mobile'
           },
           data: requestBody
         });
@@ -642,37 +553,90 @@ const AnimatedAuthForm = () => {
         result = {
           ok: httpResponse.status >= 200 && httpResponse.status < 300,
           status: httpResponse.status,
-          json: async () => httpResponse.data
+          json: async () => httpResponse.data || {}
         };
       } else {
-        result = await fetch(`${API_BASE}/auth/google`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-Platform': 'web'
-          },
-          body: JSON.stringify(requestBody),
-          credentials: 'include'
-        });
+        console.log('🌐 Web Google authentication');
+        try {
+          // Use directFetch for proper CSRF handling
+          const data = await directFetch('/auth/google', {
+            method: 'POST',
+            body: JSON.stringify(requestBody)
+          });
+          
+          result = {
+            ok: true,
+            status: 200,
+            json: async () => data
+          };
+        } catch (error) {
+          console.error('Google auth fetch error:', error);
+          result = {
+            ok: false,
+            status: error.status || 500,
+            json: async () => ({ 
+              detail: error.message || 'Google authentication failed'
+            })
+          };
+        }
       }
 
       const data = await result.json();
+      console.log('📋 Google auth response:', { 
+        ok: result.ok, 
+        status: result.status,
+        hasUser: !!data.user,
+        hasToken: !!(data.access_token || data.token)
+      });
 
       if (result.ok) {
-        if (data.token) {
-          localStorage.setItem('auth_token', data.token);
+        // Handle different response formats for Google auth
+        if (data.access_token || data.token) {
+          // JWT-based response
+          const loginResponseData = {
+            access_token: data.access_token || data.token,
+            refresh_token: data.refresh_token,
+            expires_in: data.expires_in || 3600,
+            user: data.user
+          };
+          
+          console.log('💾 Storing Google auth JWT tokens');
+          const success = await login(loginResponseData);
+          if (success) {
+            showToast('Google authentication successful!', 'success');
+            await platformDetection.showToast('Welcome!', 2000);
+            navigate('/');
+          } else {
+            throw new Error('Failed to store authentication tokens');
+          }
+        } else if (data.user) {
+          // Legacy user-only response
+          console.log('📋 Using legacy Google auth format');
+          await login({ user: data.user });
+          showToast('Google authentication successful!', 'success');
+          navigate('/');
+        } else {
+          console.error('❌ Invalid Google auth response format:', data);
+          throw new Error('Invalid response format from server');
         }
-        
-        login(data.user);
-        showToast('Google authentication successful!', 'success');
-        navigate('/');
       } else {
         const errorMessage = data.detail || data.message || 'Google authentication failed';
+        console.error('🚨 Google auth failed:', errorMessage);
         showToast(errorMessage, 'error');
+        await platformDetection.showToast(errorMessage, 3000);
       }
     } catch (error) {
       console.error('Google auth error:', error);
-      showToast('Google authentication failed. Please try again.', 'error');
+      
+      let errorMessage = 'Google authentication failed. Please try again.';
+      if (error.message.includes('Network')) {
+        errorMessage = 'Network error during Google authentication. Please check your connection.';
+      }
+      
+      showToast(errorMessage, 'error');
+      await platformDetection.showToast(errorMessage, 4000);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -728,28 +692,18 @@ const AnimatedAuthForm = () => {
           <form onSubmit={handleRegisterSubmit}>
             <h1>Create Account</h1>
             
-            {/* Name Fields */}
-            <div className="input-row">
-              <div className="input-box half">
-                <input
-                  type="text"
-                  placeholder="First Name *"
-                  value={registerData.firstName}
-                  onChange={(e) => setRegisterData({ ...registerData, firstName: e.target.value })}
-                  required
-                />
-                <i className="bx bxs-user"></i>
-              </div>
-              <div className="input-box half">
-                <input
-                  type="text"
-                  placeholder="Last Name *"
-                  value={registerData.lastName}
-                  onChange={(e) => setRegisterData({ ...registerData, lastName: e.target.value })}
-                  required
-                />
-                <i className="bx bxs-user"></i>
-              </div>
+            {/* Full Name Field */}
+            <div className="input-box">
+              <input
+                type="text"
+                placeholder="Full Name *"
+                value={registerData.full_name}
+                onChange={(e) => setRegisterData({ ...registerData, full_name: e.target.value })}
+                required
+                minLength="2"
+                maxLength="100"
+              />
+              <i className="bx bxs-user"></i>
             </div>
 
             {/* Username */}
@@ -778,15 +732,30 @@ const AnimatedAuthForm = () => {
               <i className="bx bxs-envelope"></i>
             </div>
 
-            {/* Phone */}
+            {/* Phone - Required by backend */}
             <div className="input-box">
               <input
                 type="tel"
-                placeholder="Phone Number (optional)"
+                placeholder="Phone Number *"
                 value={registerData.phone}
                 onChange={(e) => setRegisterData({ ...registerData, phone: e.target.value })}
+                required
+                minLength="10"
+                maxLength="20"
               />
               <i className="bx bxs-phone"></i>
+            </div>
+
+            {/* Address - Optional */}
+            <div className="input-box">
+              <input
+                type="text"
+                placeholder="Address (optional)"
+                value={registerData.address}
+                onChange={(e) => setRegisterData({ ...registerData, address: e.target.value })}
+                maxLength="500"
+              />
+              <i className="bx bxs-map"></i>
             </div>
 
             {/* Password */}
