@@ -10,6 +10,7 @@ import directFetch from '../utils/directFetch';
 import { debugLogin, debugLoginResponse } from '../utils/authDebug';
 import { testCSRFEndpoint } from '../utils/testCSRF';
 import registerWithoutCSRF from '../utils/bypassCSRF';
+import { testEndpoints, testRegisterEndpoint } from '../utils/endpointTest';
 import './AnimatedAuthForm.css';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
@@ -324,6 +325,19 @@ const AnimatedAuthForm = () => {
         passwordLength: registerData.password.length
       });
 
+      // Platform detection check
+      console.log('🔍 Platform detection results:', {
+        isMobile: platformDetection.isMobile,
+        hasCapacitor: !!window.Capacitor,
+        hasCapacitorHttp: !!(window.Capacitor?.Plugins?.CapacitorHttp),
+        userAgent: navigator.userAgent.substring(0, 100)
+      });
+
+      // Comprehensive endpoint testing
+      console.log('🧪 Running comprehensive endpoint tests...');
+      await testEndpoints();
+      await testRegisterEndpoint();
+      
       // Quick CSRF endpoint check
       console.log('🔍 Checking if CSRF endpoint exists...');
       const csrfToken = await testCSRFEndpoint();
@@ -335,20 +349,77 @@ const AnimatedAuthForm = () => {
       };
 
       let response;
-      if (platformDetection.isMobile && window.Capacitor?.Plugins?.CapacitorHttp) {
-        console.log('📱 Using Capacitor HTTP for registration');
-        const httpResponse = await window.Capacitor.Plugins.CapacitorHttp.request({
-          url: `${API_BASE}/auth/register`,
-          method: 'POST',
-          headers: requestHeaders,
-          data: cleanRegistrationData
-        });
+      
+      // Temporary: Force web registration for testing
+      const forceWebRegistration = true;
+      
+      if (!forceWebRegistration && platformDetection.isMobile && window.Capacitor?.Plugins?.CapacitorHttp) {
+        console.log('📱 Attempting mobile registration with CSRF handling...');
         
-        response = {
-          ok: httpResponse.status >= 200 && httpResponse.status < 300,
-          status: httpResponse.status,
-          json: async () => httpResponse.data
-        };
+        // Strategy 1: Try without CSRF first for mobile
+        try {
+          console.log('📤 Mobile Strategy 1: Registration without CSRF');
+          const httpResponse = await window.Capacitor.Plugins.CapacitorHttp.request({
+            url: `${API_BASE}/auth/register`,
+            method: 'POST',
+            headers: requestHeaders,
+            data: cleanRegistrationData
+          });
+          
+          if (httpResponse.status >= 200 && httpResponse.status < 300) {
+            response = {
+              ok: true,
+              status: httpResponse.status,
+              json: async () => httpResponse.data
+            };
+          } else {
+            throw new Error(`HTTP ${httpResponse.status}: ${httpResponse.data?.detail || 'Registration failed'}`);
+          }
+        } catch (error) {
+          console.warn('Mobile Strategy 1 failed:', error.message);
+          
+          // Strategy 2: Try with CSRF token if available
+          if (csrfToken) {
+            try {
+              console.log('📤 Mobile Strategy 2: Registration with CSRF in data');
+              const dataWithCSRF = {
+                ...cleanRegistrationData,
+                csrf_token: csrfToken
+              };
+              
+              const httpResponse = await window.Capacitor.Plugins.CapacitorHttp.request({
+                url: `${API_BASE}/auth/register`,
+                method: 'POST',
+                headers: requestHeaders,
+                data: dataWithCSRF
+              });
+              
+              if (httpResponse.status >= 200 && httpResponse.status < 300) {
+                response = {
+                  ok: true,
+                  status: httpResponse.status,
+                  json: async () => httpResponse.data
+                };
+              } else {
+                throw new Error(`HTTP ${httpResponse.status}: ${httpResponse.data?.detail || 'Registration failed'}`);
+              }
+            } catch (error2) {
+              console.error('Mobile Strategy 2 also failed:', error2.message);
+              response = {
+                ok: false,
+                status: 403,
+                json: async () => ({ detail: 'Mobile registration failed: ' + error2.message })
+              };
+            }
+          } else {
+            console.error('No CSRF token available for mobile registration');
+            response = {
+              ok: false,
+              status: 403,
+              json: async () => ({ detail: 'Mobile registration failed: ' + error.message })
+            };
+          }
+        }
       } else {
         console.log('🌐 Attempting web registration...');
         
