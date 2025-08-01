@@ -35,16 +35,27 @@ export const simpleFetch = async (endpoint, options = {}) => {
   // For POST requests, include CSRF token in the body instead of headers
   if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(defaultOptions.method?.toUpperCase())) {
     try {
+      console.log('🔄 Fetching CSRF token for request...');
       const csrfToken = await simpleCSRF.getToken();
-      if (csrfToken && requestBody) {
-        // Parse existing body and add CSRF token
-        const bodyData = JSON.parse(requestBody);
-        bodyData.csrf_token = csrfToken;
-        requestBody = JSON.stringify(bodyData);
-        console.log('🔒 Added CSRF token to request body');
+      console.log('📋 CSRF token received:', csrfToken ? 'YES' : 'NO');
+      
+      if (csrfToken) {
+        if (requestBody) {
+          // Parse existing body and add CSRF token
+          const bodyData = JSON.parse(requestBody);
+          bodyData.csrf_token = csrfToken;
+          requestBody = JSON.stringify(bodyData);
+          console.log('🔒 Added CSRF token to existing request body');
+        } else {
+          // Create new body with just CSRF token
+          requestBody = JSON.stringify({ csrf_token: csrfToken });
+          console.log('🔒 Created new request body with CSRF token');
+        }
+      } else {
+        console.warn('⚠️ No CSRF token available');
       }
     } catch (error) {
-      console.warn('Could not add CSRF token to body:', error);
+      console.error('❌ Could not add CSRF token to body:', error);
     }
   }
 

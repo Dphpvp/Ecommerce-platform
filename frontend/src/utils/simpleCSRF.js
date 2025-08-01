@@ -18,7 +18,7 @@ class SimpleCSRF {
     }
 
     try {
-      console.log('🔄 Fetching new CSRF token...');
+      console.log('🔄 Fetching new CSRF token from:', `${API_BASE}/csrf-token`);
       
       // Use simple GET request to avoid CORS preflight
       const response = await fetch(`${API_BASE}/csrf-token`, {
@@ -26,24 +26,49 @@ class SimpleCSRF {
         credentials: 'include'
       });
       
+      console.log('📡 CSRF endpoint response:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('📋 CSRF response data:', data);
         this.token = data.csrf_token;
         this.tokenExpiry = Date.now() + (50 * 60 * 1000); // 50 minutes
-        console.log('✅ CSRF token fetched successfully');
+        console.log('✅ CSRF token fetched successfully:', this.token);
         return this.token;
       } else {
-        console.warn('⚠️ CSRF endpoint returned:', response.status);
+        console.warn('⚠️ CSRF endpoint returned:', {
+          status: response.status,
+          statusText: response.statusText
+        });
+        
+        // Try to read error response
+        try {
+          const errorData = await response.text();
+          console.warn('CSRF endpoint error:', errorData);
+        } catch (e) {
+          console.warn('Could not read CSRF error response');
+        }
+        
         // Generate fallback token
         this.token = 'fallback-' + Math.random().toString(36).substr(2, 16);
         this.tokenExpiry = Date.now() + (50 * 60 * 1000);
+        console.log('🔄 Using fallback CSRF token:', this.token);
         return this.token;
       }
     } catch (error) {
-      console.warn('⚠️ CSRF token fetch failed:', error.message);
+      console.warn('⚠️ CSRF token fetch failed:', {
+        message: error.message,
+        name: error.name,
+        stack: error.stack
+      });
       // Generate fallback token to prevent blocking requests
       this.token = 'fallback-' + Math.random().toString(36).substr(2, 16);
       this.tokenExpiry = Date.now() + (50 * 60 * 1000);
+      console.log('🔄 Using fallback CSRF token due to error:', this.token);
       return this.token;
     }
   }

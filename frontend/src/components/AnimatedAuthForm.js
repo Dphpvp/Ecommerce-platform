@@ -6,6 +6,7 @@ import { useToastContext } from './toast';
 import platformDetection from '../utils/platformDetection';
 import secureAuth from '../utils/secureAuth';
 import simpleFetch from '../utils/simpleFetch';
+import directFetch from '../utils/directFetch';
 import { debugLogin, debugLoginResponse } from '../utils/authDebug';
 import './AnimatedAuthForm.css';
 
@@ -326,9 +327,9 @@ const AnimatedAuthForm = () => {
           json: async () => httpResponse.data
         };
       } else {
-        console.log('🌐 Using simple fetch for web registration');
+        console.log('🌐 Using direct fetch for web registration with CSRF handling');
         try {
-          const data = await simpleFetch('/auth/register', {
+          const data = await directFetch('/auth/register', {
             method: 'POST',
             body: JSON.stringify(registerData)
           });
@@ -339,7 +340,7 @@ const AnimatedAuthForm = () => {
             json: async () => data
           };
         } catch (error) {
-          console.error('Simple fetch registration error:', error);
+          console.error('Direct fetch registration error:', error);
           response = {
             ok: false,
             status: error.message.includes('401') ? 401 : 500,
