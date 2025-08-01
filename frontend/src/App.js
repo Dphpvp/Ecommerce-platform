@@ -32,7 +32,6 @@ const Products = React.lazy(() => import('./pages/Products'));
 const Cart = React.lazy(() => import('./pages/Cart'));
 const Wishlist = React.lazy(() => import('./pages/Wishlist'));
 const Checkout = React.lazy(() => import('./pages/Checkout'));
-const AuthSlider = React.lazy(() => import('./components/AuthSlider'));
 const Login = React.lazy(() => import('./pages/Login'));
 const Register = React.lazy(() => import('./pages/Register'));
 const ResetPassword = React.lazy(() => import('./pages/ResetPassword'));

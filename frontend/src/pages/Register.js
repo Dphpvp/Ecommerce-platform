@@ -309,7 +309,7 @@ const Register = () => {
           </div>
 
           {/* Registration Form */}
-          <form onSubmit={handleSubmit} className="modern-form">
+          <form onSubmit={handleSubmit} className="auth-form-fields">
             <div className="form-group">
               <input
                 type="text"
