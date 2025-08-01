@@ -6,7 +6,7 @@ import { useToastContext } from './toast';
 import platformDetection from '../utils/platformDetection';
 import secureAuth from '../utils/secureAuth';
 import simpleFetch from '../utils/simpleFetch';
-import directFetch from '../utils/directFetch';
+import { registerUser } from '../utils/cleanRegistration';
 import { debugLogin, debugLoginResponse } from '../utils/authDebug';
 import './AnimatedAuthForm.css';
 
@@ -228,18 +228,18 @@ const AnimatedAuthForm = () => {
     }
   };
 
-  // Handle register form submission with secure authentication
+  // Clean registration handler - rebuilt from scratch
   const handleRegisterSubmit = async (e) => {
     e.preventDefault();
     
-    // Validate required fields (matching backend requirements)
+    // Basic required field validation
     if (!registerData.username || !registerData.email || !registerData.password || 
         !registerData.confirmPassword || !registerData.full_name || !registerData.phone) {
       showToast('Please fill in all required fields', 'error');
       return;
     }
 
-    // Username validation (backend requirements)
+    // Username validation
     if (registerData.username.length < 3 || registerData.username.length > 50) {
       showToast('Username must be 3-50 characters', 'error');
       return;
@@ -248,44 +248,25 @@ const AnimatedAuthForm = () => {
       showToast('Username can only contain letters, numbers, underscore, and hyphen', 'error');
       return;
     }
-    
-    // Check for reserved usernames
-    const reservedUsernames = ['admin', 'api', 'www', 'mail', 'ftp', 'localhost', 'root', 'support'];
-    if (reservedUsernames.includes(registerData.username.toLowerCase())) {
-      showToast('This username is reserved. Please choose another.', 'error');
-      return;
-    }
 
-    // Full name validation (backend uses single field)
-    if (registerData.full_name.length < 2 || registerData.full_name.length > 100) {
-      showToast('Full name must be 2-100 characters', 'error');
-      return;
-    }
-
-    // Email validation (backend requirements)
+    // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(registerData.email) || registerData.email.length > 254) {
-      showToast('Please enter a valid email address (max 254 characters)', 'error');
+      showToast('Please enter a valid email address', 'error');
       return;
     }
 
-    // Phone validation (required by backend)
+    // Phone validation
     if (registerData.phone.length < 10 || registerData.phone.length > 20) {
       showToast('Phone number must be 10-20 characters', 'error');
       return;
     }
     if (!/^[\+]?[\d\s\-\(\)]{10,20}$/.test(registerData.phone)) {
-      showToast('Please enter a valid phone number (international format supported)', 'error');
+      showToast('Please enter a valid phone number', 'error');
       return;
     }
 
-    // Address validation (optional field)
-    if (registerData.address && registerData.address.length > 500) {
-      showToast('Address must be less than 500 characters', 'error');
-      return;
-    }
-
-    // Password validation (backend requirements)
+    // Password validation
     if (registerData.password.length < 8 || registerData.password.length > 128) {
       showToast('Password must be 8-128 characters', 'error');
       return;
@@ -295,7 +276,7 @@ const AnimatedAuthForm = () => {
       return;
     }
 
-    // Password strength validation (backend requirements)
+    // Password strength
     const hasUppercase = /[A-Z]/.test(registerData.password);
     const hasLowercase = /[a-z]/.test(registerData.password);
     const hasNumbers = /\d/.test(registerData.password);
@@ -306,14 +287,7 @@ const AnimatedAuthForm = () => {
       return;
     }
 
-    // Check for weak passwords
-    const weakPasswords = ['password', '123456', 'password123', 'admin', 'qwerty'];
-    if (weakPasswords.some(weak => registerData.password.toLowerCase().includes(weak))) {
-      showToast('Password is too weak. Please choose a stronger password.', 'error');
-      return;
-    }
-
-    // Terms acceptance validation
+    // Terms acceptance
     if (!registerData.acceptTerms) {
       showToast('Please accept the Terms of Service and Privacy Policy', 'error');
       return;
@@ -326,93 +300,16 @@ const AnimatedAuthForm = () => {
       loadingIndicator = await platformDetection.showLoading('Creating account...');
       if (loadingIndicator?.present) await loadingIndicator.present();
 
-      // Prepare clean registration data for backend (exact match to backend schema)
-      const cleanRegistrationData = {
-        username: registerData.username.trim().toLowerCase(),
-        email: registerData.email.trim().toLowerCase(),
-        password: registerData.password,
-        full_name: registerData.full_name.trim(),
-        phone: registerData.phone.trim(),
-        address: registerData.address ? registerData.address.trim() : ""
-      };
+      console.log('🚀 Starting clean registration...');
+      
+      // Use the clean registration utility
+      const result = await registerUser(registerData);
 
-      console.log('🔍 Registration data being sent:', {
-        ...cleanRegistrationData,
-        password: '[HIDDEN]',
-        passwordLength: registerData.password.length
-      });
-
-      // Platform detection check
-      console.log('🔍 Platform detection results:', {
-        isMobile: platformDetection.isMobile,
-        hasCapacitor: !!window.Capacitor,
-        hasCapacitorHttp: !!(window.Capacitor?.Plugins?.CapacitorHttp),
-        userAgent: navigator.userAgent.substring(0, 100)
-      });
-
-      console.log('🚀 Starting registration process...');
-
-      let response;
-      const requestHeaders = {
-        'Content-Type': 'application/json'
-      };
-      // Use simplified registration with proper CSRF handling
-      if (platformDetection.isMobile && window.Capacitor?.Plugins?.CapacitorHttp) {
-        console.log('📱 Mobile registration');
-        try {
-          const httpResponse = await window.Capacitor.Plugins.CapacitorHttp.request({
-            url: `${API_BASE}/auth/register`,
-            method: 'POST',
-            headers: requestHeaders,
-            data: cleanRegistrationData
-          });
-          
-          response = {
-            ok: httpResponse.status >= 200 && httpResponse.status < 300,
-            status: httpResponse.status,
-            json: async () => httpResponse.data || {}
-          };
-        } catch (error) {
-          console.error('Mobile registration failed:', error);
-          response = {
-            ok: false,
-            status: 500,
-            json: async () => ({ detail: 'Mobile registration failed: ' + error.message })
-          };
-        }
-      } else {
-        console.log('🌐 Web registration with CSRF handling');
-        try {
-          // Use directFetch which handles CSRF tokens properly
-          const data = await directFetch('/auth/register', {
-            method: 'POST',
-            body: JSON.stringify(cleanRegistrationData)
-          });
-          
-          response = {
-            ok: true,
-            status: 200,
-            json: async () => data
-          };
-        } catch (error) {
-          console.error('Web registration failed:', error.message);
-          response = {
-            ok: false,
-            status: error.status || 500,
-            json: async () => ({ 
-              detail: error.message || 'Registration failed'
-            })
-          };
-        }
-      }
-
-      const data = await response.json();
-
-      if (response.ok) {
-        showToast('Registration successful! Please check your email.', 'success');
+      if (result.success) {
+        showToast(result.message, 'success');
         await platformDetection.showToast('Please verify your email to complete registration', 4000);
         
-        // Clear registration form
+        // Clear form and switch to login
         setRegisterData({ 
           username: '', 
           email: '', 
@@ -424,24 +321,31 @@ const AnimatedAuthForm = () => {
           acceptTerms: false
         });
         
-        // Switch to login form
         setIsActive(false);
         navigate('/login');
       } else {
-        const errorMessage = data.detail || data.message || 'Registration failed';
+        console.error('Registration failed:', result);
+        
+        let errorMessage = result.error || 'Registration failed';
+        
+        // Handle specific error cases
+        if (result.status === 400) {
+          errorMessage = 'Invalid registration data. Please check your inputs.';
+        } else if (result.status === 409) {
+          errorMessage = 'Username or email already exists. Please choose different ones.';
+        } else if (result.status === 403) {
+          errorMessage = 'Registration blocked. Please try again.';
+        } else if (result.networkError) {
+          errorMessage = 'Network error. Please check your connection.';
+        }
+        
         showToast(errorMessage, 'error');
         await platformDetection.showToast(errorMessage, 3000);
       }
     } catch (error) {
       console.error('Registration error:', error);
-      
-      let errorMessage = 'Network error. Please try again.';
-      if (error.name === 'TypeError' && error.message.includes('fetch')) {
-        errorMessage = 'Connection failed. Please check your internet connection.';
-      }
-      
-      showToast(errorMessage, 'error');
-      await platformDetection.showToast(errorMessage, 4000);
+      showToast('Unexpected error occurred. Please try again.', 'error');
+      await platformDetection.showToast('Please try again later', 4000);
     } finally {
       setLoading(false);
       if (loadingIndicator?.dismiss) await loadingIndicator.dismiss();
@@ -558,24 +462,37 @@ const AnimatedAuthForm = () => {
       } else {
         console.log('🌐 Web Google authentication');
         try {
-          // Use directFetch for proper CSRF handling
-          const data = await directFetch('/auth/google', {
-            method: 'POST',
-            body: JSON.stringify(requestBody)
+          // Simple fetch with CSRF token handling
+          const csrfResponse = await fetch(`${API_BASE}/csrf-token`, {
+            method: 'GET',
+            credentials: 'include'
           });
           
-          result = {
-            ok: true,
-            status: 200,
-            json: async () => data
+          let headers = {
+            'Content-Type': 'application/json'
           };
+          
+          if (csrfResponse.ok) {
+            const csrfData = await csrfResponse.json();
+            if (csrfData.csrf_token) {
+              headers['X-CSRF-Token'] = csrfData.csrf_token;
+              console.log('🔒 Added CSRF token for Google auth');
+            }
+          }
+          
+          result = await fetch(`${API_BASE}/auth/google`, {
+            method: 'POST',
+            headers: headers,
+            body: JSON.stringify(requestBody),
+            credentials: 'include'
+          });
         } catch (error) {
           console.error('Google auth fetch error:', error);
           result = {
             ok: false,
-            status: error.status || 500,
+            status: 500,
             json: async () => ({ 
-              detail: error.message || 'Google authentication failed'
+              detail: 'Network error during Google authentication'
             })
           };
         }
