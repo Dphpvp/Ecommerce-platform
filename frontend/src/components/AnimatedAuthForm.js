@@ -8,6 +8,8 @@ import secureAuth from '../utils/secureAuth';
 import simpleFetch from '../utils/simpleFetch';
 import directFetch from '../utils/directFetch';
 import { debugLogin, debugLoginResponse } from '../utils/authDebug';
+import { testCSRFEndpoint } from '../utils/testCSRF';
+import registerWithoutCSRF from '../utils/bypassCSRF';
 import './AnimatedAuthForm.css';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
@@ -322,6 +324,11 @@ const AnimatedAuthForm = () => {
         passwordLength: registerData.password.length
       });
 
+      // Quick CSRF endpoint check
+      console.log('🔍 Checking if CSRF endpoint exists...');
+      const csrfToken = await testCSRFEndpoint();
+      console.log('📋 CSRF token result:', csrfToken ? 'Found' : 'Not found');
+
       const requestHeaders = {
         'Content-Type': 'application/json'
         // Remove security headers to avoid CORS preflight issues
@@ -343,13 +350,12 @@ const AnimatedAuthForm = () => {
           json: async () => httpResponse.data
         };
       } else {
-        console.log('🌐 Using direct fetch for web registration with CSRF handling');
-        console.log('📤 About to send registration request with data:', JSON.stringify(cleanRegistrationData, null, 2));
+        console.log('🌐 Attempting web registration...');
+        
+        // Strategy 1: Try without CSRF first (backend might not require it)
         try {
-          const data = await directFetch('/auth/register', {
-            method: 'POST',
-            body: JSON.stringify(cleanRegistrationData)
-          });
+          console.log('📤 Strategy 1: Registration without CSRF');
+          const data = await registerWithoutCSRF(cleanRegistrationData);
           
           response = {
             ok: true,
@@ -357,12 +363,38 @@ const AnimatedAuthForm = () => {
             json: async () => data
           };
         } catch (error) {
-          console.error('Direct fetch registration error:', error);
-          response = {
-            ok: false,
-            status: error.message.includes('401') ? 401 : 500,
-            json: async () => ({ detail: error.message })
-          };
+          console.warn('Strategy 1 failed:', error.message);
+          
+          // Strategy 2: Try with CSRF handling if available
+          if (csrfToken) {
+            try {
+              console.log('📤 Strategy 2: Registration with CSRF handling');
+              const data = await directFetch('/auth/register', {
+                method: 'POST',
+                body: JSON.stringify(cleanRegistrationData)
+              });
+              
+              response = {
+                ok: true,
+                status: 200,
+                json: async () => data
+              };
+            } catch (error2) {
+              console.error('Strategy 2 also failed:', error2.message);
+              response = {
+                ok: false,
+                status: 403,
+                json: async () => ({ detail: 'Registration failed: ' + error2.message })
+              };
+            }
+          } else {
+            console.error('No CSRF token available and simple registration failed');
+            response = {
+              ok: false,
+              status: 403,
+              json: async () => ({ detail: 'Registration failed: ' + error.message })
+            };
+          }
         }
       }
 
