@@ -107,22 +107,7 @@ class COOPMiddleware(BaseHTTPMiddleware):
 
 app.add_middleware(COOPMiddleware)
 
-# Handle OPTIONS requests for CORS preflight
-@app.options("/{path:path}")
-async def handle_options(path: str, request: Request):
-    origin = request.headers.get("origin")
-    
-    from fastapi.responses import Response
-    response = Response()
-    
-    if origin in origins:
-        response.headers["Access-Control-Allow-Origin"] = origin
-        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
-        response.headers["Access-Control-Allow-Headers"] = "Accept, Accept-Language, Content-Language, Content-Type, Authorization, X-CSRF-Token, X-Request-Signature, X-Request-Timestamp, X-Platform, X-Device-Type"
-        response.headers["Access-Control-Allow-Credentials"] = "true"
-        response.headers["Access-Control-Max-Age"] = "3600"
-    
-    return response
+# Let CORSMiddleware handle OPTIONS requests automatically
 
 # Security headers middleware
 @app.middleware("http")

@@ -43,11 +43,6 @@ auth_service = AuthService()
 two_factor_service = TwoFactorService()
 email_service = EmailService()
 
-@router.options("/register")
-async def register_options():
-    """Handle preflight OPTIONS request for register endpoint"""
-    return {"status": "ok"}
-
 @router.post("/register", response_model=MessageResponse)
 @rate_limit(max_attempts=3, window_minutes=60, endpoint_name="register")
 async def register(
