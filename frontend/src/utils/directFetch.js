@@ -25,6 +25,7 @@ export const directFetch = async (endpoint, options = {}) => {
       return await fetchWithCSRFInHeader(url, options);
     } catch (error2) {
       console.warn('Strategy 2 failed:', error2.message);
+      console.log('📋 Strategy 2 full error object:', error2);
       
       // Strategy 3: Try without CSRF token (backend might not require it)
       try {
@@ -81,7 +82,11 @@ const fetchWithCSRFInHeader = async (url, options) => {
   
   if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(options.method?.toUpperCase()) && csrfToken) {
     headers['X-CSRF-Token'] = csrfToken;
-    console.log('🔒 Added CSRF token to header');
+    console.log('🔒 Added CSRF token to header:', {
+      tokenLength: csrfToken.length,
+      tokenPreview: csrfToken.substring(0, 20) + '...',
+      fullToken: csrfToken
+    });
   }
   
   const response = await fetch(url, {
@@ -91,16 +96,29 @@ const fetchWithCSRFInHeader = async (url, options) => {
   
   if (!response.ok) {
     let errorData;
+    let errorText;
+    
     try {
-      errorData = await response.json();
+      // First try to get the raw text
+      errorText = await response.text();
+      console.log('📋 Strategy 2 raw error response:', errorText);
+      
+      // Then try to parse as JSON
+      try {
+        errorData = JSON.parse(errorText);
+      } catch (parseError) {
+        errorData = { detail: errorText || `HTTP ${response.status}` };
+      }
     } catch (e) {
       errorData = { detail: `HTTP ${response.status}` };
+      errorText = 'Could not read response';
     }
     
     console.log('📋 Strategy 2 detailed error:', {
       status: response.status,
       statusText: response.statusText,
       errorData: errorData,
+      errorText: errorText,
       requestUrl: url,
       requestHeaders: headers,
       requestBody: options.body
@@ -110,11 +128,12 @@ const fetchWithCSRFInHeader = async (url, options) => {
     if (response.status === 422) {
       console.log('🔍 422 Validation Error Details:', {
         errors: errorData.errors || errorData.detail || errorData.message,
-        fullErrorResponse: errorData
+        fullErrorResponse: errorData,
+        rawErrorText: errorText
       });
     }
     
-    throw new Error(errorData.detail || errorData.message || `HTTP ${response.status}`);
+    throw new Error(errorData.detail || errorData.message || errorText || `HTTP ${response.status}`);
   }
   
   return await response.json();
