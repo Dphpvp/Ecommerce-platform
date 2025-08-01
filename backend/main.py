@@ -42,7 +42,9 @@ print("CORS Origins:", origins)
 app = FastAPI(
     title="E-commerce API", 
     version="1.0.0",
-    description="E-commerce Platform API"
+    description="E-commerce Platform API",
+    docs_url=None,
+    redoc_url=None,
 )
 
 # Add CORS middleware with complex origins
@@ -137,10 +139,18 @@ async def root():
 async def health():
     return {"status": "ok"}
 
-# Basic CSRF token endpoint for testing
-@app.get("/api/csrf-token")
-async def get_csrf_token():
-    return {"csrf_token": "test-token-123"}
+@app.get("/status")
+async def status():
+    return {
+        "status": "running",
+        "version": "1.0.0",
+        "environment": "production",
+        "timestamp": datetime.now().isoformat(),
+        "cors_origins": len(origins) if 'origins' in globals() else 0,
+        "middleware_count": len(app.user_middleware),
+        "timeout_enabled": True,
+        "timestamp": datetime.now().isoformat()
+    }
 
 # CSRF Token endpoint for anonymous users
 @app.get("/api/csrf-token")
