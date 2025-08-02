@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import TwoFactorVerification from '../components/TwoFactor/TwoFactorVerification';
@@ -16,76 +16,10 @@ const Login = () => {
   const [show2FA, setShow2FA] = useState(false);
   const [tempToken, setTempToken] = useState('');
   const [twoFactorMethod, setTwoFactorMethod] = useState('');
-  const [recaptchaLoaded, setRecaptchaLoaded] = useState(false);
-  const [recaptchaWidgetId, setRecaptchaWidgetId] = useState(null);
-  const { login, refetchUser } = useAuth();
+  const { login } = useAuth();
   const { showToast } = useToastContext();
   const navigate = useNavigate();
-  const recaptchaRef = useRef(null);
 
-  // TEMPORARY: reCAPTCHA disabled
-  useEffect(() => {
-    // Auto-set recaptcha as loaded to bypass requirement
-    setRecaptchaLoaded(true);
-  }, []);
-
-  useEffect(() => {
-    // Load Google Identity Services
-    const script = document.createElement('script');
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.defer = true;
-    document.head.appendChild(script);
-
-    script.onload = () => {
-      if (window.google && process.env.REACT_APP_GOOGLE_CLIENT_ID) {
-        window.google.accounts.id.initialize({
-          client_id: process.env.REACT_APP_GOOGLE_CLIENT_ID,
-          callback: handleGoogleLogin
-        });
-        
-        window.google.accounts.id.renderButton(
-          document.getElementById('google-signin-button'),
-          { theme: 'outline', size: 'large', width: 350 }
-        );
-      }
-    };
-
-    return () => {
-      document.head.removeChild(script);
-    };
-  }, []);
-
-  const handleGoogleLogin = async (response) => {
-    try {
-      const apiResponse = await fetch(`${API_BASE}/auth/google`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: response.credential }),
-      });
-
-      const data = await apiResponse.json();
-
-      if (apiResponse.ok) {
-        if (data.requires_2fa) {
-          setTempToken(data.temp_token);
-          setTwoFactorMethod(data.method || 'app');
-          setShow2FA(true);
-        } else {
-          if (data.token) {
-            localStorage.setItem('auth_token', data.token);
-          }
-          login(data.user);
-          navigate('/');
-        }
-      } else {
-        setError(data.detail || 'Google login failed');
-      }
-    } catch (error) {
-      setError('Google login failed. Please try again.');
-    }
-  };
 
   const handleChange = (e) => {
     setFormData({
@@ -108,10 +42,7 @@ const Login = () => {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          ...formData,
-          recaptcha_response: 'DISABLED_TEMPORARILY'
-        }),
+        body: JSON.stringify(formData),
       });
 
       const data = await response.json();
@@ -211,14 +142,6 @@ const Login = () => {
           <p className="forgot-password">
             <Link to="/reset-password">Forgotten password? Click here to reset</Link>
           </p>
-
-          <div className="divider">
-            <span>OR</span>
-          </div>
-
-          <div className="google-login">
-            <div id="google-signin-button"></div>
-          </div>
 
           <p>
             Don't have an account? <Link to="/register">Register here</Link>
