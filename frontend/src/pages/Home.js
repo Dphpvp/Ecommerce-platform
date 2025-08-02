@@ -107,7 +107,14 @@ const Home = () => {
         data = await response.json();
       }
       
-      setFeaturedProducts(data);
+      // Ensure data is an array before setting
+      if (Array.isArray(data)) {
+        setFeaturedProducts(data);
+      } else if (data && Array.isArray(data.products)) {
+        setFeaturedProducts(data.products);
+      } else {
+        throw new Error('Invalid products data format');
+      }
     } catch (error) {
       console.error('Failed to fetch products:', error);
       // Create mock products for demonstration
@@ -214,7 +221,7 @@ const Home = () => {
         </div>
         <div className="featured-products-grid">
           <div className="product-grid">
-            {featuredProducts.slice(0, 6).map((product, index) => (
+            {(featuredProducts || []).slice(0, 6).map((product, index) => (
               <AnimatedProductCard 
                 key={product._id} 
                 product={product}

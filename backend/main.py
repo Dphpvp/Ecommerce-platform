@@ -78,6 +78,63 @@ async def register(request: Request):
         }
     }
 
+# Minimal products endpoint to avoid 405 errors
+@app.get("/api/products")
+async def get_products(limit: int = 10):
+    """Minimal products endpoint with mock data"""
+    mock_products = [
+        {
+            "_id": "1",
+            "name": "Premium Business Suit",
+            "price": 1299,
+            "image": "https://images.unsplash.com/photo-1594938328870-28d8b92e2c8a?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+            "description": "Professional business suit for modern professionals",
+            "category": "suits"
+        },
+        {
+            "_id": "2", 
+            "name": "Classic Dinner Jacket",
+            "price": 1599,
+            "image": "https://images.unsplash.com/photo-1617127365659-c47fa864d8bc?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+            "description": "Elegant dinner jacket for formal occasions",
+            "category": "jackets"
+        },
+        {
+            "_id": "3",
+            "name": "Premium Wool Coat", 
+            "price": 899,
+            "image": "https://images.unsplash.com/photo-1520975954732-35dd22299614?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+            "description": "Luxurious wool coat for cold weather",
+            "category": "coats"
+        },
+        {
+            "_id": "4",
+            "name": "Elegant Dress Shirt",
+            "price": 299, 
+            "image": "https://images.unsplash.com/photo-1602810316498-ab67cf68c8e1?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+            "description": "Classic dress shirt for business and formal wear",
+            "category": "shirts"
+        },
+        {
+            "_id": "5",
+            "name": "Cashmere Sweater",
+            "price": 599,
+            "image": "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80", 
+            "description": "Soft cashmere sweater for comfort and style",
+            "category": "sweaters"
+        },
+        {
+            "_id": "6",
+            "name": "Oxford Shoes",
+            "price": 399,
+            "image": "https://images.unsplash.com/photo-1549298916-b41d501d3772?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80",
+            "description": "Classic oxford shoes for professional attire", 
+            "category": "shoes"
+        }
+    ]
+    
+    return mock_products[:limit]
+
 # Temporarily exclude auth routes to avoid memory corruption
 # app.include_router(api_router)
 
