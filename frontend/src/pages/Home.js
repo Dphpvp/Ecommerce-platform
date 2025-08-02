@@ -102,7 +102,7 @@ const Home = () => {
         }
       } else {
         // Use regular fetch for web
-        console.log('🌐 Using regular fetch for featured products request');
+        console.log('🌐 Using regular fetch for featured products request (v2)');
         const response = await fetch(`${API_BASE}/products?limit=6`);
         data = await response.json();
       }
