@@ -81,19 +81,21 @@ async def register(request: Request):
 # Temporarily exclude auth routes to avoid memory corruption
 # app.include_router(api_router)
 
-# Add individual route modules except auth
-from api.routes import products, cart, orders, contact, profile, debug, uploads, newsletter
-from api.routes import admin_routes
+# Test individual route modules to find the problematic one
+# Exclude products router since it causes memory corruption
+from api.routes import cart, orders, contact, debug, uploads, newsletter
 
-app.include_router(products.router, prefix="/api/products", tags=["products"])
-app.include_router(cart.router, prefix="/api/cart", tags=["cart"])
-app.include_router(orders.router, prefix="/api/orders", tags=["orders"])
+# Start with safe routes first
 app.include_router(contact.router, prefix="/api/contact", tags=["contact"])
-app.include_router(profile.router, prefix="/api/profile", tags=["profile"])
 app.include_router(debug.router, prefix="/api/debug", tags=["debug"])
 app.include_router(uploads.router, prefix="/api/uploads", tags=["uploads"])
 app.include_router(newsletter.router, prefix="/api/newsletter", tags=["newsletter"])
-app.include_router(admin_routes.router, prefix="/api/admin", tags=["admin"])
+
+# These might also cause issues, test one by one:
+# app.include_router(cart.router, prefix="/api/cart", tags=["cart"])
+# app.include_router(orders.router, prefix="/api/orders", tags=["orders"])
+# app.include_router(profile.router, prefix="/api/profile", tags=["profile"])
+# app.include_router(admin_routes.router, prefix="/api/admin", tags=["admin"])
 
 # Handle any OPTIONS request
 @app.options("/{full_path:path}")
