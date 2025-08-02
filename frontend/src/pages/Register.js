@@ -109,13 +109,9 @@ const Register = () => {
         address: sanitizeInput.text(formData.address, 200)
       };
 
-      // Test direct fetch without CSRF for debugging
-      const response = await fetch(`${API_BASE}/auth/register`, {
+      // Use secure fetch with CSRF protection
+      const response = await secureFetch(`${API_BASE}/auth/register`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        credentials: 'include',
         body: JSON.stringify(sanitizedData)
       });
 
