@@ -1,7 +1,5 @@
-// frontend/src/utils/csrf.js - Updated for new auth.py
-import platformDetection from './platformDetection.js';
-
-const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
+// frontend/src/utils/csrf.js
+const API_BASE = process.env.REACT_APP_API_BASE_URL;
 
 class CSRFManager {
   constructor() {
@@ -16,37 +14,20 @@ class CSRFManager {
     }
 
     try {
-      // Try to get CSRF token from API
       const response = await fetch(`${API_BASE}/csrf-token`, {
-        method: 'GET',
-        credentials: 'include',
-        headers: {
-          'Accept': 'application/json',
-          ...platformDetection.getPlatformHeaders()
-        }
+        credentials: 'include'
       });
-      
       if (response.ok) {
         const data = await response.json();
         this.token = data.csrf_token;
         this.tokenExpiry = Date.now() + (50 * 60 * 1000); // 50 minutes
         return this.token;
-      } else if (response.status === 404) {
-        // CSRF endpoint doesn't exist, generate a simple token
-        console.warn('CSRF endpoint not found, using fallback token');
-        this.token = 'fallback-' + Math.random().toString(36).substr(2, 9);
-        this.tokenExpiry = Date.now() + (50 * 60 * 1000);
-        return this.token;
       }
     } catch (error) {
-      console.warn('⚠️ CSRF token not available:', error.message);
-      // Generate fallback token to prevent blocking requests
-      this.token = 'fallback-' + Math.random().toString(36).substr(2, 9);
-      this.tokenExpiry = Date.now() + (50 * 60 * 1000);
-      return this.token;
+      console.error('Failed to get CSRF token:', error);
     }
     
-    return 'fallback-token';
+    return null;
   }
 
   async makeSecureRequest(url, options = {}) {
@@ -78,13 +59,8 @@ class CSRFManager {
     return fetch(url, {
       ...options,
       headers,
-      credentials: 'include',
+      credentials: 'include', // Always include cookies for session
     });
-  }
-
-  clearToken() {
-    this.token = null;
-    this.tokenExpiry = null;
   }
 }
 
@@ -136,23 +112,18 @@ export const requestSigner = new RequestSigner();
 // Updated secure fetch wrapper
 export const secureFetch = async (url, options = {}) => {
   const defaultOptions = {
-    credentials: 'include',
+    credentials: 'include', // Always include cookies
     headers: {
       'Content-Type': 'application/json',
-      ...platformDetection.getPlatformHeaders(),
       ...options.headers,
     },
   };
 
   // Get CSRF token for state-changing operations
   if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(options.method?.toUpperCase())) {
-    try {
-      const token = await csrfManager.getToken();
-      if (token) {
-        defaultOptions.headers['X-CSRF-Token'] = token;
-      }
-    } catch (error) {
-      console.warn('Could not get CSRF token, proceeding without it');
+    const token = await csrfManager.getToken();
+    if (token) {
+      defaultOptions.headers['X-CSRF-Token'] = token;
     }
 
     // Add request signing
@@ -226,79 +197,6 @@ export const sanitizeInput = {
   }
 };
 
-// Mobile captcha utilities for platforms without reCAPTCHA
-export const mobileCaptcha = {
-  /**
-   * Generate mobile captcha token for authentication
-   */
-  generateToken() {
-    const isMobile = platformDetection.isMobile;
-    
-    if (!isMobile) {
-      console.warn('Mobile captcha requested but not on mobile platform');
-      return null;
-    }
-    
-    const tokenData = {
-      platform: 'mobile',
-      timestamp: Date.now(),
-      deviceId: this._getDeviceId(),
-      userAgent: navigator.userAgent.substring(0, 100)
-    };
-    
-    try {
-      // Use Android-safe encoding for Android platforms
-      if (platformDetection.platform === 'android') {
-        return this._encodeAndroidSafe(tokenData);
-      } else {
-        // Standard base64 encoding for other platforms
-        const jsonStr = JSON.stringify(tokenData);
-        return btoa(jsonStr);
-      }
-    } catch (error) {
-      console.error('Failed to generate mobile captcha token:', error);
-      return 'emergency-fallback-token';
-    }
-  },
-  
-  /**
-   * Android-safe encoding that avoids base64 padding issues
-   */
-  _encodeAndroidSafe(data) {
-    const jsonStr = JSON.stringify(data);
-    let hexString = '';
-    
-    for (let i = 0; i < jsonStr.length; i++) {
-      const hex = jsonStr.charCodeAt(i).toString(16).padStart(2, '0');
-      hexString += hex;
-    }
-    
-    return 'android-' + hexString;
-  },
-  
-  /**
-   * Get a device identifier for mobile captcha
-   */
-  _getDeviceId() {
-    // Try to get a consistent device identifier
-    let deviceId = localStorage.getItem('mobile_device_id');
-    
-    if (!deviceId) {
-      // Generate a new device ID
-      deviceId = 'mobile_' + Math.random().toString(36).substr(2, 12) + '_' + Date.now();
-      localStorage.setItem('mobile_device_id', deviceId);
-    }
-    
-    return deviceId;
-  },
-  
-  /**
-   * Check if mobile captcha is available/needed
-   */
-  isAvailable() {
-    return platformDetection.isMobile;
-  }
-};
 
 // Client-side validation
 export const validateInput = {
@@ -314,7 +212,7 @@ export const validateInput = {
   },
 
   password: (password) => {
-    if (password.length < 8) return { valid: false, message: 'Password must be at least 8 characters' };
+    if (password.length < 6) return { valid: false, message: 'Password must be at least 6 characters' };
     if (password.length > 128) return { valid: false, message: 'Password too long' };
     
     const weakPasswords = ['password', '123456', 'qwerty', 'admin', 'letmein'];
