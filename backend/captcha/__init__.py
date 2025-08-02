@@ -1,7 +1,4 @@
-# DISABLED - reCAPTCHA functionality removed
-# from .verification import verify_recaptcha
-
-# Placeholder import to prevent errors
+# backend/captcha/__init__.py
 from .verification import verify_recaptcha
 
 __all__ = ['verify_recaptcha']

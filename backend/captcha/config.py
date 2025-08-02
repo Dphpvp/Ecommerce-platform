@@ -1,22 +1,21 @@
+# backend/captcha/config.py
 import os
 
-# reCAPTCHA Configuration - DISABLED
-# All reCAPTCHA functionality temporarily disabled - will be reimplemented fresh for web-only
+# reCAPTCHA Configuration
+RECAPTCHA_SECRET_KEY = os.getenv("RECAPTCHA_SECRET_KEY")
+RECAPTCHA_SITE_KEY = os.getenv("REACT_APP_RECAPTCHA_SITE_KEY")  # For reference
+RECAPTCHA_VERIFY_URL = "https://www.google.com/recaptcha/api/siteverify"
 
-# RECAPTCHA_SECRET_KEY = os.getenv("RECAPTCHA_SECRET_KEY")  # DISABLED
-# RECAPTCHA_MOBILE_SECRET_KEY = os.getenv("RECAPTCHA_MOBILE_SECRET_KEY")  # DISABLED
-# RECAPTCHA_SITE_KEY = os.getenv("REACT_APP_RECAPTCHA_SITE_KEY")  # DISABLED
-# RECAPTCHA_VERIFY_URL = "https://www.google.com/recaptcha/api/siteverify"  # DISABLED
-
-# Placeholder values to prevent import errors
-RECAPTCHA_SECRET_KEY = None
-RECAPTCHA_MOBILE_SECRET_KEY = None  
-RECAPTCHA_SITE_KEY = None
-RECAPTCHA_VERIFY_URL = None
-
-# Verification settings - DISABLED
+# Verification settings
 VERIFICATION_TIMEOUT = 10.0  # seconds
 ALLOW_LOCALHOST = os.getenv("ENVIRONMENT") == "development"
 
-# Error messages - DISABLED
-CAPTCHA_ERROR_MESSAGES = {}
+# Error messages
+CAPTCHA_ERROR_MESSAGES = {
+    "missing-input-secret": "The secret parameter is missing",
+    "invalid-input-secret": "The secret parameter is invalid or malformed",
+    "missing-input-response": "The response parameter is missing",
+    "invalid-input-response": "The response parameter is invalid or malformed",
+    "bad-request": "The request is invalid or malformed",
+    "timeout-or-duplicate": "The response is no longer valid"
+}

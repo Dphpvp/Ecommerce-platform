@@ -1,27 +1,37 @@
-# DISABLED - All reCAPTCHA functionality temporarily disabled
-# Will be reimplemented fresh for web-only
+import requests
+import os
+from typing import Optional
 
-# import requests
-# import os
-# import json
-# import base64
-# import time
-# from typing import Optional
-
-def verify_recaptcha(captcha_response: str, remote_ip: Optional[str] = None, request_headers: Optional[dict] = None) -> bool:
-    """reCAPTCHA verification DISABLED - returns True for all requests"""
-    print("⚠️ CAPTCHA: Verification temporarily disabled - will be reimplemented fresh for web-only")
-    print(f"📝 CAPTCHA: Received token: {captcha_response[:50] if captcha_response else 'None'}...")
-    return True  # Allow all requests while reCAPTCHA is disabled
-
-
-# DISABLED - All helper functions commented out
-# def _verify_web_recaptcha(captcha_response: str, remote_ip: Optional[str] = None) -> bool:
-# def _is_mobile_recaptcha_token(token: str, request_headers: Optional[dict] = None) -> bool:
-# def _verify_mobile_recaptcha(captcha_response: str, remote_ip: Optional[str] = None) -> bool:
-# def _is_mobile_captcha_token(token: str) -> bool:
-# def _verify_mobile_captcha(token: str, request_headers: Optional[dict] = None) -> bool:
-# def _verify_production_fallback() -> bool:
-
-# All reCAPTCHA verification functions are disabled and will be reimplemented fresh for web-only
-print("📝 reCAPTCHA verification module disabled - all functions return success")
+def verify_recaptcha(captcha_response: str, remote_ip: Optional[str] = None) -> bool:
+    """Verify reCAPTCHA response"""
+    secret_key = os.getenv("RECAPTCHA_SECRET_KEY")
+    
+    if not secret_key:
+        return False  # Allow in development
+    
+    if not captcha_response:
+        return False
+    
+    try:
+        data = {
+            "secret": secret_key,
+            "response": captcha_response
+        }
+        
+        if remote_ip:
+            data["remoteip"] = remote_ip
+        
+        response = requests.post(
+            "https://www.google.com/recaptcha/api/siteverify",
+            data=data,
+            timeout=10.0
+        )
+        
+        if response.status_code != 200:
+            return False
+        
+        result = response.json()
+        return result.get("success", False)
+        
+    except Exception:
+        return False
