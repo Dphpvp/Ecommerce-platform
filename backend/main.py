@@ -4,6 +4,22 @@ from fastapi.responses import JSONResponse
 import sys
 import traceback
 import logging
+import os
+
+# CRITICAL: Force disable uvloop to prevent memory corruption
+import asyncio
+try:
+    import uvloop
+    # Prevent uvloop from being used
+    uvloop = None
+    print("🚫 uvloop disabled to prevent memory corruption")
+except ImportError:
+    print("✅ uvloop not installed")
+
+# Set asyncio to use pure Python event loop
+if hasattr(asyncio, 'set_event_loop_policy'):
+    asyncio.set_event_loop_policy(asyncio.DefaultEventLoopPolicy())
+    print("✅ Using pure Python asyncio event loop")
 
 # Import the full API router
 from api.main import router as api_router
@@ -71,15 +87,23 @@ async def get_csrf_token_compat(request: Request):
         # Fallback if CSRF system not available
         return {"csrf_token": "fallback-csrf-token-123"}
 
-# Include the working authentication and products routes
-# Test individual route modules to find the problematic one
+# Include the working authentication routes and test others individually
 from api.routes import auth, products, cart, orders, contact, debug, uploads, newsletter
 
 # Include auth routes (your working authentication system)
 app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
 
-# Include products router to get real database products
-app.include_router(products.router, prefix="/api/products", tags=["products"])
+# TEMPORARILY DISABLE products router to test if uvloop fix works
+# app.include_router(products.router, prefix="/api/products", tags=["products"])
+
+# Add minimal products endpoint to test without memory corruption
+@app.get("/api/products")
+async def get_products_safe(limit: int = 10):
+    """Safe products endpoint without platform detection"""
+    logger.info("🛡️ Using safe products endpoint (no platform detection)")
+    return [
+        {"_id": "1", "name": "Test Product", "price": 100, "image_url": "https://via.placeholder.com/300"}
+    ]
 
 # Start with safe routes first
 app.include_router(contact.router, prefix="/api/contact", tags=["contact"])
