@@ -1,9 +1,16 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+import sys
+import traceback
+import logging
 
 # Import the full API router
 from api.main import router as api_router
+
+# Configure logging for memory debugging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Minimal app with working CORS
 app = FastAPI(title="E-commerce API")
@@ -28,11 +35,15 @@ async def health():
 @app.get("/api/csrf-token")
 @app.post("/api/csrf-token")
 async def get_csrf_token_compat(request: Request):
-    """CSRF token endpoint supporting anonymous users"""
+    """CSRF token endpoint supporting anonymous users - with memory debugging"""
     try:
+        logger.info("🔐 CSRF token request started")
+        
         from api.middleware.csrf import csrf_protection
         from jose import jwt
         from api.core.config import get_settings
+        
+        logger.info("🔐 CSRF imports successful")
         
         settings = get_settings()
         session_id = "anonymous"
@@ -41,14 +52,22 @@ async def get_csrf_token_compat(request: Request):
         session_token = request.cookies.get("session_token")
         if session_token:
             try:
+                logger.info("🔐 Attempting JWT decode")
                 payload = jwt.decode(session_token, settings.JWT_SECRET, algorithms=["HS256"])
                 session_id = payload.get("user_id", "anonymous")
-            except:
+                logger.info("🔐 JWT decode successful")
+            except Exception as jwt_error:
+                logger.warning(f"🔐 JWT decode failed: {jwt_error}")
                 pass
         
+        logger.info("🔐 Generating CSRF token")
         csrf_token = csrf_protection.generate_token(session_id)
+        logger.info("🔐 CSRF token generated successfully")
+        
         return {"csrf_token": csrf_token}
     except Exception as e:
+        logger.error(f"🔐 CSRF token generation failed: {e}")
+        logger.error(f"🔐 Traceback: {traceback.format_exc()}")
         # Fallback if CSRF system not available
         return {"csrf_token": "fallback-csrf-token-123"}
 
@@ -86,3 +105,30 @@ async def handle_options(full_path: str):
             "Access-Control-Allow-Credentials": "true",
         }
     )
+
+# Memory debugging and startup diagnostics
+@app.on_event("startup")
+async def startup_diagnostic():
+    logger.info("🚀 E-commerce Backend Starting Up...")
+    logger.info("=" * 50)
+    
+    # Log loaded modules that could cause memory issues
+    logger.info("📦 Checking for problematic native modules:")
+    dangerous_modules = []
+    
+    for name in sys.modules.keys():
+        if any(pattern in name.lower() for pattern in ["uv", "crypto", "loop", "bcrypt", "jose", "jwt"]):
+            dangerous_modules.append(name)
+            logger.info(f"⚠️  {name}")
+    
+    if not dangerous_modules:
+        logger.info("✅ No dangerous modules detected")
+    
+    # Check uvloop specifically
+    if "uvloop" in sys.modules:
+        logger.error("❌ uvloop detected - this causes memory corruption!")
+    else:
+        logger.info("✅ uvloop not loaded - using pure asyncio")
+    
+    logger.info("=" * 50)
+    logger.info("🎯 Ready to handle requests!")
