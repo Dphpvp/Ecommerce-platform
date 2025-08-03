@@ -63,6 +63,7 @@ app.add_middleware(
         "X-CSRF-Token",
         "X-Request-Signature",
         "X-Request-Timestamp",
+        "X-Requested-With",
         "Cache-Control"
     ],
     expose_headers=["Set-Cookie"],  # Critical for cookie-based auth
@@ -97,7 +98,7 @@ async def handle_options(path: str, request: Request):
     if origin in origins:
         response.headers["Access-Control-Allow-Origin"] = origin
         response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
-        response.headers["Access-Control-Allow-Headers"] = "Accept, Accept-Language, Content-Language, Content-Type, Authorization, X-CSRF-Token, X-Request-Signature, X-Request-Timestamp"
+        response.headers["Access-Control-Allow-Headers"] = "Accept, Accept-Language, Content-Language, Content-Type, Authorization, X-CSRF-Token, X-Request-Signature, X-Request-Timestamp, X-Requested-With, Cache-Control"
         response.headers["Access-Control-Allow-Credentials"] = "true"
         response.headers["Access-Control-Max-Age"] = "3600"
     
