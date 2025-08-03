@@ -1,5 +1,5 @@
 // frontend/src/utils/csrf.js
-const API_BASE = process.env.REACT_APP_API_BASE_URL;
+const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
 
 class CSRFManager {
   constructor() {

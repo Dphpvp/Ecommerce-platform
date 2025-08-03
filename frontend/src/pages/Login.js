@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import TwoFactorVerification from '../components/TwoFactor/TwoFactorVerification';
 import { useToastContext } from '../components/toast';
 
-const API_BASE = process.env.REACT_APP_API_BASE_URL;
+const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -33,6 +33,10 @@ const Login = () => {
     e.preventDefault();
     setError('');
 
+    console.log('🔍 Login attempt starting...');
+    console.log('Form data:', { ...formData, password: '***' });
+    console.log('API_BASE:', API_BASE);
+
     setLoading(true);
 
     try {
@@ -45,10 +49,16 @@ const Login = () => {
         body: JSON.stringify(formData),
       });
 
+      console.log('Response status:', response.status);
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
       const data = await response.json();
+      console.log('Response data:', data);
 
       if (response.ok) {
+        console.log('✅ Login successful!');
         if (data.requires_2fa) {
+          console.log('2FA required');
           setTempToken(data.temp_token);
           setTwoFactorMethod(data.method || 'app');
           setShow2FA(true);
@@ -59,10 +69,20 @@ const Login = () => {
             showToast('Please enter your 2FA code', 'info');
           }
         } else {
+          console.log('No 2FA required, logging in user:', data.user);
+          if (data.token) {
+            console.log('Storing auth token');
+            localStorage.setItem('auth_token', data.token);
+          }
           login(data.user);
+          showToast('Login successful!', 'success');
           navigate('/');
         }
       } else {
+        console.error('❌ Login failed:', {
+          status: response.status,
+          data: data
+        });
         setError(data.detail || 'Login failed');
         if (data.detail && data.detail.includes('Email not verified')) {
           showToast('Please verify your email address', 'error');

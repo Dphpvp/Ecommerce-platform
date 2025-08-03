@@ -37,7 +37,7 @@ const Register = () => {
     
     try {
       const response = await csrfManager.makeSecureRequest(
-        `${process.env.REACT_APP_API_BASE_URL}/auth/register`,
+        `${process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api'}/auth/register`,
         {
           method: 'POST',
           headers: {
