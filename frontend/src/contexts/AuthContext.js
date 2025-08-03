@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
-import secureAuth from '../utils/secureAuth';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
 
@@ -18,10 +17,12 @@ export const AuthProvider = ({ children }) => {
 
   const logout = useCallback(async () => {
     try {
-      // Use secure auth logout
-      await secureAuth.logout();
+      await fetch(`${API_BASE}/auth/logout`, {
+        method: 'GET',
+        credentials: 'include'
+      });
     } catch (error) {
-      console.error('Secure logout error:', error);
+      console.error('Logout error:', error);
     } finally {
       setUser(null);
       setRequires2FA(false);
@@ -72,25 +73,34 @@ export const AuthProvider = ({ children }) => {
     };
   }, [user, handleActivity, resetTimeout]);
 
-  // Secure session fetching using secureAuth
+  // Simple session fetching
   const fetchUser = useCallback(async () => {
     try {
-      console.log('🔍 Fetching user session securely...');
+      console.log('🔍 Fetching user session...');
       
-      const userData = await secureAuth.getCurrentUser();
+      const response = await fetch(`${API_BASE}/auth/me`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
       
-      if (userData) {
-        console.log('✅ Secure user session found:', userData.username);
+      if (response.ok) {
+        const userData = await response.json();
+        console.log('✅ User session found:', userData.username);
         setUser(userData);
         return userData;
-      } else {
-        console.log('❌ No valid session');
+      } else if (response.status === 401) {
+        console.log('❌ No valid session (401)');
         setUser(null);
         return null;
+      } else {
+        console.error('⚠️ Unexpected auth response:', response.status);
+        return user;
       }
     } catch (error) {
-      console.error('💥 Secure auth fetch error:', error);
-      // Don't change user state on network errors
+      console.error('💥 Auth fetch error:', error);
       return user;
     } finally {
       if (!initialized) {
@@ -108,36 +118,25 @@ export const AuthProvider = ({ children }) => {
   }, [fetchUser, initialized]);
 
   const login = useCallback(async (userData) => {
-    console.log('🔐 Secure login called with:', userData ? 'user data' : 'no data');
+    console.log('🔐 Login called with:', userData ? 'user data' : 'no data');
     
     if (userData) {
-      // Validate user data before setting
-      if (secureAuth.validateUserData(userData)) {
-        setUser(userData);
-        setLoading(false);
-        
-        // Sync with secure auth manager
-        secureAuth.user = userData;
-      } else {
-        console.error('❌ Invalid user data structure');
-        setLoading(false);
-        return false;
-      }
+      setUser(userData);
+      setLoading(false);
     } else {
-      // Fetch from session using secure auth
-      const freshUser = await secureAuth.getCurrentUser();
+      // Fetch from session
+      const freshUser = await fetchUser();
       if (!freshUser) {
         console.error('❌ Login failed: No user data available');
         setLoading(false);
         return false;
       }
-      setUser(freshUser);
     }
     
     setRequires2FA(false);
     setTempToken(null);
     return true;
-  }, []);
+  }, [fetchUser]);
 
   const complete2FA = useCallback(async () => {
     setRequires2FA(false);
@@ -179,22 +178,28 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // Secure authenticated request using secureAuth
+  // Simple authenticated request
   const makeAuthenticatedRequest = useCallback(async (url, options = {}) => {
     try {
-      console.log(`🌐 Making secure request to ${url}`);
+      console.log(`🌐 Making request to ${url}`);
       
-      // Use secureAuth for all authenticated requests
-      const response = await secureAuth.makeSecureRequest(url, options);
+      const response = await fetch(url, {
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          ...options.headers
+        },
+        ...options
+      });
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(secureAuth.sanitizeErrorMessage(errorData.detail || `HTTP error! status: ${response.status}`));
+        throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
       }
       
       return await response.json();
     } catch (error) {
-      console.error('🚨 Secure authenticated request failed:', error);
+      console.error('🚨 Authenticated request failed:', error);
       throw error;
     }
   }, []);

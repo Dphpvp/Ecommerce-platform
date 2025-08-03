@@ -3,8 +3,6 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import TwoFactorVerification from '../components/TwoFactor/TwoFactorVerification';
 import { useToastContext } from '../components/toast';
-import secureAuth from '../utils/secureAuth';
-import inputValidator from '../utils/inputValidation';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
 
@@ -30,52 +28,40 @@ const Login = () => {
     });
   };
 
-  // Secure login implementation with input validation
+  // Simple login implementation
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-
-    console.log('🔍 Secure login attempt starting...');
-
     setLoading(true);
 
     try {
-      // Validate and sanitize input first
-      const validation = inputValidator.validateLoginCredentials(formData);
-      
-      if (!validation.valid) {
-        const firstError = Object.values(validation.errors)[0];
-        setError(firstError);
-        setLoading(false);
-        return;
-      }
+      const response = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          identifier: formData.identifier,
+          password: formData.password
+        })
+      });
 
-      console.log('✅ Input validation passed');
-
-      // Use secure authentication with sanitized data
-      const result = await secureAuth.login(validation.sanitized);
-
-      console.log('Secure login result:', { success: result.success, status: result.status });
-
-      if (result.success) {
-        console.log('✅ Secure login successful!');
+      if (response.ok) {
+        const data = await response.json();
         
-        if (result.data.requires_2fa) {
-          console.log('2FA required');
-          setTempToken(result.data.temp_token);
-          setTwoFactorMethod(result.data.method || 'app');
+        if (data.requires_2fa) {
+          setTempToken(data.temp_token);
+          setTwoFactorMethod(data.method || 'app');
           setShow2FA(true);
           
-          if (result.data.method === 'email') {
+          if (data.method === 'email') {
             showToast('Verification code sent to your email', 'info');
           } else {
             showToast('Please enter your 2FA code', 'info');
           }
         } else {
-          console.log('No 2FA required, logging in user');
-          
-          // Secure login - user data is already validated
-          const loginSuccess = await login(result.data.user);
+          const loginSuccess = await login(data.user);
           if (loginSuccess) {
             showToast('Login successful!', 'success');
             navigate('/');
@@ -84,17 +70,16 @@ const Login = () => {
           }
         }
       } else {
-        console.error('❌ Secure login failed:', result.error);
-        setError(result.error);
+        const errorData = await response.json();
+        setError(errorData.detail || 'Login failed');
         
-        // Handle specific error cases
-        if (result.error.includes('Email not verified')) {
+        if (errorData.detail && errorData.detail.includes('Email not verified')) {
           showToast('Please verify your email address', 'error');
         }
       }
     } catch (error) {
-      console.error('Secure login error:', error);
-      setError('Authentication failed. Please try again.');
+      console.error('Login error:', error);
+      setError('Network error. Please try again.');
     } finally {
       setLoading(false);
     }
