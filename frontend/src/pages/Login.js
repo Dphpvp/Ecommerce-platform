@@ -114,47 +114,99 @@ const Login = () => {
   }
 
   return (
-    <div className="auth-page">
-      <div className="container">
-        <div className="auth-form">
-          <h1>Login</h1>
-          
-          {error && <div className="error-message">{error}</div>}
-          
-          <form onSubmit={handleSubmit}>
-            <input
-              type="text"
-              name="identifier"
-              placeholder="Email, Username, or Phone"
-              value={formData.identifier}
-              onChange={handleChange}
-              required
-            />
-            <input
-              type="password"
-              name="password"
-              placeholder="Password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-            />
+    <div className="modern-auth-page">
+      <div className="auth-container">
+        <div className="auth-left-panel">
+          <div className="auth-branding">
+            <h1 className="brand-title">Welcome Back</h1>
+            <p className="brand-subtitle">Sign in to continue shopping</p>
+            <div className="auth-illustration">
+              <div className="floating-element"></div>
+              <div className="floating-element"></div>
+              <div className="floating-element"></div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="auth-right-panel">
+          <div className="auth-form-container">
+            <div className="auth-form-header">
+              <h2>Sign In</h2>
+              <p>Enter your credentials to access your account</p>
+            </div>
             
-            <button 
-              type="submit" 
-              disabled={loading} 
-              className="btn btn-primary"
-            >
-              {loading ? 'Logging in...' : 'Login'}
-            </button>
-          </form>
+            {error && <div className="error-message modern">{error}</div>}
+            
+            <form onSubmit={handleSubmit} className="modern-auth-form">
+              <div className="form-group">
+                <label htmlFor="identifier" className="form-label">Email, Username, or Phone</label>
+                <div className="input-wrapper">
+                  <input
+                    id="identifier"
+                    type="text"
+                    name="identifier"
+                    placeholder="Enter your email, username, or phone"
+                    value={formData.identifier}
+                    onChange={handleChange}
+                    className="form-input"
+                    required
+                  />
+                  <i className="input-icon fas fa-user"></i>
+                </div>
+              </div>
 
-          <p className="forgot-password">
-            <Link to="/reset-password">Forgotten password? Click here to reset</Link>
-          </p>
+              <div className="form-group">
+                <label htmlFor="password" className="form-label">Password</label>
+                <div className="input-wrapper">
+                  <input
+                    id="password"
+                    type="password"
+                    name="password"
+                    placeholder="Enter your password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="form-input"
+                    required
+                  />
+                  <i className="input-icon fas fa-lock"></i>
+                </div>
+              </div>
+              
+              <button 
+                type="submit" 
+                disabled={loading} 
+                className="auth-submit-btn"
+              >
+                {loading ? (
+                  <>
+                    <span className="btn-spinner"></span>
+                    Signing in...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-sign-in-alt"></i>
+                    Sign In
+                  </>
+                )}
+              </button>
+            </form>
 
-          <p>
-            Don't have an account? <Link to="/register">Register here</Link>
-          </p>
+            <div className="auth-links">
+              <Link to="/reset-password" className="forgot-link">
+                <i className="fas fa-key"></i>
+                Forgot your password?
+              </Link>
+              
+              <div className="auth-divider">
+                <span>New to our platform?</span>
+              </div>
+              
+              <Link to="/register" className="register-link">
+                <i className="fas fa-user-plus"></i>
+                Create an account
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -101,112 +101,184 @@ const Register = () => {
   };
 
   return (
-    <div className="auth-page">
-      <div className="container">
-        <div className="auth-form">
-          <h1>Register</h1>
-          <SecureForm onSubmit={handleSubmit} validate={validateForm}>
-            <input
-              type="text"
-              name="username"
-              placeholder="Username (3-50 characters)"
-              minLength={3}
-              maxLength={50}
-              pattern="^[a-zA-Z][a-zA-Z0-9_-]*$"
-              title="Username must start with a letter and contain only letters, numbers, underscore, and hyphen"
-              required
-            />
-            <input
-              type="email"
-              name="email"
-              placeholder="Email Address"
-              maxLength={254}
-              required
-            />
-            <input
-              type="password"
-              name="password"
-              placeholder="Password (min 8 chars with uppercase, lowercase, number, special char)"
-              minLength={8}
-              maxLength={128}
-              title="Password must be at least 8 characters with uppercase, lowercase, number, and special character"
-              required
-            />
-            <input
-              type="text"
-              name="full_name"
-              placeholder="Full Name"
-              minLength={2}
-              maxLength={100}
-              required
-            />
-            <input
-              type="text"
-              name="address"
-              placeholder="Address (optional)"
-              maxLength={500}
-            />
-            
-            {/* Phone Number with Country Code */}
-            <div style={{ marginBottom: '1rem' }}>
-              <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>
-                Phone Number *
-              </label>
-              <div style={{ display: 'flex', gap: '0.5rem' }}>
-                <select
-                  value={countryCode}
-                  onChange={(e) => setCountryCode(e.target.value)}
-                  style={{
-                    padding: '0.75rem',
-                    border: '2px solid #e5e5e5',
-                    borderRadius: '5px',
-                    fontSize: '1rem',
-                    width: '120px',
-                    backgroundColor: 'white'
-                  }}
-                >
-                  <option value="+40">🇷🇴 +40</option>
-                  <option value="+1">🇺🇸 +1</option>
-                  <option value="+44">🇬🇧 +44</option>
-                  <option value="+49">🇩🇪 +49</option>
-                  <option value="+33">🇫🇷 +33</option>
-                  <option value="+39">🇮🇹 +39</option>
-                  <option value="+34">🇪🇸 +34</option>
-                </select>
-                <input
-                  type="tel"
-                  placeholder="723423225"
-                  value={phoneNumber}
-                  onChange={handlePhoneNumberChange}
-                  maxLength={9}
-                  style={{
-                    flex: 1,
-                    padding: '0.75rem',
-                    border: '2px solid #e5e5e5',
-                    borderRadius: '5px',
-                    fontSize: '1rem',
-                    fontFamily: 'monospace'
-                  }}
-                  required
-                />
-              </div>
-              <p style={{ fontSize: '0.85rem', color: '#666', margin: '0.25rem 0 0 0' }}>
-                📱 Enter 9 digits (without the leading 0). Example: 723423225
-              </p>
-              {phoneNumber && (
-                <p style={{ fontSize: '0.85rem', color: '#007bff', margin: '0.25rem 0 0 0' }}>
-                  Full number: <strong>{getFullPhoneNumber()}</strong>
-                </p>
-              )}
+    <div className="modern-auth-page">
+      <div className="auth-container">
+        <div className="auth-left-panel">
+          <div className="auth-branding">
+            <h1 className="brand-title">Join Our Community</h1>
+            <p className="brand-subtitle">Create your account and start shopping</p>
+            <div className="auth-illustration">
+              <div className="floating-element"></div>
+              <div className="floating-element"></div>
+              <div className="floating-element"></div>
             </div>
+          </div>
+        </div>
+        
+        <div className="auth-right-panel">
+          <div className="auth-form-container register">
+            <div className="auth-form-header">
+              <h2>Create Account</h2>
+              <p>Fill in your details to get started</p>
+            </div>
+            
+            <SecureForm onSubmit={handleSubmit} validate={validateForm} className="modern-auth-form">
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="username" className="form-label">Username *</label>
+                  <div className="input-wrapper">
+                    <input
+                      id="username"
+                      type="text"
+                      name="username"
+                      placeholder="Choose a username"
+                      minLength={3}
+                      maxLength={50}
+                      pattern="^[a-zA-Z][a-zA-Z0-9_-]*$"
+                      title="Username must start with a letter and contain only letters, numbers, underscore, and hyphen"
+                      className="form-input"
+                      required
+                    />
+                    <i className="input-icon fas fa-user"></i>
+                  </div>
+                </div>
 
-            <button type="submit" disabled={loading} className="btn btn-primary">
-              {loading ? 'Registering...' : 'Register'}
-            </button>
-          </SecureForm>
-          <p>
-            Already have an account? <Link to="/login">Login here</Link>
-          </p>
+                <div className="form-group">
+                  <label htmlFor="full_name" className="form-label">Full Name *</label>
+                  <div className="input-wrapper">
+                    <input
+                      id="full_name"
+                      type="text"
+                      name="full_name"
+                      placeholder="Enter your full name"
+                      minLength={2}
+                      maxLength={100}
+                      className="form-input"
+                      required
+                    />
+                    <i className="input-icon fas fa-id-card"></i>
+                  </div>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="email" className="form-label">Email Address *</label>
+                <div className="input-wrapper">
+                  <input
+                    id="email"
+                    type="email"
+                    name="email"
+                    placeholder="Enter your email address"
+                    maxLength={254}
+                    className="form-input"
+                    required
+                  />
+                  <i className="input-icon fas fa-envelope"></i>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="password" className="form-label">Password *</label>
+                <div className="input-wrapper">
+                  <input
+                    id="password"
+                    type="password"
+                    name="password"
+                    placeholder="Create a strong password"
+                    minLength={8}
+                    maxLength={128}
+                    title="Password must be at least 8 characters with uppercase, lowercase, number, and special character"
+                    className="form-input"
+                    required
+                  />
+                  <i className="input-icon fas fa-lock"></i>
+                </div>
+                <div className="password-requirements">
+                  <small>Password must contain uppercase, lowercase, number, and special character</small>
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Phone Number *</label>
+                <div className="phone-input-group">
+                  <select
+                    value={countryCode}
+                    onChange={(e) => setCountryCode(e.target.value)}
+                    className="country-select"
+                  >
+                    <option value="+40">🇷🇴 +40</option>
+                    <option value="+1">🇺🇸 +1</option>
+                    <option value="+44">🇬🇧 +44</option>
+                    <option value="+49">🇩🇪 +49</option>
+                    <option value="+33">🇫🇷 +33</option>
+                    <option value="+39">🇮🇹 +39</option>
+                    <option value="+34">🇪🇸 +34</option>
+                  </select>
+                  <div className="input-wrapper phone-input">
+                    <input
+                      type="tel"
+                      placeholder="723423225"
+                      value={phoneNumber}
+                      onChange={handlePhoneNumberChange}
+                      maxLength={9}
+                      className="form-input"
+                      required
+                    />
+                    <i className="input-icon fas fa-phone"></i>
+                  </div>
+                </div>
+                <div className="phone-help">
+                  <small>📱 Enter 9 digits (without leading 0). Example: 723423225</small>
+                  {phoneNumber && (
+                    <small className="phone-preview">
+                      Full number: <strong>{getFullPhoneNumber()}</strong>
+                    </small>
+                  )}
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="address" className="form-label">Address</label>
+                <div className="input-wrapper">
+                  <input
+                    id="address"
+                    type="text"
+                    name="address"
+                    placeholder="Enter your address (optional)"
+                    maxLength={500}
+                    className="form-input"
+                  />
+                  <i className="input-icon fas fa-map-marker-alt"></i>
+                </div>
+                <small className="field-note">This field is optional but helps with order delivery</small>
+              </div>
+
+              <button type="submit" disabled={loading} className="auth-submit-btn">
+                {loading ? (
+                  <>
+                    <span className="btn-spinner"></span>
+                    Creating Account...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-user-plus"></i>
+                    Create Account
+                  </>
+                )}
+              </button>
+            </SecureForm>
+            
+            <div className="auth-links">
+              <div className="auth-divider">
+                <span>Already have an account?</span>
+              </div>
+              
+              <Link to="/login" className="login-link">
+                <i className="fas fa-sign-in-alt"></i>
+                Sign in to your account
+              </Link>
+            </div>
+          </div>
         </div>
       </div>
     </div>

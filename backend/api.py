@@ -294,12 +294,6 @@ async def login(user_login: UserLogin, request: Request, response: Response):
         print(f"Failed login attempt from {client_ip} for {user_login.identifier}")
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
-    if not user.get("email_verified", False):
-        raise HTTPException(
-            status_code=401, 
-            detail="Email not verified. Please check your email and verify your account."
-        )
-    
     # Check if 2FA is enabled
     if user.get("two_factor_enabled"):
         temp_token = create_jwt_token(str(user["_id"]), expires_in=timedelta(minutes=10))
@@ -1789,14 +1783,25 @@ async def remove_from_cart(item_id: str, request: Request):
     
 # Payment route
 @router.post("/payment/create-intent")
-async def create_payment_intent(payment: PaymentIntent):
+async def create_payment_intent(payment: PaymentIntent, request: Request):
     try:
+        user = await get_current_user_from_session(request)
+        
+        # Check if email is verified for payments
+        if not user.get("email_verified", False):
+            raise HTTPException(
+                status_code=403, 
+                detail="Email verification required to make payments. Please verify your email address before proceeding."
+            )
+        
         intent = stripe.PaymentIntent.create(
             amount=payment.amount,
             currency=payment.currency,
-            metadata={'integration_check': 'accept_a_payment'}
+            metadata={'integration_check': 'accept_a_payment', 'user_id': str(user["_id"])}
         )
         return {"client_secret": intent.client_secret}
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -1807,6 +1812,13 @@ async def create_order(order_data: dict, request: Request):
     try:
         user = await get_current_user_from_session(request)
         user_id = str(user["_id"])
+        
+        # Check if email is verified for purchases
+        if not user.get("email_verified", False):
+            raise HTTPException(
+                status_code=403, 
+                detail="Email verification required to make purchases. Please verify your email address before placing an order."
+            )
         
         # Get cart items
         cart_items = []
