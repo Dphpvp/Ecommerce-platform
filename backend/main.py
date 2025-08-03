@@ -150,7 +150,7 @@ async def root():
     return {
         "message": "E-commerce API is running", 
         "status": "healthy",
-        "version": "1.0.1",
+        "version": "1.0.2",
         "timestamp": datetime.now().isoformat()
     }
 
