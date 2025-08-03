@@ -144,7 +144,8 @@ class SecureAuthManager {
       credentials: 'include', // Include httpOnly cookies
       headers: {
         'Content-Type': 'application/json',
-        'X-Requested-With': 'XMLHttpRequest', // CSRF protection
+        // Temporarily remove X-Requested-With to fix CORS preflight
+        // 'X-Requested-With': 'XMLHttpRequest', // CSRF protection
         ...options.headers
       },
       ...options
@@ -210,8 +211,9 @@ class SecureAuthManager {
         method: 'GET',
         credentials: 'include',
         headers: {
-          'Cache-Control': 'no-cache',
-          'X-Requested-With': 'XMLHttpRequest'
+          'Cache-Control': 'no-cache'
+          // Temporarily remove X-Requested-With to fix CORS preflight
+          // 'X-Requested-With': 'XMLHttpRequest'
         }
       });
 
@@ -254,7 +256,8 @@ class SecureAuthManager {
         method: 'POST',
         credentials: 'include',
         headers: {
-          'X-Requested-With': 'XMLHttpRequest'
+          // Temporarily remove X-Requested-With to fix CORS preflight
+          // 'X-Requested-With': 'XMLHttpRequest'
         }
       });
 

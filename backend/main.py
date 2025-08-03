@@ -2,6 +2,7 @@
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
+from fastapi.responses import Response
 from starlette.middleware.base import BaseHTTPMiddleware
 from datetime import datetime
 import stripe
@@ -26,6 +27,20 @@ app = FastAPI(
     redoc_url=None,
 )
 
+# Add this BEFORE your router includes
+@app.api_route("/api/{path:path}", methods=["OPTIONS"])
+async def handle_options(path: str):
+    return Response(
+        status_code=200,
+        headers={
+            "Access-Control-Allow-Origin": "https://vergishop.vercel.app",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS, PATCH",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization, X-CSRF-Token, X-Request-Signature, X-Request-Timestamp",
+            "Access-Control-Allow-Credentials": "true",
+            "Access-Control-Max-Age": "3600"
+        }
+    )
+
 # Include routers
 app.include_router(api_router, prefix="/api")
 app.include_router(admin_router)
@@ -45,8 +60,8 @@ if FRONTEND_URL and FRONTEND_URL not in origins:
     origins.append(FRONTEND_URL)
 
 # Add development origins for local testing
-if os.getenv("ENVIRONMENT") == "development":
-    origins.extend(["http://localhost:3000", "http://127.0.0.1:3000"])
+# if os.getenv("ENVIRONMENT") == "development":
+#     origins.extend(["http://localhost:3000", "http://127.0.0.1:3000"])
 
 # CRITICAL: Explicit origins required for credentials
 app.add_middleware(
@@ -85,24 +100,6 @@ class COOPMiddleware(BaseHTTPMiddleware):
 
 app.add_middleware(COOPMiddleware)
 
-# Handle OPTIONS requests for CORS preflight
-@app.options("/{path:path}")
-async def handle_options(path: str, request: Request):
-    """Handle CORS preflight requests"""
-    origin = request.headers.get("origin")
-    
-    # Create response with proper CORS headers
-    from fastapi.responses import Response
-    response = Response()
-    
-    if origin in origins:
-        response.headers["Access-Control-Allow-Origin"] = origin
-        response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
-        response.headers["Access-Control-Allow-Headers"] = "Accept, Accept-Language, Content-Language, Content-Type, Authorization, X-CSRF-Token, X-Request-Signature, X-Request-Timestamp, X-Requested-With, Cache-Control"
-        response.headers["Access-Control-Allow-Credentials"] = "true"
-        response.headers["Access-Control-Max-Age"] = "3600"
-    
-    return response
 
 # Security headers middleware - FIXED for authenticated requests
 @app.middleware("http")
