@@ -1,7 +1,4 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
-import platformDetection from '../utils/platformDetection';
-import notificationService from '../utils/notificationService';
-import sessionManager from '../utils/sessionManager';
 import secureAuth from '../utils/secureAuth';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
@@ -17,199 +14,84 @@ export const AuthProvider = ({ children }) => {
   
   // Auto-logout state
   const timeoutRef = useRef(null);
-  const warningTimeoutRef = useRef(null);
-  const TIMEOUT_DURATION = 30 * 60 * 1000; // 30 minutes
-  const WARNING_DURATION = 5 * 60 * 1000; // 5 minutes before logout
+  const TIMEOUT_DURATION = 60 * 60 * 1000; // 1 hour
 
-  const logout = useCallback(async (showMessage = true) => {
-    console.log('🚪 Logging out user...');
-    
+  const logout = useCallback(async () => {
     try {
-      // Use secure auth logout which handles backend call and cleanup
+      // Use secure auth logout
       await secureAuth.logout();
     } catch (error) {
       console.error('Secure logout error:', error);
-    }
-    
-    // Use session manager to clear all session data
-    sessionManager.forceLogoutAllTabs();
-    
-    // Clear state
-    setUser(null);
-    setRequires2FA(false);
-    setTempToken(null);
-    setLoading(false);
-    
-    // Clear timeouts
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
-    if (warningTimeoutRef.current) {
-      clearTimeout(warningTimeoutRef.current);
-      warningTimeoutRef.current = null;
-    }
-    
-    // Show logout message if not already shown by secureAuth
-    if (showMessage) {
-      try {
-        await platformDetection.showToast('Logged out successfully', 2000);
-      } catch (error) {
-        console.warn('Could not show logout toast:', error);
+    } finally {
+      setUser(null);
+      setRequires2FA(false);
+      setTempToken(null);
+      
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
       }
     }
-    
-    console.log('✅ Logout complete');
   }, []);
 
   const resetTimeout = useCallback(() => {
-    if (!user || platformDetection.isMobile) return; // Skip auto-logout on mobile
+    if (!user) return;
     
-    // Clear existing timeouts
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
     }
-    if (warningTimeoutRef.current) {
-      clearTimeout(warningTimeoutRef.current);
-    }
     
-    // Set warning timeout (5 minutes before logout)
-    warningTimeoutRef.current = setTimeout(() => {
-      console.log('⚠️ Session expiring soon, showing warning');
-      
-      // Show warning modal/toast
-      const extendSession = window.confirm(
-        'Your session will expire in 5 minutes due to inactivity. ' +
-        'Click OK to extend your session or Cancel to logout now.'
-      );
-      
-      if (extendSession) {
-        console.log('🔄 User chose to extend session');
-        sessionManager.extendSession();
-        resetTimeout(); // Reset the timeout
-      } else {
-        console.log('🚪 User chose to logout immediately');
-        logout(true);
-      }
-    }, TIMEOUT_DURATION - WARNING_DURATION);
-    
-    // Set logout timeout
     timeoutRef.current = setTimeout(() => {
-      console.log('🚪 Auto-logout due to inactivity');
-      logout(true);
+      console.log('Auto-logout due to inactivity');
+      logout();
     }, TIMEOUT_DURATION);
-    
-    console.log(`⏰ Session timeout reset - will warn in ${(TIMEOUT_DURATION - WARNING_DURATION) / 60000} minutes, logout in ${TIMEOUT_DURATION / 60000} minutes`);
-  }, [user, logout, TIMEOUT_DURATION, WARNING_DURATION]);
+  }, [user, logout, TIMEOUT_DURATION]);
 
   const handleActivity = useCallback(() => {
-    if (!user || platformDetection.isMobile) return;
     resetTimeout();
-  }, [resetTimeout, user]);
+  }, [resetTimeout]);
 
   useEffect(() => {
-    if (!user || platformDetection.isMobile) return; // Skip auto-logout setup on mobile
+    if (!user) return;
 
-    console.log('🎯 Setting up auto-logout activity detection');
-    
-    const events = [
-      'mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 
-      'click', 'keydown', 'mouseenter', 'focus', 'blur'
-    ];
-    
-    // Throttle activity detection to avoid excessive calls
-    let activityTimeout;
-    const throttledActivity = () => {
-      if (activityTimeout) return;
-      activityTimeout = setTimeout(() => {
-        handleActivity();
-        activityTimeout = null;
-      }, 1000); // Throttle to once per second
-    };
+    const events = ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'];
     
     events.forEach(event => {
-      document.addEventListener(event, throttledActivity, true);
+      document.addEventListener(event, handleActivity, true);
     });
 
-    // Set initial timeout
     resetTimeout();
 
     return () => {
-      console.log('🧹 Cleaning up auto-logout activity detection');
       events.forEach(event => {
-        document.removeEventListener(event, throttledActivity, true);
+        document.removeEventListener(event, handleActivity, true);
       });
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
       }
-      if (warningTimeoutRef.current) {
-        clearTimeout(warningTimeoutRef.current);
-      }
-      if (activityTimeout) {
-        clearTimeout(activityTimeout);
-      }
     };
   }, [user, handleActivity, resetTimeout]);
 
-  // Secure session fetching using JWT tokens
+  // Secure session fetching using secureAuth
   const fetchUser = useCallback(async () => {
     try {
-      // Check if we have a valid token
-      if (!secureAuth.isAuthenticated()) {
-        console.log('🔐 No valid authentication found');
-        setUser(null);
-        if (!initialized) {
-          setLoading(false);
-          setInitialized(true);
-        }
-        return null;
-      }
-
-      // Get user data from secure storage first
-      const cachedUserData = secureAuth.getUserData();
-      if (cachedUserData && !user) {
-        console.log('📋 Loading cached user data');
-        setUser(cachedUserData);
-      }
-
-      // Verify token with backend
-      const response = await secureAuth.makeSecureRequest(`${API_BASE}/auth/me`);
+      console.log('🔍 Fetching user session securely...');
       
-      if (response) {
-        console.log('✅ User session verified:', {
-          username: response.username,
-          email: response.email,
-          isAdmin: response.is_admin
-        });
-        
-        // Update stored user data
-        secureAuth.setTokens(
-          await secureAuth.getValidToken(),
-          localStorage.getItem('refresh_token'),
-          3600, // Default 1 hour expiry
-          response
-        );
-        
-        setUser(response);
-        return response;
+      const userData = await secureAuth.getCurrentUser();
+      
+      if (userData) {
+        console.log('✅ Secure user session found:', userData.username);
+        setUser(userData);
+        return userData;
       } else {
-        console.log('❌ Session verification failed');
-        secureAuth.clearAllTokens();
+        console.log('❌ No valid session');
         setUser(null);
         return null;
       }
     } catch (error) {
-      console.warn('Auth fetch error:', error.message);
-      
-      if (error.message.includes('Authentication') || error.message.includes('401')) {
-        console.log('🔐 Authentication failed, clearing tokens');
-        secureAuth.clearAllTokens();
-        setUser(null);
-        return null;
-      }
-      
-      // Don't change user state on network errors, return cached data
-      return user || secureAuth.getUserData();
+      console.error('💥 Secure auth fetch error:', error);
+      // Don't change user state on network errors
+      return user;
     } finally {
       if (!initialized) {
         setLoading(false);
@@ -218,140 +100,44 @@ export const AuthProvider = ({ children }) => {
     }
   }, [user, initialized]);
 
-  // Initialize session manager and handle session events
+  // FIXED: Only fetch user once on initialization
   useEffect(() => {
-    console.log('🔧 Initializing auth system with session manager');
-    
-    // Initialize session manager
-    sessionManager.init();
-    
-    // Set up session event handlers
-    const handleSessionEvent = (event, data) => {
-      console.log(`📡 Session event: ${event}`, data ? data : '');
-      
-      switch (event) {
-        case 'session_restored':
-          if (data && data.user && !user) {
-            console.log('🔄 Restoring session from storage');
-            setUser(data.user);
-            setLoading(false);
-            setInitialized(true);
-          }
-          break;
-          
-        case 'logout_other_tab':
-          console.log('🚪 Session invalidated in other tab, logging out');
-          setUser(null);
-          setRequires2FA(false);
-          setTempToken(null);
-          setLoading(false);
-          break;
-          
-        case 'session_invalid':
-          // Only logout if we actually had a user before
-          if (user) {
-            console.log('🚪 Session invalidated, logging out');
-            setUser(null);
-            setRequires2FA(false);
-            setTempToken(null);
-            setLoading(false);
-          } else {
-            console.log('👁️ No session found, but user was not logged in anyway');
-          }
-          break;
-          
-        case 'no_session':
-          if (!initialized) {
-            setLoading(false);
-            setInitialized(true);
-          }
-          break;
-          
-        case 'session_extended':
-          resetTimeout();
-          break;
-          
-        default:
-          break;
-      }
-    };
-    
-    sessionManager.addListener(handleSessionEvent);
-    
-    // Fallback: fetch user if no session was restored
-    const timeout = setTimeout(() => {
-      if (!initialized) {
-        console.log('⏰ No session restored, fetching user');
-        fetchUser();
-      }
-    }, 1000);
-    
-    return () => {
-      sessionManager.removeListener(handleSessionEvent);
-      clearTimeout(timeout);
-    };
-  }, [user, initialized, fetchUser, resetTimeout]);
-
-  // FIXED: Only fetch user once on initialization (backup)
-  useEffect(() => {
-    if (!initialized && !sessionManager.isSessionValid()) {
-      console.log('🔍 No session found, fetching user from backend');
+    if (!initialized) {
       fetchUser();
     }
   }, [fetchUser, initialized]);
 
-  const login = useCallback(async (loginData) => {
-    try {
-      if (loginData && loginData.access_token) {
-        // Store tokens securely
-        const success = secureAuth.setTokens(
-          loginData.access_token,
-          loginData.refresh_token,
-          loginData.expires_in || 3600,
-          loginData.user
-        );
-        
-        if (success) {
-          setUser(loginData.user);
-          setLoading(false);
-          
-          // Store session data for backward compatibility
-          sessionManager.setSessionData(loginData.user, loginData.access_token);
-          
-          console.log('✅ Login successful with JWT tokens');
-        } else {
-          throw new Error('Failed to store authentication tokens');
-        }
-      } else if (loginData && loginData.user) {
-        // Fallback for user data without explicit tokens
-        setUser(loginData.user);
+  const login = useCallback(async (userData) => {
+    console.log('🔐 Secure login called with:', userData ? 'user data' : 'no data');
+    
+    if (userData) {
+      // Validate user data before setting
+      if (secureAuth.validateUserData(userData)) {
+        setUser(userData);
         setLoading(false);
+        
+        // Sync with secure auth manager
+        secureAuth.user = userData;
       } else {
-        // Fetch from session
-        const freshUser = await fetchUser();
-        if (!freshUser) {
-          setLoading(false);
-          return false;
-        }
+        console.error('❌ Invalid user data structure');
+        setLoading(false);
+        return false;
       }
-      
-      setRequires2FA(false);
-      setTempToken(null);
-      
-      // Try to save FCM token if we have one stored locally
-      try {
-        await notificationService.retryTokenSave();
-      } catch (error) {
-        console.error('Failed to save FCM token on login:', error);
+    } else {
+      // Fetch from session using secure auth
+      const freshUser = await secureAuth.getCurrentUser();
+      if (!freshUser) {
+        console.error('❌ Login failed: No user data available');
+        setLoading(false);
+        return false;
       }
-      
-      return true;
-    } catch (error) {
-      console.error('Login error:', error);
-      setLoading(false);
-      return false;
+      setUser(freshUser);
     }
-  }, [fetchUser]);
+    
+    setRequires2FA(false);
+    setTempToken(null);
+    return true;
+  }, []);
 
   const complete2FA = useCallback(async () => {
     setRequires2FA(false);
@@ -393,68 +179,34 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // FIXED: Get CSRF token helper
-  const getCSRFToken = useCallback(async () => {
-    try {
-      const response = await fetch(`${API_BASE}/csrf-token`, {
-        credentials: 'include'
-      });
-      if (response.ok) {
-        const data = await response.json();
-        return data.csrf_token;
-      }
-    } catch (error) {
-      console.error('Failed to get CSRF token:', error);
-    }
-    return null;
-  }, []);
-
-  // Secure authenticated request using JWT tokens
+  // Secure authenticated request using secureAuth
   const makeAuthenticatedRequest = useCallback(async (url, options = {}) => {
     try {
-      console.log(`🌐 Making secure authenticated request to ${url}`);
-      console.log('🔍 Current auth state:', {
-        hasUser: !!user,
-        userEmail: user?.email,
-        isAdmin: user?.is_admin,
-        isAuthenticated: secureAuth.isAuthenticated(),
-        tokenInfo: secureAuth.getTokenInfo()
-      });
+      console.log(`🌐 Making secure request to ${url}`);
       
-      // Use secure auth for the request
+      // Use secureAuth for all authenticated requests
       const response = await secureAuth.makeSecureRequest(url, options);
       
-      console.log('✅ Secure request completed successfully');
-      return response;
-      
-    } catch (error) {
-      console.error('🚨 Secure authenticated request failed:', {
-        message: error.message,
-        url: url,
-        hasUser: !!user,
-        isAuthenticated: secureAuth.isAuthenticated()
-      });
-      
-      // Handle authentication errors
-      if (error.message.includes('Authentication') || error.message.includes('401')) {
-        console.log('🔐 Authentication failed, clearing user state');
-        secureAuth.clearAllTokens();
-        setUser(null);
-        await platformDetection.showToast('Session expired. Please login again.', 3000);
-      } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
-        await platformDetection.showToast('Connection failed. Please check your internet connection.', 4000);
-      } else if (error.message.includes('Rate limit')) {
-        await platformDetection.showToast('Too many requests. Please slow down.', 3000);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(secureAuth.sanitizeErrorMessage(errorData.detail || `HTTP error! status: ${response.status}`));
       }
       
+      return await response.json();
+    } catch (error) {
+      console.error('🚨 Secure authenticated request failed:', error);
       throw error;
     }
-  }, [user]);
+  }, []);
 
   const checkAuthStatus = useCallback(async () => {
     try {
-      // Use secure auth to check status
-      return secureAuth.isAuthenticated();
+      const response = await fetch(`${API_BASE}/auth/me`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: { 'Accept': 'application/json' }
+      });
+      return response.ok;
     } catch (error) {
       console.error('Auth status check failed:', error);
       return false;
@@ -466,48 +218,35 @@ export const AuthProvider = ({ children }) => {
   const refetchUser = useCallback(async () => {
     console.log('🔄 Refetching user...');
     try {
-      // Use fetchUser which handles secure authentication
-      const userData = await fetchUser();
+      const response = await fetch(`${API_BASE}/auth/me`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: { 'Accept': 'application/json' }
+      });
       
-      if (userData) {
-        console.log('✅ User refetch successful');
+      if (response.ok) {
+        const userData = await response.json();
+        setUser(userData);
         return userData;
       } else {
         console.log('❌ Refetch failed, clearing user');
         setUser(null);
-        sessionManager.clearSessionData();
         return null;
       }
     } catch (error) {
       console.error('Failed to refresh user:', error);
       return null;
     }
-  }, [fetchUser]);
-
-  // Session management helpers
-  const extendSession = useCallback(() => {
-    sessionManager.extendSession();
-    resetTimeout();
-  }, [resetTimeout]);
-
-  const getSessionInfo = useCallback(() => {
-    return {
-      isValid: sessionManager.isSessionValid(),
-      remainingTime: sessionManager.getRemainingSessionTime(),
-      isMobile: platformDetection.isMobile
-    };
   }, []);
 
-  // Debug logging (disabled in production)
+  // Debug logging
   useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('🔍 Auth State:', { 
-        user: user?.username || 'none', 
-        loading, 
-        initialized, 
-        isAuthenticated 
-      });
-    }
+    console.log('🔍 Auth State:', { 
+      user: user?.username || 'none', 
+      loading, 
+      initialized, 
+      isAuthenticated 
+    });
   }, [user, loading, initialized, isAuthenticated]);
 
   return (
@@ -527,9 +266,7 @@ export const AuthProvider = ({ children }) => {
       makeAuthenticatedRequest,
       checkAuthStatus,
       isAuthenticated,
-      initialized, // Add this for components to check if auth is ready
-      extendSession, // Allow manual session extension
-      getSessionInfo // Get session status information
+      initialized // Add this for components to check if auth is ready
     }}>
       {children}
     </AuthContext.Provider>

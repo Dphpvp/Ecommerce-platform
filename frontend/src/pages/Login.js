@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import TwoFactorVerification from '../components/TwoFactor/TwoFactorVerification';
 import { useToastContext } from '../components/toast';
+import secureAuth from '../utils/secureAuth';
+import inputValidator from '../utils/inputValidation';
 
 const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
 
@@ -28,69 +30,71 @@ const Login = () => {
     });
   };
 
-  // TEMPORARY: Login without reCAPTCHA
+  // Secure login implementation with input validation
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    console.log('🔍 Login attempt starting...');
-    console.log('Form data:', { ...formData, password: '***' });
-    console.log('API_BASE:', API_BASE);
+    console.log('🔍 Secure login attempt starting...');
 
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE}/auth/login`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-      });
+      // Validate and sanitize input first
+      const validation = inputValidator.validateLoginCredentials(formData);
+      
+      if (!validation.valid) {
+        const firstError = Object.values(validation.errors)[0];
+        setError(firstError);
+        setLoading(false);
+        return;
+      }
 
-      console.log('Response status:', response.status);
-      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+      console.log('✅ Input validation passed');
 
-      const data = await response.json();
-      console.log('Response data:', data);
+      // Use secure authentication with sanitized data
+      const result = await secureAuth.login(validation.sanitized);
 
-      if (response.ok) {
-        console.log('✅ Login successful!');
-        if (data.requires_2fa) {
+      console.log('Secure login result:', { success: result.success, status: result.status });
+
+      if (result.success) {
+        console.log('✅ Secure login successful!');
+        
+        if (result.data.requires_2fa) {
           console.log('2FA required');
-          setTempToken(data.temp_token);
-          setTwoFactorMethod(data.method || 'app');
+          setTempToken(result.data.temp_token);
+          setTwoFactorMethod(result.data.method || 'app');
           setShow2FA(true);
           
-          if (data.method === 'email') {
+          if (result.data.method === 'email') {
             showToast('Verification code sent to your email', 'info');
           } else {
             showToast('Please enter your 2FA code', 'info');
           }
         } else {
-          console.log('No 2FA required, logging in user:', data.user);
-          if (data.token) {
-            console.log('Storing auth token');
-            localStorage.setItem('auth_token', data.token);
+          console.log('No 2FA required, logging in user');
+          
+          // Secure login - user data is already validated
+          const loginSuccess = await login(result.data.user);
+          if (loginSuccess) {
+            showToast('Login successful!', 'success');
+            navigate('/');
+          } else {
+            setError('Authentication failed. Please try again.');
           }
-          login(data.user);
-          showToast('Login successful!', 'success');
-          navigate('/');
         }
       } else {
-        console.error('❌ Login failed:', {
-          status: response.status,
-          data: data
-        });
-        setError(data.detail || 'Login failed');
-        if (data.detail && data.detail.includes('Email not verified')) {
+        console.error('❌ Secure login failed:', result.error);
+        setError(result.error);
+        
+        // Handle specific error cases
+        if (result.error.includes('Email not verified')) {
           showToast('Please verify your email address', 'error');
         }
       }
     } catch (error) {
-      console.error('Login error:', error);
-      setError('Network error. Please try again.');
+      console.error('Secure login error:', error);
+      setError('Authentication failed. Please try again.');
     } finally {
       setLoading(false);
     }

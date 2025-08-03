@@ -1,422 +1,421 @@
-import platformDetection from './platformDetection';
-
 /**
- * Secure JWT Authentication Utility
- * Handles token storage, validation, and security measures for both web and mobile
+ * Secure Authentication Utility for E-commerce Platform
+ * Implements defense-in-depth security measures
  */
-class SecureAuth {
+
+const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
+
+class SecureAuthManager {
   constructor() {
-    this.TOKEN_KEY = 'auth_token';
-    this.REFRESH_TOKEN_KEY = 'refresh_token';
-    this.TOKEN_EXPIRY_KEY = 'token_expiry';
-    this.USER_KEY = 'user_data';
+    this.user = null;
+    this.csrfToken = null;
+    this.tokenRefreshPromise = null;
+    this.isRefreshing = false;
     
-    // Production security settings
-    this.TOKEN_REFRESH_THRESHOLD = 5 * 60 * 1000; // Refresh 5 minutes before expiry
-    this.MAX_RETRY_ATTEMPTS = 3;
-    this.RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute  
-    this.MAX_REQUESTS_PER_WINDOW = 20; // Increased for production use
+    // Security configuration
+    this.config = {
+      maxRetries: 3,
+      retryDelay: 1000,
+      tokenRefreshBuffer: 300000, // 5 minutes before expiry
+      maxConcurrentRequests: 10,
+      rateLimitWindow: 60000, // 1 minute
+      maxRequestsPerWindow: 100
+    };
     
-    // Rate limiting storage
-    this.requestCounts = new Map();
+    // Rate limiting
+    this.requestCount = 0;
+    this.windowStart = Date.now();
     
-    // Initialize security measures
-    this.initSecurityMeasures();
+    // Request queue for token refresh
+    this.pendingRequests = [];
   }
 
   /**
-   * Initialize security measures
+   * Secure login with comprehensive validation
    */
-  initSecurityMeasures() {
-    // Clear any expired data on initialization
-    this.clearExpiredTokens();
-    
-    // Set up periodic cleanup
-    if (typeof window !== 'undefined') {
-      setInterval(() => {
-        this.clearExpiredTokens();
-        this.cleanupRateLimitData();
-      }, 60 * 1000); // Cleanup every minute
-    }
-  }
-
-  /**
-   * Secure token storage with encryption for sensitive data
-   */
-  setTokens(accessToken, refreshToken, expiresIn, userData) {
+  async login(credentials) {
     try {
-      if (!accessToken) {
-        throw new Error('Access token is required');
-      }
-
-      // Calculate expiry time
-      const expiryTime = Date.now() + (expiresIn * 1000);
+      // Input validation and sanitization
+      const sanitizedCredentials = this.sanitizeLoginInput(credentials);
       
-      // Store tokens and user data
-      localStorage.setItem(this.TOKEN_KEY, accessToken);
-      localStorage.setItem(this.TOKEN_EXPIRY_KEY, expiryTime.toString());
+      // Get CSRF token before login
+      await this.refreshCSRFToken();
       
-      if (refreshToken) {
-        localStorage.setItem(this.REFRESH_TOKEN_KEY, refreshToken);
-      }
-      
-      if (userData) {
-        // Only store non-sensitive user data
-        const safeUserData = this.sanitizeUserData(userData);
-        localStorage.setItem(this.USER_KEY, JSON.stringify(safeUserData));
-      }
-      
-      console.log('🔐 Tokens stored securely');
-      return true;
-    } catch (error) {
-      console.error('Failed to store tokens:', error);
-      return false;
-    }
-  }
-
-  /**
-   * Get access token with automatic refresh
-   */
-  async getValidToken() {
-    try {
-      const token = localStorage.getItem(this.TOKEN_KEY);
-      const expiryTime = localStorage.getItem(this.TOKEN_EXPIRY_KEY);
-      
-      if (!token || !expiryTime) {
-        return null;
-      }
-
-      const expiry = parseInt(expiryTime);
-      const now = Date.now();
-      
-      // Check if token is expired or will expire soon
-      if (now >= expiry) {
-        console.log('🔄 Token expired, attempting refresh...');
-        return await this.refreshToken();
-      } else if ((expiry - now) < this.TOKEN_REFRESH_THRESHOLD) {
-        console.log('🔄 Token expiring soon, refreshing proactively...');
-        // Attempt refresh but return current token if refresh fails
-        const refreshedToken = await this.refreshToken();
-        return refreshedToken || token;
-      }
-      
-      return token;
-    } catch (error) {
-      console.error('Error getting valid token:', error);
-      return null;
-    }
-  }
-
-  /**
-   * Refresh access token using refresh token
-   */
-  async refreshToken() {
-    try {
-      const refreshToken = localStorage.getItem(this.REFRESH_TOKEN_KEY);
-      if (!refreshToken) {
-        console.log('No refresh token available');
-        this.clearAllTokens();
-        return null;
-      }
-
-      // Rate limiting for refresh requests
-      if (!this.checkRateLimit('refresh')) {
-        throw new Error('Too many refresh attempts. Please wait.');
-      }
-
-      const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
-      
-      const response = await fetch(`${API_BASE}/auth/refresh`, {
+      const response = await this.makeSecureRequest('/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${refreshToken}`
-        },
-        credentials: 'include'
+        body: JSON.stringify(sanitizedCredentials)
       });
 
       if (response.ok) {
         const data = await response.json();
         
-        // Store new tokens
-        this.setTokens(
-          data.access_token,
-          data.refresh_token || refreshToken,
-          data.expires_in || 3600,
-          data.user
-        );
+        // Security validation of response
+        if (!this.validateAuthResponse(data)) {
+          throw new Error('Invalid authentication response');
+        }
         
-        console.log('✅ Token refreshed successfully');
-        return data.access_token;
+        this.user = data.user;
+        return { success: true, data };
       } else {
-        console.log('❌ Token refresh failed');
-        this.clearAllTokens();
-        return null;
+        const errorData = await response.json().catch(() => ({}));
+        return { 
+          success: false, 
+          error: this.sanitizeErrorMessage(errorData.detail || 'Login failed'),
+          status: response.status
+        };
       }
     } catch (error) {
-      console.error('Token refresh error:', error);
-      this.clearAllTokens();
+      console.error('Secure login error:', error.message);
+      return { 
+        success: false, 
+        error: 'Network error. Please try again.',
+        status: 0
+      };
+    }
+  }
+
+  /**
+   * Secure logout with session cleanup
+   */
+  async logout() {
+    try {
+      await this.makeSecureRequest('/auth/logout', {
+        method: 'POST'
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      // Clear all client-side data
+      this.user = null;
+      this.csrfToken = null;
+      this.clearSensitiveData();
+    }
+  }
+
+  /**
+   * Get current user with session validation
+   */
+  async getCurrentUser() {
+    try {
+      const response = await this.makeSecureRequest('/auth/me', {
+        method: 'GET'
+      });
+
+      if (response.ok) {
+        const userData = await response.json();
+        
+        // Validate user data structure
+        if (this.validateUserData(userData)) {
+          this.user = userData;
+          return userData;
+        } else {
+          console.warn('Invalid user data structure received');
+          return null;
+        }
+      } else if (response.status === 401) {
+        this.user = null;
+        return null;
+      } else {
+        throw new Error(`Unexpected response: ${response.status}`);
+      }
+    } catch (error) {
+      console.error('Get current user error:', error.message);
       return null;
     }
   }
 
   /**
-   * Make authenticated request with automatic token refresh
+   * Make secure authenticated request with CSRF protection
    */
-  async makeSecureRequest(url, options = {}) {
-    let attempt = 0;
+  async makeSecureRequest(endpoint, options = {}) {
+    // Rate limiting check
+    if (!this.checkRateLimit()) {
+      throw new Error('Rate limit exceeded. Please try again later.');
+    }
+
+    const url = endpoint.startsWith('http') ? endpoint : `${API_BASE}${endpoint}`;
     
-    while (attempt < this.MAX_RETRY_ATTEMPTS) {
+    // Ensure CSRF token for state-changing operations
+    if (['POST', 'PUT', 'DELETE', 'PATCH'].includes(options.method?.toUpperCase())) {
+      await this.ensureCSRFToken();
+    }
+
+    const secureOptions = {
+      credentials: 'include', // Include httpOnly cookies
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest', // CSRF protection
+        ...options.headers
+      },
+      ...options
+    };
+
+    // Add CSRF token for state-changing requests
+    if (this.csrfToken && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(options.method?.toUpperCase())) {
+      secureOptions.headers['X-CSRF-Token'] = this.csrfToken;
+    }
+
+    // Add security headers
+    secureOptions.headers = {
+      ...secureOptions.headers,
+      'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Pragma': 'no-cache'
+    };
+
+    let attempt = 0;
+    while (attempt < this.config.maxRetries) {
       try {
-        // Rate limiting
-        if (!this.checkRateLimit('api')) {
-          throw new Error('Rate limit exceeded. Please slow down.');
-        }
-
-        const token = await this.getValidToken();
-        if (!token) {
-          throw new Error('No valid authentication token');
-        }
-
-        const requestOptions = {
-          ...options,
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`,
-            ...options.headers
-          }
-        };
-
-        // Skip additional headers to avoid CORS preflight issues
-        // The backend should handle CSRF protection
-
-        const response = await fetch(url, requestOptions);
+        const response = await fetch(url, secureOptions);
         
-        // Handle 401 specifically for token expiry
-        if (response.status === 401) {
-          console.log('🔄 Received 401, attempting token refresh...');
-          const refreshedToken = await this.refreshToken();
-          
-          if (refreshedToken && attempt < this.MAX_RETRY_ATTEMPTS - 1) {
+        // Handle 401 with token refresh
+        if (response.status === 401 && attempt === 0) {
+          console.log('Received 401, attempting session refresh...');
+          const refreshed = await this.refreshSession();
+          if (refreshed) {
             attempt++;
-            continue; // Retry with new token
-          } else {
-            throw new Error('Authentication failed');
+            continue; // Retry with refreshed session
+          }
+        }
+        
+        // Handle CSRF token refresh
+        if (response.status === 403 && response.headers.get('X-CSRF-Error')) {
+          console.log('CSRF token invalid, refreshing...');
+          await this.refreshCSRFToken();
+          if (attempt < this.config.maxRetries - 1) {
+            secureOptions.headers['X-CSRF-Token'] = this.csrfToken;
+            attempt++;
+            continue;
           }
         }
 
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        return await response.json();
+        return response;
       } catch (error) {
         attempt++;
-        
-        if (attempt >= this.MAX_RETRY_ATTEMPTS) {
-          console.error('🚨 Max retry attempts reached:', error);
+        if (attempt >= this.config.maxRetries) {
           throw error;
         }
         
-        // Wait before retry (exponential backoff)
-        await new Promise(resolve => setTimeout(resolve, Math.pow(2, attempt) * 1000));
+        // Exponential backoff
+        await this.delay(this.config.retryDelay * Math.pow(2, attempt - 1));
       }
     }
+  }
+
+  /**
+   * Refresh CSRF token
+   */
+  async refreshCSRFToken() {
+    try {
+      const response = await fetch(`${API_BASE}/csrf-token`, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        this.csrfToken = data.csrf_token;
+        console.log('CSRF token refreshed');
+      } else {
+        console.warn('Failed to refresh CSRF token');
+      }
+    } catch (error) {
+      console.error('CSRF token refresh error:', error);
+    }
+  }
+
+  /**
+   * Ensure CSRF token is available
+   */
+  async ensureCSRFToken() {
+    if (!this.csrfToken) {
+      await this.refreshCSRFToken();
+    }
+  }
+
+  /**
+   * Refresh session/tokens
+   */
+  async refreshSession() {
+    if (this.isRefreshing) {
+      // Wait for ongoing refresh
+      return new Promise((resolve) => {
+        this.pendingRequests.push(resolve);
+      });
+    }
+
+    this.isRefreshing = true;
+    
+    try {
+      const response = await fetch(`${API_BASE}/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      });
+
+      if (response.ok) {
+        console.log('Session refreshed successfully');
+        
+        // Resolve pending requests
+        this.pendingRequests.forEach(resolve => resolve(true));
+        this.pendingRequests = [];
+        
+        return true;
+      } else {
+        console.log('Session refresh failed');
+        this.user = null;
+        
+        // Resolve pending requests with failure
+        this.pendingRequests.forEach(resolve => resolve(false));
+        this.pendingRequests = [];
+        
+        return false;
+      }
+    } catch (error) {
+      console.error('Session refresh error:', error);
+      
+      // Resolve pending requests with failure
+      this.pendingRequests.forEach(resolve => resolve(false));
+      this.pendingRequests = [];
+      
+      return false;
+    } finally {
+      this.isRefreshing = false;
+    }
+  }
+
+  /**
+   * Input sanitization for login
+   */
+  sanitizeLoginInput(credentials) {
+    return {
+      identifier: this.sanitizeString(credentials.identifier, 254),
+      password: credentials.password // Don't modify password
+    };
+  }
+
+  /**
+   * Sanitize string input
+   */
+  sanitizeString(input, maxLength = 1000) {
+    if (typeof input !== 'string') return '';
+    
+    return input
+      .trim()
+      .substring(0, maxLength)
+      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, ''); // Remove control characters
+  }
+
+  /**
+   * Validate authentication response
+   */
+  validateAuthResponse(data) {
+    return (
+      data &&
+      typeof data === 'object' &&
+      data.user &&
+      typeof data.user === 'object' &&
+      typeof data.user.username === 'string' &&
+      typeof data.user.email === 'string'
+    );
+  }
+
+  /**
+   * Validate user data structure
+   */
+  validateUserData(userData) {
+    return (
+      userData &&
+      typeof userData === 'object' &&
+      typeof userData.username === 'string' &&
+      typeof userData.email === 'string' &&
+      userData.username.length > 0 &&
+      userData.email.includes('@')
+    );
+  }
+
+  /**
+   * Sanitize error messages to prevent information disclosure
+   */
+  sanitizeErrorMessage(message) {
+    // Remove sensitive information from error messages
+    const sensitivePatterns = [
+      /password/gi,
+      /token/gi,
+      /session/gi,
+      /database/gi,
+      /sql/gi,
+      /server/gi,
+      /internal/gi
+    ];
+
+    let sanitized = typeof message === 'string' ? message : 'An error occurred';
+    
+    sensitivePatterns.forEach(pattern => {
+      sanitized = sanitized.replace(pattern, '[FILTERED]');
+    });
+
+    return sanitized.substring(0, 200); // Limit length
   }
 
   /**
    * Rate limiting check
    */
-  checkRateLimit(operation) {
+  checkRateLimit() {
     const now = Date.now();
-    const key = `${operation}_${Math.floor(now / this.RATE_LIMIT_WINDOW)}`;
     
-    const count = this.requestCounts.get(key) || 0;
-    if (count >= this.MAX_REQUESTS_PER_WINDOW) {
-      console.warn(`Rate limit exceeded for ${operation}`);
+    // Reset window if needed
+    if (now - this.windowStart > this.config.rateLimitWindow) {
+      this.requestCount = 0;
+      this.windowStart = now;
+    }
+    
+    this.requestCount++;
+    
+    if (this.requestCount > this.config.maxRequestsPerWindow) {
+      console.warn('Rate limit exceeded');
       return false;
     }
     
-    this.requestCounts.set(key, count + 1);
     return true;
   }
 
   /**
-   * Clean up old rate limit data
+   * Clear sensitive data from memory
    */
-  cleanupRateLimitData() {
-    const now = Date.now();
-    const cutoff = now - (this.RATE_LIMIT_WINDOW * 2);
-    
-    for (const [key] of this.requestCounts) {
-      const timestamp = parseInt(key.split('_').pop()) * this.RATE_LIMIT_WINDOW;
-      if (timestamp < cutoff) {
-        this.requestCounts.delete(key);
-      }
+  clearSensitiveData() {
+    // Clear any sensitive data that might be lingering
+    if (window.performance && window.performance.clearResourceTimings) {
+      window.performance.clearResourceTimings();
     }
   }
 
   /**
-   * Sanitize user data before storage (remove sensitive information)
+   * Utility delay function
    */
-  sanitizeUserData(userData) {
-    const sensitive_fields = ['password', 'password_hash', 'secret', 'token', 'key'];
-    const sanitized = {};
-    
-    for (const [key, value] of Object.entries(userData)) {
-      // Skip sensitive fields
-      if (sensitive_fields.some(field => key.toLowerCase().includes(field))) {
-        continue;
-      }
-      
-      // Only store simple data types
-      if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
-        sanitized[key] = value;
-      }
-    }
-    
-    return sanitized;
-  }
-
-  /**
-   * Get stored user data
-   */
-  getUserData() {
-    try {
-      const userData = localStorage.getItem(this.USER_KEY);
-      return userData ? JSON.parse(userData) : null;
-    } catch (error) {
-      console.error('Error getting user data:', error);
-      return null;
-    }
+  delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   /**
    * Check if user is authenticated
    */
   isAuthenticated() {
-    const token = localStorage.getItem(this.TOKEN_KEY);
-    const expiryTime = localStorage.getItem(this.TOKEN_EXPIRY_KEY);
-    
-    if (!token || !expiryTime) {
-      return false;
-    }
-    
-    return Date.now() < parseInt(expiryTime);
+    return !!this.user;
   }
 
   /**
-   * Clear expired tokens
+   * Get current user data (safe copy)
    */
-  clearExpiredTokens() {
-    const expiryTime = localStorage.getItem(this.TOKEN_EXPIRY_KEY);
-    
-    if (expiryTime && Date.now() >= parseInt(expiryTime)) {
-      console.log('🧹 Clearing expired tokens');
-      this.clearAllTokens();
-    }
-  }
-
-  /**
-   * Clear all authentication data
-   */
-  clearAllTokens() {
-    localStorage.removeItem(this.TOKEN_KEY);
-    localStorage.removeItem(this.REFRESH_TOKEN_KEY);
-    localStorage.removeItem(this.TOKEN_EXPIRY_KEY);
-    localStorage.removeItem(this.USER_KEY);
-    
-    // Clear any cached auth data
-    if (typeof window !== 'undefined' && window.caches) {
-      caches.keys().then(cacheNames => {
-        cacheNames.forEach(cacheName => {
-          if (cacheName.includes('auth') || cacheName.includes('user')) {
-            caches.delete(cacheName);
-          }
-        });
-      });
-    }
-    
-    console.log('🧹 All authentication data cleared');
-  }
-
-  /**
-   * Get token expiry information
-   */
-  getTokenInfo() {
-    const expiryTime = localStorage.getItem(this.TOKEN_EXPIRY_KEY);
-    const token = localStorage.getItem(this.TOKEN_KEY);
-    
-    if (!expiryTime || !token) {
-      return null;
-    }
-    
-    const expiry = parseInt(expiryTime);
-    const now = Date.now();
-    
-    return {
-      hasToken: !!token,
-      isExpired: now >= expiry,
-      expiresIn: Math.max(0, expiry - now),
-      willExpireSoon: (expiry - now) < this.TOKEN_REFRESH_THRESHOLD
-    };
-  }
-
-  /**
-   * Security headers for requests (minimal to avoid CORS preflight issues)
-   */
-  getSecurityHeaders() {
-    return {
-      // Only include essential headers that don't trigger CORS preflight
-      'X-Requested-With': 'XMLHttpRequest'
-    };
-  }
-
-  /**
-   * Logout and clear all data
-   */
-  async logout() {
-    try {
-      const token = localStorage.getItem(this.TOKEN_KEY);
-      
-      if (token) {
-        // Notify backend of logout using simple fetch to avoid CORS preflight
-        const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
-        
-        try {
-          await fetch(`${API_BASE}/auth/logout`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            }
-          });
-          console.log('✅ Backend logout successful');
-        } catch (error) {
-          console.warn('Backend logout failed:', error);
-          // Continue with local cleanup even if backend call fails
-        }
-      }
-      
-      this.clearAllTokens();
-      
-      // Clear any additional app-specific data
-      localStorage.removeItem('guest_cart');
-      localStorage.removeItem('guest_wishlist');
-      
-      await platformDetection.showToast('Logged out successfully', 2000);
-      return true;
-    } catch (error) {
-      console.error('Logout error:', error);
-      // Still clear local data even if backend call fails
-      this.clearAllTokens();
-      return false;
-    }
+  getUser() {
+    return this.user ? { ...this.user } : null;
   }
 }
 
-// Create singleton instance
-const secureAuth = new SecureAuth();
-
-export default secureAuth;
+// Export singleton instance
+export default new SecureAuthManager();
