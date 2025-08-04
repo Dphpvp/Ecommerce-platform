@@ -3467,22 +3467,16 @@
 .modern-auth-page {
   min-height: 100vh;
   display: flex;
-  align-items: center;
-  justify-content: center;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  padding: 2rem 1rem;
 }
 
 .auth-container {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  max-width: 1200px;
   width: 100%;
-  min-height: 700px;
+  min-height: 100vh;
   background: white;
-  border-radius: 24px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   overflow: hidden;
 }
 
@@ -3492,8 +3486,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 3rem;
+  padding: 4rem 3rem;
   overflow: hidden;
+  min-height: 100vh;
 }
 
 .auth-branding {
@@ -3570,17 +3565,18 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 3rem;
+  padding: 4rem 3rem;
   background: #fafafa;
+  min-height: 100vh;
 }
 
 .auth-form-container {
   width: 100%;
-  max-width: 400px;
+  max-width: 500px;
 }
 
 .auth-form-container.register {
-  max-width: 500px;
+  max-width: 600px;
 }
 
 .auth-form-header {
@@ -3822,8 +3818,6 @@
 @media (max-width: 768px) {
   .auth-container {
     grid-template-columns: 1fr;
-    margin: 1rem;
-    border-radius: 16px;
   }
   
   .auth-left-panel {
@@ -3857,9 +3851,6 @@
 }
 
 @media (max-width: 480px) {
-  .modern-auth-page {
-    padding: 1rem;
-  }
   
   .auth-right-panel {
     padding: 1.5rem 1rem;
@@ -3871,11 +3862,6 @@
 }
 
 /* === NEW AUTH THEME STYLES === */
-.auth-container {
-  max-width: 500px;
-  margin: 0 auto;
-  padding: var(--space-8);
-}
 
 .auth-header {
   text-align: center;
@@ -4026,23 +4012,6 @@
   text-decoration: underline;
 }
 
-@media (max-width: 768px) {
-  .auth-container {
-    padding: var(--space-4);
-  }
-  
-  .auth-form-container {
-    padding: var(--space-6);
-  }
-  
-  .auth-title {
-    font-size: var(--text-2xl);
-  }
-  
-  .form-row {
-    grid-template-columns: 1fr;
-  }
-}
 
 /* === WISHLIST PAGE === */
 .wishlist-grid {
