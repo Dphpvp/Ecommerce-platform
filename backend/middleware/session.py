@@ -9,7 +9,9 @@ from jose import jwt, JWTError
 from datetime import datetime, timezone, timedelta
 import os
 
-JWT_SECRET = os.getenv("JWT_SECRET", "your-jwt-secret-key")
+JWT_SECRET = os.getenv("JWT_SECRET")
+if not JWT_SECRET:
+    raise ValueError("JWT_SECRET environment variable is required for security!")
 SESSION_SECRET = os.getenv("SESSION_SECRET", secrets.token_hex(32))
 
 # Fixed cookie domain configuration

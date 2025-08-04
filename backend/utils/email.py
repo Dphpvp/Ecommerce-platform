@@ -8,9 +8,13 @@ import os
 # 🆕 Email configuration - Production ready with your credentials
 EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
 EMAIL_PORT = int(os.getenv("EMAIL_PORT", "587"))  # Ensure EMAIL_PORT is an integer
-EMAIL_USER = os.getenv("EMAIL_USER", "email.testing.dph@gmail.com")
+EMAIL_USER = os.getenv("EMAIL_USER")
 EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
-ADMIN_EMAIL = os.getenv("ADMIN_EMAIL", "email.testing.dph@gmail.com")
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
+
+# Validate required email configuration
+if not all([EMAIL_USER, EMAIL_PASSWORD, ADMIN_EMAIL]):
+    raise ValueError("EMAIL_USER, EMAIL_PASSWORD, and ADMIN_EMAIL environment variables are required!")
 
 # Production URLs
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")

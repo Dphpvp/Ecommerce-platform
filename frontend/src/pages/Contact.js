@@ -1,14 +1,23 @@
 // Modern Contact Page - Elegant Design
 import React, { useState, useEffect, useRef } from 'react';
 import { useToastContext } from '../components/toast';
-import SecureForm from '../components/SecureForm';
-import { csrfManager } from '../utils/csrf';
+import SuccessModal from '../components/SuccessModal';
 import '../styles/index.css';
 import NewsletterSubscribe from '../components/NewsletterSubscribe';
 
+const API_BASE = process.env.REACT_APP_API_BASE_URL || 'https://ecommerce-platform-nizy.onrender.com/api';
+
 const Contact = () => {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    message: ''
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [scrollY, setScrollY] = useState(0);
+  const [error, setError] = useState('');
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const { showToast } = useToastContext();
   const textareaRef = useRef(null);
 
@@ -18,89 +27,62 @@ const Contact = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value
+    });
+  };
+
   const handleTextareaResize = (event) => {
     const textarea = event.target;
     textarea.style.height = 'auto';
     textarea.style.height = textarea.scrollHeight + 'px';
   };
 
-  const handleSubmit = async (sanitizedData, csrfToken) => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
     setIsSubmitting(true);
     
     try {
-      const requestData = {
-        name: sanitizedData.name.trim(),
-        email: sanitizedData.email.trim().toLowerCase(),
-        phone: sanitizedData.phone?.trim() || '',
-        message: sanitizedData.message.trim(),
-        send_confirmation: Boolean(sanitizedData.send_confirmation)
-      };
-
-      const response = await csrfManager.makeSecureRequest(
-        `${process.env.REACT_APP_API_BASE_URL}/contact`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-CSRF-Token': csrfToken,
-          },
-          credentials: 'include',
-          body: JSON.stringify(requestData)
-        }
-      );
+      const response = await fetch(`${API_BASE}/contact`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          name: formData.name.trim(),
+          email: formData.email.trim().toLowerCase(),
+          phone: formData.phone.trim(),
+          message: formData.message.trim()
+        })
+      });
 
       const result = await response.json();
 
       if (response.ok) {
-        showToast('Message sent successfully! We will get back to you within 24 hours.', 'success');
+        // Reset form
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          message: ''
+        });
         
-        const form = document.querySelector('.contact-form');
-        if (form) {
-          form.reset();
-        }
+        // Show success modal instead of toast
+        setShowSuccessModal(true);
       } else {
-        const errorMessage = result.detail || result.message || 'Failed to send message. Please try again.';
-        throw new Error(errorMessage);
+        const errorData = await response.json();
+        setError(errorData.detail || 'Failed to send message. Please try again.');
       }
     } catch (error) {
       console.error('Contact form submission error:', error);
-      
-      let errorMessage = 'Failed to send message. Please try again later.';
-      
-      if (error.name === 'TypeError' && error.message.includes('fetch')) {
-        errorMessage = 'Network error. Please check your connection and try again.';
-      } else if (error.message.includes('CSRF')) {
-        errorMessage = 'Security token expired. Please refresh the page and try again.';
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-      
-      showToast(errorMessage, 'error');
+      setError('Network error. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const validateForm = (formData) => {
-    const errors = {};
-    
-    if (!formData.name || formData.name.length < 2) {
-      errors.name = 'Name must be at least 2 characters long';
-    }
-    
-    if (!formData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      errors.email = 'Please enter a valid email address';
-    }
-    
-    if (formData.phone && !/^[\+]?[\d\s\-\(\)]{7,20}$/.test(formData.phone)) {
-      errors.phone = 'Please enter a valid phone number';
-    }
-    
-    if (!formData.message || formData.message.length < 20) {
-      errors.message = 'Message must be at least 20 characters long';
-    }
-    
-    return errors;
   };
 
   return (
@@ -218,12 +200,9 @@ const Contact = () => {
           
           <div className="contact-form-container">
             <div className="contact-form-card">
-              <SecureForm 
-                onSubmit={handleSubmit} 
-                className="modern-contact-form" 
-                validate={true}
-                customValidation={validateForm}
-              >
+              {error && <div className="error-message">{error}</div>}
+              
+              <form onSubmit={handleSubmit} className="modern-contact-form">
                 <div className="form-grid">
                   <div className="form-group">
                     <label className="modern-label">
@@ -233,9 +212,9 @@ const Contact = () => {
                     <input
                       type="text"
                       name="name"
+                      value={formData.name}
+                      onChange={handleChange}
                       className="modern-input"
-                      minLength="2"
-                      maxLength="100"
                       required
                       placeholder="Enter your full name"
                     />
@@ -249,8 +228,9 @@ const Contact = () => {
                     <input
                       type="email"
                       name="email"
+                      value={formData.email}
+                      onChange={handleChange}
                       className="modern-input"
-                      maxLength="254"
                       required
                       placeholder="your.email@example.com"
                     />
@@ -264,8 +244,9 @@ const Contact = () => {
                   <input
                     type="tel"
                     name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
                     className="modern-input"
-                    maxLength="20"
                     placeholder="+1 (555) 123-4567"
                   />
                 </div>
@@ -278,27 +259,16 @@ const Contact = () => {
                   <textarea
                     ref={textareaRef}
                     name="message"
+                    value={formData.message}
+                    onChange={handleChange}
                     className="modern-textarea"
                     rows="5"
-                    minLength="20"
-                    maxLength="2000"
                     required
                     placeholder="Tell us how we can help you..."
                     onInput={handleTextareaResize}
                     style={{ resize: 'none', overflow: 'hidden' }}
                   ></textarea>
                   <div className="input-help">Minimum 20 characters</div>
-                </div>
-
-                <div className="form-group">
-                  <label className="checkbox-label">
-                    <input
-                      type="checkbox"
-                      name="send_confirmation"
-                      defaultChecked={true}
-                    />
-                    <span>Send me a confirmation copy of this message</span>
-                  </label>
                 </div>
 
                 <div className="form-actions">
@@ -323,7 +293,7 @@ const Contact = () => {
                     )}
                   </button>
                 </div>
-              </SecureForm>
+              </form>
             </div>
           </div>
         </div>
@@ -395,6 +365,15 @@ const Contact = () => {
           </div>
         </div>
       </section>
+
+      {/* Success Modal */}
+      <SuccessModal 
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        title="Message Sent Successfully!"
+        message="Thank you for contacting us! We've received your message and will get back to you within 24 hours."
+        actionText="Continue"
+      />
     </div>
   );
 };

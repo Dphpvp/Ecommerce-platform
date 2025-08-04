@@ -41,7 +41,9 @@ from middleware.validation import (
 )
 
 # Configuration
-JWT_SECRET = os.getenv("JWT_SECRET", "your-jwt-secret-key")
+JWT_SECRET = os.getenv("JWT_SECRET")
+if not JWT_SECRET:
+    raise ValueError("JWT_SECRET environment variable is required for security!")
 STRIPE_SECRET_KEY = os.getenv("STRIPE_SECRET_KEY")
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
 if STRIPE_SECRET_KEY:

@@ -7,7 +7,9 @@ import os
 from database.connection import db
 
 # Configuration
-JWT_SECRET = os.getenv("JWT_SECRET", "your-jwt-secret-key")
+JWT_SECRET = os.getenv("JWT_SECRET")
+if not JWT_SECRET:
+    raise ValueError("JWT_SECRET environment variable is required for security!")
 #security = HTTPBearer()
 
 # FIXED: Use OAuth2PasswordBearer instead of HTTPBearer to avoid 403 bug
