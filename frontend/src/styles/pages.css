@@ -112,7 +112,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  background: linear-gradient(135deg, #4ade80 0%, #22c55e 100%);
+  background: linear-gradient(135deg, var(--color-gray-600) 0%, var(--color-gray-700) 100%);
   color: white;
   padding: var(--space-4) var(--space-6);
   border: none;
@@ -125,7 +125,7 @@
 }
 
 .hero-secondary:hover {
-  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  background: linear-gradient(135deg, var(--color-gray-700) 0%, var(--color-gray-800) 100%);
   transform: translateY(-2px);
   box-shadow: var(--shadow-lg);
   color: white;
@@ -2642,7 +2642,7 @@
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+  background: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-primary-700) 100%);
   color: white;
   padding: var(--space-4) var(--space-8);
   border-radius: var(--radius-full);
@@ -2650,13 +2650,13 @@
   font-weight: var(--font-semibold);
   text-decoration: none;
   transition: var(--transition-all);
-  box-shadow: 0 4px 12px rgba(31, 41, 55, 0.3);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
 }
 
 .hero-btn-primary:hover {
-  background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
+  background: linear-gradient(135deg, var(--color-primary-700) 0%, var(--color-primary-800) 100%);
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(31, 41, 55, 0.4);
+  box-shadow: 0 8px 24px rgba(37, 99, 235, 0.4);
   color: white;
 }
 
@@ -3045,30 +3045,29 @@
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+  background: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-primary-700) 100%);
   color: white;
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, #374151 0%, #4b5563 100%);
+  background: linear-gradient(135deg, var(--color-primary-700) 0%, var(--color-primary-800) 100%);
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(31, 41, 55, 0.3);
+  box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
   color: white;
 }
 
 .btn-secondary {
   background-color: white;
-  color: #1f2937;
-  border: 2px solid #1f2937;
+  color: var(--color-text-primary);
+  border: 2px solid var(--color-border);
 }
 
 .btn-secondary:hover {
-  background-color: #1f2937;
-  color: white;
-  border-color: #1f2937;
+  background-color: var(--color-gray-100);
+  color: var(--color-text-primary);
+  border-color: var(--color-gray-300);
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(31, 41, 55, 0.3);
-  color: white;
+  box-shadow: 0 6px 16px rgba(75, 85, 99, 0.3);
 }
 
 /* Mobile Responsive Styles for About Page */
@@ -4019,7 +4018,7 @@
 /* === MODERN USER ORDERS STYLES === */
 .modern-orders-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: linear-gradient(135deg, var(--color-primary-50) 0%, var(--color-gray-50) 100%);
   padding: 2rem 0;
 }
 
@@ -4072,9 +4071,9 @@
 .orders-title-modern {
   font-size: 2.5rem;
   font-weight: 700;
-  color: #1a202c;
+  color: var(--color-text-primary);
   margin-bottom: 0.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--color-primary-700) 0%, var(--color-primary-900) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -4095,7 +4094,7 @@
   flex-direction: column;
   align-items: center;
   padding: 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-primary-700) 100%);
   border-radius: 12px;
   color: white;
   min-width: 120px;
@@ -4233,7 +4232,7 @@
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-primary-700) 100%);
   color: white;
   padding: 1rem 2rem;
   border-radius: 8px;
@@ -4290,7 +4289,7 @@
 .order-icon {
   width: 48px;
   height: 48px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-primary-700) 100%);
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -4452,13 +4451,13 @@
 }
 
 .btn-view-details {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-primary-700) 100%);
   color: white;
 }
 
 .btn-view-details:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
 }
 
 /* Responsive Design */
@@ -4496,7 +4495,7 @@
 /* === MODERN WISHLIST STYLES === */
 .modern-wishlist-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #ffeef8 0%, #f0f9ff 50%, #f3e8ff 100%);
+  background: linear-gradient(135deg, var(--color-primary-50) 0%, var(--color-gray-50) 100%);
   padding: 2rem 0;
 }
 
@@ -4573,19 +4572,19 @@
 .hero-icon {
   width: 80px;
   height: 80px;
-  background: linear-gradient(135deg, #e11d48 0%, #f43f5e 100%);
+  background: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-primary-700) 100%);
   border-radius: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  box-shadow: 0 10px 30px rgba(225, 29, 72, 0.4);
+  box-shadow: 0 10px 30px rgba(37, 99, 235, 0.4);
 }
 
 .wishlist-title-modern {
   font-size: 3rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #e11d48 0%, #9333ea 100%);
+  background: linear-gradient(135deg, var(--color-primary-700) 0%, var(--color-primary-900) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   margin-bottom: 0.5rem;
@@ -4595,13 +4594,13 @@
 }
 
 .item-count-badge {
-  background: linear-gradient(135deg, #e11d48 0%, #f43f5e 100%);
+  background: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-primary-700) 100%);
   color: white;
   padding: 0.5rem 1rem;
   border-radius: 50px;
   font-size: 1rem;
   font-weight: 700;
-  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.3);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
 }
 
 .wishlist-subtitle-modern {
@@ -4675,29 +4674,29 @@
 }
 
 .action-btn.primary {
-  background: linear-gradient(135deg, #e11d48 0%, #f43f5e 100%);
+  background: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-primary-700) 100%);
   color: white;
-  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.3);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
 }
 
 .action-btn.primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(225, 29, 72, 0.4);
+  box-shadow: 0 8px 25px rgba(37, 99, 235, 0.4);
 }
 
 .action-btn.secondary {
-  background: linear-gradient(135deg, #8b5cf6 0%, #a855f7 100%);
+  background: linear-gradient(135deg, var(--color-gray-600) 0%, var(--color-gray-700) 100%);
   color: white;
-  box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+  box-shadow: 0 4px 12px rgba(75, 85, 99, 0.3);
 }
 
 .action-btn.secondary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
+  box-shadow: 0 8px 25px rgba(75, 85, 99, 0.4);
 }
 
 .action-btn.danger {
-  background: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+  background: linear-gradient(135deg, var(--color-red-500) 0%, var(--color-red-600) 100%);
   color: white;
   box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
@@ -4841,14 +4840,14 @@
 }
 
 .primary-cta {
-  background: linear-gradient(135deg, #e11d48 0%, #f43f5e 100%);
+  background: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-primary-700) 100%);
   color: white;
-  box-shadow: 0 8px 25px rgba(225, 29, 72, 0.3);
+  box-shadow: 0 8px 25px rgba(37, 99, 235, 0.3);
 }
 
 .primary-cta:hover {
   transform: translateY(-3px);
-  box-shadow: 0 12px 35px rgba(225, 29, 72, 0.4);
+  box-shadow: 0 12px 35px rgba(37, 99, 235, 0.4);
 }
 
 .secondary-cta {
@@ -4938,14 +4937,14 @@
 .feature-icon-modern {
   width: 80px;
   height: 80px;
-  background: linear-gradient(135deg, #e11d48 0%, #f43f5e 100%);
+  background: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-primary-700) 100%);
   border-radius: 20px;
   display: flex;
   align-items: center;
   justify-content: center;
   margin: 0 auto 1.5rem;
   color: white;
-  box-shadow: 0 10px 30px rgba(225, 29, 72, 0.3);
+  box-shadow: 0 10px 30px rgba(37, 99, 235, 0.3);
 }
 
 .feature-card-modern h4 {

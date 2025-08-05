@@ -248,7 +248,10 @@ const Navigation = () => {
       <div className="header-container desktop-nav">
         {/* Brand */}
         <Link to="/" className="header-brand">
-          <img src="/images/logo.png" alt="Vergi Designs" className="header-logo-large" />
+          <div className="css-logo">
+            <div className="logo-v">V</div>
+            <div className="logo-circle"></div>
+          </div>
           <span className="brand-text-large">Vergi Designs</span>
         </Link>
 
@@ -459,9 +462,13 @@ const Navigation = () => {
 
       {/* Mobile Navigation */}
       <div className="mobile-header-container">
-        {/* Mobile Brand - Logo Only */}
+        {/* Mobile Brand - Logo with Text */}
         <Link to="/" className="mobile-header-brand">
-          <img src="/images/logo.png" alt="Vergi Designs" className="mobile-header-logo" />
+          <div className="css-logo-mobile">
+            <div className="logo-v-mobile">V</div>
+            <div className="logo-circle-mobile"></div>
+          </div>
+          <span className="mobile-brand-text">Vergi Designs</span>
         </Link>
         
         {/* Mobile Actions - Only essential buttons */}

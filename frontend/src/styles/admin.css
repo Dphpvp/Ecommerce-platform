@@ -4,7 +4,7 @@
 /* Modern Order Management Styles */
 .modern-admin-orders {
   min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  background: linear-gradient(135deg, var(--color-primary-50) 0%, var(--color-gray-50) 100%);
   padding: 2rem 0;
 }
 
@@ -22,9 +22,9 @@
 .header-content .admin-title {
   font-size: 2.5rem;
   font-weight: 700;
-  color: #1a202c;
+  color: var(--color-text-primary);
   margin-bottom: 0.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--color-primary-700) 0%, var(--color-primary-900) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -44,7 +44,7 @@
   flex-direction: column;
   align-items: center;
   padding: 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-primary-700) 100%);
   border-radius: 12px;
   color: white;
   min-width: 120px;
@@ -104,7 +104,7 @@
 }
 
 .filter-btn:hover {
-  border-color: #667eea;
+  border-color: var(--color-primary-500);
   transform: translateY(-1px);
 }
 
@@ -132,7 +132,7 @@
 
 .sort-select:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--color-primary-500);
 }
 
 .sort-order-btn {
@@ -151,7 +151,7 @@
 }
 
 .sort-order-btn:hover {
-  border-color: #667eea;
+  border-color: var(--color-primary-500);
   background: #f7fafc;
 }
 
@@ -179,7 +179,7 @@
 .modern-order-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
-  border-color: #667eea;
+  border-color: var(--color-primary-500);
 }
 
 .order-card-header {
@@ -200,7 +200,7 @@
 .order-icon {
   width: 48px;
   height: 48px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--color-primary-500) 0%, var(--color-primary-700) 100%);
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -286,7 +286,7 @@
 }
 
 .info-item svg {
-  color: #667eea;
+  color: var(--color-primary-500);
   flex-shrink: 0;
 }
 
@@ -336,7 +336,7 @@
 }
 
 .btn-view-details {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--color-primary-500) 0%, var(--color-primary-700) 100%);
   color: white;
 }
 
@@ -362,7 +362,7 @@
 
 .status-select:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--color-primary-500);
 }
 
 .btn-update-status {
