@@ -330,8 +330,8 @@
 
 /* Newsletter Section - Reduced size */
 .newsletter {
-  padding: var(--space-8) 0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: var(--space-4) 0;
+  background: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-primary-700) 100%);
   color: white;
   text-align: center;
   position: relative;
@@ -361,15 +361,15 @@
 }
 
 .newsletter-title {
-  font-size: var(--text-2xl);
+  font-size: var(--text-xl);
   font-weight: var(--font-bold);
-  margin-bottom: var(--space-3);
+  margin-bottom: var(--space-2);
 }
 
 .newsletter-subtitle {
-  font-size: var(--text-base);
+  font-size: var(--text-sm);
   opacity: 0.9;
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-4);
   line-height: var(--leading-relaxed);
 }
 
@@ -3709,7 +3709,7 @@
 }
 
 .field-note {
-  color: #6b7280;
+  color: #000;
   font-size: 0.75rem;
   margin-top: 0.25rem;
 }
@@ -3902,13 +3902,13 @@
 .auth-title {
   font-size: 1.75rem;
   font-weight: 700;
-  color: #1f2937;
+  color: #000;
   margin-bottom: 0.5rem;
 }
 
 .auth-subtitle {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: #000;
   margin: 0;
 }
 
@@ -3928,7 +3928,8 @@
   margin-bottom: 0.5rem;
 }
 
-.form-input-simple {
+.form-input-simple,
+.simple-input {
   width: 100%;
   padding: 0.75rem;
   border: 1px solid #d1d5db;
@@ -3936,12 +3937,49 @@
   font-size: 0.875rem;
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
   box-sizing: border-box;
+  background: white;
+  color: #000;
 }
 
-.form-input-simple:focus {
+.form-input-simple::placeholder,
+.simple-input::placeholder {
+  color: #666;
+}
+
+.form-input-simple:focus,
+.simple-input:focus {
   outline: none;
   border-color: #3b82f6;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Phone input styling */
+.phone-input-simple {
+  display: flex;
+  gap: 0.5rem;
+  align-items: stretch;
+}
+
+.simple-select {
+  padding: 0.75rem 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  background: white;
+  color: #000;
+  cursor: pointer;
+  min-width: 80px;
+  flex-shrink: 0;
+}
+
+.simple-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.phone-input {
+  flex: 1;
 }
 
 .submit-btn-simple {
@@ -3998,7 +4036,7 @@
 
 .signup-prompt {
   font-size: 0.875rem;
-  color: #6b7280;
+  color: #000;
   margin: 1rem 0 0 0;
 }
 
