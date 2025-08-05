@@ -2328,7 +2328,7 @@
 .professional-empty-cart p {
   font-size: var(--text-lg);
   color: var(--color-text-secondary);
-  margin: 0 0 var(--space-8) 0);
+  margin: 0 0 var(--space-8) 0;
   line-height: var(--leading-relaxed);
 }
 

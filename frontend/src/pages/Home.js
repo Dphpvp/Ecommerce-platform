@@ -133,94 +133,99 @@ const Home = () => {
   const opacity = Math.max(0, 1 - scrollY / 800);
 
   return (
-    <div className="page-container-full">
-      {/* ASOS-Inspired Hero Section */}
-      <section className="hero">
+    <div className="modern-home-page">
+      {/* Modern Hero Section */}
+      <section className="modern-hero-section">
         <div className="hero-background">
           <img 
             src={heroImages[currentImageIndex]}
-            alt="Sustainable Fashion Collection"
+            alt="Vergi Designs Fashion Collection"
             style={{
               transform: parallaxTransform,
               opacity: opacity
             }}
           />
         </div>
+        <div className="hero-overlay"></div>
         <div className="hero-content">
-          <div className="hero-badge">
-            <svg className="eco-icon" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-            </svg>
-            Sustainable Fashion
-          </div>
-          <h1 className="hero-title">
-            Fashion that feels good,
-            <br />looks amazing
-          </h1>
-          <p className="hero-subtitle">
-            Discover our curated collection of sustainable fashion pieces designed for the conscious consumer who values style and ethics
-          </p>
-          <div className="hero-actions">
-            <Link to="/products" className="hero-cta">
-              Shop Collection
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M5 12h14M12 5l7 7-7 7"/>
-              </svg>
-            </Link>
-            <Link to="/about" className="hero-secondary">
-              Our Story
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6"/>
-                <polyline points="15,3 21,3 21,9"/>
-                <line x1="10" y1="14" x2="21" y2="3"/>
-              </svg>
-            </Link>
+          <div className="container">
+            <div className="hero-text">
+              <div className="hero-badge">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                </svg>
+                Premium Fashion
+              </div>
+              <h1 className="hero-title">
+                Discover Your Perfect
+                <span className="hero-accent">Style</span>
+              </h1>
+              <p className="hero-description">
+                Explore our carefully curated collection of premium fashion pieces designed for the modern lifestyle
+              </p>
+              <div className="hero-actions">
+                <Link to="/products" className="hero-btn-primary">
+                  <span>Shop Collection</span>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                  </svg>
+                </Link>
+                <Link to="/about" className="hero-btn-secondary">
+                  Learn More
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
 
       {/* Featured Categories */}
-      <section className="featured-categories">
-        <div className="section-header">
-          <h2 className="section-title">Shop by Category</h2>
-          <p className="section-subtitle">
-            Explore our sustainable fashion collections designed for every occasion
-          </p>
-        </div>
-        <div className="categories-grid">
-          {[
-            { name: 'Women\'s Wear', subtitle: 'Modern & Chic', image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80' },
-            { name: 'Men\'s Collection', subtitle: 'Contemporary Style', image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80' },
-            { name: 'Accessories', subtitle: 'Premium Quality', image: 'https://images.unsplash.com/photo-1524592094714-0f0654e20314?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80' }
-          ].map((category, index) => (
-            <div key={index} className="category-card">
-              <img src={category.image} alt={category.name} className="category-card-image" />
-              <div className="category-card-overlay">
-                <h3 className="category-title">{category.name}</h3>
-                <p className="category-subtitle">{category.subtitle}</p>
-                <Link to="/products" className="category-button">
-                  Shop Now
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M5 12h14M12 5l7 7-7 7"/>
-                  </svg>
-                </Link>
+      <section className="modern-categories-section">
+        <div className="container">
+          <div className="section-header">
+            <h2 className="section-title">Shop by Category</h2>
+            <p className="section-subtitle">
+              Discover our premium collections designed for every style
+            </p>
+          </div>
+          <div className="modern-categories-grid">
+            {[
+              { name: 'Women\'s Fashion', subtitle: 'Elegant & Stylish', image: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', link: '/products?category=women' },
+              { name: 'Men\'s Collection', subtitle: 'Modern & Classic', image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', link: '/products?category=men' },
+              { name: 'Premium Accessories', subtitle: 'Complete Your Look', image: 'https://images.unsplash.com/photo-1524592094714-0f0654e20314?ixlib=rb-4.0.3&auto=format&fit=crop&w=1000&q=80', link: '/products?category=accessories' }
+            ].map((category, index) => (
+              <div key={index} className="modern-category-card">
+                <div className="category-image-wrapper">
+                  <img src={category.image} alt={category.name} className="category-image" />
+                  <div className="category-overlay"></div>
+                </div>
+                <div className="category-content">
+                  <h3 className="category-name">{category.name}</h3>
+                  <p className="category-description">{category.subtitle}</p>
+                  <Link to={category.link} className="category-link">
+                    Explore Collection
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                  </Link>
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </section>
 
       {/* Featured Products */}
-      <section className="featured-products">
-        <div className="section-header">
-          <h2 className="section-title">Featured Products</h2>
-          <p className="section-subtitle">
-            Discover our handpicked selection of sustainable fashion pieces
-          </p>
-        </div>
-        <div className="featured-products-grid">
-          <div className="product-grid">
+      <section className="modern-products-section">
+        <div className="container">
+          <div className="section-header">
+            <h2 className="section-title">Featured Products</h2>
+            <p className="section-subtitle">
+              Discover our carefully selected premium fashion pieces
+            </p>
+          </div>
+          <div className="modern-products-grid">
             {(featuredProducts || []).slice(0, 6).map((product, index) => (
               <AnimatedProductCard 
                 key={product._id} 
@@ -229,15 +234,23 @@ const Home = () => {
               />
             ))}
           </div>
+          <div className="products-cta">
+            <Link to="/products" className="view-all-btn">
+              View All Products
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M5 12h14M12 5l7 7-7 7"/>
+              </svg>
+            </Link>
+          </div>
         </div>
       </section>
 
       {/* Newsletter */}
       <section className="newsletter">
         <div className="newsletter-content">
-          <h2 className="newsletter-title">Stay in the Loop</h2>
+          <h2 className="newsletter-title">Stay Updated</h2>
           <p className="newsletter-subtitle">
-            Get the latest on sustainable fashion trends, new arrivals, and exclusive offers
+            Get the latest on new arrivals, exclusive deals, and fashion trends
           </p>
           <form className="newsletter-form">
             <input

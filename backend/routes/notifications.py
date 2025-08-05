@@ -9,8 +9,8 @@ import json
 import httpx
 from datetime import datetime
 
-# This would be imported from your auth dependencies
-from auth.dependencies import get_current_admin_user
+# Import admin authentication dependency
+from auth.dependencies import get_admin_user
 
 router = APIRouter()
 
@@ -34,7 +34,7 @@ class PushNotificationResponse(BaseModel):
 @router.post("/admin/send-push", response_model=PushNotificationResponse)
 async def send_push_notification(
     notification_data: PushNotificationRequest,
-    current_admin = Depends(get_current_admin_user)
+    current_admin = Depends(get_admin_user)
 ):
     """
     Send push notification to Android app users
@@ -153,7 +153,7 @@ async def send_push_notification(
 
 @router.get("/admin/push-stats")
 async def get_push_notification_stats(
-    current_admin = Depends(get_current_admin_user)
+    current_admin = Depends(get_admin_user)
 ):
     """
     Get push notification statistics
@@ -181,7 +181,7 @@ async def get_push_notification_stats(
 # Health check endpoint for FCM configuration
 @router.get("/admin/fcm-health")
 async def check_fcm_health(
-    current_admin = Depends(get_current_admin_user)
+    current_admin = Depends(get_admin_user)
 ):
     """
     Check Firebase Cloud Messaging configuration health
