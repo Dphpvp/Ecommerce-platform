@@ -161,18 +161,19 @@ const ResetPassword = () => {
 
   if (step === 'sent') {
     return (
-      <div className="auth-page">
-        <div className="container">
-          <div className="auth-form">
-            <h1>Check Your Email</h1>
-            <div className="success-message">
-              <p>We've sent a password reset link to <strong>{requestForm.email}</strong></p>
-              <p>Check your inbox and click the link to reset your password.</p>
-            </div>
-            <Link to="/login" className="btn btn-primary" style={{ display: 'inline-block', padding: '12px 30px', textDecoration: 'none', borderRadius: '6px', fontWeight: 'bold' }}>
-              Back to Login
-            </Link>
+      <div className="simple-auth-page">
+        <div className="auth-form-container-centered">
+          <div className="simple-auth-header">
+            <h2 className="auth-title">Check Your Email</h2>
+            <p className="auth-subtitle">We've sent you a reset link</p>
           </div>
+          <div className="success-message">
+            <p>We've sent a password reset link to <strong>{requestForm.email}</strong></p>
+            <p>Check your inbox and click the link to reset your password.</p>
+          </div>
+          <Link to="/login" className="submit-btn-simple" style={{ display: 'inline-block', textAlign: 'center', textDecoration: 'none', marginTop: '1rem' }}>
+            Back to Login
+          </Link>
         </div>
       </div>
     );
@@ -180,15 +181,15 @@ const ResetPassword = () => {
 
   if (step === 'success') {
     return (
-      <div className="auth-page">
-        <div className="container">
-          <div className="auth-form">
-            <h1>Password Reset Complete</h1>
-            <div className="success-message">
-              <p>Your password has been successfully reset!</p>
-            </div>
-            <Link to="/login" className="btn btn-primary">Login with New Password</Link>
+      <div className="simple-auth-page">
+        <div className="auth-form-container-centered">
+          <div className="simple-auth-header">
+            <h2 className="auth-title">Password Reset Complete</h2>
+            <p className="auth-subtitle">Your password has been successfully reset!</p>
           </div>
+          <Link to="/login" className="submit-btn-simple" style={{ display: 'inline-block', textAlign: 'center', textDecoration: 'none', marginTop: '1rem' }}>
+            Login with New Password
+          </Link>
         </div>
       </div>
     );
@@ -196,46 +197,47 @@ const ResetPassword = () => {
 
   if (step === 'reset' && token) {
     return (
-      <div className="auth-page">
-        <div className="container">
-          <div className="auth-form">
-            <h1>Reset Your Password</h1>
+      <div className="simple-auth-page">
+        <div className="auth-form-container-centered">
+          <div className="simple-auth-header">
+            <h2 className="auth-title">Reset Your Password</h2>
+            <p className="auth-subtitle">Enter your new password</p>
+          </div>
+          
+          <form onSubmit={handleResetSubmit} className="simple-auth-form">
+            <div className="form-group">
+              <input
+                type="password"
+                name="password"
+                placeholder="New Password (min 8 characters)"
+                value={resetForm.password}
+                onChange={handleResetChange}
+                className={`simple-input ${errors.password ? 'error' : ''}`}
+                required
+              />
+              {errors.password && <span className="error-text">{errors.password}</span>}
+            </div>
             
-            <form onSubmit={handleResetSubmit}>
-              <div className="form-group">
-                <input
-                  type="password"
-                  name="password"
-                  placeholder="New Password (min 6 characters)"
-                  value={resetForm.password}
-                  onChange={handleResetChange}
-                  className={errors.password ? 'error' : ''}
-                  required
-                />
-                {errors.password && <span className="error-text">{errors.password}</span>}
-              </div>
-              
-              <div className="form-group">
-                <input
-                  type="password"
-                  name="confirmPassword"
-                  placeholder="Confirm New Password"
-                  value={resetForm.confirmPassword}
-                  onChange={handleResetChange}
-                  className={errors.confirmPassword ? 'error' : ''}
-                  required
-                />
-                {errors.confirmPassword && <span className="error-text">{errors.confirmPassword}</span>}
-              </div>
-              
-              <button type="submit" disabled={loading} className="btn btn-primary">
-                {loading ? 'Resetting...' : 'Reset Password'}
-              </button>
-            </form>
+            <div className="form-group">
+              <input
+                type="password"
+                name="confirmPassword"
+                placeholder="Confirm New Password"
+                value={resetForm.confirmPassword}
+                onChange={handleResetChange}
+                className={`simple-input ${errors.confirmPassword ? 'error' : ''}`}
+                required
+              />
+              {errors.confirmPassword && <span className="error-text">{errors.confirmPassword}</span>}
+            </div>
             
-            <p>
-              <Link to="/login">Back to Login</Link>
-            </p>
+            <button type="submit" disabled={loading} className="submit-btn-simple">
+              {loading ? 'Resetting...' : 'Reset Password'}
+            </button>
+          </form>
+          
+          <div className="auth-footer-links">
+            <Link to="/login" className="simple-link">Back to Login</Link>
           </div>
         </div>
       </div>
@@ -243,38 +245,45 @@ const ResetPassword = () => {
   }
 
   return (
-    <div className="auth-page">
-      <div className="container">
-        <div className="auth-form">
-          <h1>Reset Password</h1>
-          <p>Enter your email address and we'll send you a link to reset your password.</p>
+    <div className="simple-auth-page">
+      <div className="auth-form-container-centered">
+        <div className="simple-auth-header">
+          <Link to="/login" className="back-link">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="m15 18-6-6 6-6"/>
+            </svg>
+            Back to Login
+          </Link>
+          <h2 className="auth-title">Reset Password</h2>
+          <p className="auth-subtitle">Enter your email address and we'll send you a link to reset your password</p>
+        </div>
+        
+        <form onSubmit={handleRequestSubmit} className="simple-auth-form">
+          <div className="form-group">
+            <input
+              type="email"
+              name="email"
+              placeholder="Enter your email address"
+              value={requestForm.email}
+              onChange={handleRequestChange}
+              className={`simple-input ${errors.email ? 'error' : ''}`}
+              required
+            />
+            {errors.email && <span className="error-text">{errors.email}</span>}
+          </div>
           
-          
-          <form onSubmit={handleRequestSubmit}>
-            <div className="form-group">
-              <input
-                type="email"
-                name="email"
-                placeholder="Enter your email address"
-                value={requestForm.email}
-                onChange={handleRequestChange}
-                className={errors.email ? 'error' : ''}
-                required
-              />
-              {errors.email && <span className="error-text">{errors.email}</span>}
-            </div>
-            
-            <button 
-              type="submit" 
-              disabled={loading} 
-              className="btn btn-primary"
-            >
-              {loading ? 'Sending...' : 'Send Reset Link'}
-            </button>
-          </form>
-          
-          <p>
-            Remember your password? <Link to="/login">Back to Login</Link>
+          <button 
+            type="submit" 
+            disabled={loading} 
+            className="submit-btn-simple"
+          >
+            {loading ? 'Sending...' : 'Send Reset Link'}
+          </button>
+        </form>
+        
+        <div className="auth-footer-links">
+          <p className="signup-prompt">
+            Remember your password? <Link to="/login" className="simple-link">Back to Login</Link>
           </p>
         </div>
       </div>
