@@ -1876,11 +1876,30 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(135deg, #1a1a1a 0%, #333 50%, #1a1a1a 100%);
+  border-radius: 10px;
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
   transition: var(--transition-transform);
-  border: 1px solid #333;
+  border: 1px solid #444;
+  overflow: hidden;
+}
+
+.css-logo::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+}
+
+.css-logo:hover::before {
+  transform: translateX(100%);
 }
 
 .logo-v {
@@ -1888,8 +1907,12 @@
   font-weight: var(--font-bold);
   color: white;
   font-family: var(--font-family-sans);
-  letter-spacing: 1px;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  letter-spacing: 1.5px;
+  text-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.5),
+    0 0 10px rgba(255, 255, 255, 0.1);
+  position: relative;
+  z-index: 2;
 }
 
 .logo-circle {
@@ -1914,11 +1937,30 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-  border-radius: 6px;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+  background: linear-gradient(135deg, #1a1a1a 0%, #333 50%, #1a1a1a 100%);
+  border-radius: 8px;
+  box-shadow: 
+    0 3px 8px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
   transition: var(--transition-transform);
-  border: 1px solid #333;
+  border: 1px solid #444;
+  overflow: hidden;
+}
+
+.css-logo-mobile::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent 30%, rgba(255, 255, 255, 0.1) 50%, transparent 70%);
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+}
+
+.css-logo-mobile:hover::before {
+  transform: translateX(100%);
 }
 
 .logo-v-mobile {
@@ -1926,8 +1968,12 @@
   font-weight: var(--font-bold);
   color: white;
   font-family: var(--font-family-sans);
-  letter-spacing: 0.5px;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  letter-spacing: 1px;
+  text-shadow: 
+    0 1px 2px rgba(0, 0, 0, 0.5),
+    0 0 8px rgba(255, 255, 255, 0.1);
+  position: relative;
+  z-index: 2;
 }
 
 .logo-circle-mobile {
@@ -3210,6 +3256,10 @@
   height: 70px;
   padding: 0 var(--space-4);
   max-width: 100%;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--color-border);
 }
 
 /* Mobile Brand - Logo Only with Bigger Size */
@@ -3490,7 +3540,10 @@
   /* Show mobile navigation */
   .mobile-header-container {
     display: flex !important;
-    background: rgba(255, 0, 0, 0.1); /* Debug: light red background to verify mobile nav is showing */
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 250, 252, 0.95) 100%);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--color-border);
   }
   
   /* Debug: Add border to identify mobile products grid */
