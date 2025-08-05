@@ -249,7 +249,7 @@ const Navigation = () => {
         {/* Brand */}
         <Link to="/" className="header-brand">
           <div className="css-logo">
-            <div className="logo-v">V</div>
+            <div className="logo-v">VD</div>
             <div className="logo-circle"></div>
           </div>
           <span className="brand-text-large">Vergi Designs</span>
@@ -465,7 +465,7 @@ const Navigation = () => {
         {/* Mobile Brand - Logo with Text */}
         <Link to="/" className="mobile-header-brand">
           <div className="css-logo-mobile">
-            <div className="logo-v-mobile">V</div>
+            <div className="logo-v-mobile">VD</div>
             <div className="logo-circle-mobile"></div>
           </div>
           <span className="mobile-brand-text">Vergi Designs</span>

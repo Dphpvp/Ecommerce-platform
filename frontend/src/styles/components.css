@@ -1871,34 +1871,29 @@
 /* CSS Logo Design */
 .css-logo {
   position: relative;
-  width: 48px;
-  height: 48px;
+  width: 60px;
+  height: 40px;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   transition: var(--transition-transform);
+  border: 1px solid #333;
 }
 
 .logo-v {
-  font-size: 24px;
+  font-size: 20px;
   font-weight: var(--font-bold);
   color: white;
-  position: relative;
-  z-index: 2;
   font-family: var(--font-family-sans);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  letter-spacing: 1px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .logo-circle {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 48px;
-  height: 48px;
-  background: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-primary-700) 100%);
-  border-radius: 50%;
-  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
-  z-index: 1;
+  display: none;
 }
 
 .css-logo:hover {
@@ -1913,35 +1908,30 @@
 /* Mobile CSS Logo */
 .css-logo-mobile {
   position: relative;
-  width: 40px;
-  height: 40px;
+  width: 50px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  border-radius: 6px;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
   transition: var(--transition-transform);
+  border: 1px solid #333;
 }
 
 .logo-v-mobile {
-  font-size: 20px;
+  font-size: 16px;
   font-weight: var(--font-bold);
   color: white;
-  position: relative;
-  z-index: 2;
   font-family: var(--font-family-sans);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
 .logo-circle-mobile {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, var(--color-primary-600) 0%, var(--color-primary-700) 100%);
-  border-radius: 50%;
-  box-shadow: 0 3px 8px rgba(37, 99, 235, 0.3);
-  z-index: 1;
+  display: none;
 }
 
 .css-logo-mobile:hover {
@@ -1955,9 +1945,9 @@
 
 /* Enhanced Brand Text */
 .brand-text-large {
-  font-size: var(--text-xl);
+  font-size: var(--text-2xl);
   font-weight: var(--font-bold);
-  color: var(--color-text-primary);
+  color: #000;
   letter-spacing: -0.025em;
   transition: var(--transition-colors);
   margin-left: var(--space-3);
@@ -3251,9 +3241,9 @@
 
 /* Mobile Brand Text - Always visible with responsive design */
 .mobile-brand-text {
-  font-size: var(--text-base);
-  font-weight: var(--font-semibold);
-  color: var(--color-text-primary);
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  color: #000;
   letter-spacing: -0.01em;
   margin-left: var(--space-2);
   transition: var(--transition-colors);
