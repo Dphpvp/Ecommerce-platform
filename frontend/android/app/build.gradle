@@ -45,13 +45,13 @@ dependencies {
     implementation project(':capacitor-android')
     
     // Google Services for authentication and reCAPTCHA
-    implementation 'com.google.android.gms:play-services-auth:21.0.0'
+    implementation 'com.google.android.gms:play-services-auth:20.7.0'
     implementation 'com.google.android.gms:play-services-safetynet:18.0.1'
-    implementation 'com.google.firebase:firebase-auth:22.3.1'
+    implementation 'com.google.firebase:firebase-auth:22.3.0'
     implementation 'com.google.firebase:firebase-core:21.1.1'
     
     // Native Android reCAPTCHA SDK
-    implementation 'com.google.android.recaptcha:recaptcha:18.8.0-beta01'
+    implementation 'com.google.android.recaptcha:recaptcha:18.4.0'
     
     // WebView enhancements for better captcha support
     implementation "androidx.webkit:webkit:$androidxWebkitVersion"

@@ -360,7 +360,7 @@ const AdminDashboard = () => {
                   📊 Export Customers
                 </button>
                 <button onClick={handleSendNewsletter} className="btn-quick">
-                  📧 Send Newsletter
+                  📧📱 Newsletter / Notifications
                 </button>
                 <button onClick={() => navigate('/admin/users/new')} className="btn-quick">
                   👤 Create Admin

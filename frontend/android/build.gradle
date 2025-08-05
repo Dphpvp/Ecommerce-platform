@@ -7,7 +7,7 @@ buildscript {
     }
     dependencies {
         // Updated AGP for API 34 compatibility
-        classpath 'com.android.tools.build:gradle:8.11.1'
+        classpath 'com.android.tools.build:gradle:8.1.4'
 
         // Keep your Google services plugin if you use Firebase or Google APIs
         classpath 'com.google.gms:google-services:4.4.2'

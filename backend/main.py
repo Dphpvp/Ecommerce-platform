@@ -10,6 +10,7 @@ import os
 
 from api import router as api_router
 from routes.admin_routes import router as admin_router
+from routes.notifications import router as notifications_router
 from middleware.validation import rate_limiter, get_client_ip
 
 # Configuration
@@ -44,6 +45,7 @@ async def handle_options(path: str):
 # Include routers
 app.include_router(api_router, prefix="/api")
 app.include_router(admin_router)
+app.include_router(notifications_router, prefix="/api/notifications")
 
 # Security middleware
 if ALLOWED_HOSTS:

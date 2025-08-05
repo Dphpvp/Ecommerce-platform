@@ -2397,3 +2397,192 @@
 .admin-btn-success:hover {
   background: #059669;
 }
+
+/* === NEWSLETTER/NOTIFICATION COMPOSE STYLES === */
+
+/* Send Mode Selector */
+.send-mode-selector {
+  margin: var(--space-6) 0;
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+}
+
+.send-mode-selector h3 {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-4);
+}
+
+.mode-buttons {
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.mode-btn {
+  padding: var(--space-3) var(--space-4);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.mode-btn:hover {
+  border-color: var(--color-primary-600);
+  background: var(--color-primary-50);
+}
+
+.mode-btn.active {
+  border-color: var(--color-primary-600);
+  background: var(--color-primary-600);
+  color: white;
+}
+
+/* Communication Forms */
+.communication-forms {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+/* Newsletter Form */
+.newsletter-form {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+}
+
+.newsletter-form h3 {
+  font-size: var(--text-xl);
+  font-weight: var(--font-semibold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Notification Form */
+.notification-form {
+  background: linear-gradient(135deg, var(--color-primary-50) 0%, var(--color-surface) 100%);
+  border: 1px solid var(--color-primary-200);
+  border-radius: var(--radius-xl);
+  padding: var(--space-6);
+}
+
+.notification-form h3 {
+  font-size: var(--text-xl);
+  font-weight: var(--font-semibold);
+  color: var(--color-primary-700);
+  margin-bottom: var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Character Count */
+.char-count {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  margin-top: var(--space-1);
+  display: block;
+}
+
+/* Mobile Notification Preview */
+.notification-preview {
+  margin-top: var(--space-4);
+  padding: var(--space-4);
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+}
+
+.notification-preview h4 {
+  font-size: var(--text-base);
+  font-weight: var(--font-medium);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-3);
+}
+
+.mobile-notification-preview {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  max-width: 320px;
+}
+
+.notification-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.notification-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.notification-title {
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: #1f2937;
+  margin-bottom: var(--space-1);
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+
+.notification-body {
+  font-size: var(--text-xs);
+  color: #6b7280;
+  line-height: 1.4;
+  word-wrap: break-word;
+}
+
+/* Form Actions */
+.form-actions {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: flex-start;
+  margin-top: var(--space-6);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+.btn-large {
+  padding: var(--space-4) var(--space-6);
+  font-size: var(--text-base);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .mode-buttons {
+    flex-direction: column;
+  }
+  
+  .mode-btn {
+    text-align: center;
+  }
+  
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .mobile-notification-preview {
+    max-width: 100%;
+  }
+}
