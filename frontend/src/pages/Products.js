@@ -129,11 +129,23 @@ const Products = () => {
         return products.sort((a, b) => a.name.localeCompare(b.name));
       case 'name-desc':
         return products.sort((a, b) => b.name.localeCompare(a.name));
-      case 'rating':
-        return products.sort((a, b) => (b.rating || 4.2) - (a.rating || 4.2));
+      case 'rating-high':
+        return products.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      case 'rating-low':
+        return products.sort((a, b) => (a.rating || 0) - (b.rating || 0));
+      case 'reviews-most':
+        return products.sort((a, b) => (b.review_count || 0) - (a.review_count || 0));
+      case 'reviews-least':
+        return products.sort((a, b) => (a.review_count || 0) - (b.review_count || 0));
+      case 'men':
+        return products.filter(p => p.category?.toLowerCase().includes('men') || p.gender?.toLowerCase() === 'male' || p.tags?.includes('men'));
+      case 'women':
+        return products.filter(p => p.category?.toLowerCase().includes('women') || p.gender?.toLowerCase() === 'female' || p.tags?.includes('women'));
+      case 'unisex':
+        return products.filter(p => p.gender?.toLowerCase() === 'unisex' || p.tags?.includes('unisex'));
       case 'newest':
       default:
-        return products.sort((a, b) => new Date(b.createdAt || Date.now()) - new Date(a.createdAt || Date.now()));
+        return products.sort((a, b) => new Date(b.createdAt || b.created_at || Date.now()) - new Date(a.createdAt || a.created_at || Date.now()));
     }
   };
 
@@ -144,7 +156,13 @@ const Products = () => {
       case 'price-high': return 'Price: High to Low';
       case 'name-asc': return 'Name: A to Z';
       case 'name-desc': return 'Name: Z to A';
-      case 'rating': return 'Highest Rated';
+      case 'rating-high': return 'Rating: High to Low';
+      case 'rating-low': return 'Rating: Low to High';
+      case 'reviews-most': return 'Most Reviews';
+      case 'reviews-least': return 'Least Reviews';
+      case 'men': return 'Men\'s Items';
+      case 'women': return 'Women\'s Items';
+      case 'unisex': return 'Unisex Items';
       case 'newest':
       default: return 'Newest First';
     }
@@ -351,23 +369,91 @@ const Products = () => {
               </button>
               {showSortDropdown && (
                 <div className="sort-dropdown-menu">
+                  <div className="sort-section-header">Sort by</div>
                   <button onClick={() => { setSortBy('newest'); setShowSortDropdown(false); }} className={sortBy === 'newest' ? 'active' : ''}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M12 2v20M5 12l7-7 7 7"/>
+                    </svg>
                     Newest First
                   </button>
                   <button onClick={() => { setSortBy('price-low'); setShowSortDropdown(false); }} className={sortBy === 'price-low' ? 'active' : ''}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M12 19V5M19 12l-7 7-7-7"/>
+                    </svg>
                     Price: Low to High
                   </button>
                   <button onClick={() => { setSortBy('price-high'); setShowSortDropdown(false); }} className={sortBy === 'price-high' ? 'active' : ''}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M12 5v14M5 12l7-7 7 7"/>
+                    </svg>
                     Price: High to Low
                   </button>
+                  
+                  <div className="sort-section-header">By Rating</div>
+                  <button onClick={() => { setSortBy('rating-high'); setShowSortDropdown(false); }} className={sortBy === 'rating-high' ? 'active' : ''}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+                    </svg>
+                    Highest Rated
+                  </button>
+                  <button onClick={() => { setSortBy('rating-low'); setShowSortDropdown(false); }} className={sortBy === 'rating-low' ? 'active' : ''}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+                    </svg>
+                    Lowest Rated
+                  </button>
+                  
+                  <div className="sort-section-header">By Reviews</div>
+                  <button onClick={() => { setSortBy('reviews-most'); setShowSortDropdown(false); }} className={sortBy === 'reviews-most' ? 'active' : ''}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                    </svg>
+                    Most Reviews
+                  </button>
+                  <button onClick={() => { setSortBy('reviews-least'); setShowSortDropdown(false); }} className={sortBy === 'reviews-least' ? 'active' : ''}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                    </svg>
+                    Least Reviews
+                  </button>
+                  
+                  <div className="sort-section-header">By Gender</div>
+                  <button onClick={() => { setSortBy('women'); setShowSortDropdown(false); }} className={sortBy === 'women' ? 'active' : ''}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="8" r="7"/>
+                      <polyline points="8.21,13.89 7,23 17,23 15.79,13.88"/>
+                    </svg>
+                    Women's Items
+                  </button>
+                  <button onClick={() => { setSortBy('men'); setShowSortDropdown(false); }} className={sortBy === 'men' ? 'active' : ''}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="8" r="7"/>
+                      <polyline points="8.12,2 9.21,12 14.79,12 15.88,2"/>
+                      <line x1="9" y1="21" x2="15" y2="21"/>
+                      <line x1="12" y1="17" x2="12" y2="21"/>
+                    </svg>
+                    Men's Items
+                  </button>
+                  <button onClick={() => { setSortBy('unisex'); setShowSortDropdown(false); }} className={sortBy === 'unisex' ? 'active' : ''}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="10"/>
+                      <path d="M8 12h8"/>
+                    </svg>
+                    Unisex Items
+                  </button>
+                  
+                  <div className="sort-section-header">Alphabetical</div>
                   <button onClick={() => { setSortBy('name-asc'); setShowSortDropdown(false); }} className={sortBy === 'name-asc' ? 'active' : ''}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M3 7V5a2 2 0 012-2h2m0 0V1m0 2h2a2 2 0 012 2v2M7 3h4m6 0h2a2 2 0 012 2v2m0 0v2a2 2 0 01-2 2h-2m0 0v2m0-2h-2a2 2 0 01-2-2V7"/>
+                    </svg>
                     Name: A to Z
                   </button>
                   <button onClick={() => { setSortBy('name-desc'); setShowSortDropdown(false); }} className={sortBy === 'name-desc' ? 'active' : ''}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M3 7V5a2 2 0 012-2h2m0 0V1m0 2h2a2 2 0 012 2v2M7 3h4m6 18h2a2 2 0 002-2v-2m0 0v-2a2 2 0 00-2-2h-2m0 0v-2m0 2h-2a2 2 0 00-2 2v2"/>
+                    </svg>
                     Name: Z to A
-                  </button>
-                  <button onClick={() => { setSortBy('rating'); setShowSortDropdown(false); }} className={sortBy === 'rating' ? 'active' : ''}>
-                    Highest Rated
                   </button>
                 </div>
               )}

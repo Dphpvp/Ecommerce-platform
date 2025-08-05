@@ -35,28 +35,96 @@ const OrderManagementCard = ({ order, onStatusUpdate, getStatusColor }) => {
 
   return (
     <>
-      <div className="order-management-card">
-        <div className="order-header">
-          <div className="order-basic-info">
-            <h3>Order #{order._id?.slice(-8) || 'Unknown'}</h3>
-            <p>
-              Customer: {order.user_info?.full_name || 'Unknown'} ({order.user_info?.email || 'Unknown'})
-            </p>
-            <p>Total: ${(order.total_amount || 0).toFixed(2)}</p>
-            <p>Date: {formatDate(order.created_at)}</p>
+      <div className="modern-order-card">
+        <div className="order-card-header">
+          <div className="order-identity">
+            <div className="order-icon">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+                <line x1="3" y1="6" x2="21" y2="6"/>
+                <path d="M16 10a4 4 0 01-8 0"/>
+              </svg>
+            </div>
+            <div className="order-info">
+              <h3 className="order-number">#{order._id?.slice(-8) || 'Unknown'}</h3>
+              <p className="order-date">{formatDate(order.created_at)}</p>
+            </div>
           </div>
-          <div className="order-status-section">
-            <span
-              className="current-status"
-              style={{ backgroundColor: getStatusColor(order.status) }}
+          <div className={`order-status order-status-${order.status}`}>
+            {(order.status || 'unknown').charAt(0).toUpperCase() + (order.status || 'unknown').slice(1)}
+          </div>
+        </div>
+        
+        <div className="order-card-content">
+          <div className="customer-info">
+            <div className="info-item">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+                <circle cx="12" cy="7" r="4"/>
+              </svg>
+              <div>
+                <span className="info-label">Customer</span>
+                <span className="info-value">{order.user_info?.full_name || 'Unknown'}</span>
+              </div>
+            </div>
+            <div className="info-item">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+                <polyline points="22,6 12,13 2,6"/>
+              </svg>
+              <div>
+                <span className="info-label">Email</span>
+                <span className="info-value">{order.user_info?.email || 'Unknown'}</span>
+              </div>
+            </div>
+            <div className="info-item">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+              </svg>
+              <div>
+                <span className="info-label">Total</span>
+                <span className="info-value total-amount">${(order.total_amount || 0).toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="order-card-actions">
+          <button
+            className="btn-modern btn-view-details"
+            onClick={() => setIsModalOpen(true)}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+              <circle cx="12" cy="12" r="3"/>
+            </svg>
+            View Details
+          </button>
+          <div className="quick-actions">
+            <select
+              value={selectedStatus}
+              onChange={(e) => setSelectedStatus(e.target.value)}
+              className="status-select"
             >
-              {(order.status || 'unknown').toUpperCase()}
-            </span>
+              {[
+                "pending",
+                "accepted", 
+                "processing",
+                "shipped",
+                "delivered",
+                "cancelled",
+              ].map((status) => (
+                <option key={status} value={status}>
+                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                </option>
+              ))}
+            </select>
             <button
-              className="details-toggle"
-              onClick={() => setIsModalOpen(true)}
+              onClick={handleStatusChange}
+              disabled={selectedStatus === order.status}
+              className="btn-modern btn-update-status"
             >
-              View Details
+              Update
             </button>
           </div>
         </div>
@@ -156,6 +224,8 @@ const AdminOrders = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
+  const [sortBy, setSortBy] = useState("created_at");
+  const [sortOrder, setSortOrder] = useState("desc");
   const { makeAuthenticatedRequest } = useAuth();
   const { showToast } = useToastContext();
 
@@ -221,6 +291,37 @@ const AdminOrders = () => {
     { value: "cancelled", label: "Cancelled" },
   ];
 
+  const sortOptions = [
+    { value: "created_at", label: "Date Created" },
+    { value: "total_amount", label: "Total Amount" },
+    { value: "status", label: "Status" },
+    { value: "user_info.full_name", label: "Customer Name" },
+  ];
+
+  // Sort orders function
+  const sortOrders = (ordersToSort) => {
+    return [...ordersToSort].sort((a, b) => {
+      let aValue, bValue;
+
+      if (sortBy === "user_info.full_name") {
+        aValue = a.user_info?.full_name || "";
+        bValue = b.user_info?.full_name || "";
+      } else if (sortBy === "created_at") {
+        aValue = new Date(a.created_at);
+        bValue = new Date(b.created_at);
+      } else {
+        aValue = a[sortBy] || 0;
+        bValue = b[sortBy] || 0;
+      }
+
+      if (sortOrder === "asc") {
+        return aValue > bValue ? 1 : -1;
+      } else {
+        return aValue < bValue ? 1 : -1;
+      }
+    });
+  };
+
   if (loading) {
     return (
       <div className="admin-orders">
@@ -231,14 +332,27 @@ const AdminOrders = () => {
     );
   }
 
+  const sortedOrders = sortOrders(orders);
+
   return (
-    <div className="admin-orders">
+    <div className="admin-orders modern-admin-orders">
       <div className="container">
-        <div className="orders-header">
-          <h1>Order Management</h1>
+        <div className="admin-orders-header">
+          <div className="header-content">
+            <h1 className="admin-title">Order Management</h1>
+            <p className="admin-subtitle">Manage and track all customer orders</p>
+          </div>
+          <div className="orders-stats">
+            <div className="stat-card">
+              <span className="stat-number">{orders.length}</span>
+              <span className="stat-label">Total Orders</span>
+            </div>
+          </div>
+        </div>
           
+        <div className="admin-controls">
           <div className="filter-section">
-            <h3>🔍 Filter Orders</h3>
+            <h3 className="section-title">Filter by Status</h3>
             <div className="filter-buttons">
               {statusOptions.map((option) => (
                 <button
@@ -258,11 +372,42 @@ const AdminOrders = () => {
               ))}
             </div>
           </div>
+
+          <div className="sort-section">
+            <h3 className="section-title">Sort Orders</h3>
+            <div className="sort-controls">
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="sort-select"
+              >
+                {sortOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+                className="sort-order-btn"
+                title={`Sort ${sortOrder === "asc" ? "Descending" : "Ascending"}`}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  {sortOrder === "asc" ? (
+                    <path d="M12 19V5M5 12l7-7 7 7"/>
+                  ) : (
+                    <path d="M12 5v14M19 12l-7 7-7-7"/>
+                  )}
+                </svg>
+                {sortOrder === "asc" ? "Ascending" : "Descending"}
+              </button>
+            </div>
+          </div>
         </div>
 
         <div className="orders-section">
           <div className="orders-list">
-            {orders.map((order) => (
+            {sortedOrders.map((order) => (
               <OrderManagementCard
                 key={order._id}
                 order={order}
@@ -274,7 +419,15 @@ const AdminOrders = () => {
 
           {orders.length === 0 && (
             <div className="no-orders">
-              <p>📦 No orders found for the selected filters.</p>
+              <div className="no-orders-icon">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+                  <line x1="3" y1="6" x2="21" y2="6"/>
+                  <path d="M16 10a4 4 0 01-8 0"/>
+                </svg>
+              </div>
+              <h3>No Orders Found</h3>
+              <p>No orders match the selected filters.</p>
             </div>
           )}
         </div>

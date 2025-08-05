@@ -24,6 +24,9 @@ const Orders = () => {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [sortBy, setSortBy] = useState("created_at");
+  const [sortOrder, setSortOrder] = useState("desc");
+  const [filterStatus, setFilterStatus] = useState("");
   const { makeAuthenticatedRequest } = useAuth();
 
   const fetchOrders = useCallback(async () => {
@@ -69,38 +72,147 @@ const Orders = () => {
     return colors[status] || "#6c757d";
   };
 
+  // Filter and sort orders
+  const filteredOrders = orders.filter(order => {
+    if (!filterStatus) return true;
+    return order.status === filterStatus;
+  });
+
+  const sortedOrders = [...filteredOrders].sort((a, b) => {
+    let aValue, bValue;
+
+    if (sortBy === "created_at") {
+      aValue = new Date(a.created_at);
+      bValue = new Date(b.created_at);
+    } else if (sortBy === "total_amount") {
+      aValue = a.total_amount || 0;
+      bValue = b.total_amount || 0;
+    } else if (sortBy === "status") {
+      aValue = a.status || "";
+      bValue = b.status || "";
+    } else {
+      aValue = a[sortBy] || "";
+      bValue = b[sortBy] || "";
+    }
+
+    if (sortOrder === "asc") {
+      return aValue > bValue ? 1 : -1;
+    } else {
+      return aValue < bValue ? 1 : -1;
+    }
+  });
+
+  const statusOptions = [
+    { value: "", label: "All Orders" },
+    { value: "pending", label: "Pending" },
+    { value: "accepted", label: "Accepted" },
+    { value: "processing", label: "Processing" },
+    { value: "shipped", label: "Shipped" },
+    { value: "delivered", label: "Delivered" },
+    { value: "cancelled", label: "Cancelled" },
+  ];
+
+  const sortOptions = [
+    { value: "created_at", label: "Date" },
+    { value: "total_amount", label: "Amount" },
+    { value: "status", label: "Status" },
+  ];
+
   if (loading) {
     return (
-      <div className="orders">
+      <div className="modern-orders-page">
         <div className="container">
-          <h1>My Orders</h1>
-          <p>Loading orders...</p>
+          <div className="loading-container">
+            <div className="loading-spinner"></div>
+            <h2>Loading Your Orders</h2>
+            <p>Please wait while we fetch your order history...</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="luxury-orders-page">
+    <div className="modern-orders-page">
       <div className="container">
-        {/* Luxury Header Section */}
-        <div className="luxury-orders-header">
-          <div className="orders-hero-content">
-            <div className="orders-badge">Order History</div>
-            <h1 className="orders-title">My Orders</h1>
-            <p className="orders-subtitle">Track and manage your purchase history</p>
+        {/* Modern Header Section */}
+        <div className="orders-header-modern">
+          <div className="header-content">
+            <h1 className="orders-title-modern">My Orders</h1>
+            <p className="orders-subtitle-modern">Track and manage your purchase history</p>
           </div>
-          <div className="orders-hero-decoration">
-            <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1">
-              <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
-              <line x1="3" y1="6" x2="21" y2="6"/>
-              <path d="M16 10a4 4 0 01-8 0"/>
-            </svg>
+          <div className="orders-stats">
+            <div className="stat-card">
+              <span className="stat-number">{orders.length}</span>
+              <span className="stat-label">Total Orders</span>
+            </div>
+            <div className="stat-card">
+              <span className="stat-number">${orders.reduce((sum, order) => sum + (order.total_amount || 0), 0).toFixed(0)}</span>
+              <span className="stat-label">Total Spent</span>
+            </div>
           </div>
         </div>
+
+        {/* Controls Section */}
+        {orders.length > 0 && (
+          <div className="orders-controls">
+            <div className="filter-section">
+              <h3 className="section-title">Filter by Status</h3>
+              <div className="filter-buttons">
+                {statusOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => setFilterStatus(option.value)}
+                    className={`filter-btn ${filterStatus === option.value ? 'active' : ''}`}
+                    style={
+                      filterStatus === option.value && option.value
+                        ? { backgroundColor: getStatusColor(option.value), color: 'white' }
+                        : filterStatus === option.value
+                        ? { backgroundColor: '#3b82f6', color: 'white' }
+                        : {}
+                    }
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="sort-section">
+              <h3 className="section-title">Sort Orders</h3>
+              <div className="sort-controls">
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  className="sort-select"
+                >
+                  {sortOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+                  className="sort-order-btn"
+                  title={`Sort ${sortOrder === "asc" ? "Descending" : "Ascending"}`}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    {sortOrder === "asc" ? (
+                      <path d="M12 19V5M5 12l7-7 7 7"/>
+                    ) : (
+                      <path d="M12 5v14M19 12l-7 7-7-7"/>
+                    )}
+                  </svg>
+                  {sortOrder === "asc" ? "Ascending" : "Descending"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         
-        {orders.length === 0 ? (
-          <div className="luxury-no-orders">
+        {sortedOrders.length === 0 ? (
+          <div className="no-orders-modern">
             <div className="no-orders-icon">
               <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
@@ -108,29 +220,40 @@ const Orders = () => {
                 <path d="M16 10a4 4 0 01-8 0"/>
               </svg>
             </div>
-            <h3 className="no-orders-title">No Orders Yet</h3>
-            <p className="no-orders-text">You haven't placed any orders yet. Start shopping to see your order history here.</p>
-            <Link to="/products" className="btn-luxury-solid">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
-                <line x1="3" y1="6" x2="21" y2="6"/>
-                <path d="M16 10a4 4 0 01-8 0"/>
-              </svg>
-              Start Shopping
-            </Link>
+            <h3 className="no-orders-title">
+              {filterStatus ? `No ${filterStatus.charAt(0).toUpperCase() + filterStatus.slice(1)} Orders` : 'No Orders Yet'}
+            </h3>
+            <p className="no-orders-text">
+              {filterStatus 
+                ? `You don't have any ${filterStatus} orders.`
+                : "You haven't placed any orders yet. Start shopping to see your order history here."
+              }
+            </p>
+            {!filterStatus && (
+              <Link to="/products" className="btn-modern-primary">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+                  <line x1="3" y1="6" x2="21" y2="6"/>
+                  <path d="M16 10a4 4 0 01-8 0"/>
+                </svg>
+                Start Shopping
+              </Link>
+            )}
           </div>
         ) : (
-          <div className="luxury-orders-grid">
-            {orders.map(order => (
-              <div key={order._id} className="luxury-order-card">
+          <div className="orders-grid-modern">
+            {sortedOrders.map(order => (
+              <div key={order._id} className="modern-order-card-user">
                 <div className="order-card-header">
-                  <div className="order-number-section">
+                  <div className="order-identity">
                     <div className="order-icon">
-                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path d="M20 6L9 17l-5-5"/>
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+                        <line x1="3" y1="6" x2="21" y2="6"/>
+                        <path d="M16 10a4 4 0 01-8 0"/>
                       </svg>
                     </div>
-                    <div className="order-number-info">
+                    <div className="order-info">
                       <h3 className="order-number">#{order.order_number || order._id.slice(-8)}</h3>
                       <p className="order-date">{formatDate(order.created_at)}</p>
                     </div>
@@ -141,20 +264,32 @@ const Orders = () => {
                 </div>
                 
                 <div className="order-card-content">
-                  <div className="order-summary">
+                  <div className="order-summary-modern">
                     <div className="summary-item">
-                      <span className="summary-label">Total Amount</span>
-                      <span className="summary-value">${order.total_amount.toFixed(2)}</span>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                      </svg>
+                      <div>
+                        <span className="summary-label">Total Amount</span>
+                        <span className="summary-value">${order.total_amount.toFixed(2)}</span>
+                      </div>
                     </div>
                     <div className="summary-item">
-                      <span className="summary-label">Items</span>
-                      <span className="summary-value">{order.items?.length || 0} items</span>
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+                        <line x1="3" y1="6" x2="21" y2="6"/>
+                        <path d="M16 10a4 4 0 01-8 0"/>
+                      </svg>
+                      <div>
+                        <span className="summary-label">Items</span>
+                        <span className="summary-value">{order.items?.length || 0} items</span>
+                      </div>
                     </div>
                   </div>
                   
                   {order.items && order.items.length > 0 && (
                     <div className="order-items-preview">
-                      {order.items.slice(0, 3).map((item, index) => (
+                      {order.items.slice(0, 4).map((item, index) => (
                         <div key={index} className="item-preview">
                           <img
                             src={item.product?.image_url || '/images/placeholder-product.jpg'}
@@ -166,9 +301,9 @@ const Orders = () => {
                           />
                         </div>
                       ))}
-                      {order.items.length > 3 && (
+                      {order.items.length > 4 && (
                         <div className="item-preview-more">
-                          +{order.items.length - 3}
+                          +{order.items.length - 4}
                         </div>
                       )}
                     </div>
@@ -177,7 +312,7 @@ const Orders = () => {
                 
                 <div className="order-card-actions">
                   <button
-                    className="btn-luxury-outline btn-view-details"
+                    className="btn-modern btn-view-details"
                     onClick={() => openModal(order)}
                   >
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
